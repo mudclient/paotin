@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+TMP=$(which bash)
+if [ "x$TMP" = "x" ]; then
+    echo 本程序运行前需要先安装 bash/tmux/TinTin++。
+    exit
+fi
+
+export SHELL=$TMP
+
+TMP=$(which tmux)
+if [ "x$TMP" = "x" ]; then
+    echo 本程序运行前需要先安装 bash/tmux/TinTin++。
+    exit
+fi
+
+TMP=$(which tt++)
+if [ "x$TMP" = "x" ]; then
+    echo 本程序运行前需要先安装 bash/tmux/TinTin++。
+    exit
+fi
+
+export HOME=$(pwd)
+export PATH=$HOME/bin:$PATH
+export TMUXCMD="tmux -L MUD -f $HOME/tmux.conf"
+
+test -f .bash_profile || ln -s profile.sh .bash_profile
+exec bash -l

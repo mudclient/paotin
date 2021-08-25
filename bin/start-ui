@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+MODE=$1
+
+if [ "x$MODE" == "xdaemon" ]; then
+    while true; do bash; done
+    exit
+fi
+
+if [ "x$MODE" == "xLOGO" ]; then
+    echo -e 'PaoTin++\n庖丁加加' | head -$(expr $(date '+%s') '/' 10 '%' 2 '+' 1) | tail -1
+    exit
+fi
+
+if [ "x$TMUXCMD" = "x" ]; then
+    export TMUXCMD="tmux -L MUD"
+fi
+
+SESSION=MUD
+
+# 优先连接到已有的会话，继续之前的状态
+$TMUXCMD attach-session -t $SESSION && exit
+
+# 如果尚未创建会话，则创建一个标准会话
+$TMUXCMD new-session -d -s $SESSION
+$TMUXCMD new-window     -t $SESSION
+$TMUXCMD send-keys      -t $SESSION "touch log/debug.log && tail -f log/debug.log"
+$TMUXCMD send-keys      -t $SESSION Enter
+$TMUXCMD rename-window  -t $SESSION 调试日志
+$TMUXCMD select-window  -t $SESSION:0
+$TMUXCMD split-window   -t $SESSION -vbl 5
+$TMUXCMD send-keys      -t $SESSION "touch log/quest.log && tail -f log/quest.log"
+$TMUXCMD send-keys      -t $SESSION Enter
+$TMUXCMD last-pane
+$TMUXCMD send-keys      -t $SESSION "doc HOW-TO-PLAY.md"
+$TMUXCMD send-keys      -t $SESSION Enter
+
+exec $TMUXCMD attach-session -t $SESSION
