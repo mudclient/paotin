@@ -1,0 +1,9 @@
+#var TELNET[IAC]  {\xFF};
+#var TELNET[DONT] {\xFE};
+#var TELNET[DO]   {\xFD};
+#var TELNET[WONT] {\xFC};
+#var TELNET[WILL] {\xFB};
+#var TELNET[SB]   {\xFA};
+#var TELNET[SE]   {\xF0};
+#var TELNET[GMCP] {\xC9};
+#var TELNET[MXP]  {\x5B};

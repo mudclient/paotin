@@ -1,0 +1,45 @@
+#nop GMCP 支持库;
+
+load-lib telnet;
+load-lib event;
+
+event.define {GMCP.Move}    {无参} {GMCP} {接收到 GMCP 移动信息，已更新 gGMCP[Move]};
+event.define {GMCP.Status}  {无参} {GMCP} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
+event.define {GMCP.Combat}  {无参} {GMCP} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
+event.define {GMCP.Buff}    {无参} {GMCP} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
+
+#alias {gmcp.Enable} {
+    #event {IAC WILL GMCP} {
+        #send {$TELNET[IAC]$TELNET[DO]$TELNET[GMCP]\};
+    };
+};
+
+#alias {gmcp.Handle} {
+    #local key      {%1};
+    #local handler  {%2};
+
+    #line sub var #event {IAC SB GMCP $key IAC SE} {$handler};
+};
+
+#alias {gmcp.Subscribe} {
+    gmcp.Handle GMCP.Move {
+        #var gGMCP[Move] {%%0};
+        #var gGMCP[Move] {$gGMCP[Move][1]};
+        event.emit GMCP.Move {};
+    };
+
+    gmcp.Handle GMCP.Status {
+        #var gGMCP[Status] {%%0};
+        event.emit GMCP.Status {};
+    };
+
+    gmcp.Handle GMCP.Combat {
+        #var gGMCP[Combat] {%%0};
+        event.emit GMCP.Combat {};
+    };
+
+    gmcp.Handle GMCP.Buff {
+        #var gGMCP[Buff] {%%0};
+        event.emit GMCP.Buff {};
+    };
+};

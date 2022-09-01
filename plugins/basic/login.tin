@@ -17,6 +17,12 @@
         #class auto-login kill;
         #class auto-login open;
 
+        #nop 如果角色设置了 GMCP 支持，则积极回应服务器的 GMCP 协商请求。;
+        #if { "$user[GMCP]" == "true" } {
+            load-lib gmcp;
+            gmcp.Enable;
+        };
+
         #if { "$session[UTF8]" == "true" } {
             #config {charset} {UTF-8};
         };
@@ -54,6 +60,9 @@
         };
 
         #line oneshot #action {^%s{欢迎来到北大侠客行！|重新连线完毕。}%s$} {
+            #if { "$login[user][GMCP]" == "true" } {
+                gmcp.Subscribe;
+            };
             #delay 0 {
                 #showme 登录成功。;
                 #local handler $login[autoexec];
