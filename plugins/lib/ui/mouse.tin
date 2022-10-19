@@ -1,0 +1,37 @@
+#config {mouse} on;
+
+#EVENT {SCROLLED CTRL MOUSE WHEEL DOWN} {
+    #if {%1 == 0 || %1 == 1} {
+        #cursor history next;
+    };
+    #else {
+        #buffer down 1;
+    };
+};
+
+#EVENT {SCROLLED CTRL MOUSE WHEEL UP} {
+    #if {%1 == 0 || %1 == 1} {
+        #cursor history prev;
+    };
+    #else {
+        #buffer up 1;
+    };
+};
+
+#EVENT {SCROLLED MOUSE WHEEL DOWN} {
+    #if {%1 == 0 || %1 == 1} {
+        #cursor history next;
+    };
+    #else {
+        #buffer down 10;
+    };
+};
+
+#EVENT {SCROLLED MOUSE WHEEL UP} {
+    #if {%1 == 0 || %1 == 1} {
+        #cursor history prev;
+    };
+    #else {
+        #buffer up 10;
+    };
+};
