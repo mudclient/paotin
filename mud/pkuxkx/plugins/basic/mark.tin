@@ -1,0 +1,461 @@
+#nop vim: set filetype=tt:;
+
+#var basic_mark[META] {
+    {NAME}      {游戏标记管理}
+    {DESC}      {记录游戏角色和游戏服务器的各种标记状态}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {}
+    {CONFIG}    {}
+};
+
+load-lib event;
+load-lib sync;
+
+///=== {
+///// mark 管理模块
+/////
+///// mark 是指和 ID 关联的一个变量，及其对应的值。因为一个 ID 可能在不同的位置登录，
+///// 所以把这些变量存到服务器上会比较方便一些。本模块实现了这个目的。
+/////
+///// 由于服务器资源有限，存在诸多限制，因此 mark 要节约使用，变量内容不要太长，
+///// 数量也不宜过多。原则上，mark 尽量只管理那些一旦错过就很难再找回的值。
+// };
+#nop 所有 mark 都存放在服务器上，但本地内存中有一份缓存在这个表里。;
+#nop 这里的值只是对值的说明，模块加载后其内容会被清掉，并重新设置为正确的服务器值;
+#var gMarkTable {
+    {福州密码}          {1234}
+    {黑木崖上}          {未开通|已开通}
+    {襄阳雪峰}          {未开通|已开通}
+    {四宝}              {缺失|齐全}
+
+    {经验兑换率}        {150}
+
+    {重启时间}          {%T}
+    {双倍到期时间}      {%T}
+    {签到日期}          {YYYY-MM-DD}
+    {药炉到期时间}      {%T}
+
+    {江湖新星}          {尚未开始|已经送还|3M成功|6M成功|12M成功}
+    {上次问亲戚经验}    {10M}
+    {真气层数}          {18}
+
+    {星宿新手}          {没吃内丹|吃过内丹|准备请教|请教完成|已经毕业}
+    {AFK}               {AFK 脚本}
+};
+
+VAR {第一个 MARK 记录的 note 索引} {mark.first-index} {0};
+VAR {第一个 MARK 记录的 note 索引} {mark.last-index}  {0};
+
+event.Define {GotMark} {无参} {$MODULE} {已经获取到服务器上储存的 MARK 值。};
+
+#func {basic_mark.Init} {
+    #local mark {};
+    #foreach {*gMarkTable[]} {mark} {
+        #local value {$gMarkTable[$mark]};
+        #local type {字符串};
+        #local dict {};
+        #if { "$value" == "%*|%*" } {
+            #local type {枚举值};
+            #replace value {|} {;};
+            #local dict {$value};
+        };
+        #elseif { "$value" == "%+1..d" } {
+            #local type {数值型};
+        };
+        #elseif { "$value" === "%T" } {
+            #local type {时间戳};
+        };
+        #elseif { "$value" == "%dM" } {
+            #local type {经验值};
+        };
+        #elseif { "$value" == "YYYY-MM-DD" } {
+            #local type {日期型};
+        };
+        #var gMarkTable[$mark] {
+            {type}      {$type}
+            {dict}      {$dict}
+            {value}     {NONE}
+            {noteIdx}   {0}
+            {update}    {}
+        };
+    };
+
+    mark.RetrieveAll;
+
+    #return true;
+};
+
+///=== {
+// ## mark.Define <标记名称> <标记类型> [<字典值>]
+//    定义一个新的标记。
+//    标记类型只能是字符串、数值型、枚举值、时间戳、日期型、经验值之一。
+//    如果标记类型是枚举值，则需要同时给出枚举字典，只有枚举字典中的值才是合法的。
+// };
+#alias {mark.Define} {
+    #local mark     {%1};
+    #local type     {%2};
+    #local dict     {%3};
+
+    #if { "$mark" == "" } {
+        xtt.Usage mark.Define;
+        #return;
+    };
+
+    #if { "$type" != "{字符串|数值型|枚举值|时间戳|日期型|经验值}" } {
+        xtt.Usage mark.Define;
+        #return;
+    };
+
+    #if { "$type" == "枚举值" && "$dict" != "%*;%*" } {
+        errLog 枚举值至少得提供两个选项。;
+        #return;
+    };
+
+    #if { "$type" != "枚举值" } {
+        #local dict {};
+    };
+
+    #var {gMarkTable[$mark]} {
+        {type}      {$type}
+        {dict}      {$dict}
+        {value}     {}
+        {update}    {}
+    };
+};
+
+#alias {mark.set} {
+    #local noteIdx  {%1};
+    #local mark     {%2};
+    #local value    {%3};
+    #local update   {@default{%4;@time.Now{}}};
+
+    #var {gMarkTable[$mark]} {
+        {type}      {@default{$gMarkTable[$mark][type];临时值}}
+        {oldIndex}  {@default{$gMarkTable[$mark][noteIdx];0}}
+        {noteIdx}   {$noteIdx}
+        {value}     {$value}
+        {update}    {$update}
+    };
+};
+
+VAR {MARK 写入队列，如果存在并发请求，将在这里排队} mark.writeQueue {};
+
+///=== {
+// ## mark.Set <标记名称> [<值>]
+//    如果省略值，则擦除该 mark。
+// };
+#alias {mark.Set} {
+    #local mark     {%1};
+    #local value    {@default{%2;NONE}};
+
+    #if { "$mark" == "" } {
+        xtt.Usage mark.Set;
+        #return;
+    };
+
+    #local now {@time.Now{}};
+    mark.set {0} {$mark} {$value} {$now};
+
+    queue.Push mark.writeQueue {
+        {mark}  {$mark}
+        {value} {$value}
+        {update}{$now}
+    };
+
+    mark.writeToServer;
+};
+
+///=== {
+// ## mark.Erase <标记名称>
+//    擦除 mark。
+//    被擦除的 mark 将不再占用服务器空间。
+// };
+#alias {mark.Erase} {
+    #local mark {%1};
+
+    #if { "$mark" == "" } {
+        xtt.Usage mark.Erase;
+        #return;
+    };
+
+    #if { &gMarkTable[$mark][] == 0 } {
+        warnLog 尚不存在「$mark」。;
+        #return;
+    };
+
+    mark.Set {$mark};
+};
+
+///=== {
+// #@ mark.Get <标记名称>
+//    根据 mark 名称取值。
+// };
+#func {mark.Get} {
+    #local mark {%1};
+    #local value {$gMarkTable[$mark]};
+
+    #if { "$value[value]" != "NONE" } {
+        #return {$value[value]};
+    };
+
+    #nop 如果没有取到值，则给一个合理的零值;
+    #if { "$value[type]" == "数值型" } {
+        #return {0};
+    };
+    #elseif { "$value[type]" == "枚举值" } {
+        #local tmp {$value[dict]};
+        #list tmp create {$tmp};
+        #return {$tmp[1]};
+    };
+    #else {
+        #return {};
+    };
+};
+
+#nop 真正的服务器读写过程。;
+VAR {正在往服务器写入数据} mark.writing {false};
+
+#alias {mark.writeToServer} {
+    #if { @isTrue{$mark.writing} } {
+        #return;
+    };
+
+    #var mark.writing {true};
+
+    #class mark.writeToServer open;
+
+    #var mark.writeToServer.uuid {};
+
+    #alias {mark.writeToServer.prepare} {
+        #if { @queue.Size{mark.writeQueue} == 0 } {
+            #var mark.writing {false};
+            #class mark.writeToServer kill;
+            #return;
+        };
+
+        #local item {@queue.First{mark.writeQueue}};
+        #if { $gMarkTable[$item[mark]][oldIndex] > 0 } {
+            note -d $gMarkTable[$item[mark]][oldIndex];
+        };
+        #else {
+            mark.writeToServer.do 0;
+        };
+    };
+
+    #nop 两个调用路径：删除后(index>0)写入，或者无删除(index=0)直接写入。;
+    #alias {mark.writeToServer.do} {
+        #local index {%%1};
+
+        #local item {@queue.First{mark.writeQueue}};
+        #if { $index > 0 } {
+            #if { $item[oldIndex] != $index } {
+                errLog 发现 BUG，请联系开发者。出错位置: mark.writeToServer.do;
+                mark.writeToServer.fallback;
+                mark.RetrieveAll;
+                #return;
+            };
+            #local mark {};
+            #nop 如果是删除后写入，则排在它之后的 mark 都需要重新计算索引。;
+            #foreach {*gMarkTable[]} {mark} {
+                #local this     {$gMarkTable[$mark]};
+                #local oldIndex {$gMarkTable[$item[mark]][oldIndex]};
+                #if { $this[noteIdx] > $oldIndex } {
+                    #math gMarkTable[$mark][noteIdx] {$gMarkTable[$mark][noteIdx] - 1};
+                };
+            };
+
+            #math mark.last-index {$mark.last-index - 1};
+        };
+
+        #if { "$item[value]" == "NONE" } {
+            okLog 「$item[mark]」已删除。;
+            #if { "$gMarkTable[$item[mark]][type]" == "临时值" } {
+                #unvar gMarkTable[$item[mark]];
+            };
+            queue.Shift mark.writeQueue;
+            #delay mark.writeToServer.next {mark.writeToServer.prepare} 1;
+            #return;
+        };
+
+        #local uuid {mark-@uuid{}};
+        #var mark.writeToServer.uuid {$uuid};
+
+        xtt.Send note -wc MV:$item[update]=$item[mark]=$item[value] to MARK-不要乱动;
+        sync.Wait {mark.writeToServer.fail} {$uuid};
+    };
+
+    #action {^%d号笔记删除。{|ID=basic/mark}$} {
+        #line gag;
+        mark.writeToServer.do %%1;
+    };
+
+    #action {^添加个人笔记到MARK-不要乱动成功！$} {
+        #local item {@queue.First{mark.writeQueue}};
+        okLog MARK「$item[mark]」已设置为「$item[value]」。;
+
+        #math mark.last-index {$mark.last-index + 1};
+        #var gMarkTable[$item[mark]][noteIdx] {$mark.last-index};
+        #unvar gMarkTable[$item[mark]][oldIndex];
+
+        queue.Shift mark.writeQueue;
+        sync.Ignore $mark.writeToServer.uuid;
+        #delay mark.writeToServer.next {mark.writeToServer.prepare} 1;
+        #line gag;
+    };
+
+    #alias {mark.writeToServer.fail} {
+        errLog 设置 MARK「%1」时服务器没有响应或响应错误，请不要重复输入，稍后将自动重试。;
+        #delay mark.writeToServer.retry {mark.writeToServer.do} 10;
+    };
+
+    #alias {mark.writeToServer.fallback} {
+        #var mark.writeQueue    {};
+        #var mark.writing       {false};
+        #class mark.writeToServer kill;
+    };
+
+    #class mark.writeToServer close;
+
+    mark.writeToServer.prepare;
+};
+
+///=== {
+// ## mark.RetrieveAll
+//    从服务器取回所有的 mark。
+// };
+#alias {mark.RetrieveAll} {
+    #class mark.RetrieveAll open;
+
+    #var mark.RetrieveAll.begin {false};
+    #var mark.RetrieveAll.mark  {false};
+    #var mark.RetrieveAll.first {0};
+    #var mark.RetrieveAll.count {0};
+    #var mark.writeQueue        {};
+    #var mark.writing           {false};
+
+    #action {^==========%*的全部笔记=========={|ID=basic/mark}$} {
+        #var mark.RetrieveAll.begin {true};
+        #line gag;
+    } {4.999};
+
+    #action {^%+2..S$} {
+        #if { @isFalse{$mark.RetrieveAll.begin} } {
+            #return;
+        };
+
+        #line gag;
+
+        #local group {%%1};
+        #if { "$group" == "MARK-不要乱动" } {
+            #var mark.RetrieveAll.mark {true};
+        };
+        #elseif { @isTrue{$mark.RetrieveAll.mark} } {
+            #var mark.RetrieveAll.mark {false};
+        };
+    };
+
+    #action {^  [%s%d]MV:%d=%S=%*$} {
+        #line gag;
+        #if { @isFalse{$mark.RetrieveAll.mark} } {
+            #return;
+        };
+        #if { $mark.RetrieveAll.first == 0 } {
+            #var mark.RetrieveAll.first {%%2};
+            #var mark.first-index {$mark.RetrieveAll.first};
+        };
+        mark.set {%%2} {%%4} {%%5} {%%3};
+        #math mark.RetrieveAll.count {$mark.RetrieveAll.count + 1};
+    } {4};
+
+    #action {^  [%s%d]%*$} {
+        #line gag;
+        #if { @isTrue{$mark.RetrieveAll.mark} } {
+            okLog MARK 内容格式有误: %%0;
+        };
+    };
+
+    #alias {mark.RetrieveAll.done} {
+        #local count {$mark.RetrieveAll.count};
+        #math mark.last-index  {$mark.first-index + $count - 1};
+        #class mark.RetrieveAll kill;
+        okLog 所有标记已提取，共 $count 条。;
+    };
+
+    #class mark.RetrieveAll close;
+
+    xtt.Send {note -a};
+    sync.Wait mark.RetrieveAll.done;
+};
+
+///=== {
+// ## mark.List
+//    列出所有的 mark。
+// };
+#alias {mark.List} {
+    #local format {    %-20s %-44s %+16s %s};
+	#echo {<128>$format} {标记} {值} {更新时间} {类型};
+	#draw Yellow scroll line 1 1 1 120;
+    #local mark {};
+    #foreach {*gMarkTable[]} {mark} {
+        #local value    {@mark.Get{$mark}};
+        #local type     {$gMarkTable[$mark][type]};
+        #local dict     {$gMarkTable[$mark][dict]};
+        #local update   {$gMarkTable[$mark][update]};
+        #switch {"$type"} {
+            #case {"枚举值"} {#local type {<050>$type<130>{$dict}}};
+            #case {"数值型"} {#local type {<020>$type}};
+            #case {"时间戳"} {#local type {<030>$type}; #if { "$value" != "" } {#local value {@time.Format{$value}}}};
+            #case {"日期型"} {#local type {<030>$type}; #if { "$value" != "" } {#local value {@time.Format{$value;{%Y-%m-%d}}}}};
+            #case {"经验值"} {#local type {<060>$type}; #local value {@defaultNum{$value;0}M}};
+        };
+        #if { "$update" == "" } {
+            #local update {<010>尚未更新};
+        };
+        #else {
+            #local elapse {@math.Eval{@time.Now{} - $update}};
+            #if { $elapse < 60 * 3 } {
+                #local update {<169>$elapse 秒前};
+            };
+            #elseif { $elapse < 3600 * 3 } {
+                #local elapse {@math.Floor{@math.Eval{$elapse / 60}}};
+                #local update {<129>$elapse 分钟前};
+            };
+            #elseif { $elapse < 86400 * 3 } {
+                #local elapse {@math.Floor{@math.Eval{$elapse / 3600}}};
+                #local update {<139>$elapse 小时前};
+            };
+            #else {
+                #local elapse {@math.Floor{@math.Eval{$elapse / 86400}}};
+                #local update {<119>$elapse 天前};
+            };
+        };
+        #local len {@str.Len{$value}};
+        #if { $len > 40 } {
+            #local value {@str.Left{{$value};20} ... 等共 $len 个字符};
+        };
+        #echo {$format} {<060>$mark} {<160>{$value}} {$update} {<070>$type};
+    };
+};
+
+#action {^北大侠客行再过%1将重新启动 ...$} {
+    #local time {@time.ParseDoC{%1}};
+    #if { $time > 600 } {
+        mark.Set {重启时间} {@math.Eval{@time.Now{} + $time}};
+    };
+    #else {
+        mark.Del {重启时间};
+    };
+    prompt.Set {{reboot}{$time}};
+};
+
+#action {^%+1..5u(%*)告诉你：今日兑换率：%d$} {
+    prompt.Set {{pot/exp}{%3%}};
+};
+
+#action {^【闲聊】%*(%*): 今日{经验转化率:|兑换率：}%d$} {
+    prompt.Set {{pot/exp}{%3%}};
+} {1};
+
+#action {^游方和尚(Youfang heshang)告诉你：你听说过江湖新星的任务，没有就赶快来吧。$} {
+    mark.Set {江湖新星} {尚未开始};
+};
