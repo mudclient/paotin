@@ -7,6 +7,11 @@
 #nop 按回车键重复输入之前的命令。;
 #config {repeat enter} {on};
 
+#nop 输入的命令需要回显。;
+#config {command echo} {off};
+#nop 定制一下输入命令的回显颜色，以示区分;
+#config {command color} {\e[4;38;5;178m};
+
 #nop 关闭 MCCP 协议。;
 #config {mccp} {off};
 
