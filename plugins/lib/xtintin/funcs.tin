@@ -122,6 +122,7 @@
 #function {listExtend}      {#var l {%1}; #loc len {%2}; #loc size {@listSize{{$l}}}; #math len {$len - $size}; #if { $len > 0 } { #loop {1} {$len} {id} { #list l add {{}} } }; #return {$l} };
 #function {len}             {#format result {%L} {%1}};
 #function {toLower}         {#format result {%l} {%1}};
+#function {toUpper}         {#format result {%u} {%1}};
 #function {capital}         {#format result {%n} {%1}};
 #function {replace}         {#var result %1;#replace result {%2} {%3}};
 #function {inList}          {#math result { @indexOf{{%1};{%2}} > 0 }};

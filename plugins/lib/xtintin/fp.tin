@@ -1,0 +1,84 @@
+#function {filter} {
+    #local table {%1};
+    #local cond {%2};
+
+    #replace {cond} {KEY} {$$key};
+    #replace {cond} {VALUE} {$$value};
+
+    #local newTable {};
+    #local key {};
+    #foreach {*table[]} {key} {
+        #local value {$table[$key]};
+        #line sub var #if { $cond } {
+            #cat newTable {{$key}{$value}};
+        };
+    };
+
+    #return {$newTable}
+};
+
+#function {filterMap} {
+    #local table {%1};
+    #local cond {%2};
+    #local body {%3};
+
+    #replace {cond} {KEY} {$$key};
+    #replace {cond} {VALUE} {$$value};
+    #replace {body} {KEY} {$$key};
+    #replace {body} {VALUE} {$$value};
+
+    #local newTable {};
+    #local key {};
+    #foreach {*table[]} {key} {
+        #local value {$table[$key]};
+        #line sub var #if { $cond } {
+            #cat newTable {{$key}{$body}};
+        };
+    };
+
+    #return {$newTable}
+};
+
+#function {mapIf} {
+    #local table {%1};
+    #local cond {%2};
+    #local body {%3};
+
+    #replace {cond} {KEY} {$$key};
+    #replace {cond} {VALUE} {$$value};
+    #replace {body} {KEY} {$$key};
+    #replace {body} {VALUE} {$$value};
+
+    #local newTable {};
+    #local key {};
+    #foreach {*table[]} {key} {
+        #local value {$table[$key]};
+        #line sub var {
+            #if { $cond } {
+                #cat newTable {{$key}{$body}};
+            };
+            #else {
+                #cat newTable {{$key}{$value}};
+            };
+        };
+    };
+
+    #return {$newTable}
+};
+
+#function {map} {
+    #local table {%1};
+    #local body {%2};
+
+    #replace {body} {KEY} {$$key};
+    #replace {body} {VALUE} {$$value};
+
+    #local newTable {};
+    #local key {};
+    #foreach {*table[]} {key} {
+        #local value {$table[$key]};
+        #cat newTable {{$key}{$body}};
+    };
+
+    #return {$newTable}
+};
