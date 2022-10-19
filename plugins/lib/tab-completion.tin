@@ -1,0 +1,27 @@
+#event {READ FILE} {
+    refresh-tab-completion;
+};
+
+#alias {refresh-tab-completion} {
+    #info {ALIASES} save;
+    #local idx {};
+    #foreach {*info[ALIASES][]} {idx} {
+        #local name {$info[ALIASES][$idx][arg1]};
+        #nop 只有名字规整的 alias 才给加自动补全。;
+        #if { "$name" == "%*{[^a-zA-Z0-9.-]}%*" } {
+            #continue;
+        };
+
+        #nop 名字是大骆驼风格命名的，可以加自动补全。;
+        #if { "$name" == "{[A-Z][a-zA-Z0-9]*}" } {
+            #tab {$name};
+            #continue;
+        };
+
+        #nop 如果名字由小数点分成多个部分，那么只有最后一部分是大写字母开头的，才加自动补全。;
+        #if { "$name" == "%*.{[A-Z][A-Za-z0-9]*}" } {
+            #tab {$name};
+            #continue;
+        };
+    };
+};
