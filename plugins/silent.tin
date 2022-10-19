@@ -1,0 +1,50 @@
+#nop 做一个安静的客户端。;
+#nop 「隐藏自己，做好清理。」—— 《三体·黑暗森林》;
+
+#nop 命令白名单。;
+#nop 只有纯小写字母，空格，减号组成的命令无需再加白名单。这里只维护例外;
+#var silent-WhiteList {
+    chat*;          qq*;            helpme*;        tt*;
+    amber_alert;
+};
+
+#nop 文字表情;
+#cat silent-WhiteList {
+    ...;            :)..;           :D;             :P;            ?;
+    ??;             @@;             ad.;
+};
+
+#var silent-LastCmd {};
+
+#alias {^%*{|ID=paotin/silent}$} {
+    #local cmd {%0};
+    #replace {cmd} {%S %*} {&1};
+
+    #if {  {$silent-WhiteList[$cmd]} == {true}
+        || {$cmd} == {{[a-z]{1,10}}} && {%0} == {{[a-z0-9 -]*}} } {
+        #var silent-LastCmd {};
+        #send {%0};
+        #return;
+    };
+
+    #echo {<160>命令「<130>$cmd<160>」不是一个合法的 MUD 命令，如果确认是，请更新白名单。<070>};
+    #if { {%0} != {$silent-LastCmd} } {
+        #echo {<160>本次命令<110>已被抑制<160>。如果你着急输入，可以重复一次本命令，将临时通过一次。<070>};
+        #var silent-LastCmd {%0};
+    };
+    #else {
+        #var silent-LastCmd {};
+        #send {%0};
+    };
+} {9.999};
+
+#alias {silent.Init} {
+    #local list {$silent-WhiteList};
+    #local cmd {};
+    #var silent-WhiteList {};
+    #foreach {$list} {cmd} {
+        #var {silent-WhiteList[$cmd]} {true};
+    };
+};
+
+silent.Init;
