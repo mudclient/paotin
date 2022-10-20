@@ -1,0 +1,58 @@
+#nop 开启 PCRE UTF 字符类支持。;
+#config {PCRE UTF} ON;
+
+#nop 【一代神相】江湖十大气血高手 牛肉面馆 总管事「绝对不是」天天练功 🐒 ☯️ (Marking);
+#nop 【 西  毒 】桃林书院 生员「喵喵喵喵喵喵喵喵喵喵喵喵喵喵喵喵」挖煤猫 🐎 ⭕️ (Zardc);
+#nop             朱雀 辽东大侠 胡一刀(Hu yidao) [任务发放] ◆◆ <衣钵相承>;
+#nop             丐帮第八代帮主 萧峰(Xiao feng) [任务发放] ◆;
+#nop             大善人 韩员外(Han yuanwai) [任务发放];
+#function {ParseTitle} {
+    #local obj {%0};
+
+    #nop 小技巧：replace 匹配之前不会将 &1~&99 清空，因此匹配可选项时会保留上一次的值。;
+    #nop 所以这里手动清空一下;
+    #local tmp {};
+    #replace {tmp} {%s%s%s%s%s%s%s%s%s%s} {};
+
+    #replace {obj} {^{?:(?:【(.+?)】)?(.*?)(?:「(.+?)」)?(\p{Han}+)( (?:\p{So}\S* )+)?\(([A-Z][a-z']+(?: [a-z]+)*)\)(?: <(.*?)>)?(?: \[(.*?)\])?(?: ((?:◆)+))?(?: <(衣钵相承)>)?}$} {
+        {rank}      {@trim{&1}}
+        {title}     {@trim{&2}}
+        {nick}      {@trim{&3}}
+        {name}      {&4}
+        {emoji}     {@trim{&5}}
+        {id}        {@toLower{&6}}
+        {status1}   {&7}
+        {status2}   {&8}
+        {isJobNPC}  {&9}
+        {yibo}      {&10}
+    };
+
+    #nop 注意 #replace 刚替换完时，得到的是字符串，最后还要再进行一次赋值，才能够将它结构化;
+    #local obj {$obj};
+
+    #if { "$obj[name]" == "" } {
+        #return {};
+    };
+
+    #if { "$obj[title]" == "☆%S%s%S☆" } {
+        #local partyInfo {$obj[title]};
+        #replace partyInfo {^☆%S%s%S☆$} {{party}{&1}{partyRank}{&3}};
+        #local partyInfo {$partyInfo};
+        #local obj[title] {$partyInfo[party];$partyInfo[partyRank]};
+        #local obj[party] {$partyInfo[party]};
+        #local obj[partyRank] {$partyInfo[partyRank]};
+    };
+
+    #replace obj[title] {%+1..s} {;};
+    #replace obj[emoji] {%+1..s} {;};
+    #replace obj[rank]  {%+1..s} {};
+
+    #local field {};
+    #foreach {rank;title;nick;name;emoji;id;status1;status2;isJobNPC;yibo} {field} {
+        #if { "$obj[$field]" == "" } {
+            #unlocal obj[$field];
+        };
+    };
+
+    #return {$obj};
+};

@@ -1,0 +1,188 @@
+#nop ╭───技能列表(共十六项)─┬─────────────┬──────┬──────┬──────╮
+#nop │名称                      │ID                        │描述        │级别        │最大级别    │
+#nop ├───一项职业技能────┼─────────────┼──────┼──────┼──────┤
+#nop │  占卜之术                │divination                │不足挂齿    │82.0        │387         │
+#nop ├───六项基本知识────┼─────────────┼──────┼──────┼──────┤
+#nop │  禅宗心法                │buddhism                  │半生不熟    │153.0       │-           │
+#nop │  鉴定之术                │identification            │初窥门径    │54.0        │-           │
+#nop │  读书写字                │literate                  │半生不熟    │152.0       │-           │
+#nop │  医术                    │medical-skill             │新学乍用    │30.0        │-           │
+#nop │  妙手空空                │stealing                  │新学乍用    │10.0        │-           │
+#nop │  道家养生术              │taoism                    │深不可测    │948.23      │-           │
+#nop ├───六项基本功夫────┼─────────────┼──────┼──────┼──────┤
+#nop │  基本拳法                │cuff                      │半生不熟    │386.0       │387         │
+#nop │  基本轻功                │dodge                     │半生不熟    │386.0       │387         │
+#nop │  基本内功                │force                     │半生不熟    │386.0       │387         │
+#nop │  基本招架                │parry                     │半生不熟    │386.0       │387         │
+#nop │  基本剑法                │sword                     │半生不熟    │386.0       │387         │
+#nop ├───四项特殊功夫────┼─────────────┼──────┼──────┼──────┤
+#nop │□太极剑法                │taiji-jian                │半生不熟    │386.0       │387         │
+#nop │□太极拳                  │taiji-quan                │半生不熟    │386.0       │387         │
+#nop │□太极神功                │taiji-shengong            │第五重楼    │387.0       │387         │
+#nop │□梯云纵                  │tiyunzong                 │半生不熟    │386.0       │387         │
+#nop ╰─────────────┴─────────────┴──────┴────北大侠客行────╯
+#nop;
+
+#function {basic_char_skills.Init} {
+    #class char open;
+    #var char[Skills] {};
+    #class char close;
+    #return true;
+};
+
+#action {^╭───技能列表(共%*项){(─|┬)*}──╮$} {
+    #class {ParseSkills} open;
+
+    #var char[Skills][currentType] {};
+
+    #gag {^│名称};
+
+    #action {^├───%%1项%%2──} {
+        #var char[Skills][currentType] {%%2};
+    };
+
+    #local RST      {\e[0m};
+    #local RST__    {\e[2;37;0m};
+    #local __I__    {$RST__│};
+
+    #action {~^$RST│%*│%*│%*│%*│%*│{|ID=char.skills}} {
+        #local line     {%%0};
+        #local code     {%%2};
+        #local level    {%%4};
+        #local limit    {%%5};
+        #replace {code}   {\x1b[2;37;0m} {};
+        #replace {level}  {\x1b[2;37;0m} {};
+        #replace {limit}  {\x1b[2;37;0m} {};
+
+		#replace level {+} {};
+
+        #if { "$limit" == "%s%d%s" } {
+            #math limit {$limit + 0};
+        };
+        #else {
+            #local limit {0};
+        };
+
+        #if { $limit > 0 } {
+            #nop 给技能加上彩色进度条，用来表示当前级别距离上限的程度;
+            #local newCode {@__char_skills_colorit__{{$code};$level;$limit}};
+            #replace code { } {};
+            #replace line {$code\x1b[2;37;0m%s} {$newCode\e[0m};
+            #echo {%s} {@Beautify{{$line}}};
+            #local line {Skill/%%1/%%2/%%3/%%4/$limit};
+            #replace line { } {};
+            #showme {$line};
+            #line gag;
+        };
+    };
+
+    #action {^Skill/{□|Θ|}%%2/%%3/%%4/%%5/%%6$} {
+        #local type ${char[Skills][currentType]};
+        #local enabled  {%%1};
+        #local name     {%%2};
+        #local code     {%%3};
+        #local rank     {%%4};
+        #local level    {%%5};
+        #local limit    {%%6};
+
+        #replace name { } {};
+
+        #if { "$enabled" == "□" } {
+            #format enabled {true};
+        };
+        #else {
+            #format enabled {false};
+        };
+
+        #local key {};
+        #format key {char[Skills][%s]} {$name};
+
+        #class char open;
+        #var {$key} {
+            {name}{$name}
+            {type}{$type}
+            {enabled}{$enabled}
+            {code}{$code}
+            {rank}{$rank}
+            {level}{$level}
+            {limit}{$limit}
+        };
+        #class char close;
+
+        #line gag;
+    };
+
+    #action {^╰───{(┴|─)*}┴────%S────╯{|ID=char.skills}$} {
+        #unvar char[Skills][currentType];
+        #class {ParseSkills} kill;
+    };
+
+    #action {^你不是查看过吗？{|ID=char/skills}$} {
+        #class {ParseSkills} kill;
+    };
+
+    #delay 5 {
+        #class {ParseSkills} kill;
+    };
+
+    #class {ParseSkills} close;
+};
+
+#function {__char_skills_colorit__} {
+    #local code     {%1};
+    #local level    {%2};
+    #local limit    {%3};
+
+    #local p {};
+    #math p {$level * 100 / $limit};
+    #format p {%d} {$p};
+
+    #local color {};
+
+    #if { $p < 15 } {
+        #format color {%s} {<071>};
+    };
+    #elseif { $p < 30 } {
+        #format color {%s} {<171>};
+    };
+    #elseif { $p < 60 } {
+        #format color {%s} {<003>};
+    };
+    #elseif { $p < 90 } {
+        #format color {%s} {<074>};
+    };
+    #elseif { $p < 100 } {
+        #format color {%s} {<134>};
+    };
+    #elseif { $p == 100 } {
+        #format color {%s} {<132>};
+    };
+    #elseif { $p > 100 } {
+        #format color {%s} {<506>};
+    };
+
+    #local len {};
+    #local len2 {};
+    #local len3 {};
+    #format {len} {%L} {$code};
+    #format {code} {%p} {$code};
+    #format {len2} {%L} {$code};
+    #math len3 {$len - $len2};
+    #format {code} {%s%${len3}s} {$code} {$p%};
+    #local leftLen {};
+    #math leftLen {$len * $level / $limit};
+    #format leftLen {%d} {$leftLen};
+    #local left {};
+    #format {left} {${color}%.${leftLen}s<070>} {$code};
+
+    #local right {};
+    #local rightLen {};
+    #math rightLen {$len - $leftLen};
+    #format {right} {%r} {$code};
+    #format {right} {%.${rightLen}s} {$right};
+    #format {right} {<g08>%r} {$right};
+
+    #return {$left$right};
+};
+
+#alias {char.GetSkills} {skills};

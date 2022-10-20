@@ -1,0 +1,206 @@
+#nop i2 格式：
+#nop 你身上带著下列这些东西(负重 27%)：
+#nop 九十一两白银(Silver)
+#nop 二个竹壶(Zhuhu)
+#nop 三块干粮(Gan liang)
+#nop 大砍刀(Dakan dao)
+#nop 青锋剑(Qingfeng sword)
+#nop 北侠战袍(Pkuxkx zhanpao)
+#nop 北侠战甲(Pkuxkx zhanjia)
+#nop 北侠战衣(Pkuxkx zhanyi)
+#nop 北侠战盔(Pkuxkx zhankui)
+#nop 北侠战靴(Pkuxkx zhanxue)
+#nop 锦囊(Jin nang)
+#nop
+#nop -------------------------------------------
+#nop 你左手拿着：大砍刀(Dakan dao)
+#nop 你右手拿着：青锋剑(Qingfeng sword)
+#nop
+#nop -------------------------------------------
+#nop 你身上穿着：
+#nop 北侠战袍(Pkuxkx zhanpao)
+#nop 北侠战甲(Pkuxkx zhanjia)
+#nop 北侠战衣(Pkuxkx zhanyi)
+#nop 北侠战盔(Pkuxkx zhankui)
+#nop 北侠战靴(Pkuxkx zhanxue)
+#nop 锦囊(Jin nang)
+#nop;
+
+#function {basic_char_i2.Init} {
+    char.reset.i2;
+    char.reset.bag;
+    char.reset.sachet;
+    #return true;
+};
+
+#alias {char.reset.i2} {
+    #class char open;
+    #nop 随身物品;
+    #var char-Item      {};
+    #nop 穿戴;
+    #var char-Wear      {};
+    #nop 武器;
+    #var char-Wield     {};
+    #nop 装备;
+    #var char-Equip     {};
+    #class char close;
+};
+
+#alias {char.reset.bag} {
+    #class char open;
+    #nop 包袱;
+    #var char-Bag       {};
+    #class char close;
+};
+
+#alias {char.reset.sachet} {
+    #class char open;
+    #nop 宝石袋;
+    #var char-Sachet    {};
+    #class char close;
+};
+
+#action {^你身上带著下列这些东西(负重 %1%)：$} {
+    #class {ParseItems} open;
+
+    #var char-Item.currentType {随身};
+    char.reset.i2;
+
+    #nop 你左手拿着：大砍刀(Dakan dao);
+    #nop 你右手拿着：青锋剑(Qingfeng sword);
+    #action {^你{左手|右手}拿着：%%2(%%3)$} {
+        #local hand     {%%1};
+        #local item     {%%2};
+        #local id       {@toLower{%%3}};
+        #class char open;
+        #var char-Wield.$hand {
+            {item}{$item}
+            {id}{$id}
+        };
+        #class char close;
+    } {4};
+
+    #action {^你身上穿着：$} {
+        #var char-Item.currentType {装备};
+    };
+
+    #nop 九十一两白银(Silver);
+    #action {^{(零|一|二|三|四|五|六|七|八|九|十|百|千|万|亿)+}{两|文|张}{黄金|白银|铜板|一千两银票}(%*)$} {
+        #local amount   {@c2d{%%1}};
+        #local unit     {%%3};
+        #local item     {%%4};
+        #local id       {@toLower{%%5}};
+
+        #class char open;
+        #var {char-Item.$item} {
+            {id}{@toLower{$id}}
+            {amount}{@c2d{$amount}}
+        };
+        #class char close;
+    } {4};
+
+    #local 武器等级 {沉水|赤焰|荡寇|彗月|照夜|追日|断阙|刑天};
+    #local 武器种类 {剑|刀|杖|鞭|斧|枪|锤|戟|匕|针|萧|钩};
+
+    #local 装备等级 {机杼|苍野|青幽|百战|鬼烈|巨灵|深罡|九日};
+    #local 装备种类 {铠甲|靴|袍|手套|盔|盾|披风|腰带|护腕};
+
+    #local 饰品等级 {恶来|玄狐|洛神|盘瓠|儵忽|帝江|烛阴|盘古};
+    #local 饰品种类 {戒指|项链};
+
+    #local 职业等级 {(..)+};
+    #local 职业部位 {盔|护腕|披风|护手|袍|腰带|盾|靴|项链|戒指|(板|布|鳞|皮)甲|面具|护心|护肩|腿甲};
+
+    #local 汉字数词 {(?:零|一|二|三|四|五|六|七|八|九|十|百|千|万|亿)+};
+    #local 汉字量词 {(?:本|块|碗|件|册|柄|把|根|枚|个)+};
+    #local 词缀修饰 {(?:[^ ][^ ])+};
+
+    #nop 火锅装;
+    #nop 八件百战手套(Hands);
+    #action {^{?:(${汉字数词})件|}{?:(${词缀修饰})的|}{?:(${装备等级})(${武器种类}|${装备种类}|${饰品种类})}(%S)$} {
+        #local amount   {@c2d{%%1}};
+        #local modifier {%%2};
+        #local level    {%%3};
+        #local kind     {%%4};
+        #local id       {@toLower{%%5}};
+        #if { $amount == 0 } {
+            #local amount {1};
+        };
+        #echo {amount [$amount] modifier [$modifier] level [$level] kind [$kind] id [$id]};
+    } {4};
+
+    #nop 职业装和随机装;
+    #nop 二件玄铁之护手(Gauntlet);
+    #nop 玄铁之板甲(Armor);
+    #nop 天兵华彩 巨灵之手套(Hands);
+    #action {^{((零|一|二|三|四|五|六|七|八|九|十|百|千|万|亿)+件)?}{(([^ ]+)[ ])?}%S之%S(%S)$} {
+        #local amount   {%%3};
+        #local title    {%%6};
+        #local rank     {%%7};
+        #local item     {%%8};
+        #local id       {@toLower{%%9}};
+
+        #if { "${char-Item.currentType}" == "装备" } {
+            #return;
+        };
+
+        #if { "$amount" == "" } { #format amount {%s} {一} };
+        #format amount {%s} {@c2d{$amount}};
+
+        #if { "${char-Equip.$id}" != "" } {
+            #math amount { ${char-Equip.$id} + $amount };
+        };
+
+        #class char open;
+        #var {char-Equip.$id} {$amount};
+        #class char close;
+    } {4};
+
+    #nop 二把竹剑(Zhujian);
+    #action {^{(零|一|二|三|四|五|六|七|八|九|十|百|千|万|亿)+}{本|块|碗|件|册|柄|把|根|枚|个}%S(%*)$} {
+        #local amount   {@c2d{%%1}};
+        #local unit     {%%3};
+        #local item     {%%4};
+        #local id       {@toLower{%%5}};
+        #class char open;
+        #var {char-Item.$item} {
+            {id}{$id}
+            {amount}{$amount}
+        };
+        #class char close;
+    };
+
+    #nop 大砍刀(Dakan dao);
+    #nop 青锋剑(Qingfeng sword);
+    #action {^%%1(%%2)$} {
+        #local item {%%1};
+        #local id   {@toLower{%%2}};
+        #if { "${char-Item.currentType}" == "装备" } {
+            #class char open;
+            #var {char-Wear.$item} {{id}{$id}};
+            #class char close;
+        };
+        #elseif { "${char-Item.currentType}" == "随身" } {
+            #class char open;
+            #var {char-Item.$item} {{id}{$id}};
+            #class char close;
+        };
+        #elseif { "${char-Item.currentType}" == "包袱" } {
+            #class char open;
+            #var {char-Bag.$item} {{id}{$id}};
+            #class char close;
+        };
+        #elseif { "${char.-currentType}" == "宝石袋" } {
+            #class char open;
+            #var {char-Sachet.$item} {{id}{$id}};
+            #class char close;
+        };
+    } {9};
+
+    #delay 3 {
+        #unvar char-Item.currentType;
+        #class {ParseItems} kill;
+    };
+
+    #class {ParseItems} close;
+};

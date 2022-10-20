@@ -1,0 +1,29 @@
+#var gOnlineIDs {};
+
+#alias {finger} {
+    #class finger-parse open;
+
+    #var finger-state {};
+
+    #action {^《北大侠客行》$}      {#nop};
+    #action {^姓名%s帐号%s发呆$}    {#nop};
+
+    #action {^{(—)+}$}             {
+        #if { "${finger-state}" == "wait-end" } {
+            #class finger-parse kill;
+        };
+    };
+
+    #action {^%+1..S%+1..s%+1..S%+1..s%+1..ds%s$}  {
+        #if { "%%3" == "{[a-z]+}" } {
+            #if { "${finger-state}" == "" } {
+                #var finger-state {wait-end};
+            };
+            #var gOnlineIDs[%%3] {%%1};
+        };
+    };
+
+    #class finger-parse close;
+
+    #send finger;
+};

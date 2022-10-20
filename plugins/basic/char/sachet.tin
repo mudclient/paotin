@@ -1,0 +1,67 @@
+#nop ┌────────────────────────────────────────┐;
+#nop │锦囊 (97/101)                                                                   │;
+#nop ├───五行宝石─────────────┬───────────────────┤;
+#nop │[J5A]雷☆精金*12                        │[B4A]风☆玄冰*30                      │;
+#nop ├───日月及中性五行宝石────────┴───────────────────┤;
+#nop │[S5C]雷◎玉髓*1                                                                 │;
+#nop ├───四灵宝石──────┬─────────────┬────────────┤;
+#nop │[G4A]风☆神龙骨*11        │[F4A]风☆凤凰羽*5         │[X4B]风★玄武甲*7       │;
+#nop │[G4B]风★神龙骨*8         │[F4B]风★凤凰羽*4         │[X4A]风☆玄武甲*7       │;
+#nop │                          │                          │[X3A]水☆玄武甲*7       │;
+#nop │                          │                          │[X3B]水★玄武甲*5       │;
+#nop └─────────────┴─────────────┴───北大侠客行────┘;
+#nop ;
+
+#list char[锦囊] create {};
+
+#action {^%S(%S %S) [%1/%2]$E} {
+    #list char[锦囊] create {};
+
+    #class char-parse-sachet open;
+
+    #local level    {地|山|水|风|雷|火|泽|天};
+    #local type     {☆|★|◎};
+    #local wuxing   {精金|木灵|玄冰|炎晶|玉髓};
+    #local beast    {玄武甲|神龙骨|凤凰羽|麒麟角};
+    #local special  {日魂|月魄};
+    #local pattern  {\(\s*(\d+)\)($level)($type)($wuxing|$beast|$special)\*(\d+)\s+};
+
+    #action {^├───%*宝石───────┴─────────┴──────────┤$} {
+        #nop;
+    };
+
+    #action {^│%*│$} {
+        #local line {%%1};
+        #replace line {│} {;};
+        #local item {};
+        #foreach {$line} {item} {
+            #if { "$item" == "" } {
+                #continue;
+            };
+            #nop {( 1)山★ 玄武甲*12};
+            #local item {@__char_sachet_parse__{{$item}}};
+            #var char[锦囊] {$char[锦囊]{$item[序号]}{$item}};
+        };
+    };
+
+    #action {^╰─────────┴─────────┴─────────┴─%S────╯{|ID=char.sachet}$} {
+        #delay tmp {};
+        #class char-parse-sachet kill;
+    };
+
+    #class char-parse-sachet close;
+};
+
+#function {__char_sachet_parse__} {
+    #local item {%1};
+
+    #replace {item} {[%S]%*{☆|★|◎}%**%d} {
+        {序号}{&1}
+        {等级}{&2}
+        {阴阳}{&3}
+        {种类}{&4}
+        {数量}{&5}
+    };
+
+    #return {$item};
+};

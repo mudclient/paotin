@@ -1,0 +1,346 @@
+#nop 角色生命值信息解析模块;
+
+load-lib event;
+
+event.define {char/hp}       {无参}  {char/hp} {已经获取到 hp 命令输出结果，并更新 char[HP]。};
+event.define {char/hpbrief}  {无参}  {char/hp} {已经获取到 hpbrief 命令输出结果，并更新 char[HP]。};
+
+#function {basic_char_hp.Init} {
+    #class char open;
+    #var char[HP]           {};
+    #var char[HP][经验]     {};
+    #var char[HP][经验显示] {};
+    #var char[HP][潜能]     {};
+    #var char[HP][潜能显示] {};
+    #var char[HP][上次内力] {0};
+    #var char[HP][当前内力] {};
+    #var char[HP][最大内力] {};
+    #var char[HP][加力]     {};
+    #var char[HP][内力百分比] {};
+    #var char[HP][上次精力] {0};
+    #var char[HP][当前精力] {};
+    #var char[HP][最大精力] {};
+    #var char[HP][精力百分比] {};
+    #var char[HP][上次气血] {0};
+    #var char[HP][当前气血] {};
+    #var char[HP][有效气血] {};
+    #var char[HP][最大气血] {};
+    #var char[HP][气血百分比] {};
+    #var char[HP][上次精神] {0};
+    #var char[HP][当前精神] {};
+    #var char[HP][有效精神] {};
+    #var char[HP][最大精神] {};
+    #var char[HP][精神百分比] {};
+    #var char[HP][上次真气] {0};
+    #var char[HP][当前真气] {};
+    #var char[HP][最大真气] {};
+    #var char[HP][真气减伤] {};
+    #var char[HP][真元]     {};
+    #var char[HP][食物]     {};
+    #var char[HP][最大食物] {};
+    #var char[HP][饥饿]     {};
+    #var char[HP][饮水]     {};
+    #var char[HP][最大饮水] {};
+    #var char[HP][口渴]     {};
+    #var char[HP][气势]     {};
+    #var char[HP][状态]     {};
+    #var char[HP][毒]       {};
+    #var char[HP][上次更新] {0};
+    #var char[HP][更新时间] {};
+    #var char[HP][状态更新] {};
+    #class char close;
+
+    set hpbrief long,report;
+
+    #return true;
+};
+
+#nop hp 有两种格式，非战斗状态：
+#nop ┌───个人状态────────────┬───────────────────┐;
+#nop │【精神】 5978    / 5978     [103%]    │【精力】 12102   / 6051    (+   0)    │;
+#nop │【气血】 23372   / 23372    [101%]    │【内力】 5369    / 7063    (+   1)    │;
+#nop │【真气】 1367    / 1367     [  9%]    │【静气】 101%               [正常]    │;
+#nop │【食物】 874     / 900      [正常]    │【潜能】 7.67万                       │;
+#nop │【饮水】 874     / 900      [正常]    │【经验】 1349.88万                    │;
+#nop ├───────────────────┴───────────────────┤;
+#nop │【状态】 健康、怒、星宿火毒、星宿毒掌毒                                       │;
+#nop └──────────────────────────────北大侠客行────┘;
+#nop 战斗状态：
+#action {^╭───个人状态────────────┬───────────────────╮$} {
+    #class char-hp-parse-hp open;
+    #action {^│【精神】%s%d%s/%s%d%s[%s%d\%]%!s│【精力】%s%d%s/%s%d%s(+%s%d)%!s│$} {
+        #var char[HP][当前精神] {%%2};
+        #var char[HP][有效精神] {%%5};
+        #var char[HP][当前精力] {%%10};
+        #var char[HP][最大精力] {%%13};
+    };
+	#action {^│【气血】%s%d%s/%s%d%s[%s%d\%]%!s│【内力】%s%d%s/%s%d%s(+%s%d)%!s│$} {
+        #var char[HP][当前气血] {%%2};
+        #var char[HP][有效气血] {%%5};
+        #var char[HP][当前内力] {%%10};
+        #var char[HP][最大内力] {%%13};
+        #var char[HP][加力]     {%%16};
+	};
+	#action {^│【真气】%!s%d%!s/%!s%d%!s[%!s%d\%]%!s│【%!*】%!s%!d\%%!s[%!*]%!s│$} {
+        #var char[HP][当前真气] {%%1};
+        #var char[HP][最大真气] {%%2};
+        #var char[HP][真气减伤] {%%3};
+	};
+    #action {^│【食物】%s%d%s/%s%d%s[%S]%!s│【潜能】%s%S%!s│$} {
+        #var char[HP][食物]     {%%2};
+        #var char[HP][最大食物] {%%5};
+        #var char[HP][饥饿]     {%%7};
+        #var char[HP][潜能显示] {%%9};
+    };
+    #action {^│【饮水】%s%d%s/%s%d%s[%S]%!s│【经验】%s%S%!s│$} {
+        #var char[HP][饮水]     {%%2};
+        #var char[HP][最大饮水] {%%5};
+        #var char[HP][口渴]     {%%7};
+        #var char[HP][经验显示] {%%9};
+    };
+    #action {^│【气势】%s%d%s\%%s　【平衡】%s%d%s\%%!s│$} {
+        #var char[HP][气势]     {%%2};
+    };
+    #action {^├───────────────────────────────────┤$} {
+        #nop;
+    };
+    #action {~【状态】%*│} {
+        #local status {%%1};
+        #replace status { } {};
+        #replace status {{\033\[[0-9;]+m}} {};
+        #replace status {、} {;};
+        #var char[HP][状态] {$status};
+        #local item {};
+        #local poison {};
+        #foreach {$status} {item} {
+            #if { "$item" == "{.*毒|火焰刀焚伤|生死符}" } {
+                #local poison {$poison$item;};
+            };
+        };
+        #replace poison {;$} {};
+        #var char[HP][毒] {$poison};
+    };
+	#action {^╰─────────────{(─)*}%S────╯{|ID=char.hp}$} {
+    	#class char-hp-parse-hp kill;
+        event.emit char/hp;
+	};
+    #class char-hp-parse-hp close;
+};
+
+#nop hp -neili 格式：
+#nop ┌──内力显示─────────────────────────────┐
+#nop │□太极神功 (taiji-shengong)                 　 -   2117/  5109(6040)  │
+#nop ├──其他信息───────────┬─────────────────┤
+#nop │【走火入魔】 -41.50%              │【极限内力】 6040                 │
+#nop └─────────────────┴────────◎北大侠客行◎──┘
+#nop 
+#nop hpbrief 格式：
+#nop 第一行: 经验，潜能，最大内力，当前内力，最大精力，当前精力
+#nop 第二行: 最大气血，有效气血，当前气血，最大精神，有效精神，当前精神
+#nop 第三行: 真气，真元，食物，饮水，是否战斗，是否busy
+#nop #69407,853,992,992,844,1398
+#nop #771,776,776,397,397,397
+#nop #0,0,30,43
+#nop;
+
+#nop 第一行: 经验，潜能，最大内力，当前内力，最大精力，当前精力;
+#nop 第二行: 最大气血，有效气血，当前气血，最大精神，有效精神，当前精神;
+#action {^{|>|> }#%1,%2,%3,%4,%5,%6$} {
+    #if { "${char.parsingHP}" == "" } {
+        #var char[HP][经验显示] {%1};
+        #var char[HP][经验]     {@__char_hp_expandBigNumber__{%1}};
+        #var char[HP][潜能显示] {%2};
+        #var char[HP][潜能]     {@__char_hp_expandBigNumber__{%2}};
+        #var char[HP][最大内力] {@__char_hp_expandBigNumber__{%3}};
+        #var char[HP][上次内力] {$char[HP][当前内力]};
+        #var char[HP][当前内力] {@__char_hp_expandBigNumber__{%4}};
+        #var char[HP][最大精力] {@__char_hp_expandBigNumber__{%5}};
+        #var char[HP][上次精力] {$char[HP][当前精力]};
+        #var char[HP][当前精力] {@__char_hp_expandBigNumber__{%6}};
+
+        #math char[HP][内力百分比] { $char[HP][当前内力] * 50 / $char[HP][最大内力] };
+        #math char[HP][精力百分比] { $char[HP][当前精力] * 50 / $char[HP][最大精力] };
+
+        #var char.parsingHP     {true};
+        #line gag;
+    };
+    #else {
+        #var char[HP][最大气血] {@__char_hp_expandBigNumber__{%1}};
+        #var char[HP][有效气血] {@__char_hp_expandBigNumber__{%2}};
+        #var char[HP][上次气血] {$char[HP][当前气血]};
+        #var char[HP][当前气血] {@__char_hp_expandBigNumber__{%3}};
+        #var char[HP][最大精神] {@__char_hp_expandBigNumber__{%4}};
+        #var char[HP][有效精神] {@__char_hp_expandBigNumber__{%5}};
+        #var char[HP][上次精神] {$char[HP][当前精神]};
+        #var char[HP][当前精神] {@__char_hp_expandBigNumber__{%6}};
+
+        #math char[HP][精神百分比] { $char[HP][当前精神] * 100 / $char[HP][最大精神] };
+        #math char[HP][气血百分比] { $char[HP][当前气血] * 100 / $char[HP][最大气血] };
+
+        #unvar char.parsingHP;
+        #line gag;
+    };
+} {2.1};
+
+#nop 第三行: 真气，真元，食物，饮水;
+#action {^#%1,%2,%3,%4,{0|1},{0|1}$} {
+    #var char[HP][上次真气]  {$char[HP][当前真气]};
+    #var char[HP][当前真气]  {@__char_hp_expandBigNumber__{%1}};
+    #var char[HP][当前真元]  {@__char_hp_expandBigNumber__{%2}};
+    #var char[HP][食物]      {@__char_hp_expandBigNumber__{%3}};
+    #var char[HP][饮水]      {@__char_hp_expandBigNumber__{%4}};
+    #var char[HP][战斗中]    {false};
+    #var char[HP][忙]        {false};
+
+    #if { "%5" == "1" } {
+        #var char[HP][战斗中] {true};
+    };
+
+    #if { "%6" == "1" } {
+        #var char[HP][忙] {true};
+    };
+
+    #var char[HP][上次更新] {$char[HP][更新时间]};
+    #format now {%T};
+    #var char[HP][更新时间] {$now};
+
+    #unvar char.parsingHP;
+    #line gag;
+    #delay {char.hp.summarize} {char.hp.summarize} {0};
+} {2.0};
+
+#alias {char.hp.summarize} {
+    #local color    {<160>};
+    #local combat   {};
+    #if { "$char[HP][战斗中]" == "true" } {
+        #format color   {<110>};
+        #format combat  { <110>战斗中<070>};
+    };
+
+    #if { "$char[HP][忙]" == "true" } {
+        #format color   {<110>};
+        #format combat  {$combat <130>你正忙<070>};
+    };
+
+    #local 每秒气血变化 {};
+    #math 每秒气血变化 {($char[HP][当前气血] - $char[HP][上次气血]) / ($char[HP][更新时间] - $char[HP][上次更新])};
+    #if { ${每秒气血变化} > 0 } {
+        #local 每秒气血变化 {(<120>${每秒气血变化}<070>)};
+    };
+    #elseif { ${每秒气血变化} < 0 } {
+        #local 每秒气血变化 {(<110>${每秒气血变化}<070>)};
+    };
+    #else {
+        #local 每秒气血变化 {};
+    };
+
+    #local 每秒精神变化 {};
+    #math 每秒精神变化 {($char[HP][当前精神] - $char[HP][上次精神]) / ($char[HP][更新时间] - $char[HP][上次更新])};
+    #if { ${每秒精神变化} > 0 } {
+        #local 每秒精神变化 {(<120>${每秒精神变化}<070>)};
+    };
+    #elseif { ${每秒精神变化} < 0 } {
+        #local 每秒精神变化 {(<110>${每秒精神变化}<070>)};
+    };
+    #else {
+        #local 每秒精神变化 {};
+    };
+
+    #local 每秒内力变化 {};
+    #math 每秒内力变化 {($char[HP][当前内力] - $char[HP][上次内力]) / ($char[HP][更新时间] - $char[HP][上次更新])};
+    #if { ${每秒内力变化} > 0 } {
+        #local 每秒内力变化 {(<120>${每秒内力变化}<070>)};
+    };
+    #elseif { ${每秒内力变化} < 0 } {
+        #local 每秒内力变化 {(<110>${每秒内力变化}<070>)};
+    };
+    #else {
+        #local 每秒内力变化 {};
+    };
+
+    #local 每秒精力变化 {};
+    #math 每秒精力变化 {($char[HP][当前精力] - $char[HP][上次精力]) / ($char[HP][更新时间] - $char[HP][上次更新])};
+    #if { ${每秒精力变化} > 0 } {
+        #local 每秒精力变化 {(<120>${每秒精力变化}<070>)};
+    };
+    #elseif { ${每秒精力变化} < 0 } {
+        #local 每秒精力变化 {(<110>${每秒精力变化}<070>)};
+    };
+    #else {
+        #local 每秒精力变化 {};
+    };
+
+    #local {气血受损率} {};
+    #math {气血受损率} { $char[HP][有效气血] * 100 / $char[HP][最大气血] };
+
+    #nop 气血恢复的数值展示为每分钟可以恢复的最大血量的倍数（以百分比形式）;
+    #local {气血恢复} {};
+    #math {气血恢复} { $char[STATUS][气血恢复] * 100 * 60 / $char[HP][最大气血] };
+
+    #nop 气血治疗的数值展示为每分钟可以治疗的最大血量的倍数（以百分比形式）;
+    #local {气血治疗} {};
+    #math {气血治疗} { $char[STATUS][气血治疗] * 100 * 60 / $char[HP][最大气血] };
+
+    #local summarize {};
+    #format summarize {$color【HP摘要】<070>气血: %s%s/%s 内力: %s%s 气血恢复: %s/%s 精神: %s%s 精力: %s%s 食物: %s 饮水: %s$combat}
+        {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血受损率}}}
+        {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
+        {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
+        {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}}
+        {@__char_hp_colorit__{$char[HP][精力百分比]}} {${每秒精力变化}}
+        {$char[HP][食物]} {$char[HP][饮水]};
+
+    #showme $summarize;
+
+    event.emit char/hpbrief;
+};
+
+#function {__char_hp_expandBigNumber__} {
+    #local number {%1};
+    #replace number {K} {*1000};
+    #replace number {M} {*1000000};
+    #math number {$number};
+    #return $number;
+};
+
+#function {__char_hp_colorit__} {
+    #local p {%1};
+    #if { $p < 15 } {
+        #return {<010>$p%<070>};
+    };
+    #elseif { $p < 30 } {
+        #return {<110>$p%<070>};
+    };
+    #elseif { $p < 60 } {
+        #return {<030>$p%<070>};
+    };
+    #elseif { $p < 90 } {
+        #return {<130>$p%<070>};
+    };
+    #elseif { $p <= 100 } {
+        #return {<120>$p%<070>};
+    };
+    #else {
+        #return {<160>$p%<070>};
+    };
+};
+
+#alias {char.GetHP}     {hpbrief;hp};
+
+#alias {hpbrief2} {
+    #class char-hpbrief open;
+    #action {@SyncMessage{hpbrief-end}} {
+        #class char-hpbrief kill;
+        #line gag;
+        hpbrief;
+    };
+    #alias {char.hpbrief.done} {
+        #class char-hpbrief kill;
+        #line gag;
+    };
+    #class char-hpbrief close;
+
+    event.handleOnce {char/hpbrief} {char/hp} {char/hp} {char.hpbrief.done};
+    #send hpbrief;
+    SyncMessage hpbrief-end;
+};

@@ -1,0 +1,81 @@
+#var gOnlineUsers {};
+
+#alias {who-l} {
+    #class who-parse open;
+
+    #action {^【%*】%*(%w)$} {
+        #local obj {@ParseTitle{%%0}};
+        #if { "$obj[id]" == "" } {
+            #echo {解析失败: %%0};
+        };
+        #else {
+            #var gOnlineUsers[$obj[id]] {
+                $gOnlineUsers[$obj[id]]
+                $obj
+            };
+        };
+    };
+
+    who-handle-end;
+
+    #class who-parse close;
+
+    #send {who -l};
+};
+
+#alias {who-pro-l} {
+    #class who-parse open;
+
+    #action {^【%*】%*(%w)$} {
+        #local obj {@ParseTitle{%%0}};
+        #if { "$obj[id]" == "" } {
+            #echo {解析失败: %%0};
+        };
+        #else {
+            #local obj[pro] {$obj[rank]};
+            #unlocal obj[rank];
+            #var gOnlineUsers[$obj[id]] {
+                $gOnlineUsers[$obj[id]]
+                $obj
+            };
+        };
+    };
+
+    who-handle-end;
+
+    #class who-parse close;
+
+    #send {who -pro -l};
+};
+
+#alias {who-all} {
+    #class who-parse open;
+
+    #action {^%S(在线%d人)(活跃 %*%)$} {
+        #echo {%s} {LINE: %%0};
+    };
+
+    #action {^%S(%w){(\s+\S+\(\w+\))*}%s$} {
+        #echo {%s} {LINE: %%0};
+    };
+
+    who-handle-end;
+
+    #class who-parse close;
+
+    #send {who};
+};
+
+#alias {who-handle-end} {
+    #action {^{|共列出 1 位玩家。}系统负担：%S cmds/s, %S comp lines/s。$} {
+        #class who-parse kill;
+    };
+
+    #action {^请用help who查看指令格式。$} {
+        #class who-parse kill;
+    };
+
+    #action {^等等，系统喘气中......$} {
+        #class who-parse kill;
+    };
+};
