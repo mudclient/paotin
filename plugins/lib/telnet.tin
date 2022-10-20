@@ -15,3 +15,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #var TELNET[SE]   {\xF0};
 #var TELNET[GMCP] {\xC9};
 #var TELNET[MXP]  {\x5B};
+#var TELNET[CR]   {\x0D};
+#var TELNET[LF]   {\x0A};
+#var TELNET[GA]   {\xF9};
+#var TELNET[EOR]  {\xEF};

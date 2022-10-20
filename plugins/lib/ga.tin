@@ -1,0 +1,63 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var lib_ga[META] {
+    {NAME}      {GA}
+    {DESC}      {GA 处理。IAC GA 是服务器信息输出结尾符号}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+#config {IAC GA} {ON};
+
+#function {lib_ga.Init} {
+    #class data/lib/ga open;
+    #list gXttPipeLine create {};
+    #class data/lib/ga close;
+
+    #return true;
+};
+
+load-lib telnet;
+load-lib event;
+
+event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参数为造成本次输出的命令};
+
+#event {SENT OUTPUT} {
+    #local cmd {%0};
+    #replace cmd {{$TELNET[CR]?}$TELNET[LF]} {};
+    #if { "$cmd" != "" } {
+        #list gXttPipeLine add {$cmd};
+    };
+};
+
+#event {RECEIVED PROMPT} {
+    #local rawLine  {%0};
+    #local line     {%1};
+    #if { "$line" == "== 未完继续 %*== (q 离开%*，其他继续下一页)%*" } {
+        #cr;
+        #return;
+    };
+};
+
+#action {^> {$TELNET[GA]|$TELNET[EOR]}$} {
+    #local line {%0};
+    #replace line {{$TELNET[GA]|$TELNET[EOR]}$} {};
+
+    #if { &gXttPipeLine[] > 0 } {
+        #local cmd {$gXttPipeLine[1]};
+        #list gXttPipeLine delete {1};
+    };
+
+    event.Emit GA {} {$cmd};
+
+    #line gag;
+
+} {1.000};
