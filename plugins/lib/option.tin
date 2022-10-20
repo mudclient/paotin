@@ -1,0 +1,145 @@
+#var lib_option[META] {
+    {NAME}      {全局选项管理}
+    {DESC}      {为全局选项提供了一个储存位置，并提供一些实用的 API。}
+    {AUTHOR}    {担子炮}
+};
+
+#function {lib_option.Init} {
+    #var gOptions {};
+    #return {true};
+};
+
+#alias {option.Define} {
+    #local option   {%1};
+    #local type     {%2};
+    #local meaning  {%3};
+    #local default  {%4};
+
+    #if { "$gOptions[$option]" != "" } {
+        errLog 选项「$option」已存在，请检查代码。;
+        #return;
+    };
+
+    #local types {Bool};
+    #if { "$type" != "{$types}" } {
+        errLog 不能识别的选项类型: 「$type」，目前仅支持选项类型：{$types};
+        #return;
+    };
+
+    #if { "$type" == "Bool" && "$default" != "{true|false}" } {
+        errLog Bool 型的选项值只能是 true 或者 false。;
+        #return;
+    };
+
+    #var gOptions[$option] {
+        {name}      {$option}
+        {type}      {$type}
+        {meaning}   {$meaning}
+        {value}     {$default}
+    };
+};
+
+#alias {option.List} {
+    #echo {};
+	#echo {<128>%+20s %+10s %+30s %+20s} {选项名称} {选项类型} {选项含义} {选项当前值};
+	#draw Yellow scroll line 1 1 1 83;
+
+    #local option {};
+	#foreach {*gOptions[]} {option} {
+		#echo {%+20s %+10s %+30s %+20s}
+            {$gOptions[$option][name]}
+            {$gOptions[$option][type]}
+            {$gOptions[$option][meaning]}
+            {$gOptions[$option][value]};
+	};
+    #echo {};
+};
+
+#function {option.Get} {
+    #local {option} {%1};
+
+    #if { "$gOptions[$option]" == "" } {
+        errLog 不存在选项「$option」，请先定义后再使用。;
+        #return {};
+    };
+
+    #return {$gOptions[$option][value]};
+};
+
+#function {option.Set} {
+    #local {option} {%1};
+    #local {value}  {%2};
+
+    #local old {$xttOptions[$option]};
+    #if { "$old" == "" } {
+        errLog 不存在选项「$option」，请先定义后再使用。;
+        #return {};
+    };
+
+    #var {gOptions[$option][value]} {$value};
+
+    #return {$old};
+};
+
+#function {option.IsEnable} {
+    #local option {%1};
+    #local value {@option.Get{$option}};
+    #if { "$value" == "true" } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#function {option.IsDisable} {
+    #local option {%1};
+    #local value {@option.Get{$option}};
+    #if { "$value" == "false" } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#alias {option.Set} {
+    #local {option} {%1};
+    #local {value}  {%2};
+
+    #local _ {@option.Set{$option;{$value}}};
+};
+
+#function {option.Toggle} {
+    #local {option} {%1};
+
+    #local value {@option.Get{$option}};
+    #if { "$value" == "true" } {
+        option.Disable $option;
+        infoLog <160>选项「<130>$option<160>」 <110>已禁用。<070>;
+    };
+    #elseif { "$value" == "false" } {
+        option.Enable $option;
+        infoLog <160>选项「<130>$option<160>」 <120>已启用。<070>;
+    };
+
+    #return {$value};
+};
+
+#alias {option.Toggle} {
+    #local {option} {%1};
+
+    #local _ {@option.Toggle{$option}};
+};
+
+#alias {option.Enable} {
+    #local {option} {%1};
+
+    option.Set $option {true};
+};
+
+#alias {option.Disable} {
+    #local {option} {%1};
+
+    option.Set $option {false};
+};

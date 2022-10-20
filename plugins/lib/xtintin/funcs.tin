@@ -1,0 +1,216 @@
+#nop ############################ 小工具-方向处理 #################################;
+
+#function {reverseCmds} {
+    #local cmds  {%1};
+    #local newCmds {};
+    #foreach {$cmds} {item} {
+        #format {newCmds} {%s;%s} @reverseDir{$item} {$newCmds};
+    };
+
+    #return {$newCmds};
+};
+
+#function {dirName}     { #return @convertDir{name; %1; %2}; };
+#function {shortDir}    { #return @convertDir{short; %1; %2}; };
+#function {longDir}     { #return @convertDir{long; %1; %2}; };
+#function {reverseDir}  { #return @convertDir{reverse; %1; %2}; };
+
+#var xtt.dir.table {
+    {east}      {{name}{正东}   {short}{e}  {long}{east}        {reverse}{west}     }
+    {west}      {{name}{正西}   {short}{w}  {long}{west}        {reverse}{east}     }
+    {south}     {{name}{正南}   {short}{s}  {long}{south}       {reverse}{north}    }
+    {north}     {{name}{正北}   {short}{n}  {long}{north}       {reverse}{south}    }
+
+    {e}         {{name}{正东}   {short}{e}  {long}{east}        {reverse}{w}        }
+    {w}         {{name}{正西}   {short}{w}  {long}{west}        {reverse}{e}        }
+    {s}         {{name}{正南}   {short}{s}  {long}{south}       {reverse}{n}        }
+    {n}         {{name}{正北}   {short}{n}  {long}{north}       {reverse}{s}        }
+
+    {northeast} {{name}{东北}   {short}{ne} {long}{northeast}   {reverse}{southwest}}
+    {southeast} {{name}{东南}   {short}{se} {long}{southeast}   {reverse}{northwest}}
+    {northwest} {{name}{西北}   {short}{nw} {long}{northwest}   {reverse}{southeast}}
+    {southwest} {{name}{西南}   {short}{sw} {long}{southwest}   {reverse}{northeast}}
+
+    {ne}        {{name}{东北}   {short}{ne} {long}{northeast}   {reverse}{sw}       }
+    {se}        {{name}{东南}   {short}{se} {long}{southeast}   {reverse}{nw}       }
+    {nw}        {{name}{西北}   {short}{nw} {long}{northwest}   {reverse}{se}       }
+    {sw}        {{name}{西南}   {short}{sw} {long}{southwest}   {reverse}{ne}       }
+
+    {up}        {{name}{正上}   {short}{u}  {long}{up}          {reverse}{down}     }
+    {down}      {{name}{正下}   {short}{d}  {long}{down}        {reverse}{up}       }
+    {u}         {{name}{正上}   {short}{u}  {long}{up}          {reverse}{d}        }
+    {d}         {{name}{正下}   {short}{d}  {long}{down}        {reverse}{u}        }
+
+    {eastup}    {{name}{东上}   {short}{eu} {long}{eastup}      {reverse}{westdown} }
+    {westup}    {{name}{西上}   {short}{wu} {long}{westup}      {reverse}{eastdown} }
+    {southup}   {{name}{南上}   {short}{su} {long}{southup}     {reverse}{northdown}}
+    {northup}   {{name}{北上}   {short}{nu} {long}{northup}     {reverse}{southdown}}
+
+    {eu}        {{name}{东上}   {short}{eu} {long}{eastup}      {reverse}{wd}       }
+    {wu}        {{name}{西上}   {short}{wu} {long}{westup}      {reverse}{ed}       }
+    {su}        {{name}{南上}   {short}{su} {long}{southup}     {reverse}{nd}       }
+    {nu}        {{name}{北上}   {short}{nu} {long}{northup}     {reverse}{sd}       }
+
+    {eastdown}  {{name}{东下}   {short}{ed} {long}{eastdown}    {reverse}{westup}   }
+    {westdown}  {{name}{西下}   {short}{wd} {long}{westdown}    {reverse}{eastup}   }
+    {southdown} {{name}{南下}   {short}{sd} {long}{southdown}   {reverse}{northup}  }
+    {northdown} {{name}{北下}   {short}{nd} {long}{northdown}   {reverse}{southup}  }
+
+    {ed}        {{name}{东下}   {short}{ed} {long}{eastdown}    {reverse}{wu}       }
+    {wd}        {{name}{西下}   {short}{wd} {long}{westdown}    {reverse}{eu}       }
+    {sd}        {{name}{南下}   {short}{sd} {long}{southdown}   {reverse}{nu}       }
+    {nd}        {{name}{北下}   {short}{nd} {long}{northdown}   {reverse}{su}       }
+
+    {out}       {{name}{出去}   {short}{out}    {long}{out}     {reverse}{enter}    }
+    {enter}     {{name}{进去}   {short}{enter}  {long}{enter}   {reverse}{out}      }
+};
+
+#function {convertDir} {
+    #local field        {%1};
+    #local dir          {%2};
+    #local restricted   {%2};
+
+    #if { "$dir" == "" } {
+        #return "";
+    };
+
+    #local entry ${xtt.dir.table[$dir]};
+
+    #if { "$restricted" == "true" && "$entry" == "" } {
+        #return {};
+    };
+    #else {
+        #return {$entry[$field]};
+    };
+};
+
+#nop ############################ 小工具-语法增强 #################################;
+
+#function {boolAnd} {
+    #if { "%1" == "true" && "%2" == "true" } {
+        #return {true};
+    };
+
+    #return {false};
+};
+
+#function {reverseList} {
+    #var l {%1};
+
+    #list {l} size len;
+    #list {result} create {};
+
+    #loop $len 1 {idx} {
+        #list {result} add $l[$idx];
+    };
+};
+
+#function {eval}            {#math result {%1}};
+#function {space}           {#var result {@repeat{%1;{ }}}};
+#function {repeat}          {#var result {}; #loop 1 %1 tmp {#var result {${result}%2}}};
+#function {string2list}     {#list result {create} {%1}};
+#function {list2string}     {#var l {%1}; #list l simplify; #return {$l}};
+#function {strListSize}     {#list l create {%1}; #list l size result};
+#function {indexOfStrList}  {#list l create {%1}; #list l find {%2} result};
+#function {indexOf}         {#var l {%1}; #list l find {%2} result};
+#function {trim}            {#format {result} {%p} {%1}};
+#function {trimAll}         {#var result {%1}; #replace {result} { } {}};
+#function {sort}            {#var l {%0}; #var result {}; #foreach {$l} {tmp} {#list result {sort} {$tmp}}; #return {@list2string{{$result}}}};
+#function {sortList}        {#var l {@list2string{{%0}}}; #var result {}; #foreach {$l} {tmp} {#list result {sort} {$tmp}}};
+#function {listSize}        {#var l {%1}; #list l size result};
+#function {listSet}         {#var l {%1}; #loc idx {%2}; #loc data {%3}; #var l @listExtend{{$l};$idx}; #list l set {$idx} {$data}; #return {$l} };
+#function {listExtend}      {#var l {%1}; #loc len {%2}; #loc size {@listSize{{$l}}}; #math len {$len - $size}; #if { $len > 0 } { #loop {1} {$len} {id} { #list l add {{}} } }; #return {$l} };
+#function {len}             {#format result {%L} {%1}};
+#function {toLower}         {#format result {%l} {%1}};
+#function {capital}         {#format result {%n} {%1}};
+#function {replace}         {#var result %1;#replace result {%2} {%3}};
+#function {inList}          {#math result { @indexOf{{%1};{%2}} > 0 }};
+#function {center}          {#format len {%L} {%1}; #math left {(%2 - $len) / 2 + $len}; #math right {%2 - $left}; #format result {%${left}s%${right}s} {%1} {}};
+
+#function {max}             {#var result {%1}; #foreach {%0} {i} {#if { $i > $result} { #var result {$i}}}};
+#function {min}             {#var result {%1}; #foreach {%0} {i} {#if { $i < $result} { #var result {$i}}}};
+
+#function {parseTime} {
+    #local {timeStr} {%1};
+
+    #nop 注意这里用了个小技巧，末尾的空格不要去掉;
+    #replace timeStr {%S小时}   {@c2d{&1}*3600+ };
+    #replace timeStr {%S分}     {@c2d{&1}*60+ };
+    #replace timeStr {%S秒}     {@c2d{&1}};
+
+    #local time {};
+    #math time {$timeStr + 0};
+
+    #return {$time};
+};
+
+#function {c2d} {
+    #local string {%1};
+
+    #local number1  {};
+    #local number2  {0};
+    #local number3  {0};
+
+    #local chr      {};
+
+    #local ch {};
+	#parse {$string} {ch} {
+        #if { "$ch" == "{1|2|3|4|5|6|7|8|9|0|\.}" } {
+            #format number1 {%s%s} {$number1} {$ch};
+            #continue;
+        };
+
+        #switch {"$ch"} {
+            #case {"零"}    { #format number1 {0}   };
+            #case {"一"}    { #format number1 {1}   };
+            #case {"二"}    { #format number1 {2}   };
+            #case {"三"}    { #format number1 {3}   };
+            #case {"四"}    { #format number1 {4}   };
+            #case {"五"}    { #format number1 {5}   };
+            #case {"六"}    { #format number1 {6}   };
+            #case {"七"}    { #format number1 {7}   };
+            #case {"八"}    { #format number1 {8}   };
+            #case {"九"}    { #format number1 {9}   };
+            #case {"十"}    {
+                #if { "$number1" == "" } {
+                    #format number1 {1};
+                };
+                #math number2 {$number2 + $number1 * 10};
+                #format number1 {};
+            };
+            #case {"百"}    {
+                #math number2 {$number2 + $number1 * 100};
+                #format number1 {};
+            };
+            #case {"千"}    {
+                #math number2 {$number2 + $number1 * 1000};
+                #format number1 {};
+            };
+            #case {"万"}    {
+                #math number3 {($number2 + $number1) * 10000};
+                #format number1 {};
+                #format number2 {0};
+            };
+            #case {"亿"}    {
+                #math number3 {($number2 + $number1) * 100000000};
+                #format number1 {};
+                #format number2 {0};
+            };
+        };
+    };
+
+    #if { "$number1" == "" } {
+        #format number1 {0};
+    };
+
+    #local number {};
+    #math number {$number1 + $number2 + $number3};
+    #return $number;
+};
+
+#function {strWidth} {
+    #local str {%1};
+    #replace {str} {<{[gG0-9A-Fa-f]{1,8}}>} {};
+    #replace {str} {{\e\[[0-9;]+m}} {};
+    #return {@len{$str}};
+};

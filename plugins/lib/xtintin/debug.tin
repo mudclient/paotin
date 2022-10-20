@@ -1,0 +1,26 @@
+#nop ############################ 调试开关 #################################;
+
+#var XTinTin[debug] {false};
+
+#alias {xtt.ToggleDebug} {
+    #if { "$XTinTin[debug]" == "false" } {
+        beautify.Off;
+        prompt.Disable;
+        xtt.DebugOn;
+    };
+    #else {
+        xtt.DebugOff;
+        prompt.Enable;
+        beautify.On;
+    };
+};
+
+#alias {xtt.DebugOn} {
+    #var XTinTin[debug] {true};
+    #debug all on;
+};
+
+#alias {xtt.DebugOff} {
+    #var XTinTin[debug] {false};
+    #debug all off;
+};

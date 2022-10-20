@@ -1,0 +1,42 @@
+#nop 几个常用的别名;
+
+#nop 一些中文 MUD 服务器在接收到 quit 命令时会让角色从服务器上下线，;
+#nop 这往往会导致玩家丢失背包里的物品。;
+#nop 为了避免悲剧发生，这里特别映射一下，改成仅断开连接，而不退出服务器角色。;
+#nop 如果玩家真的需要向服务器发送 quit 指令，请输入 #send quit。exit 同理;
+#alias {exit} {#end};
+#alias {quit} {#end};
+
+#nop 类似于 DOS/Unix，设置 clear/cls 命令为清除屏幕上的内容。;
+#alias {cls} {clear};
+#alias {clear} {
+    #system {tput clear};
+    prompt.refresh;
+};
+
+#nop 武当、少林等门派的诵经文本会干扰机器运行，使用全局替换从一开始就屏蔽掉。;
+#substitute {~\e[1;36m%+1u..\e[2;37;0m} {};
+
+#ticker {save-data}     {xtt.Send save}     {600};
+#ticker {backup-data}   {xtt.Send backup}   {1800};
+
+#delay 1 {
+    set table_pattern 1;
+    set area_detail 1;
+    set learn_emote 1;
+    set localmap 1;
+
+    load-module basic/char;
+    load-module shortcut;
+
+    event.handle {char/hpbrief} {prompt} {framework/online} {prompt.UpdateHP};
+    event.handle {char/status}  {prompt} {framework/online} {prompt.UpdateSM};
+
+    #nop 提供给用户的自动执行函数;
+    user-online;
+};
+
+#event {RECEIVED OUTPUT} {
+    #undelay KeepAlive;
+    #delay KeepAlive {#zap} 180;
+};

@@ -1,0 +1,178 @@
+#function {__event_init__} {
+    #var gEventHandlers {};
+    #var gValidEvent    {};
+};
+
+#function {__xtt_event_name_is_valid__} {
+    #local name {%1};
+    #if { "$name" == "{[_a-zA-Z]([./_a-zA-Z0-9-]*[./_a-zA-Z0-9])?}" } {
+        #return {true};
+    };
+    
+    #return {false};
+};
+
+#alias {event.define} {
+    #local name     {%1};
+    #local type     {%2};
+    #local module   {%3};
+    #local desc     {%4};
+
+    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
+        errLog 事件名称不是合法的标识符名称。;
+        #return;
+    };
+
+    #if { "$type" == "" } {
+        #local type {无参};
+    };
+
+    #if { "$type" != "{有参|无参}" } {
+        errLog 事件类型只能是「有参」和「无参」两者之一，省略表示「无参」。;
+        #return;
+    };
+
+    #var {gValidEvent[$name]} {
+        {type}{$type}
+        {module}{$module}
+        {desc}{$desc}
+    };
+};
+
+#alias {event.list} {
+    #local event {};
+
+    #if { &gValidEvent[] <= 0 } {
+        infoLog 尚未定义任何事件。;
+        #return;
+    };
+
+    #echo {%h} { 已经定义的事件列表 };
+
+    #echo {%-20s %-5s %-20s %s} {事件/已注册的钩子} {类型} {模块} {说明/代码};
+    #echo {%-20s %-5s %-20s %s} {--------------------} {----} {----------} {------------};
+
+    #foreach {*gValidEvent[]} {event} {
+        #local type {有参};
+        #if { "$gValidEvent[$event][type]" == "{无参|}" } {
+            #local type {无参};
+        };
+
+        #echo {%-20s %-5s %-20s %s} {$event} {$type} {$gValidEvent[$event][module]} {$gValidEvent[$event][desc]};
+        #local hook {};
+        #local count {0};
+        #foreach {*gEventHandlers[$event][]} {hook} {
+            #local len {1};
+            #format len {%L} {$hook};
+            #math len {16 - $len};
+            #math count {$count + 1};
+            #local lead {├};
+            #if { $count == &gEventHandlers[$event][] } {
+                #Local lead {╰};
+            };
+            #echo { $lead@repeat{$len;─} %s        %-20s %s}{$hook}
+                            {$gEventHandlers[$event][$hook][module]}
+                            {$gEventHandlers[$event][$hook][code]};
+        };
+    };
+
+    #echo {%h};
+};
+
+#alias {event.emit} {
+    #local name  {%1};
+    #local pHook {%2};
+    #local args  {%3};
+
+    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
+        errLog 事件名称不是合法的标识符名称。;
+        #return;
+    };
+
+    #if { "$gValidEvent[$name]" == "" } {
+        errLog 未定义的事件名称: $name;
+        #return;
+    };
+
+    #if { &gEventHandlers[$name][] <= 0 } {
+        #return;
+    };
+
+    #local hook {};
+    #foreach {*gEventHandlers[$name][]} {hook} {
+        #local options  {$gEventHandlers[$name][$hook][options]};
+        #local code     {$gEventHandlers[$name][$hook][code]};
+        #nop 如果发射事件时指定了 pHook，则只唤醒指定的 hook，注意这里的 pHook 支持通配符;
+        #if { "$pHook" != "" && "$hook" != "$pHook" } {
+            #return;
+        };
+        #if { "$options[justOnce]" == "true" } {
+            #unvar {gEventHandlers[$name][$hook]};
+        };
+        #if { "$args" == "" || "$gValidEvent[$name][type]" == "无参" } {
+            $code;
+        };
+        #else {
+            $code {$args};
+        };
+    };
+};
+
+#alias {event.handle} {
+    #local name     {%1};
+    #local hook     {%2};
+    #local module   {%3};
+    #local code     {%4};
+
+    #if { "$name" == "" || "$hook" == "" || "$module" == "" || "$code" == "" } {
+        #return;
+    };
+
+    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
+        errLog 事件名称不是合法的标识符名称。;
+        #return;
+    };
+
+    #var {gEventHandlers[$name][$hook]} {
+        {module}{$module}
+        {code}{$code}
+    };
+};
+
+#alias {event.unhandle} {
+    #local name {%1};
+    #local hook {%2};
+
+    #if { "$name" == "" || "$hook" == "" } {
+        #return;
+    };
+
+    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
+        errLog 事件名称不是合法的标识符名称。;
+        #return;
+    };
+
+    #unvar {gEventHandlers[$name][$hook]};
+};
+
+#alias {event.handleOnce} {
+    #local name     {%1};
+    #local hook     {%2};
+    #local module   {%3};
+    #local code     {%4};
+
+    #if { "$name" == "" || "$hook" == "" || "$module" == "" || "$code" == "" } {
+        #return;
+    };
+
+    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
+        errLog 事件名称不是合法的标识符名称。;
+        #return;
+    };
+
+    #var {gEventHandlers[$name][$hook]} {
+        {options}{{justOnce}{true}}
+        {module}{$module}
+        {code}{$code}
+    };
+};

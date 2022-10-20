@@ -1,0 +1,70 @@
+#class login kill;
+#class login open;
+
+#var login[session]     {};
+#var login[user]        {};
+#var login[autoexec]    {};
+
+#alias {login} {
+    #var    login[session]  {%1};
+    #var    login[user]     {%2};
+    #var    login[autoexec] {%3};
+    #session {$session[name]} {$session[host]} {$session[port]};
+};
+
+#event {SESSION CONNECTED} {
+    #if { "%0" == "$login[session][name]" } {
+        #class auto-login kill;
+        #class auto-login open;
+
+        #if { "$session[UTF8]" == "true" } {
+            #config {charset} {UTF-8};
+        };
+        #else {
+            #config {charset} {GBK1TOUTF8};
+        };
+
+        #line oneshot #action {^Input 1 for GBK, 2 for UTF8, 3 for BIG5$} {
+            #nop;
+        };
+
+        #line oneshot #action {^您的英文名字（要注册新人物请输入new。）：$} {
+            #if { "$session[UTF8]" == "false" } {
+                #delay 0 #send {2};
+            };
+
+            #delay 0 {
+                #echo {\n};
+                #config {charset} {UTF-8};
+                #send $login[user][id];
+            };
+        };
+
+        #line oneshot #action {^您的英文名字：$} {
+            #delay 0 {#echo {\n}};
+        };
+
+        #line oneshot #action {^此ID档案已存在，请输入密码：$} {
+            #delay 0 {#echo {\n}; #send $login[user][passwd]};
+            #delay 1 {look};
+        };
+
+        #line oneshot #action {^您要将另一个连线中的相同人物赶出去，取而代之吗？(y/n)$} {
+            #delay 0 {#echo {\n}; #send y};
+        };
+
+        #line oneshot #action {^%s{欢迎来到北大侠客行！|重新连线完毕。}%s$} {
+            #delay 0 {
+                #showme 登录成功。;
+                #local handler $login[autoexec];
+                #class auto-login kill;
+                #class login kill;
+                $handler;
+            };
+        };
+
+        #class auto-login close;
+    };
+};
+
+#class login close;

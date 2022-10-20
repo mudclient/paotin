@@ -1,0 +1,101 @@
+#nop 模块名称：框架主程序;
+#nop 模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR;
+#nop 版权声明：本文件属于《担子炮 TinTin 套装》的一部分;
+#nop ===========;
+#nop 《担子炮 TinTin 套装》的所有版权均由 © 2020 担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利;
+#nop 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。;
+#nop ===========;
+
+#class main open;
+
+#kill all;
+
+#event {PROGRAM START} {
+    #if { "$user[id]" != "{[A-Za-z0-9]+}" } {
+        #echo {<110>请参考使用文档指定用户正确的 user id。<070>};
+        #return;
+    };
+
+    #if { "@InitLog{$user[id]}" != "true" } {
+        #echo {<110>创建日志目录 $gLog[PATH]/$user[id] 时遇到错误。<070>};
+        #echo {<130>请检查你的安装环境，或者参考使用手册重新安装本软件。<070>};
+        #return;
+    };
+
+    load-module basic/login;
+    auto-login;
+};
+
+#alias {auto-login} {
+    login {$session} {$user} {
+        load-file {framework/online.tin};
+    };
+};
+
+#event {SESSION CREATED} {
+    #%0 {
+        log.Open;
+        load-module lib/ui/prompt;
+        load-module lib/ui/beautify;
+        load-module lib/event;
+    };
+};
+
+#event {SESSION TIMED OUT} {
+    #echo {%s} {<110>连接服务器超时，稍后自动重试。<070>};
+    #gts #delay 3 auto-login;
+};
+
+#event {SESSION DISCONNECTED} {
+    #if { "%0" == "$session[name]" } {
+        #local reconnect {$session[reconnect]};
+        #if { "$session[remote_maint]" == "true" } {
+            #local reconnect {$session[reconnect_slow]};
+            #var session[remote_maint] {false};
+        };
+
+        #if { "$reconnect" == "{|0}" } {
+            #local reconnect 12;
+        };
+
+        #nop 断开连接后再次重连不要太频繁，以免服务器不高兴。;
+        #echo {%s} {<110>连接已被服务器断开，$reconnect 秒后自动重连。<070>};
+        #gts #delay {$reconnect} {
+            #echo {%s} {<120>自动重连。<070>};
+            auto-login;
+        };
+    };
+};
+
+#alias {load-file} {
+    #local file {%1};
+    #local output {};
+    #script output {test -f var/$file && echo true || echo false};
+    #if { "$output[1]" == "true" } {
+        #read var/$file;
+    };
+    #else {
+        #read $file;
+    };
+};
+
+#alias {init} {
+    #nop 调整 tintin 环境;
+    load-file framework/settings.tin;
+    #nop 框架依赖的基本函数;
+    load-file framework/utils.tin;
+    #nop 日志支持;
+    load-file framework/log.tin;
+    #nop 为 TinTin 赋能，实现模块加载器;
+    load-file framework/module-loader.tin;
+
+    #nop 为 TinTin 赋能，自行实现的扩展语法和实用函数集。;
+    load-lib xtintin;
+
+    #nop 默认的用户环境配置;
+    load-file ids/DEFAULT;
+};
+
+init;
+
+#class main close;

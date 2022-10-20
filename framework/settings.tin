@@ -1,0 +1,17 @@
+#nop 默认使用 GBK 编码，国内最常见的编码。支持通过触发动态切换编码。;
+#config {charset} {GBK1TOUTF8};
+#nop 网络延迟较大的时候，设置较大的包延迟选项可以尽量避免命令输出接受不完整。;
+#config {packet patch} {0.8};
+#nop 颜色代码的影响不会持续到下一行，防止未闭合的文字特效污染后续文本。;
+#config {color patch} {on};
+#nop 按回车键重复输入之前的命令。;
+#config {repeat enter} {on};
+
+#nop 关闭 MCCP 协议。;
+#config {mccp} {off};
+
+#nop 开启 wordwrap 常常导致折行的文本显示为乱码，因此要关掉它;
+#config {wordwrap} {off};
+
+#nop 切分出专门的文字输入区。;
+#split;

@@ -1,0 +1,205 @@
+#nop ############################ 系统工具-帮助文档和参数类型检查 #################################;
+
+#alias {xtt.PrintHelpDoc} {
+    #local aliasList    {%1};
+    #local funcList     {%2};
+    #local what         {%3};
+
+    #echo {%c%h} {light cyan};
+
+    #if { "$what" == "" } {
+        #echo {%c%s} {light yellow} {别名:};
+
+        #foreach {$aliasList} {alias} {
+            #if { "$alias" == "" } {
+                #continue;
+            };
+
+            #var __XTinTinAPIDoc__ {};
+            $alias 'XTinTinAPI;
+            #if { "$__XTinTinAPIDoc__" == "" } {
+                #echo {    %c%-20s --- %s} {light cyan} {$alias} {(没有文档)};
+            };
+            #else {
+                #echo {    %c%-20s --- %s} {light cyan} {$alias} {$__XTinTinAPIDoc__[desc]};
+            };
+        };
+
+        #echo {%c%s} {light yellow} {函数:};
+
+        #local func {};
+        #foreach {$funcList} {func} {
+            #if { "$func" == "" } {
+                #continue;
+            };
+
+            #var __XTinTinAPIDoc__ {};
+            #local {funcCall} {#local _ {@$func{'XTinTinAPI}}};
+            $funcCall;
+            #if { "$__XTinTinAPIDoc__" == "" } {
+                #echo {    %c%-20s --- %s} {light cyan} {$func} {(没有文档)};
+            };
+            #else {
+                #echo {    %c%-20s --- %s} {light cyan} {$func} {$__XTinTinAPIDoc__[desc]};
+            };
+        };
+    };
+    #elseif { @indexOfStrList{{$aliasList}; $what} > 0 } {
+        #var __XTinTinAPIDoc__ {};
+        $what 'XTinTinAPI;
+        #if { "$__XTinTinAPIDoc__" == "" } {
+            #echo {%c%%s} {light cyan} {没有关于 $alias 的文档。};
+        };
+        #else {
+            #local _ @xtt.GenHelpDoc{{$__XTinTinAPIDoc__}};
+        };
+    };
+    #elseif { @indexOfStrList{{$funcList}; $what} > 0 } {
+        #var __XTinTinAPIDoc__ {};
+        #local {funcCall} {#local _ {@$what{'XTinTinAPI}}};
+        $funcCall;
+        #if { "$__XTinTinAPIDoc__" == "" } {
+            #echo {    %c%-20s --- %s} {light cyan} {$func} {(没有文档)};
+        };
+        #else {
+            #local _ @xtt.GenHelpDoc{{$__XTinTinAPIDoc__}};
+        };
+    };
+
+    #echo {%c%h} {light cyan};
+};
+
+#function {xtt.GenHelpDoc} {
+    #local args {%1};
+
+    #if { "$args[check]" == "'XTinTinAPI" } {
+        #return {
+            {name}{$args[name]}
+            {type}{$args[type]}
+            {desc}{$args[desc]}
+            {args}{$args[args]}
+            {check}{}
+        };
+    };
+
+    #if { "$args[type]" == "alias" } {
+        #echo {%c别名用法: %c%s 参数1 参数2...} {light cyan} {light yellow} {$args[name]};
+    };
+    #elseif { "$args[type]" == "function" } {
+        #echo {%c函数用法: %c@%s{ {参数1}{值1} {参数2}{值2}... }} {light cyan} {light yellow} {$args[name]};
+    };
+    #else {
+        #echo {%c不明类型的标识符: %c%s} {light red} {light yellow} {$args[name]};
+        #echo {%c%h} {light cyan};
+        #return;
+    };
+    #echo {%c说明：%s} {light cyan} {$args[desc]};
+    #echo {%c参数列表（!必选，?可选）：} {light cyan};
+    #foreach *args[args][] {idx} {
+        #local key  {};
+        #local desc {};
+
+        #nop 注意别名和函数收集参数名称的方法不同;
+        #if { "$args[type]" == "alias" } {
+            #list tmp create $args[args][$idx];
+            #format key  {%s} {$tmp[1]};
+            #format desc {%s} {$tmp[2]};
+        };
+        #else {
+            #format key  {%s} {$idx};
+            #format desc {%s} $args[args][$idx];
+        };
+
+        #echo {%c    %-16s -- %s} {light cyan} {$key} {$desc};
+    };
+};
+
+/*
+用法：将下面这段代码作为模版，插入到想要生成文档的别名或者函数开头，就可以了。
+
+    #local ok @xtt.HelpDoc{{
+        {type}{function}
+        {name}{helpDoc}
+        {desc}{为函数或别名提供代码注释，生成帮助文档，进行参数检查}
+        {check}{%0}
+        {args}{
+            {!name}{函数或别名的名称}
+            {!desc}{函数或别名的一句话说明}
+            {!check}{需要检查的变量，别名用 %0，函数建议用 %1}
+            {!args}{函数或别名的参数说明。}
+        }
+    }}
+
+    #if { "$ok" != "true" } {
+         #return "$ok"
+    }
+
+以上，截止到此处为止。
+
+你可能已经注意到了，上面的代码调用了 xtt.HelpDoc 函数来检查参数并生成文档。
+而 xtt.HelpDoc 本身就支持用以上语法来检查并生成文档。因此上面的代码本身也演示了如何调用函数。
+注意第二个 args 有两种写法，如果是函数就用键值对，如果是别名就用列表(前面加{1}{2}{3})。
+其中参数名用感叹号打头表示必选，问号打头表示可选，默认必选。
+*/
+#function {xtt.HelpDoc} {
+    #local args {%1};
+
+    #if { "$args[check]" == "'XTinTinAPI" } {
+        #return @XTinTinGenHelpDoc{{$args}};
+    };
+
+    #if { "$XTinTin[debug]" != "true" } {
+        #return {true};
+    };
+
+    #local ok {true};
+
+    #local realArgs {};
+    #list  realArgs create {$args[check]};
+    #foreach {*args[args][]} {idx} {
+        #nop 这个 key 必须要用 var，因为后面 regex 里面不支持 local;
+        #var key {};
+
+        #nop 注意别名和函数收集参数名称的方法不同;
+        #if { "$args[type]" == "alias" } {
+            #list tmp create $args[args][$idx];
+            #format key {%s} {$tmp[1]};
+        };
+        #else {
+            #format key {%s} {$idx};
+        };
+
+        #var optional {false};
+        #regex {$key} {{!|\?}%%2} {
+            #format key {%s} {&2};
+            #if { "&1" == "?" } {
+                #var optional {true};
+            };
+        }{};
+
+        #nop 注意别名和函数收集参数值的方法不同;
+        #local value {};
+        #if { "$args[type]" == "alias" } {
+            #format value {%s} {$realArgs[$idx]};
+        };
+        #else {
+            #format value {%s} {$check[$key]};
+        };
+
+        #if { "$optional" == "false" && "$value" == "" } {
+            #echo {%c函数或别名在调用时缺少必要的参数: %s} {light red} $key;
+            #format ok {false};
+        };
+    };
+
+    #unvar key;
+
+    #if { "$ok" != "true" } {
+        #echo {%c%h} {light cyan};
+        #var _ @XTinTinGenHelpDoc{{$args}};
+        #echo {%c-----\n%s} {light cyan} {实际传递的参数信息: \n$args[check]};
+        #echo {%c%h} {light cyan};
+    };
+
+    #return $ok;
+};

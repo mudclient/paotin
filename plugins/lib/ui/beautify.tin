@@ -1,0 +1,109 @@
+#var lib_ui_beautify[META] {
+    {NAME}      {美化插件}
+    {DESC}      {美化你的 TinTin++，对齐你的表格。}
+    {AUTHOR}    {担子炮}
+};
+
+#function {lib_ui_beautify.Init} {
+    #var beautify-switch {};
+    beautify.On;
+    #return true;
+};
+
+#var beautify-table {
+    {┌|┎|╭|╓|└|┖|╰|╙}                                   {─}
+    {─|┬|┭|┰|┱|╥}                                         {─}
+    {├|┞|┟|┠|╟}                                            {─}
+    {┼|╁|╀|╂|┽|╃|╅|╉|╫}                                {─}
+    {┴|┵|┸|┹|╨}                                            {─}
+    {┏|┍|┗|┕}                                               {━}
+    {━|┳|┲|┯|┮}                                            {━}
+    {┣|┢|┡|┝}                                               {━}
+    {╋|╇|╈|┿|╊|╆|╄|┾}                                   {━}
+    {┻|┺|┷|┶}                                               {━}
+    {╔|╦|╠|╬|╚|╩|═|╒|╤|╞|╪|╘|╧}                    {═}
+
+    {│|┃|║|┆|┇|┊|┋|┤|┨|┫|╣|╢|╡}                    {left-align}
+    {┐|┓|┒|╮|╗|┘|┛|┚|╯|╝|╲|╱}                       {left-align}
+
+    {■|‖|▉|▊|▋|▌|▍|▎|▏|◢|◣|▓}                       {left-align}
+    {▁|▂|▃|▄|▅|▆|▇|█|▀|▔|┄|┅|┈|┉|—}              {double}
+
+    {▼|△|□|◇|◆|☆|★|◎|⊙|○|●|Θ|⊕|×|·|∶|∴|∷}     {left-align}
+    {≤|≧|≥|≮|≯|↙|↘|↗|↖|←|↑|→|↓|∨|∧|≌|╳}        {left-align}
+    {※|Ψ|Ж|ξ|ф|∩|⊥|♀|∞|≈|√|⌒|Ω|¤|ō||ψ|ζ}     {left-align}
+    {①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩}                             {left-align}
+
+    {“|‘}                                                     {right-align}
+    {”|’|…}                                                  {left-align}
+
+    {⭕️|🐎|🌊|🔥|🎭|🐀|🔅}                                      {left-align}
+};
+
+#alias {beautify.On} {
+    #class beautify-sub kill;
+    #class beautify-sub open;
+
+    #local charset {};
+    #foreach {*{beautify-table[]}} {charset} {
+        #local type {${beautify-table[$charset]}};
+        #switch {"$type"} {
+            #case {"double"}        {#substitute {{$charset}} {%%1%%1}};
+            #case {"left-align"}    {#substitute {{$charset}} {%%1 }};
+            #case {"right-align"}   {#substitute {{$charset}} { %%1}};
+            #default                {#line sub var #substitute {{$charset}} {%%1$type}};
+        };
+    };
+
+    #substitute {%S%!s{https?://[[:graph:]]+}\s*{\S|$}} {%%1 %%2 %%3};
+
+    #class beautify-sub close;
+
+    #var beautify-switch {ON};
+    okLog 宽字符美化已启用。;
+    warnLog 出于美化需要，接下来你在屏幕上看到的内容可能和服务器实际传送的内容不一致。;
+    warnLog 这可能会给编写触发带来困扰，此时你可以通过快捷键或者 beautify.Off 暂时禁用美化。;
+
+    prompt.Set {{beautify}{<120>已启用}};
+    prompt.refresh;
+};
+
+#alias {beautify.Off} {
+    #class beautify-sub kill;
+
+    #var beautify-switch {OFF};
+    warnLog 宽字符美化已禁用。你可以通过快捷键或者 beautify.On 重新启用。;
+
+    prompt.Set {{beautify}{<110>已禁用}};
+    prompt.refresh;
+};
+
+#function {Beautify} {
+    #local text {%1};
+
+    #if { "${beautify-switch}" != "ON" } {
+        #return {$text};
+    };
+
+    #local charset {};
+    #foreach {*{beautify-table[]}} {charset} {
+        #local type {${beautify-table[$charset]}};
+        #switch {"$type"} {
+            #case {"double"}        {#replace {text} {{$charset}} {&1&1}};
+            #case {"left-align"}    {#replace {text} {{$charset}} {&1 }};
+            #case {"right-align"}   {#replace {text} {{$charset}} { &1}};
+            #default                {#line sub var #replace {text} {{$charset}} {&1$type}};
+        };
+    };
+
+    #return {$text};
+};
+
+#alias {beautify.ToggleSwitch} {
+    #if { "${beautify-switch}" == "ON" } {
+        beautify.Off;
+    };
+    #else {
+        beautify.On;
+    };
+};

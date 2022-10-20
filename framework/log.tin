@@ -1,0 +1,96 @@
+#nop 日志模块;
+
+#var gLog[buffer]   {buffer.log};
+#var gLog[socket]   {socket.log};
+
+#var gLog[info]     {info.log};
+#var gLog[ok]       {ok.log};
+#var gLog[warn]     {warn.log};
+#var gLog[error]    {error.log};
+#var gLog[debug]    {debug.log};
+
+#var gLog[PATH]     {log};
+
+#function {InitLog} {
+    #local path {%1};
+
+    #script output {test -d var && echo true || echo false};
+    #if { "$output[1]" == "true" } {
+        #var gLog[PATH] {var/log};
+    };
+    #else {
+        #var gLog[PATH] {log};
+    };
+
+    #if { "@mkdir{$gLog[PATH]/$path}" != "true" } {
+        #return {false};
+    };
+
+    #var gLog[PATH] {$gLog[PATH]/$path};
+
+    load-lib option;
+    option.Define {EchoCommand} {Bool} {是否回显发送的命令} {false};
+
+    #return {true};
+};
+
+#alias {mudLog}     {log.write {$gLog[socket]} {%0}};
+
+#alias {okLog}      {log.write {$gLog[ok]}     {<120>%0}   {ECHO}};
+#alias {warnLog}    {log.write {$gLog[warn]}   {<130>%0}   {ECHO}};
+#alias {errLog}     {log.write {$gLog[error]}  {<110>%0}   {ECHO}};
+#alias {infoLog}    {log.write {$gLog[info]}   {%0}        {ECHO}};
+#alias {dbgLog}     {log.write {$gLog[debug]}  {%0}};
+
+#alias {{[a-z]{1,10}}Log %*} {
+    #format logName {%l} {%1};
+    log.write {${logName}.log} {%2};
+};
+
+#alias {log.write} {
+    #local file {%1};
+    #local text {%2};
+    #local echo {%3};
+
+    #line log {$gLog[PATH]/$file} {$text<070>};
+
+    #if { "$echo" == "ECHO" } {
+        #echo {%s} {$text<070>};
+    };
+};
+
+#event {RECEIVED INPUT} {
+    #local needEcho {false};
+
+    #if { @option.IsDisable{EchoCommand} } {
+        #local needEcho {true};
+    };
+    #else {
+        #line sub escape #var tmp {%0};
+        #local cmds {};
+        #list cmds create {$tmp};
+        #if { &cmds[] > 1 } {
+            #local needEcho {true};
+        };
+    };
+
+    #if { "$needEcho" == "true" } {
+        #echo {<020>%t INPUT: <420>%s<070>} {%Y-%m-%d %H:%M:%S} {<420>%0<070>};
+    };
+};
+
+#alias {log.Open} {
+    #config {LOG} {RAW};
+    #config {LOG LEVEL} {HIGH};
+    #log timestamp {%Y-%m-%d %H:%M:%S };
+    #log append {$gLog[PATH]/$gLog[buffer]};
+    #event {RECEIVED LINE} {mudLog %%0};
+    #event {SEND OUTPUT} {
+        #local text {};
+        #format text {<020>SEND: <420>%p<070>} {%%0};
+        mudLog $text;
+        #if { @option.IsEnable{EchoCommand} } {
+            #echo {<020>%t %s} {%Y-%m-%d %H:%M:%S} {$text};
+        };
+    };
+};

@@ -1,0 +1,5 @@
+#nop xtintin: 为了方便 TinTin++ 使用而增加的一些语法扩展。;
+
+load-file plugins/lib/xtintin/funcs.tin;
+load-file plugins/lib/xtintin/cmds.tin;
+load-file plugins/lib/xtintin/debug.tin;

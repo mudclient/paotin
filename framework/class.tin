@@ -1,0 +1,55 @@
+#list xtt-class-stack create {};
+
+#alias {class.name} {
+    #local currentClassName {${xtt-class-stack[-1]}};
+};
+
+#alias {class.open} {
+    #local className {%1};
+
+    #list {xtt-class-stack} {add} {$className};
+    #class {$className} open;
+};
+
+#alias {class.close} {
+    #local className {%1};
+    #class {$className} close;
+
+    #list {xtt-class-stack} {delete} {-1};
+    #local preClassName {${xtt-class-stack[-1]}};
+    #if { "$preClassName" != "" } {
+        #class {$preClassName} open;
+    };
+};
+
+#alias {class.kill} {
+    #local className {%1};
+    #class {$className} kill;
+};
+
+#alias {class.read} {
+    #local className {%1};
+    #local filePath {%2};
+
+    class.open {$className};
+    class.do {$className} {load-file $filePath};
+    class.close {$className};
+};
+
+#alias {class.do} {
+    #local className {%1};
+    #local code      {%2};
+
+    #class {$className} {assign} {$code};
+};
+
+#alias {class.enable} {
+    #local className {%1};
+    #class {$className} {load};
+};
+
+#alias {class.disable} {
+    #local className {%1};
+    #class {$className} {save};
+    #class {$className} {clear};
+};

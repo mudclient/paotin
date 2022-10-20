@@ -1,0 +1,24 @@
+#alias {Tick} {xtt.Tick};
+#alias {xtt.Tick} {
+    #local id       {%1};
+    #local code     {%2};
+    #local interval {%3};
+
+    #line sub var #untick {$id};
+    #line sub var #tick {$id} {$code} $interval;
+    $code;
+};
+
+#alias {xtt.Send} {
+    #if { "$xttOptions[DisableOutput]" == "true" } {
+        #echo {<160>命令已被抑制: <420>%p<070>} {%0};
+        #return;
+    };
+
+    #send %0
+};
+
+#alias {xtt.SendAtOnce} {
+    #local cmds {%1};
+    #send {#$cmds#};
+};

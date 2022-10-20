@@ -1,0 +1,33 @@
+#!/usr/bin/env tt++
+#nop vim: filetype=tt
+
+#nop 模块名称：用户配置文件模版;
+#nop 模块说明：本文件是《担子炮 TinTin 套装》的命令行入口程序;
+#nop 版权声明：本文件属于《担子炮 TinTin 套装》的一部分;
+#nop ===========;
+#nop 《担子炮 TinTin 套装》的所有版权均由 © 2020 担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利;
+#nop 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。;
+#nop ===========;
+
+#nop 载入担子炮的 TinTin 脚本框架;
+#read {framework/main.tin};
+
+#nop 你要连哪个接入;
+#var session[host]  mud.pkuxkx.net;
+#nop 你的账号英文 ID;
+#var user[id]       foo;
+#nop 你的大名;
+#var user[name]     小虾米;
+#nop 你的账号密码;
+#var user[passwd]   bar;
+
+#nop XXX: 所有 ids/DEFAULT 里的内容都可以在这里定制;
+
+#nop 用户上线之后想要自动执行的代码写这里;
+#alias {user-online} {
+    chat* back;
+};
+
+#nop 也可以在下面继续定义自己的别名和触发，均在 #gts 生效（会继承到所有 session）;
+
+#alias {hello} {hi};

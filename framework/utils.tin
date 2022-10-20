@@ -1,0 +1,72 @@
+#function {existsAlias} {
+    #local pName     {%1};
+    #local pClass    {%2};
+
+    #info alias save;
+
+    #local idx {};
+    #foreach {*{info[ALIASES][]}} {idx} {
+        #local name  {$info[ALIASES][$idx][arg1]};
+        #local class {$info[ALIASES][$idx][class]};
+
+        #if { "$name" == "$pName" && ( "$pClass" == "" || "$class" == "$pClass" ) } {
+            #return {true};
+        };
+    };
+
+    #return {false};
+};
+
+#function {existsFunction} {
+    #local pName    {%1};
+    #local pClass   {%2};
+
+    #info function save;
+
+    #local idx {};
+    #foreach {*{info[FUNCTIONS][]}} {idx} {
+        #local name  {$info[FUNCTIONS][$idx][arg1]};
+        #local class {$info[FUNCTIONS][$idx][class]};
+
+        #if { "$name" == "$pName" && ( "$pClass" == "" || "$class" == "$pClass" ) } {
+            #return {true};
+        };
+    };
+
+    #return {false};
+};
+
+#function {existsFile} {
+    #local file {%1};
+    #local output {};
+    #script output {test -f $file && echo true || test -f var/$file && echo true || echo false};
+    #return $output[1];
+};
+
+#function {existsJobPlugin} {
+    #local job {%1};
+    #return {@existsPlugin{job/$job}};
+};
+
+#function {existsPlugin} {
+    #local plugin {%1};
+    #return {@existsFile{plugins/$plugin.tin}};
+};
+
+#function {mkdir} {
+    #local dir {%1};
+    #local output {};
+    #script output {mkdir -p $dir 2>/dev/null && test -d $dir && echo true || echo false};
+    #return $output[1];
+};
+
+#function {uuid} {
+    #local now      {};
+    #local random   {};
+
+    #math random {1d1000};
+    #format random {%%03d} {$random};
+    #format now {%U};
+
+    #return {${now}.$random};
+};

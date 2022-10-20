@@ -1,0 +1,44 @@
+#nop vim: filetype=tt
+#nop 模块名称：默认环境信息;
+#nop 模块说明：本文件属于框架代码的一部分，一般情况不建议修改。如果需要定制，请在用户配置里进行。;
+#nop           用户配置文件的模版请参见 ids/EXAMPLE
+#nop 版权声明：本文件属于《担子炮 TinTin 套装》的一部分;
+#nop ===========;
+#nop 《担子炮 TinTin 套装》的所有版权均由 © 2020 担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利;
+#nop 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。;
+#nop ===========;
+
+#nop session 的名字，没特殊需求不建议修改;
+#var session[name]  pkuxkx;
+
+#nop session 的主机名，海外用户需要用 pkuxkx.com 或 hk.pkuxkx.com;
+#var session[host]  hk.pkuxkx.com;
+#var session[host]  pkuxkx.com;
+#var session[host]  mud.pkuxkx.net;
+
+#nop session 的端口，按照论坛上面的地址修改;
+#var session[port]  8081;
+#var session[UTF8]  true;
+
+#nop 连接断开时，间隔多少秒自动重连;
+#var session[reconnect]         12;     #nop 正常间隔;
+#var session[reconnect_slow]    600;    #nop 维护模式下的间隔;
+#var session[remote_maint]      false;  #nop 维护模式开关;
+
+#nop 可以通过触发来开启维护模式;
+#action {^%*(%*)告诉你：开启远程维护$} {#var session[remote_maint] {true}};
+
+#nop 你的账号英文 ID，请在单独的文件里设置，这里只是占个位置;
+#var user[id]               bot;
+
+#nop 你的账号密码，请在单独的文件里设置，这里只是占个位置;
+#var user[passwd]           123456;
+
+#nop 默认的食物和饮料;
+#var char[favorite][food]   {gan liang};
+#var char[favorite][water]  {niurou tang};
+
+#nop 用户上线之后想要自动执行的代码写这里;
+#alias {user-online} {
+    back;
+};
