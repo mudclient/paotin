@@ -11,7 +11,8 @@
 如果你本地已经编译好了 tt++，那么输入以下命令就可以立即开始游戏：
 
 ```
-bin/start-ui
+./setup
+start-ui
 ```
 
 ### 使用本仓库推荐的 tt++（推荐）
@@ -22,9 +23,9 @@ bin/start-ui
 git clone https://github.com/mudclient/tintin.git --branch beta-develop
 (cd tintin/src && ./configure && make && strip tt++)
 cp tintin/src/tt++ bin/
-export PATH=$PATH:$(pwd)/bin
 mkdir -p log
-bin/start-ui
+./setup
+start-ui
 ```
 
 ## Docker 方式运行（推荐）
@@ -46,7 +47,13 @@ docker run --rm -it --name tt --hostname tt mudclient/paotin
 如果你想要长期挂机，则要使用下面的命令：
 
 ```
-docker run -d -it --name tt --hostname tt mudclient/paotin daemon
+# 创建游戏主目录，该目录可以自定义
+mkdir -p $HOME/my-paotin/
+
+# 创建游戏目录结构
+mkdir -p $HOME/my-paotin/{ids,etc,log,plugins}
+
+docker run -d -it --name tt --hostname tt -v $HOME/my-paotin:/paotin/var mudclient/paotin daemon
 ```
 
 以后每次上线的时候，只需要用下面的命令就可以连接到 UI：
@@ -68,3 +75,26 @@ docker build -t paotin .
 # 开始游戏
 docker run --rm -it --name tt --hostname tt paotin
 ```
+
+# 开发自己的插件
+
+## Docker 方式下
+
+Docker 方式下，可以将本地工作目录 mount 到容器内的 /paotin/var 目录，那么就可以实现容器内外的文件共享。
+
+```
+mkdir -p $HOME/my-paotin   # 先创建一个本地工作目录
+docker run -d -it --name tt --hostname tt -v $HOME/my-paotin:/paotin/var mudclient/paotin daemon
+```
+
+如果你编辑本地工作目录（上面假设为 `$HOME/my-paotin`）中的文件，那么 Docker 内部是可以访问到的。
+如果你将自己的插件放置在 `$HOME/my-paotin/plugins/` 目录下，那么 Docker 内部可以正常加载。
+
+另外，日志文件会出现在 `$HOME/my-paotin/log/` 目录下，
+ID 配置文件和数据配置文件可分别放置在 `$HOME/my-paotin/ids/` 目录和 `$HOME/my-paotin/etc/` 目录下。
+
+更多内容请参见 `DIRECTORY.md` 文件。
+
+## 本地运行方式
+
+你可以在 `plugins/` 目录下编写你的插件。插件代码格式可参考样板插件 `plugins/EXAMPLE.tin` 及其它已有插件。
