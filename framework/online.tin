@@ -29,8 +29,8 @@
     load-module basic/char;
     load-module shortcut;
 
-    event.handle {char/hpbrief} {prompt} {framework/online} {prompt.UpdateHP};
-    event.handle {char/status}  {prompt} {framework/online} {prompt.UpdateSM};
+    event.Handle {char/hpbrief} {prompt} {framework/online} {prompt.UpdateHP};
+    event.Handle {char/status}  {prompt} {framework/online} {prompt.UpdateSM};
 
     #nop 提供给用户的自动执行函数;
     user-online;

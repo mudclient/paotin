@@ -2,7 +2,7 @@
 
 load-lib event;
 
-event.define {char/status}    {无参}  {char/status} {已经获取到 status_me 命令输出结果，并更新 char[STATUS]。};
+event.Define {char/status}    {无参}  {char/status} {已经获取到 status_me 命令输出结果，并更新 char[STATUS]。};
 
 #nop ╭────个人状态────┬────┬──────┬────┬──────┬────┬─────╮;
 #nop │姓名    │马后炮      │ＩＤ    │Mhp         │级别    │32          │战斗力  │104611      │;
@@ -99,7 +99,7 @@ event.define {char/status}    {无参}  {char/status} {已经获取到 status_me
         #echo <120>人物状态信息已更新。<070>;
         #line gag;
 
-        event.emit char/status;
+        event.Emit char/status;
     };
 
     #action {^等等，系统喘气中......$} {

@@ -2,8 +2,8 @@
 
 load-lib event;
 
-event.define {char/hp}       {无参}  {char/hp} {已经获取到 hp 命令输出结果，并更新 char[HP]。};
-event.define {char/hpbrief}  {无参}  {char/hp} {已经获取到 hpbrief 命令输出结果，并更新 char[HP]。};
+event.Define {char/hp}       {无参}  {char/hp} {已经获取到 hp 命令输出结果，并更新 char[HP]。};
+event.Define {char/hpbrief}  {无参}  {char/hp} {已经获取到 hpbrief 命令输出结果，并更新 char[HP]。};
 
 #function {basic_char_hp.Init} {
     #class char open;
@@ -122,7 +122,7 @@ event.define {char/hpbrief}  {无参}  {char/hp} {已经获取到 hpbrief 命令
     };
 	#action {^╰─────────────{(─)*}%S────╯{|ID=char.hp}$} {
     	#class char-hp-parse-hp kill;
-        event.emit char/hp;
+        event.Emit char/hp;
 	};
     #class char-hp-parse-hp close;
 };
@@ -292,7 +292,7 @@ event.define {char/hpbrief}  {无参}  {char/hp} {已经获取到 hpbrief 命令
 
     #showme $summarize;
 
-    event.emit char/hpbrief;
+    event.Emit char/hpbrief;
 };
 
 #function {__char_hp_expandBigNumber__} {
@@ -340,7 +340,7 @@ event.define {char/hpbrief}  {无参}  {char/hp} {已经获取到 hpbrief 命令
     };
     #class char-hpbrief close;
 
-    event.handleOnce {char/hpbrief} {char/hp} {char/hp} {char.hpbrief.done};
+    event.HandleOnce {char/hpbrief} {char/hp} {char/hp} {char.hpbrief.done};
     #send hpbrief;
     SyncMessage hpbrief-end;
 };

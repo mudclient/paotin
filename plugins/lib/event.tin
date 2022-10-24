@@ -1,6 +1,8 @@
-#function {__event_init__} {
+#function {lib_event.Init} {
     #var gEventHandlers {};
     #var gValidEvent    {};
+
+    #return true;
 };
 
 #function {__xtt_event_name_is_valid__} {
@@ -12,7 +14,7 @@
     #return {false};
 };
 
-#alias {event.define} {
+#alias {event.Define} {
     #local name     {%1};
     #local type     {%2};
     #local module   {%3};
@@ -39,7 +41,7 @@
     };
 };
 
-#alias {event.list} {
+#alias {event.List} {
     #local event {};
 
     #if { &gValidEvent[] <= 0 } {
@@ -79,7 +81,7 @@
     #echo {%h};
 };
 
-#alias {event.emit} {
+#alias {event.Emit} {
     #local name  {%1};
     #local pHook {%2};
     #local args  {%3};
@@ -118,7 +120,7 @@
     };
 };
 
-#alias {event.handle} {
+#alias {event.Handle} {
     #local name     {%1};
     #local hook     {%2};
     #local module   {%3};
@@ -139,7 +141,7 @@
     };
 };
 
-#alias {event.unhandle} {
+#alias {event.UnHandle} {
     #local name {%1};
     #local hook {%2};
 
@@ -155,7 +157,7 @@
     #unvar {gEventHandlers[$name][$hook]};
 };
 
-#alias {event.handleOnce} {
+#alias {event.HandleOnce} {
     #local name     {%1};
     #local hook     {%2};
     #local module   {%3};

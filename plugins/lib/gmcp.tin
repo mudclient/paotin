@@ -3,10 +3,10 @@
 load-lib telnet;
 load-lib event;
 
-event.define {GMCP.Move}    {无参} {GMCP} {接收到 GMCP 移动信息，已更新 gGMCP[Move]};
-event.define {GMCP.Status}  {无参} {GMCP} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
-event.define {GMCP.Combat}  {无参} {GMCP} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
-event.define {GMCP.Buff}    {无参} {GMCP} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
+event.Define {GMCP.Move}    {无参} {GMCP} {接收到 GMCP 移动信息，已更新 gGMCP[Move]};
+event.Define {GMCP.Status}  {无参} {GMCP} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
+event.Define {GMCP.Combat}  {无参} {GMCP} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
+event.Define {GMCP.Buff}    {无参} {GMCP} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
 
 #alias {gmcp.Enable} {
     #event {IAC WILL GMCP} {
@@ -25,21 +25,21 @@ event.define {GMCP.Buff}    {无参} {GMCP} {接收到 GMCP BUFF状态，已更�
     gmcp.Handle GMCP.Move {
         #var gGMCP[Move] {%%0};
         #var gGMCP[Move] {$gGMCP[Move][1]};
-        event.emit GMCP.Move {};
+        event.Emit GMCP.Move {};
     };
 
     gmcp.Handle GMCP.Status {
         #var gGMCP[Status] {%%0};
-        event.emit GMCP.Status {};
+        event.Emit GMCP.Status {};
     };
 
     gmcp.Handle GMCP.Combat {
         #var gGMCP[Combat] {%%0};
-        event.emit GMCP.Combat {};
+        event.Emit GMCP.Combat {};
     };
 
     gmcp.Handle GMCP.Buff {
         #var gGMCP[Buff] {%%0};
-        event.emit GMCP.Buff {};
+        event.Emit GMCP.Buff {};
     };
 };
