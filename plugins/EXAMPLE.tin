@@ -1,0 +1,76 @@
+#nop 样板模块;
+
+/*
+加载模块用 load-module EXAMPLE 命令。
+如果是在命令行输入，可以用短名称 LM EXAMPLE 也是一样的效果。代码中建议用长名称。
+对于纯模块而言，也可以在加载模块时提供参数：
+
+    load-module EXAMPLE     { {foo}{value1} {bar}{value2} }
+
+参数会传送给 EXAMPLE[config] 变量，供模块使用。
+*/
+
+#nop 模块元信息描述。;
+#nop 如果不提供这个变量，则称为「弱模块」。;
+#nop 如果提供了这个变量，并设计了 EXAMPLE.Run 别名，则称为「纯模块」。纯模块会有更多功能。;
+#nop 模块加载器会为纯模块自动生成 EXAMPLE.Start 和 EXAMPLE.Stop 两个方法。;
+#var EXAMPLE[META] {
+    {NAME}      {样板模块}
+    {DESC}      {本模块用来展示 PaoTin++ 的模块加载机制和模块书写规范。}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {可以在这里写模块的使用注意事项或者版权声明等。}
+    {CONFIG}    {
+        {foo}   {模块配置参数1，前面是名称，后面写配置参数的说明，给人看的。}
+        {bar}   {模块配置参数2，可以按需扩展。}
+    }
+};
+
+#nop 纯模块允许有一个 Init 函数，会在模块加载后自动调用。;
+#function {EXAMPLE.Init} {
+    #nop load-module 时提供的参数最终会保存到 $EXAMPLE[config] 变量里，供插件使用。;
+    #var EXAMPLE[config];
+    okLog EXAMPLE 初始化中…;
+
+    #nop Init 函数必须返回 true 以表示模块成功初始化。;
+    #nop 如果返回别的值，则模块加载将会失败，已加载的部分也会被卸载。;
+    #return true;
+};
+
+#nop 纯模块加载后默认处于禁用状态，必须调用 EXAMPLE.Start 后才会开始运行。;
+#nop EXAMPLE.Start 方法会调用一次 EXAMPLE.Run 方法，用户可以在这里驱动模块事件循环;
+#alias {EXAMPLE.Run} {
+    #nop xxxLog 可以用来输出日志。;
+    #nop 系统预定义的日志有 infoLog errLog okLog warnLog dbgLog mudLog;
+    #nop 每种不同的 Log 文件会存放在单独的文件中。;
+    #nop 你也可以自定义自己的日志，比如叫 myjobLog 也是可以的，会自动生成 myjob.log 文件。;
+    okLog Hello, I'm a pure PaoTin++ module, My name is EXAMPLE.;
+
+    #nop xtt.Tick 类似于 #tick，但是会立即运行一次定时器。;
+    xtt.Tick {EXAMPLE.timer} {EXAMPLE.Test} 10;
+};
+
+#nop 纯模块也可以通过 EXAMPLE.Stop 来停止运行。停止运行的纯模块就像是尚未加载一样，不会对系统其它部分产生任何影响。;
+#nop 你也可以用 EXAMPLE.Start 来再次运行本模块，系统会继续之前 Stop 时保存的状态，包括变量和触发都不会丢失。;
+#alias {EXAMPLE.Pause} {
+    okLog EXAMPLE 暂停运行。;
+};
+
+#nop 纯模块也可以自定义方法。自定义的方法如果是以大写字母开头，并且仅由字母和数字组成，会自动支持命令行补全;
+#alias {EXAMPLE.Test} {
+    warnLog EXAMPLE.Test 执行一次。;
+    #showme {测试触发1};
+    #showme {测试触发2};
+};
+
+#nop 无论是纯模块，还是弱模块，都有几个预定义的变量可供插件使用。;
+#nop 下面演示 $ID 变量的用法。;
+#action {^测试触发1$ID$} {
+    #echo {可以看到，本触发具有一个由模块名标识构成的唯一 ID，因此不会和别的模块冲突。};
+    #action {%*测试触发%*};
+    infoLog 触发1成功。;
+};
+
+#nop 一般建议 $ID 放在末尾。如果 $ID 和末尾锚定符号 $ 连用，那么也可以简写成 $E，效果相同;
+#action {^测试触发2$E} {
+    infoLog 触发2成功。;
+};
