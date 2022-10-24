@@ -1,0 +1,189 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#var basic_cmds_jobquery[META] {
+    {NAME}      {任务查询}
+    {DESC}      {解析 jq 命令的输出结果，方便玩家使用}
+    {NOTE}      {重载了两个命令，jq 不 gag，jobquery 会 gag，两个命令的结果都会被解析}
+    {AUTHOR}    {担子炮}
+};
+
+/*
+
+╭───北侠任务查询助理────────┬───────────────────────────────────╮
+│编号    │类型    │名称              │状态                                                                  │
+│[12]    │[主]    │韩世忠            │未满足接受此任务的所有条件，至少需要30年功力。                        │
+│[13]    │[主]    │公孙止            │未满足接受此任务的所有条件，经验必须达到2000000。                     │
+│[14]    │[主]    │破阵              │未满足接受此任务的所有条件，占卜之术的级别不足1级。                   │
+│[15]    │[主]    │破阵(40) 70.2%    │仍需二十五秒才能接到下个任务。                                        │
+│[19]    │[主]    │海棠(10)          │现在即可接到下个任务。                                                │
+│[20]    │[主]    │捉蛊              │未满足接受此任务的所有条件，身上必须有蛊盒。                          │
+╰────┴────┴─────────┴───────────────────────────────────╯
+╭─────────────────────────────────────┬─────────────────╮
+│                                                                          │jobquery支持参数++/--增加         │
+│                                                                          │/减少任务到自定义列表，参数intro  │
+│                                                                          │给出所有任务简介。支持MXP。       │
+╰─────────────────────────────────────┴────────北大侠客行────╯
+*/
+
+event.Define {jobquery} {无参} {$MODULE} {任务CD状态查询结果已更新，内容在变量 gJobState 中};
+
+/*
+jobquery 本来就有两个别名：
+    1. jobquery 长一些，不方便输入，用的较少，因此重定义其行为，默认屏蔽系统输出
+    2. jq 短一些，平时用的比较多，则不屏蔽系统输出，以免影响玩家使用习惯。
+*/
+#alias {^jobquery{| %*}$}  {job.Query gag   {%1}};
+#alias {^jq{| %*}$}        {job.Query nogag {%1}};
+
+#function {basic_cmds_jobquery.Init} {
+    #class data/basic/cmds/jobquery open;
+    #var gJobState {};
+    #var gJobStateUpdate {0};
+    #class data/basic/cmds/jobquery close;
+    #return true;
+};
+
+#alias {job.Query} {
+    #local gag  {%1};
+    #local args {%2};
+
+    #nop 如果命令不是预期的格式，则直接透传给服务器，不予处理。;
+    #if { "$args" != "{|-m|-x|-z|-t|-zn|-cur|-avail|[0-9]+}" } {
+        #send {jobquery $args};
+        #return;
+    };
+
+    #class job.Query open;
+
+    #highlight {^你刚刚查询过任务，请稍后再查。$} {bold light red};
+
+    #if { "$gag" == "gag" } {
+        #action {^%*{|ID=cmds/jobquery}$} {
+            #line gag;
+        } {5.1};
+    };
+
+    #line oneshot #action {^你刚刚查询过任务，请稍后再查。$} {
+        #class job.Query kill;
+
+        #local now {};
+        #local cd {0};
+
+        #format now {%T};
+        #math cd {$gJobStateUpdate + 11 - $now};
+
+        #if { $cd < 0 } {
+            #local cd {10};
+        };
+
+        #delay jobquery {job.Query {%1} {%2}} $cd;
+    };
+
+    #line oneshot #action {^╭───北侠任务查询助理─{(─|┬)+}─╮$} {
+        jobquery.parse.output {%1};
+    };
+
+    #line oneshot #action {^╰─{(─|┴)+}──北大侠客行────╯{|ID=cmds/jobquery}$} {
+        #class jobquery-parser kill;
+        #class job.Query kill;
+        #if { "%1" == "gag" } {
+            #line gag;
+        };
+        #delay 0 jobquery.parse.done;
+    };
+
+    #class job.Query close;
+
+    #send {jobquery $args};
+};
+
+#alias {jobquery.parse.output} {
+    #local gag {%1};
+
+    #class jobquery open;
+    #var gJobState {};
+    #var gJobStateUpdate {0};
+    #class jobquery close;
+
+    #class jobquery-parser open;
+
+    #nop 这里一共有 7 个占位符;
+    #local jobHeader {│[%d]%!s│[{门|新|主|特}]%!s│%S{|\((\d+)\)} {|([0-9.]+)%}%!s};
+    #local jobEnd {%!s│};
+
+    #alias {jq.set} {
+        #local {name}   {%%3};
+        #local {times}  {%%4};
+        #local {pct}    {%%6};
+        #if { "$times" != "" } {#local {times} {%%5}};
+        #if { "$pct" != "" }   {#local {pct}   {%%7}};
+        #var gJobState[$name] {
+            {ID}        {%%1}
+            {类型}      {%%2}
+            {名称}      {$name}
+            {次数}      {$times}
+            {成功率}    {$pct}
+            {CD}        {%%8}
+            {附加信息}  {%%9}
+        };
+        #if { "%1" == "gag" } {
+            #line gag;
+        };
+    };
+
+    #action {^$jobHeader│仍需%S才能接到下个任务。$jobEnd$} {
+        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {@parseTime{%%8}} {等待CD中};
+    };
+
+    #action {^$jobHeader│现在即可接到下个任务。$jobEnd$} {
+        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {0} {现在即可接到下个任务};
+    };
+
+    #action {^$jobHeader│任务正在进行中。地点在%*。$jobEnd$} {
+        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {-1} {%%8};
+    };
+
+    #action {^$jobHeader│未满足接受此任务的所有条件，%*。$jobEnd$} {
+        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {-2} {%%8};
+    };
+
+    #class jobquery-parser close;
+};
+
+#alias {jobquery.parse.done} {
+    #format gJobStateUpdate {%T};
+
+    #local name {};
+    #local cdStr {};
+    #local doingStr {};
+    #foreach {*gJobState[]} {name} {
+        #if { $gJobState[$name][CD] > 0 } {
+            #local cdStr {$cdStr <130>$name<070>(<110>$gJobState[$name][CD]s<070>)};
+        };
+        #elseif { $gJobState[$name][CD] == -1 } {
+            #local doingStr {$doingStr <120>$name<070>(<130>$gJobState[$name][附加信息]<070>)};
+        };
+    };
+
+
+    #if { "$doingStr$cdStr" == "" } {
+        okLog 任务 CD 状态已更新，没有任务处于 CD 中。;
+    };
+    #elseif { "$doingStr" == "" } {
+        okLog 任务 CD 状态已更新，以下任务仍然处于 CD 中:$cdStr;
+    };
+    #elseif { "$cdStr" == "" } {
+        okLog 任务 CD 状态已更新，以下任务正在进行中:$doingStr;
+    };
+    #else {
+        okLog 任务 CD 状态已更新，以下任务正在进行中:$doingStr，以下任务仍然处于 CD 中:$cdStr;
+    };
+
+    event.Emit {jobquery};
+};
