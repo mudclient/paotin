@@ -1,0 +1,38 @@
+#nop vim: set filetype=tt:;
+
+/*
+模块名称：多 MUD 支持
+模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
+版权声明：本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var gMUDLIB {
+    {pkuxkx} {北大侠客行}
+    {thuxyj} {清华西游记}
+};
+
+#var gCurrentMUDLIB {};
+
+#nop 定义 MUDLIB，原则上，只有提供的游戏内容完全不一致才可以称为是不同的 MUDLIB。;
+#alias {mudlib.Define} {
+    #local id   {%1};
+    #local name {%2};
+
+    #var {gMUDLIB[$id]} {$name};
+};
+
+#nop 设置当前使用的 MUDLIB。这会导致后续加载的 MUD 相关的插件全部优先使用该 MUD 目录。;
+#alias {mudlib.Set} {
+    #local id {%1};
+
+    #if { "$gMUDLIB[$id]" == "" } {
+        errLog 未知的 MUDLIB $id，请先定义它。;
+        #return;
+    };
+
+    #var gCurrentMUDLIB {$id};
+};

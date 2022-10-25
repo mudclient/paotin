@@ -1,0 +1,69 @@
+#nop vim: filetype=tt
+
+#class login kill;
+#class login open;
+
+#var login[session]     {};
+#var login[user]        {};
+#var login[autoexec]    {};
+
+#alias {login} {
+    #var    login[session]  {%1};
+    #var    login[user]     {%2};
+    #var    login[autoexec] {%3};
+    #session {$session[name]} {$session[host]} {$session[port]};
+};
+
+#event {SESSION CONNECTED} {
+    #if { "%0" == "$login[session][name]" } {
+        #class auto-login kill;
+        #class auto-login open;
+
+        #nop 如果角色设置了 GMCP 支持，则积极回应服务器的 GMCP 协商请求。;
+        #if { "$user[GMCP]" == "true" } {
+            load-lib gmcp;
+            gmcp.Enable;
+        };
+
+        #if { "$session[UTF8]" == "true" } {
+            #config {charset} {UTF-8};
+        };
+        #else {
+            #config {charset} {GBK1TOUTF8};
+        };
+
+        #line oneshot #action {^%sWelcome to Xi You Ji! Select GB or BIG5 (gb/big5):$} {
+            #send gb;
+        };
+
+        #line oneshot #action {^您是否是中小学学生或年龄更小？(yes/no)$} {
+            #delay 0 {#echo {\n}; #send no};
+        };
+
+        #line oneshot #action {^您的英文名字：（新玩家请键入 new 注册）$} {
+            #delay 0 {#echo {\n}; #send $login[user][id]};
+        };
+
+        #action {^请输入相应密码：$} {
+            #delay  0 {#echo {\n}; #send {$user[passwd]}};
+        };
+
+        #line oneshot #action {^您要将另一个连线中的相同人物赶出去，取而代之吗？(y/n)$} {
+            #delay 0 {#echo {\n}; #send y};
+        };
+
+        #line oneshot #action {^重新连线完毕。$} {
+            #delay 0 {
+                #showme 登录成功。;
+                #local handler $login[autoexec];
+                #class auto-login kill;
+                #class login kill;
+                $handler;
+            };
+        };
+
+        #class auto-login close;
+    };
+};
+
+#class login close;
