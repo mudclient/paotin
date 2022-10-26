@@ -338,6 +338,7 @@ class.open module-loader;
     #echo {%c%h}    {cyan} { $moduleName$cnName };
     #echo {%s}      {    <060>名称:<070> $moduleName$cnName <060>类型:<070> $type <060>状态:<070> $enable <060>作者:<070> $author};
     #echo {%s}      {    <060>脚本路径:<070> $path};
+
     #if { "$type" == "弱模块" } {
         #echo {%c%h} {cyan} { 更多信息仅纯模块可见 };
         #return;
@@ -345,7 +346,11 @@ class.open module-loader;
 
     #echo {%s}      {    <060>说明:<070> $desc};
     #echo {%s}      {    <060>备注:<070> $note};
-    #echo {%s}      {    <060>接口:<070> 你可以通过 $moduleName\.Start/Stop 命令来启动/停止模块。};
+
+    #if { "$type" == "纯模块" } {
+        #echo {%s}      {    <060>接口:<070> 你可以通过 $moduleName\.Start/Stop 命令来启动/停止模块。};
+    };
+
     #echo {%s}      {    <060>配置参数表:<070>};
     #echo {$format} {cyan} {配置项} {当前值} {作用};
     #echo {$format} {cyan} {--------------------} {--------------------} {------------------------------};
