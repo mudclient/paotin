@@ -64,11 +64,11 @@ class.open module-loader;
             #nop 模块路径;
             #local PATH {$path};
             #nop 模块中触发器的默认 ID;
-            #local ID     {%!{|id=${moduleName}}};
+            #local ID     {%!{(?:|id=${moduleName})}};
             #nop 文本开始;
             #local {B}    {^{[> ]*}};
             #nop 文本结束;
-            #local {E}    {%!{|id=${moduleName}}$};
+            #local {E}    {%!{(?:|id=${moduleName})}$};
             #nop 颜色触发中的文本结束;
             #local {CE}   {%!{\e\[[0-9\;]*[mK]}$E};
             class.read {$moduleName} {$path};
@@ -161,7 +161,7 @@ class.open module-loader;
 #alias {kill-module} {
     #local moduleName   {%1};
     #if { "$moduleName" == "" } {
-        warnLog 用法: reload-module <模块全限定名称>;
+        warnLog 用法: kill-module <模块全限定名称>;
         #return;
     };
 

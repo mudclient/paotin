@@ -78,7 +78,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local {option} {%1};
     #local {value}  {%2};
 
-    #local old {$xttOptions[$option]};
+    #local old {$gOptions[$option][value]};
     #if { "$old" == "" } {
         errLog 不存在选项「$option」，请先定义后再使用。;
         #return {};

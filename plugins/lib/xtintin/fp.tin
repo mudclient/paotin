@@ -10,6 +10,8 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local table {%1};
     #local cond {%2};
 
+    #local key      {};
+    #local value    {};
     #replace {cond} {KEY} {$$key};
     #replace {cond} {VALUE} {$$value};
 
@@ -29,6 +31,9 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local table {%1};
     #local cond {%2};
     #local body {%3};
+
+    #local key      {};
+    #local value    {};
 
     #replace {cond} {KEY} {$$key};
     #replace {cond} {VALUE} {$$value};
@@ -51,6 +56,9 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local table {%1};
     #local cond {%2};
     #local body {%3};
+
+    #local key      {};
+    #local value    {};
 
     #replace {cond} {KEY} {$$key};
     #replace {cond} {VALUE} {$$value};
@@ -77,6 +85,9 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #function {map} {
     #local table {%1};
     #local body {%2};
+
+    #local key      {};
+    #local value    {};
 
     #replace {body} {KEY} {$$key};
     #replace {body} {VALUE} {$$value};
