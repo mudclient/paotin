@@ -167,7 +167,7 @@
 };
 
 #gag {^%s$};
-#gag {^>%s$};
+#action {^>%s$} {#line gag};
 #gag {^├{(─|┼)+}┤$};
 
 #action {$B临走之际，你忽然发现一个盒子看起来有些特殊！$E} {
@@ -193,7 +193,10 @@
 
 #action {◆北大侠客行总图◆$E} {
     #class main-map open;
-    #sub {~\e[0m       } {};
+    #action {~^\e[0m       %*$} {
+        #line ignore #showme {@Beautify{{%%1}}};
+        #line gag;
+    };
     #class main-map close;
     #action {^最近修订时间} {
         #class main-map kill;

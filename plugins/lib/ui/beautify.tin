@@ -5,7 +5,10 @@
 };
 
 #function {lib_ui_beautify.Init} {
-    #var beautify-switch {};
+    #class data/lib/ui/beautify open;
+    #var beautify-switch {OFF};
+    #var beautify-eol-mark {<g03>.};
+    #class data/lib/ui/beautify close;
     beautify.On;
     #return true;
 };
@@ -57,6 +60,12 @@
 
     #substitute {%S%!s{https?://[[:graph:]]+}\s*{\S|$}} {%%1 %%2 %%3};
 
+    #nop 行尾空格因为肉眼不可见因此常常导致无法匹配触发。这里把它可视化一下。;
+    #action {~^%*%+1S%+1..s%c{|ID=beautify}$} {
+        #line ignore #showme {@Beautify{{%%1%%2%%3}}$beautify-eol-mark};
+        #line gag;
+    } {9.999};
+
     #class beautify-sub close;
 
     #var beautify-switch {ON};
@@ -97,6 +106,16 @@
     };
 
     #return {$text};
+};
+
+#alias {beautify.SetEolMark} {
+    #local mark {%1};
+
+    #if { "$mark" == "" } {
+        #local mark {<g03>.};
+    };
+
+    #var beautify-eol-mark {$mark};
 };
 
 #alias {beautify.ToggleSwitch} {
