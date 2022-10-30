@@ -40,23 +40,23 @@
             };
 
             #delay 0 {
-                #echo {\n};
+                #echo {}; #buffer end;
                 #config {charset} {UTF-8};
                 #send $login[user][id];
             };
         };
 
         #line oneshot #action {^您的英文名字：$} {
-            #delay 0 {#echo {\n}};
+            #delay 0 {#echo {}; #buffer end};
         };
 
         #line oneshot #action {^此ID档案已存在，请输入密码：$} {
-            #delay 0 {#echo {\n}; #send $login[user][passwd]};
+            #delay 0 {#echo {}; #buffer end; #send $login[user][passwd]};
             #delay 1 {look};
         };
 
         #line oneshot #action {^您要将另一个连线中的相同人物赶出去，取而代之吗？(y/n)$} {
-            #delay 0 {#echo {\n}; #send y};
+            #delay 0 {#echo {}; #buffer end; #send y};
         };
 
         #line oneshot #action {^%s{欢迎来到北大侠客行！|重新连线完毕。}%s$} {
