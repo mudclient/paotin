@@ -277,11 +277,11 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         #local allBarColor {${prompt-theme[Disable]}};
     };
 
-    #if { "$topSepBar" != "" } {
+    #if { &topSepBar[] > 0 } {
         #math topMaxLine {$topMaxLine + 1};
     };
 
-    #if { $botMaxLine == 0 && ( "$midSepBar" == "" || "$botSepBar" == "" ) } {
+    #if { $botMaxLine == 0 && ( &midSepBar[] == 0 || &midSepBar[] == 0 ) } {
         #local botMaxLine {1};
     };
     #else {
@@ -307,7 +307,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         };
     };
 
-    #if { "$topSepBar" != "" } {
+    #if { &topSepBar[] > 0 } {
         #local text {@__prompt_build_line__{{$topSepBar}}};
         #if { $text[width] == 0 && $topMaxLine == 1 } {
             #math topMaxLine {$topMaxLine - 1};
@@ -320,7 +320,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         };
     };
 
-    #if { "$botSepBar" != "" || $botMaxLine > 0 } {
+    #if { &botSepBar[] > 0 || $botMaxLine > 0 } {
         #local text {@__prompt_build_line__{{$botSepBar}}};
         #local barColor {${prompt-theme[BotSepBar]}};
         #if { "$allBarColor" != "" } {#local barColor {$allBarColor}};
@@ -344,7 +344,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         };
     };
 
-    #if { "$midSepBar" != "" || $botMaxLine > 0 } {
+    #if { &midSepBar[] > 0 || $botMaxLine > 0 } {
         #local text {@__prompt_build_line__{{$midSepBar}}};
         #local barColor {${prompt-theme[MidSepBar]}};
         #if { "$allBarColor" != "" } {#local barColor {$allBarColor}};
@@ -353,7 +353,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         #list content {add} {{{line}{-$line}{text}{$text}}};
     };
 
-    #if { 1 && ( "${prompt-top-max-line}" != "$topMaxLine" || "${prompt-bot-max-line}" != "$botMaxLine" ) } {
+    #if { "${prompt-top-max-line}" != "$topMaxLine" || "${prompt-bot-max-line}" != "$botMaxLine" } {
         #local lineWidth {};
         #screen get COLS lineWidth;
         #format spaceLine {%-${lineWidth}s} {};
