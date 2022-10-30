@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+git submodule init
+git submodule update
+(cd tintin/src && ./configure && make && strip tt++)
+cp tintin/src/tt++ bin/

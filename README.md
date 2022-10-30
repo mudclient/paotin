@@ -1,32 +1,60 @@
-# PaoTin++
+<p align="center">
+    <h3 align="center">PaoTin++</h3>
+    <p align="center">TinTin++ 脚手架，一个更好的 TinTin++ 编程环境</p>
+    <p align="center">
+        <a href="#软件结构及亮点功能">亮点功能</a> •
+        <a href="#docker-方式运行推荐">在 Docker 上运行</a> •
+        <a href="#本地运行">在本机环境下安装与运行</a> •
+        <a href="#特性介绍">特性介绍</a>
+    </p>
+</p>
+
+# PaoTin++ 是什么？不是什么？
 
 这是一个基于 [TinTin++](https://github.com/scandum/tintin) 的定制发行版。包括一些尚未被合并进官方 TinTin++ 版本的 patch 和一些基础性的框架代码，企图能够对 TinTin++ 的功能有所增强。
 
+PaoTin++ 主要目的是整理并输出本人过去在使用 TinTin++ 时，为了解决一些实践中遇到的困难而设计的解决方案。
+这些解决方案大体分两部分，一部分是对 TinTin++ 自身源码的修改，数量不多，但可以从源头上弥补 TinTin++ 的一些不足。
+另一部分是一组纯 TinTin++ 脚本，目的是为了构建一个更好的编写 TinTin++ 脚本的框架平台。
+
+对于一部分人来说，可以把 PaoTin++ 当成是一个集成的一体化的 TinTin++ 游戏与开发环境。在该环境下，相较于原版 TinTin++，PaoTin++ 提供了一些额外的功能。
+
+对于另一部分人来说，可以把 PaoTin++ 当成是了解、学习 TinTin++ 脚本的参考示例。特别是如何在 TinTin++ 环境下构造复杂的脚本框架，本仓库做了一些积极的尝试。
+
+PaoTin++ 不是一个成熟的机器人套件，并不计划提供一整套开箱即用的，可以无人值守方式挂机的机器人脚本。虽然这可能是许多玩家所渴望的，但由于每个人的游戏目标不同，以及游戏内可能存在的玩家竞争机制，因此我不认为复制别人的游戏策略是明智的选择。但玩家可以基于 PaoTin++ 开发自己的机器人。或是在使用 TinTin++ 开发机器人的过程中，如果遇到了 PaoTin++ 已经解决过的困难，那么不妨试试 PaoTin++。
+
+# 软件结构及亮点功能
+
+PaoTin++ 主要由以下四部分组成：
+
+* 一个 [TinTin++ 衍生品](https://github.com/mudclient/tintin/tree/beta-develop)，它在 TinTin++ beta 版的基础上，
+  提供了一些额外的[补丁](https://github.com/mudclient/tintin/compare/beta...mudclient:tintin:beta-develop)。
+* 一个由 TinTin++ 脚本书写的[框架程序](https://github.com/mudclient/paotin/tree/master/framework)，
+  其主要部分包含一个[模块加载器](https://github.com/mudclient/paotin#模块管理)。
+* 一组由 TinTin++ 脚本书写的 [TinTin++ 功能扩展](https://github.com/mudclient/paotin/tree/master/plugins/lib)。
+* 预置的与特定 MUDLIB [有关的触发](https://github.com/mudclient/paotin/tree/master/mud)。
+
+亮点功能：
+
+* ✅同步发布 Docker 镜像
+* ✅模块化编程框架
+* ✅支持模块源码重定位
+* ✅支持多 MUDLIB
+* ✅完善的日志记录
+* ✅事件驱动编程框架
+* ✅防掉线机制
+* ✅输入回显与命令回显
+* ✅命令行自动补全
+* ✅基于 tmux 的 UI 设计
+* ✅可自定义的提示栏
+* ✅utf-8 支持与界面美化
+* ✅鼠标支持
+* ✅PCRE 支持 utf-8 字符类
+* ✅更好的颜色泄漏防范
+* ✅支持 GMCP
+* ✅支持 MXP
+
 # 运行方式
-
-## 本地运行
-
-### 使用本地 tt++ （需要自行编译 tintin++）
-
-如果你本地已经编译好了 tt++，那么输入以下命令就可以立即开始游戏：
-
-```
-./setup
-start-ui
-```
-
-### 使用本仓库推荐的 tt++（推荐）
-
-假设你本地已经有完整的 C 语言开发环境，那么用下面的命令就可以自行编译 tt++：
-
-```
-git clone https://github.com/mudclient/tintin.git --branch beta-develop
-(cd tintin/src && ./configure && make && strip tt++)
-cp tintin/src/tt++ bin/
-mkdir -p log
-./setup
-start-ui
-```
 
 ## Docker 方式运行（推荐）
 
@@ -66,7 +94,7 @@ docker exec -it tt start-ui
 
 ### 自行构建 Docker 镜像
 
-你也可以在本地构建 Docker 镜像，并通过下面的命令使用自己构建的镜像开始游戏：
+你也可以基于本仓库在本地构建 Docker 镜像，并通过下面的命令使用自己构建的镜像开始游戏：
 
 ```
 # 构建 Docker 镜像
@@ -76,7 +104,87 @@ docker build -t paotin .
 docker run --rm -it --name tt --hostname tt paotin
 ```
 
-# 开发自己的插件
+## 本地运行
+
+### 准备编译环境
+
+#### macOS
+
+```
+brew install gcc make gnutls pcre zlib git bash tmux
+```
+
+#### Ubuntu
+
+```
+sudo apt-get install build-essential zlib1g-dev libpcre3-dev libgnutls28-dev git bash tmux
+```
+
+#### Fedora
+
+```
+sudo yum install make gcc zlib-devel pcre-devel git bash tmux
+```
+
+#### Debian
+
+```
+sudo apt-get install build-essential zlib1g-dev libpcre++-dev git bash tmux
+```
+
+#### Android(Termux)
+
+```
+apt install make libgnutls pcre zlib git bash tmux
+```
+
+#### 其它类 Unix 系统
+
+请自行安装：
+
+* C 语言编译器
+* make 实用程序
+* pcre 开发包
+* zlib 开发包
+* git
+* bash
+* tmux
+
+### 编译本仓库指定的 TinTin++（推荐）
+
+假设你是首次使用 PaoTin++，那么你需要先编译一份 PaoTin++ 依赖的 TinTin++，
+假设你本机已经有完整的 C 语言开发环境，那么用下面的命令就可以开始编译：
+
+```
+git clone https://github.com/mudclient/paotin.git
+cd paotin
+./install
+```
+
+编译完成后，使用下面的命令即可开始游戏：
+
+```
+./setup
+start-ui
+```
+
+以后每次更新 PaoTin++ 时，如果涉及到 TinTin++ 的更新，则需要重新执行 `./install`，
+否则每次执行 `./setup` 即可进入环境。
+
+### 自行选择并编译 TinTin++
+
+如果你比较熟悉 TinTin++，知道 PaoTin++ 依赖的 fork 需要哪些特性，你也可以根据自己的需求来选择并编译 TinTin++。
+只需要将你编译好的 `tt++` 可执行文件链接或者复制到 PaoTin++ 的 `bin` 目录，就可以直接通过下面的命令来进入环境：
+
+```
+./setup
+start-ui
+```
+
+# 定制与开发
+
+无论是 Docker 运行方式，还是本地运行方式，都不建议直接修改仓库内已有的文件和目录，以免后续更新时造成冲突。
+PaoTin++ 大部分模块源码文件都支持重定位，你可以在 `var/` 目录下创建自己的新插件或者重写已有插件。
 
 ## Docker 方式下
 
@@ -93,11 +201,22 @@ docker run -d -it --name tt --hostname tt -v $HOME/my-paotin:/paotin/var mudclie
 另外，日志文件会出现在 `$HOME/my-paotin/log/` 目录下，
 ID 配置文件和数据配置文件可分别放置在 `$HOME/my-paotin/ids/` 目录和 `$HOME/my-paotin/etc/` 目录下。
 
-更多内容请参见 `DIRECTORY.md` 文件。
+更多内容请参见 `docs/DIRECTORY.md` 文件。
 
 ## 本地运行方式
 
-你可以在 `plugins/` 目录下编写你的插件。插件代码格式可参考样板插件 `plugins/EXAMPLE.tin` 及其它已有插件。
+你可以在 `var/plugins/` 目录下编写你的插件。插件代码格式可参考样板插件 `plugins/EXAMPLE.tin` 及其它已有插件。
+
+建议另外新建一个目录，用来存放你的源代码，并将 `var/` 目录通过符号链接指向该目录。例如：
+
+```
+mkdir -p ../my-paotin/{etc,ids,plugins,log}
+ln -s ../my-paotin var
+```
+
+这样的话修改 `var/*` 就不会影响 PaoTin++ 仓库的文件，不会在 PaoTin++ 更新时造成冲突。
+
+更多内容请参见 `docs/DIRECTORY.md` 文件。
 
 # 特性介绍
 

@@ -1,0 +1,4 @@
+[submodule "tintin"]
+	path = tintin
+	url = https://github.com/mudclient/tintin
+	branch = beta-develop
