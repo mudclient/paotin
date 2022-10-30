@@ -1,12 +1,27 @@
-#nop 角色生命值信息解析模块;
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var basic_char_hp[META] {
+    {NAME}      {HP 信息解析}
+    {DESC}      {解析 hp 和 hpbrief 两个命令的内容，并储存到变量 char[HP]}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
 
 load-lib event;
 
-event.Define {char/hp}       {无参}  {char/hp} {已经获取到 hp 命令输出结果，并更新 char[HP]。};
-event.Define {char/hpbrief}  {无参}  {char/hp} {已经获取到 hpbrief 命令输出结果，并更新 char[HP]。};
+event.Define {char/hp}       {无参}  {$MODULE} {已经获取到 hp 命令输出结果，并更新 char[HP]。};
+event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令输出结果，并更新 char[HP]。};
 
 #function {basic_char_hp.Init} {
-    #class char open;
+    #class data/basic/char open;
     #var char[HP]           {};
     #var char[HP][经验]     {};
     #var char[HP][经验显示] {};
@@ -48,7 +63,7 @@ event.Define {char/hpbrief}  {无参}  {char/hp} {已经获取到 hpbrief 命令
     #var char[HP][上次更新] {0};
     #var char[HP][更新时间] {};
     #var char[HP][状态更新] {};
-    #class char close;
+    #class data/basic/char close;
 
     set hpbrief long,report;
 

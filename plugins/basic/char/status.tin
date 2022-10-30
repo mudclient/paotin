@@ -2,7 +2,7 @@
 
 load-lib event;
 
-event.Define {char/status}    {无参}  {char/status} {已经获取到 status_me 命令输出结果，并更新 char[STATUS]。};
+event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命令输出结果，并更新 char[STATUS]。};
 
 #nop ╭────个人状态────┬────┬──────┬────┬──────┬────┬─────╮;
 #nop │姓名    │马后炮      │ＩＤ    │Mhp         │级别    │32          │战斗力  │104611      │;

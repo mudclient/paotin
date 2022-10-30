@@ -10,10 +10,10 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 load-lib telnet;
 load-lib event;
 
-event.Define {GMCP.Move}    {无参} {GMCP} {接收到 GMCP 移动信息，已更新 gGMCP[Move]};
-event.Define {GMCP.Status}  {无参} {GMCP} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
-event.Define {GMCP.Combat}  {无参} {GMCP} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
-event.Define {GMCP.Buff}    {无参} {GMCP} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
+event.Define {GMCP.Move}    {无参} {$MODULE} {接收到 GMCP 移动信息，已更新 gGMCP[Move]};
+event.Define {GMCP.Status}  {无参} {$MODULE} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
+event.Define {GMCP.Combat}  {无参} {$MODULE} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
+event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
 
 #alias {gmcp.Enable} {
     #event {IAC WILL GMCP} {
@@ -30,23 +30,23 @@ event.Define {GMCP.Buff}    {无参} {GMCP} {接收到 GMCP BUFF状态，已更�
 
 #alias {gmcp.Subscribe} {
     gmcp.Handle GMCP.Move {
-        #var gGMCP[Move] {%%0};
+        #line sub escape #var gGMCP[Move] {%%0};
         #var gGMCP[Move] {$gGMCP[Move][1]};
         event.Emit GMCP.Move {};
     };
 
     gmcp.Handle GMCP.Status {
-        #var gGMCP[Status] {%%0};
+        #line sub escape #var gGMCP[Status] {%%0};
         event.Emit GMCP.Status {};
     };
 
     gmcp.Handle GMCP.Combat {
-        #var gGMCP[Combat] {%%0};
+        #line sub escape #var gGMCP[Combat] {%%0};
         event.Emit GMCP.Combat {};
     };
 
     gmcp.Handle GMCP.Buff {
-        #var gGMCP[Buff] {%%0};
+        #line sub escape #var gGMCP[Buff] {%%0};
         event.Emit GMCP.Buff {};
     };
 };

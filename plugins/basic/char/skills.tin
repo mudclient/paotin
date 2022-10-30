@@ -24,9 +24,9 @@
 #nop;
 
 #function {basic_char_skills.Init} {
-    #class char open;
+    #class data/basic/char open;
     #var char[Skills] {};
-    #class char close;
+    #class data/basic/char close;
     #return true;
 };
 
@@ -94,11 +94,7 @@
             #format enabled {false};
         };
 
-        #local key {};
-        #format key {char[Skills][%s]} {$name};
-
-        #class char open;
-        #var {$key} {
+        #var {char[Skills][$name]} {
             {name}{$name}
             {type}{$type}
             {enabled}{$enabled}
@@ -107,7 +103,6 @@
             {level}{$level}
             {limit}{$limit}
         };
-        #class char close;
 
         #line gag;
     };
