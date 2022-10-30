@@ -70,7 +70,7 @@ class.open module-loader;
             #nop 文本结束;
             #local {E}    {%!{(?:|id=${moduleName})}$};
             #nop 颜色触发中的文本结束;
-            #local {CE}   {%!{\e\[[0-9\;]*[mK]}$E};
+            #local {CE}   {%!c$E};
             class.read {$moduleName} {$path};
         };
 
@@ -258,10 +258,10 @@ class.open module-loader;
 #alias {MODS} {list-modules};
 #alias {list-modules} {
     #local _ {%0};
-    #local format {  %c%-30s %-10s %-10s %-6s %-6s %s};
+    #local format {  %c%-30s %-8s %-8s %-4s %-6s %-6s %s};
     #echo {%c%h}    {cyan} { 已加载模块 -- 请用 MOD <模块名> 来查看详细内容 };
-    #echo {$format} {cyan} {模块名称} {作者} {类型} {状态} {配置项} {说明};
-    #echo {$format} {cyan} {------------} {----------} {-------} {----} {----} {------------------------------------};
+    #echo {$format} {cyan} {模块名称} {作者} {类型} {状态} {事件} {配置项} {说明};
+    #echo {$format} {cyan} {------------} {-------} {-------} {----} {----} {----} {------------------------------------};
     #local name {};
     #local count {0};
     #foreach {*{xtt-modules[]}} {name} {
@@ -274,6 +274,7 @@ class.open module-loader;
         #local config   {$metaInfo[CONFIG]};
         #local enable   {<120>开启<070>};
         #local hasConfig {有};
+        #local hasEvents {无};
 
         #if { "$cnName" != "" } {
             #local cnName {(<160>$cnName<070>)};
@@ -281,6 +282,11 @@ class.open module-loader;
 
         #if { "$config" == "" } {
             #local hasConfig {无};
+        };
+
+        #local event {@filter{{$gValidEvent};{"VALUE[module]"=="$name"}}};
+        #if { &event[] > 0 } {
+            #local hasEvents {<160>&event[]个<070>};
         };
 
         #if { "$type" == "纯模块" } {
@@ -294,7 +300,7 @@ class.open module-loader;
             #local enable {<110>禁用<070>};
         };
 
-        #echo {$format} {white} {$name $cnName} {$author} {$type} {$enable} {$hasConfig} {$desc};
+        #echo {$format} {white} {$name $cnName} {$author} {$type} {$enable} {$hasEvents} {$hasConfig} {$desc};
     };
     #echo {%c%h} {cyan} { 共列出 $count 项模块信息 };
 };
@@ -334,7 +340,6 @@ class.open module-loader;
         #local cnName { (<160>$cnName<070>)<060>};
     };
 
-    #local format {    %c%-20s %-20s %s};
     #echo {%c%h}    {cyan} { $moduleName$cnName };
     #echo {%s}      {    <060>名称:<070> $moduleName$cnName <060>类型:<070> $type <060>状态:<070> $enable <060>作者:<070> $author};
     #echo {%s}      {    <060>脚本路径:<070> $path};
@@ -351,11 +356,31 @@ class.open module-loader;
         #echo {%s}      {    <060>接口:<070> 你可以通过 $moduleName\.Start/Stop 命令来启动/停止模块。};
     };
 
+    #local format {    %c%-20s %-20s %s};
+
+    #local event {@filter{{$gValidEvent};{"VALUE[module]"=="$moduleName"}}};
+    #if { &event[] > 0 } {
+        #local name {};
+        #echo {%s}      {    <060>提供事件列表:<070>};
+        #echo {$format} {cyan} {事件名称} {事件类型} {说明};
+        #echo {$format} {cyan} {--------------------} {--------------------} {------------------------------};
+        #foreach {*event[]} {name} {
+            #local type {$event[$name][type]};
+            #local desc {$event[$name][desc]};
+            #echo {$format} {light cyan} {$name} {$type} {$desc};
+        };
+    };
+
+    #if { &config[] <= 0 } {
+        #echo {%c%h} {cyan} {};
+        #return;
+    };
+
+    #local count {0};
     #echo {%s}      {    <060>配置参数表:<070>};
     #echo {$format} {cyan} {配置项} {当前值} {作用};
     #echo {$format} {cyan} {--------------------} {--------------------} {------------------------------};
     #local key {};
-    #local count {0};
     #foreach {*config[]} {key} {
         #math count {$count + 1};
         #local value ${xtt-modConfig[$moduleName][$key]};
