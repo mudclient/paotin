@@ -121,7 +121,7 @@ class.open module-loader;
         #local metaInfo[TYPE] {混合模块};
     };
 
-    #format xtt-modules {%s%s} {${xtt-modules}} {{$moduleName}{$metaInfo}};
+    #var {xtt-modules[$moduleName]} {$metaInfo};
 
     #if { "$metaInfo[TYPE]" != "弱模块" } {
         #if { "$metaInfo[CONFIG]" != "" } {
