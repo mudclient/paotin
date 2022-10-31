@@ -54,15 +54,15 @@
         };
 
         #line oneshot #action {^%s{欢迎来到北大侠客行！|重新连线完毕。}%s$} {
-            #if { "$login[user][GMCP]" == "true" } {
-                gmcp.Subscribe;
-            };
             #delay 0 {
                 #showme 登录成功。;
                 #local handler $login[autoexec];
                 #class auto-login kill;
                 #class login kill;
                 $handler;
+                #if { "$user[GMCP]" == "true" } {
+                    #delay 1 gmcp.pkuxkx.Enable;
+                };
             };
         };
 

@@ -28,7 +28,7 @@ event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已�
     #line sub var #event {IAC SB GMCP $key IAC SE} {$handler};
 };
 
-#alias {gmcp.Subscribe} {
+#alias {gmcp.pkuxkx.Enable} {
     gmcp.Handle GMCP.Move {
         #line sub escape #var gGMCP[Move] {%%0};
         #var gGMCP[Move] {$gGMCP[Move][1]};
@@ -49,4 +49,9 @@ event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已�
         #line sub escape #var gGMCP[Buff] {%%0};
         event.Emit GMCP.Buff {};
     };
+
+    gmcp status on;
+    gmcp move on;
+    gmcp buff on;
+    gmcp combat on;
 };
