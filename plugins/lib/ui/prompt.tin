@@ -344,7 +344,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         };
     };
 
-    #if { &midSepBar[] > 0 || $botMaxLine > 0 } {
+    #if { &midSepBar[] > 0 || &botLines[] > 0 } {
         #local text {@__prompt_build_line__{{$midSepBar}}};
         #local barColor {${prompt-theme[MidSepBar]}};
         #if { "$allBarColor" != "" } {#local barColor {$allBarColor}};
