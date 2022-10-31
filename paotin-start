@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [ -f /.dockerenv ]; then
+    echo Docker 环境下不需要执行本命令，直接用 start-ui 即可启动。
+    exit;
+fi
+
 TMP=$(which bash)
 if [ "x$TMP" = "x" ]; then
     echo 本程序运行前需要先安装 bash/tmux，并编译 TinTin++。
@@ -27,4 +32,4 @@ export PATH=$HOME/bin:$PATH
 export TMUXCMD="tmux -L MUD -f $HOME/tmux.conf"
 
 test -f .bash_profile || ln -s profile.sh .bash_profile
-exec bash -l
+exec bash -l start-ui

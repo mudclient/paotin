@@ -164,12 +164,11 @@ cd paotin
 编译完成后，使用下面的命令即可开始游戏：
 
 ```
-./setup
-start-ui
+./paotin-start
 ```
 
 以后每次更新 PaoTin++ 时，如果涉及到 TinTin++ 的更新，则需要重新执行 `./install`，
-否则每次执行 `./setup` 即可进入环境。
+否则每次执行 `./paotin-start` 即可进入环境。
 
 ### 自行选择并编译 TinTin++
 
@@ -177,8 +176,11 @@ start-ui
 只需要将你编译好的 `tt++` 可执行文件链接或者复制到 PaoTin++ 的 `bin` 目录，就可以直接通过下面的命令来进入环境：
 
 ```
-./setup
-start-ui
+git clone https://github.com/mudclient/paotin.git
+cd paotin
+# TODO: 这里需要你自己把你编译的 tt++ 文件放入 bin/ 目录。
+# 然后执行
+./paotin-start
 ```
 
 # 定制与开发
