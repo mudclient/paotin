@@ -33,23 +33,24 @@
         };
 
         #line oneshot #action {^%sWelcome to Xi You Ji! Select GB or BIG5 (gb/big5):$} {
-            #send gb;
+            #line oneshot #event {CATCH VT100 ERASE SCREEN ALL} {#0};
+            xtt.Answer gb;
         };
 
         #line oneshot #action {^您是否是中小学学生或年龄更小？(yes/no)$} {
-            #delay 0 {#echo {\n}; #send no};
+            #delay 0 #send no;
         };
 
         #line oneshot #action {^您的英文名字：（新玩家请键入 new 注册）$} {
-            #delay 0 {#echo {\n}; #send $login[user][id]};
+            xtt.Answer $login[user][id];
         };
 
         #action {^请输入相应密码：$} {
-            #delay  0 {#echo {\n}; #send {$user[passwd]}};
+            xtt.Answer {$login[user][passwd]};
         };
 
         #line oneshot #action {^您要将另一个连线中的相同人物赶出去，取而代之吗？(y/n)$} {
-            #delay 0 {#echo {\n}; #send y};
+            xtt.Answer y;
         };
 
         #line oneshot #action {^重新连线完毕。$} {

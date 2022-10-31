@@ -6,9 +6,10 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#nop xtintin: 为了方便 TinTin++ 使用而增加的一些语法扩展。;
+#nop xtintin 是为了方便 TinTin++ 使用而增加的一些语法扩展。;
 
 load-file plugins/lib/xtintin/funcs.tin;
 load-file plugins/lib/xtintin/cmds.tin;
 load-file plugins/lib/xtintin/debug.tin;
 load-file plugins/lib/xtintin/fp.tin;
+load-file plugins/lib/xtintin/answer.tin;
