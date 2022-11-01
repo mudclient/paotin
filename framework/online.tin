@@ -27,8 +27,8 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #nop 武当、少林等门派的诵经文本会干扰机器运行，使用全局替换从一开始就屏蔽掉。;
 #substitute {~\e[1;36m%+1u..\e[2;37;0m} {};
 
-#ticker {save-data}     {xtt.Send save}     {600};
-#ticker {backup-data}   {xtt.Send backup}   {1800};
+#ticker {eat}       {xtt.Send eat $char[favorite][food]}    {60};
+#ticker {drink}     {xtt.Send drink $char[favorite][water]} {60};
 
 #delay 1 {
     set table_pattern 1;
