@@ -30,7 +30,23 @@
     #return true;
 };
 
-#action {^╭───技能列表(共%*项){(─|┬)*}──╮$} {
+#alias {skills} {char.skills};
+#alias {sk}     {char.skills};
+#alias {cha}    {char.skills};
+
+#alias {char.skills} {
+    #local args {%0};
+
+    #if { "$args" == "" } {
+        #line oneshot #action {^╭───技能列表(共%*项){(─|┬)*}──╮$} {
+            char.skills.parse.output;
+        };
+    };
+
+    xtt.Send skills %0;
+};
+
+#alias {char.skills.parse.output} {
     #class {ParseSkills} open;
 
     #var char[Skills][currentType] {};
@@ -107,17 +123,20 @@
         #line gag;
     };
 
-    #action {^╰───{(┴|─)*}┴────%S────╯{|ID=char.skills}$} {
+    #action {^╰───{(┴|─)*}─%S────╯{|ID=char.skills}$} {
         #unvar char[Skills][currentType];
         #class {ParseSkills} kill;
     };
 
     #action {^你不是查看过吗？{|ID=char/skills}$} {
+        #unvar char[Skills][currentType];
         #class {ParseSkills} kill;
     };
 
-    #delay 5 {
+    event.HandleOnce GA {char.skills} {char} {
+        #unvar char[Skills][currentType];
         #class {ParseSkills} kill;
+        #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
     };
 
     #class {ParseSkills} close;

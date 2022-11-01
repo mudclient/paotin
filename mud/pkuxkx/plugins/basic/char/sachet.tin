@@ -14,9 +14,19 @@
 
 #list char[锦囊] create {};
 
-#action {^%S(%S %S) [%1/%2]$E} {
+#alias {jiancha} {char.sachet.jiancha};
+
+#alias {char.sachet.jiancha} {
     #list char[锦囊] create {};
 
+    #line oneshot #action {^%S(%S %S) [%*/%*]{|ID=char.sachet}$} {
+        char.sachet.parse.output;
+    };
+
+    xtt.Send jiancha;
+};
+
+#alias {char.sachet.parse.output} {
     #class char-parse-sachet open;
 
     #local level    {地|山|水|风|雷|火|泽|天};
@@ -38,15 +48,20 @@
             #if { "$item" == "" } {
                 #continue;
             };
-            #nop {( 1)山★ 玄武甲*12};
+            #nop {[M5B]雷★木灵*30};
             #local item {@__char_sachet_parse__{{$item}}};
             #var char[锦囊] {$char[锦囊]{$item[序号]}{$item}};
         };
     };
 
-    #action {^╰─────────┴─────────┴─────────┴─%S────╯{|ID=char.sachet}$} {
-        #delay tmp {};
+    #action {^╰──{(─|┴)+}─%S────╯{|ID=char.sachet}$} {
         #class char-parse-sachet kill;
+    };
+
+    event.HandleOnce GA {char.sachet} {char} {
+        #class char-parse-sachet kill;
+        okLog 锦囊数据已更新。;
+        #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
     };
 
     #class char-parse-sachet close;
