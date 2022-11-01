@@ -4,8 +4,14 @@
 #nop 命令白名单。;
 #nop 只有纯小写字母，空格，减号组成的命令无需再加白名单。这里只维护例外;
 #var silent-WhiteList {
-    chat*;          qq*;            helpme*;        tt*;
-    amber_alert;    status_me;
+    chat;           chat*;          qq;             qq*;
+    helpme;         helpme*;        tt;             tt*;
+    rumor;          rumor*;         tell;           say;
+    bd;             bd*;            group;          group*;
+    nation;         nation*;        ask;            i2;
+    buy;            list;           node;
+
+    amber_alert;    status_me;      set;            unset;
 };
 
 #nop 文字表情;
