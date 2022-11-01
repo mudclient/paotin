@@ -5,7 +5,7 @@
 #nop 只有纯小写字母，空格，减号组成的命令无需再加白名单。这里只维护例外;
 #var silent-WhiteList {
     chat*;          qq*;            helpme*;        tt*;
-    amber_alert;
+    amber_alert;    status_me;
 };
 
 #nop 文字表情;

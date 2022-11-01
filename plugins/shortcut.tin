@@ -134,11 +134,11 @@
         #ignore delays off;
         #ignore events off;
         #ignore macros off;
-    } {1.0};
+    } {1.000};
 
-    #alias {^%*$E} {
-        #echo {<110>命令已被抑制（可用 <120>#send<110> 强制发送。撤销请用 <120>undo-disable-all-command<110>）: <130>%s<070>} {%%0}
-    } {1.1};
+    #alias {^%*{|ID=paotin/disable-all-command}$} {
+        #echo {<110>命令已被抑制，可用 <120>#send<110> 强制发送。撤销请用 <120>undo-disable-all-command<110> : <130>%s<070>} {%%0}
+    } {1.000};
 
     #ignore actions on;
     #ignore tickers on;
