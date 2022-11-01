@@ -198,5 +198,3 @@
 
     #return {$left$right};
 };
-
-#alias {char.GetSkills} {skills};

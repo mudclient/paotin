@@ -40,9 +40,13 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
 #nop ╰────┴──────┴────┴──────┴────┴──────┴──北大侠客行────╯;
 
 #alias {char.status_me.parse.output} {
+    #local silent {%1};
+
     #class char-parse-status-me open;
 
-    #gag {^%*$};
+    #if { "$silent" == "gag" } {
+        #gag {^%*$};
+    };
 
 #nop 　气血恢复  　340.21  　气血治疗  　65.47   　精神恢复  　605.26  　精神治疗  　65.47   　;
     #action {^│气血恢复│%S%!s│气血治疗│%S%!s│精神恢复│%S%!s│精神治疗│%S%!s│$} {
@@ -78,36 +82,43 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
 
 #alias {char.GetStatusMe} {
     #local silent {%1};
-
-    #local disableOutput {@XTTGetOption{DisableOutput}};
-    #if { "$disableOutput" == "true" } {
-        #echo {<160>命令已被抑制: <420>%p<070>} {char.GetStatusMe};
-        #return;
-    };
+    #local args   {%2};
 
     #class char.GetStatusMe open;
 
-#nop ╭───个人状态────┬────┬──────┬────┬──────┬────┬──────╮┐;
-    #action {^╭───个人状态──{(─|┬)+}─╮$} {
-        char.status_me.parse.output;
+#nop ╭───个人状态────┬────┬──────┬────┬──────┬────┬──────╮;
+    #line oneshot #action {^╭───个人状态──{(─|┬)+}─╮$} {
+        #if { "%1" == "gag" } {#line gag};
+        char.status_me.parse.output %1;
     };
 
 #nop ╰────┴──────┴────┴──────┴────┴──────┴──北大侠客行────╯;
     #action {^╰{(─|┴)+}──%S────╯{|ID=char.status}$} {
-        #class char-parse-status-me kill;
-        #class char.GetStatusMe kill;
-        #echo <120>人物状态信息已更新。<070>;
-        #line gag;
-
-        event.Emit char/status;
+        #if { "%1" == "gag" } {#line gag};
     };
 
     #action {^等等，系统喘气中......$} {
         #class char-parse-status-me kill;
         #class char.GetStatusMe kill;
+        event.UnHandle GA {char.status_me};
+    };
+
+    #alias {char.status_me.parse.done} {
+        #class char-parse-status-me kill;
+        #class char.GetStatusMe kill;
+        okLog 人物状态信息已更新。;
+        event.Emit char/status;
+    };
+
+    event.HandleOnce GA {char.status_me} {char} {
+        char.status_me.parse.done;
+        #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
     };
 
     #class char.GetStatusMe close;
 
-    status_me;
+    xtt.Send status_me %2;
 };
+
+#alias {status_me}  {char.GetStatusMe gag   {%0}};
+#alias {sm}         {char.GetStatusMe nogag {%0}};
