@@ -1,11 +1,11 @@
-#nop 开启 PCRE UTF 字符类支持。;
-#config {PCRE UTF} ON;
-
 #nop 【一代神相】江湖十大气血高手 牛肉面馆 总管事「绝对不是」天天练功 🐒 ☯️ (Marking);
 #nop 【 西  毒 】桃林书院 生员「喵喵喵喵喵喵喵喵喵喵喵喵喵喵喵喵」挖煤猫 🐎 ⭕️ (Zardc);
 #nop             朱雀 辽东大侠 胡一刀(Hu yidao) [任务发放] ◆◆ <衣钵相承>;
 #nop             丐帮第八代帮主 萧峰(Xiao feng) [任务发放] ◆;
 #nop             大善人 韩员外(Han yuanwai) [任务发放];
+#nop             剑术神通「陷空洞中执九剑，能使龙池飞霹雳！」小小霹雳鼠 🗡(Xxpls);
+#nop             一品堂 供奉「大　爷　我　的　爱」护寺僧人 🦅 (Molia) <发呆一分钟>;
+#nop             大宗师 予人玫瑰 ★ 剑胆琴心★  「语多难寄一寸相思卿安否」黑袍人 🐅 🧡 (Heipao ren);
 #function {ParseTitle} {
     #local obj {%0};
 
@@ -14,7 +14,18 @@
     #local tmp {};
     #replace {tmp} {%s%s%s%s%s%s%s%s%s%s} {};
 
-    #replace {obj} {^{?:(?:【(.+?)】)?(.*?)(?:「(.+?)」)?(\p{Han}+)( (?:\p{So}\S* )+)?\(([A-Z][a-z']+(?: [a-z]+)*)\)(?: <(.*?)>)?(?: \[(.*?)\])?(?: ((?:◆)+))?(?: <(衣钵相承)>)?}$} {
+    #local rank     {?:(?:【(.+?)】)?};
+    #local title    {?:(.*?)};
+    #local nick     {?:(?:「(.+?)」)?};
+    #local name     {?:(\p{Han}+)};
+    #local emoji    {?:( (?:(?:\p{So}\S*|🗡|🦅|🧡|🐅|🐒|🐎|⭕️) )+)?};
+    #local id       {?:\(([A-Z][a-z']+(?: [a-z]+)*)\)};
+    #local status1  {?:(?: <(.*?)>)?};
+    #local status2  {?:(?: \[(.*?)\])?};
+    #local isJobNPC {?:(?: ((?:◆)+))?};
+    #local yibo     {?:(?: <(衣钵相承)>)?};
+
+    #replace {obj} {{*UTF8}{?:^}{$rank}{$title}{$nick}{$name}{$emoji}{$id}{$emoji}{$status1}{$status2}{$isJobNPC}{$yibo}$} {
         {rank}      {@trim{&1}}
         {title}     {@trim{&2}}
         {nick}      {@trim{&3}}
