@@ -1,6 +1,7 @@
 #!/bin/sh
 
 TT=
+ID=$1
 START_FILE=$1
 
 ECHO="echo -e"
@@ -35,4 +36,4 @@ fi
 $ECHO "\x1b[1;32m启动 tintin...\x1b[0m"
 $ECHO "\x1b[1;32m$TT $START_FILE\x1b[0m"
 
-$TT $START_FILE
+$TT -G -t GAME-$ID $START_FILE

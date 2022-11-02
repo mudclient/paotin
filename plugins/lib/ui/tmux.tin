@@ -1,0 +1,19 @@
+#alias {tmux.UpdateCharData} {
+    #if { "$char[档案][账号]" == "" } {
+        #return;
+    };
+
+    #local id       {#[fg=brightwhite]$char[档案][账号]#[default]};
+    #local name     {#[fg=brightcyan]$char[档案][大名]#[default]};
+    #local title    {$char[档案][头衔]};
+    #replace title  {;} { };
+    #local title    {#[bold fg=red]$title#[default]};
+    #local file     {tmux/$char[档案][账号]/char-data};
+
+    #script {tmp} {echo "ID: [$id] 大名: [$name] 头衔: [$title]" > $file};
+    #script {tmp} {tmux refresh};
+};
+
+load-lib event;
+
+event.Handle {char/status} {tmux} {ui} {tmux.UpdateCharData};

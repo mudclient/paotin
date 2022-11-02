@@ -146,11 +146,17 @@
         #class char-score-parser kill;
         #replace char[档案][年龄] {岁} {};
         #var char[档案][年龄] {@c2d{$char[档案][年龄]}};
+
+        event.Emit {char/status};
     };
 
     #class char-score-parser close;
 };
     
 load-module {basic/title};
+
+load-lib event;
+
+event.Define {char/status} {无参} {$MODULE} {score 命令的数据解析成功时，发送本事件}
 
 score;

@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+#nop vim: set filetype=tt:;
+#nop {
+
+ID=$1
+LOGS="${*:2}"
+
+if [ "x$LOGS" == "x" ]; then
+    LOGS="chat qq jh helpme fullsk quest job tell"
+fi
+
+if [ "x$ID" == "x" ]; then
+    echo -e '用法: \x1b[1;32;92mmtail \x1b[1;33;93m<id>\x1b[0m [<log1> <log2>...]'
+    echo '日志名称不用加路径和 .log 后缀，只要文件名就好。'
+    echo "可以同时显示多个日志，默认显示日志: $LOGS"
+    echo '别忘了写 ID，加油！'
+    exit
+fi
+
+if [[ ! -d "var/log/$ID" && ! -d "log/$ID/" ]]; then
+    echo 没找到 $ID 的游戏日志。请先打开游戏再执行本操作。;
+    exit
+fi
+
+exec tt++ -G -t MLOG-$ID bin/mtail $ID $LOGS
+exit
+
+};
+
+#event {PROGRAM START} {
+    #if { "%0" == "" } {
+        #end {\};
+    };
+
+    disable-all-keys;
+    #alias {okLog}          {#0};
+    #alias {warnLog}        {#0};
+    #alias {prompt.Set}     {#0};
+    #alias {prompt.refresh} {#0};
+    #read plugins/lib/ui/mouse.tin;
+    #read plugins/lib/ui/beautify.tin;
+    #local _ {@lib_ui_beautify.Init{}};
+    monitor-log %0;
+};
+
+#alias {disable-all-keys} {
+    #local ch {};
+    #parse {abcdefghijklmnopqrstuvwxyz} {ch} {
+        #macro {\c$ch} {#0};
+        #macro {$ch} {#0};
+    };
+    #parse {ABCDEFGHIJKLMNOPQRSTUVWXYZ} {ch} {
+        #macro {$ch} {#0};
+    };
+    #parse {`1234567890-=~!@#$%^&*()_+} {ch} {
+        #macro {$ch} {#0};
+    };
+    #parse {,./<>?;':"[]\\|} {ch} {
+        #macro {$ch} {#0};
+    };
+    #macro {\x7B} {#0};
+    #macro {\x7D} {#0};
+
+    #macro {\cn}    {switch-log +};
+    #macro {\cp}    {switch-log -};
+
+    #var ctrl-c-pressed {false};
+    #macro {\cc} {
+        #if { "$ctrl-c-pressed" == "false" } {
+            #echo {如果你想要退出，请再按一次 Ctrl+C。};
+            #var ctrl-c-pressed {true};
+            #delay cancel {
+                #echo {等待超时，恢复正常。};
+                #var ctrl-c-pressed {false};
+            } {1.000};
+        };
+        #else {
+            #showme {\e]2;NOLOG\a\};
+            #end {\};
+        };
+    };
+};
+
+#alias {switch-log} {
+    #local dir {%1};
+    #if { "$dir" == "" } {
+        #local dir {+};
+    };
+    #session $dir;
+    #buffer end;
+    #script logname {echo $LOGNAME > tmux/$ID/log-name};
+    #showme {\e]2;MLOG-${ID}-${LOGNAME}\a\};
+};
+
+#alias {monitor-log%+1..s%+1..S{?:|\s+(.*)}$} {
+    #local  id      {%2};
+    #local  logs    {%3};
+
+    #local path {};
+    #script path {test -d var/log/$id/ && echo var/log/$id || echo log/$id};
+    #local path {$path[1]};
+    #list logs create $logs;
+    #local log {};
+    #foreach {$logs[]} {log} {
+        #local file {$path/${log}.log};
+        #script {tmp} {touch $file};
+        #run {log-$log} {tail -n 1000 -f $path/${log}.log};
+        #var LOGNAME {$log};
+        #var ID      {$id};
+    };
+
+    switch-log;
+};
+
+#event {SCREEN RESIZE} {#buffer end};

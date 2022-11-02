@@ -4,12 +4,21 @@
 .bash_profile
 .viminfo
 .tintin/*
+.local
+.cache
+
+bin/tt++
+bin/tt-*
+bin/tmux*
+!bin/tmux-ui
 
 log/*
 !log/.gitkeep
 ids/*
 !ids/DEFAULT
 !ids/EXAMPLE
+
+tmux/*
 
 foo.tin
 bar.tin
@@ -18,6 +27,11 @@ bug.tin
 test.tin
 out
 out[1-9]
+*.out
+*.old
+*.bak
+*.jpg
+*.png
 
 var/*
 var

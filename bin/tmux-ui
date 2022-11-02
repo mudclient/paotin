@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+#
+# 这是一堆乱七八糟的和 tmux UI 元素相关的小功能的集合。
+# 通过 ELEMENT 来区分想要的是哪个元素，目前支持的有 LOGO/WIN/PANE 三大类
+# LOGO: tmux 右下角的一个 LOGO 显示，计划将版本号也放进去
+# WIN:  tmux 状态栏中，窗口标题会显示角色 ID
+# PANE: 会在 tmux pane 上显示一些有用的信息，目前支持两种，用第二个参数 ARG 来控制
+#       ARG=GAME-id，表示这是游戏主面板，用来显示一些角色数据，约定存放在 tmux/ID/ 目录下
+#       ARG=MLOG-id，表示这是游戏日志监视器，会在 pane 边框线上显示日志名称
+#
+# 需要配合 tmux.conf 使用，将需要的参数特别是 ID 要传过来。
+#
+
+ELEMENT=$1
+ARG=$2
+ARG2=$3
+ARG3=$4
+ID=
+LOGNAME=
+
+if [[ "x$ARG" == xGAME-* ]]; then
+    ID=${ARG:5}
+    mkdir -p tmux/$ID
+    ARG=GAME
+fi
+
+if [[ "x$ARG" =~ xMLOG-(.*)-(.*) ]]; then
+    ID=${BASH_REMATCH[1]}
+    LOGNAME=${BASH_REMATCH[2]}
+    mkdir -p tmux/$ID
+    ARG=MLOG
+fi
+
+# 每隔十秒钟轮换显示英文和中文 LOGO
+if [ "x$ELEMENT" == "xLOGO" ]; then
+    echo -e 'PaoTin++\n庖丁加加' | head -$(expr $(date '+%s') '/' 10 '%' 2 '+' 1) | tail -1
+    exit
+fi
+
+if [ "x$ELEMENT" == "xWIN" ]; then
+    if [ "x$ID" != "x" ]; then
+        echo $ID
+    else
+        echo '#W'
+    fi
+    exit
+fi
+
+if [ "x$ELEMENT" == "xPANE" ]; then
+    if [ "x$ARG" == "xMLOG" ]; then
+        echo -n " 正在查看 #[bg=blue fg=brightyellow bold]$LOGNAME#[default] 日志"
+        if [ "x$ARG2" == "x1" ]; then
+            echo -n "，Ctrl+N/Ctrl+P 切换，Ctrl+CC 退出 "
+        else
+            echo -n " "
+        fi
+    elif [ "x$ARG" == "xGAME" ]; then
+        echo -n " $(cat tmux/$ID/char-data || echo 尚未找到 $ID 的角色数据，请检查机器人版本) "
+    else
+        WIDTH=${ARG3-0}
+        if [ $WIDTH -gt 100 ]; then
+            echo -n ' 终端: #{client_termname} 当前目录: #{pane_current_path} #[align=right] 尺寸: #{pane_width}x#{pane_height} '
+        elif [ $WIDTH -gt 80 ]; then
+            echo -n ' #{client_termname} #{pane_current_path} #[align=right] #{pane_width}x#{pane_height} '
+        elif [ $WIDTH -gt 40 ]; then
+            echo -n ' #{client_termname} #[align=right] #{pane_width}x#{pane_height} '
+        elif [ $WIDTH -gt 20 ]; then
+            echo -n '#[align=right] #{pane_width}x#{pane_height} '
+        else
+            echo -n ''
+        fi
+    fi
+fi

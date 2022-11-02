@@ -11,7 +11,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ===========
 */
 
-#nop 载入担子炮的 TinTin 脚本框架;
+#nop 载入 PaoTin++ 环境;
 #read {framework/main.tin};
 
 #nop 你要连哪个接入;
