@@ -1,0 +1,96 @@
+#var lib_ui_chat[META] {
+    {NAME}      {聊天日志}
+    {DESC}      {抓取聊天信息，分置到不同的日志文件里去}
+    {AUTHOR}    {担子炮}
+};
+
+#list chat-channel create {
+    {{pattern}{求助}                        {action}{helpmeLog}     {gag}{true}}
+    {{pattern}{北侠QQ群}                    {action}{qqLog}         {gag}{true}}
+    {{pattern}{%!{闲聊|副本|谣言}}          {action}{chatLog}       {gag}{true}}
+    {{pattern}{%!{江湖|任务|交易}}          {action}{jhLog}         {gag}{true}}
+    {{pattern}{%!{队伍|门派|本地|区域}}     {action}{bdLog}         {gag}{true}}
+    {{pattern}{私聊}                        {action}{tellLog}       {gag}{false}}
+    {{pattern}{%*}                          {action}{groupLog}      {gag}{true}}
+};
+
+#function {lib_ui_chat.Init} {
+    load-file {etc/ui-chat.tin};
+    #return true;
+};
+
+#nop 普通聊天信息;
+#action {~^%c【%+2..5u】%c%+1..10u%c({[a-z A-Z]+})%c: %*$E} {
+    chat.log {%2} {%0};
+} {4.994};
+
+#nop 单行的 emote 表情;
+#action {~^%c【%+2..5u】%*(%+1..S{| \S+} ||{| \S+} %+1..S)%c$E} {
+    chat.log {%2} {%0};
+} {4.994};
+
+#nop 多行的 emote 表情;
+#action {~^%c【%+2..5u】%*$E} {
+    chat.log-multi-line {%2} {%0};
+} {4.995};
+
+#alias {chat.log} {
+    #local type {%1};
+    #local text {%2};
+
+    #local id {};
+    #loop {1} {&chat-channel[]} {id} {
+        #local pattern {$chat-channel[$id][pattern]};
+        #local action  {$chat-channel[$id][action]};
+        #local gag     {$chat-channel[$id][gag]};
+        #if { "$type" == "$pattern" } {
+            $action $text;
+            #if { "$gag" == "true" } {
+                #line gag;
+            };
+            #return;
+        };
+    };
+};
+
+#alias {chat.log-multi-line} {
+    #local type {%1};
+    #local text {%2};
+    chat.log {$type} {$text};
+
+    #if { "$type" != "{闲聊|求助|谣言}" } {
+        #return;
+    };
+
+    #if { "$type" == "{闲聊|谣言}" && {$text} == {%* {\e\[0m}} } {
+        #return;
+    };
+
+    #class chat.log open;
+
+    #action {~^%*{|ID=chat.log}$} {
+        chat.log {%1} {%%0};
+    } {4.993};
+
+    #action {~^%*(%w ||{| \S+} %+1..S)%c{|ID=chat.log}$} {
+        chat.log {%1} {%%0};
+        #class chat.log kill;
+    } {4.992};
+
+    #if { "$type" == "{闲聊|谣言}" } {
+        #action {~^%* {\e\[0m}{|ID=chat.log}$} {
+            chat.log {%1} {%%0};
+            #class chat.log kill;
+        } {4.992};
+    };
+
+    #delay chat.log {#class chat.log kill} 0;
+
+    #class chat.log close;
+};
+
+#action {~^%c%u%c(%w)告诉你：%*$} {
+    chat.log 私聊 {%0};
+} {9.999};
+
+set learn_emote 1;
