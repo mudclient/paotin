@@ -123,7 +123,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
 
 #nop 热键绑定;
 #list global-key-bindings create {
-    {{key}{\cs}    {action}{prompt.ToggleSwitch}}
+    {{key}{\cos}    {action}{prompt.ToggleSwitch}}
 };
 
 #var prompt-top-max-line {0};

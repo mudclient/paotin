@@ -47,7 +47,7 @@
     { {place}{Bot} {line}{3}    {label}{状态}       {name}{status}   {cooldown}{600} }
     { {place}{Bot} {line}{3}    {label}{持续效果}   {name}{persist}  {countdown}{Seconds} }
 
-    { {place}{BotSepBar}        {label}{美化 / Ctrl+B 切换}  {name}{beautify} {cooldown}{600} {visibility}{HideCool} }
+    { {place}{BotSepBar}        {label}{屏幕美化}   {name}{beautify} {cooldown}{600} {visibility}{HideCool} }
     { {place}{BotSepBar}        {label}{状态栏更新} {name}{disable}  {visibility}{HideLabel} }
     { {place}{BotSepBar}        {label}{任务}       {name}{job}     }
     { {place}{BotSepBar}        {label}{阶段}       {name}{stage}   {cooldown}{1200} {countdown}{Auto} }
@@ -80,9 +80,10 @@
 
 #nop 热键绑定;
 #list global-key-bindings create {
-    {{key}{\cs}     {action}{prompt.ToggleSwitch}}
-    {{key}{\cb}     {action}{beautify.ToggleSwitch}}
     {{key}{\cd}     {action}{xtt.ToggleDebug}}
-    {{key}{\ce}     {action}{option.Toggle EchoCommand}}
     {{key}{\col}    {action}{option.List}}
+    {{key}{\cos}    {action}{prompt.ToggleSwitch}}
+    {{key}{\cob}    {action}{beautify.ToggleSwitch}}
+    {{key}{\coe}    {action}{option.Toggle EchoCommand}}
+    {{key}{\com}    {action}{option.Toggle GagMove}}
 };
