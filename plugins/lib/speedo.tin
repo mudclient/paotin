@@ -1,0 +1,151 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#var lib_speedo[META] {
+    {NAME}      {测速仪}
+    {DESC}      {为各种数据提供测速支持，气血/精神/经验值/存款都可以}
+    {AUTHOR}    {担子炮}
+};
+
+#function {lib_speedo.Init} {
+    #var gSpeedo {};
+    #return {true};
+};
+
+#alias {speedo.Add} {
+    #local key          {%1};
+    #local value        {%2};
+    #local monotone     {%3};
+    #local keepalive    {%4};
+
+    #math value {$value + @speedo.Get{{$key}}};
+    speedo.Set {$key} {$value} {$monotone} {$keepalive};
+};
+
+#alias {speedo.Set} {
+    #local key          {%1};
+    #local value        {%2};
+    #local monotone     {%3};
+    #local keepalive    {%4};
+
+    #format {now} {%T};
+
+    #if { "$gSpeedo[$key]" == "" } {
+        #var {gSpeedo[$key][base]}          {$value};
+        #var {gSpeedo[$key][baseTime]}      {$now};
+        #var {gSpeedo[$key][deduction]}     {0};
+        #var {gSpeedo[$key][paused]}        {false};
+    };
+
+    #nop 只允许单调递增或者单调递减;
+    #if { "$monotone" == "true" } {
+        #if {  ( $value > $gSpeedo[$key][value] && $gSpeedo[$key][value] < $gSpeedo[$key][base] )
+            || ( $value < $gSpeedo[$key][value] && $gSpeedo[$key][value] > $gSpeedo[$key][base] ) } {
+            #var {gSpeedo[$key][base]}      {$gSpeedo[$key][value]};
+            #var {gSpeedo[$key][baseTime]}  {$gSpeedo[$key][update]};
+            #var {gSpeedo[$key][deduction]} {0};
+        };
+    };
+
+    #line local #math interval {$now - $gSpeedo[$key][update]};
+
+    #nop Set 会导致继续统计，但之前暂停时经过的时间将被扣除;
+    #nop 超过 keepalive 的间隔也会被扣除;
+    #if {  "$gSpeedo[$key][paused]" == "true" || ("$keepalive" != "" && $interval > $keepalive) } {
+        #var {gSpeedo[$key][paused]} {false};
+        #math {gSpeedo[$key][deduction]} {$gSpeedo[$key][deduction] + $interval};
+    };
+    
+    #var {gSpeedo[$key][value]}     {$value};
+    #var {gSpeedo[$key][update]}    {$now};
+};
+
+#function {speedo.Get} {
+    #local key {%1};
+
+    #if { "$gSpeedo[$key]" == "" } {
+        #return {0};
+    };
+
+    #return {$gSpeedo[$key][value]};
+};
+
+#alias {speedo.GetUpdateTime} {
+    #local key {%1};
+    #return {$gSpeedo[$key][update]};
+};
+
+#function {speedo.GetSpeed} {
+    #local key      {%1};
+    #local interval {%2};
+
+    #local speedInfo {@speedo.GetSpeedInfo{{$key};{$interval}}};
+    #if { "$speedInfo" == "" } {
+        #return {0};
+    };
+
+    #return {$speedInfo[value]};
+};
+
+#function {speedo.GetSpeedInfo} {
+    #local key {%1};
+    #local interval {%2};
+
+    #if { "$interval" == "" } {
+        #local interval 1;
+    };
+
+    #if { "$gSpeedo[$key]" == "" } {
+        #return {};
+    };
+
+    #local value {0};
+    #math value {
+            ( $gSpeedo[$key][value] - $gSpeedo[$key][base] ) * $interval
+        /   ( $gSpeedo[$key][update] - $gSpeedo[$key][baseTime] - $gSpeedo[$key][deduction])
+    };
+
+    #return {
+        {begin}     {$gSpeedo[$key][baseTime]}
+        {end}       {$gSpeedo[$key][update]}
+        {value}     {$value}
+    };
+};
+
+#alias {speedo.Pause} {
+    #local key {%1};
+    #var {gSpeedo[$key][paused]} {true};
+};
+
+#alias {speedo.Resume} {
+    #local key {%1};
+
+    #if { "$gSpeedo[$key][paused]" == "true" } {
+        #var {gSpeedo[$key][paused]} {false};
+        #math {gSpeedo[$key][deduction]} {$gSpeedo[$key][deduction] + $now - $gSpeedo[$key][update]};
+        #format {now} {%T};
+        #var {gSpeedo[$key][update]} {$now};
+    };
+};
+
+#alias {speedo.Reset} {
+    #local key {%1};
+
+    #if { "$gSpeedo[$key]" == "" } {
+        #return;
+    };
+
+    #format {now} {%T};
+
+    #var {gSpeedo[$key][base]}      {0};
+    #var {gSpeedo[$key][baseTime]}  {$now};
+    #var {gSpeedo[$key][deduction]} {0};
+    #var {gSpeedo[$key][paused]}    {false};
+    #var {gSpeedo[$key][value]}     {0};
+    #var {gSpeedo[$key][update]}    {$now};
+};
