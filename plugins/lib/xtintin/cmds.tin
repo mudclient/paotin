@@ -17,6 +17,232 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     $code;
 };
 
+#alias {xtt.ListTicker} {
+	#info tickers save;
+
+	#echo {<128>%+20s %+20s %+20s} {定时器名称} {执行间隔} {距离下次执行(s)};
+
+	#draw Yellow scroll line 1 1 1 62;
+
+	#format utime %U;
+
+    #local index {};
+	#loop {1} {&info[TICKERS][]} {index} {
+        #local uval {};
+		#math uval $info[TICKERS][+$index][arg3] * 1000000;
+
+		#echo {%+20s %+20s %+20m}
+			{$info[TICKERS][+$index][arg1]}
+			{$info[TICKERS][+$index][arg3]}
+			{($uval - ($utime - $info[TICKERS][+$index][arg4]) % $uval) / 1000000.00};
+	};
+};
+
+#alias {xtt.ListAlias} {
+    #local pattern {%1};
+
+	#info aliases save;
+
+    #local aliasTable {};
+    #local index {};
+	#loop {1} {&info[ALIASES][]} {index} {
+		#local name     {$info[ALIASES][+$index][arg1]};
+		#local class    {$info[ALIASES][+$index][class]};
+
+        #if { "$class" == "" && "$pattern" != "all" } {
+            #continue;
+        };
+
+        #if { "$class" == "" } {
+            #local class {未分组};
+        };
+
+        #if { "$name" == "%*{[^a-zA-Z0-9-_.]}%*" } {
+            #continue;
+        };
+
+        #if { "$pattern" != "{|all}" && "$class/$name" != "%*$pattern%*" } {
+            #continue;
+        };
+
+        #list {aliasTable[$class]} sort {$name};
+	};
+
+    #local format {    %-20s %-30s %-10s};
+	#echo {<128>$format} {class} {别名} {类型};
+
+	#draw Yellow scroll line 1 1 1 80;
+
+    #local classList {@sort{*aliasTable[]}};
+    #local class {};
+    #foreach {$classList} {class} {
+        #local name {};
+        #foreach {${aliasTable[$class][]}} {name} {
+            #local type {<130>自定义<070>};
+
+            #if { "$name" == "%*.{[A-Z][a-zA-Z0-9]+}" } {
+                #local type {<120>开放API<070>};
+            };
+
+            #if { "$class" == "module-loader" } {
+                #if { "$name" == "{[A-Z]+}" } {
+                    #local type {<160>快捷方式<070>};
+                };
+                #else {
+                    #local type {<020>语法增强<070>};
+                }
+            };
+
+            #if { "${class}.$name" == "main.class.%*" } {
+                #local type {<020>语法增强<070>};
+            };
+
+            #if { "${class}.$name" == "main.load-file" } {
+                #local type {<020>语法增强<070>};
+            };
+
+            #if { "${class}.$name" == "main.%*Log" } {
+                #local type {<120>日志接口<070>};
+            };
+
+            #if { "$pattern" == "" && "$type" == "%*自定义%*" } {
+                #continue;
+            };
+
+            #echo {<060>$format}
+                {$class}
+                {$name}
+                {$type};
+        };
+    };
+};
+
+#alias {xtt.ListVar} {
+    #local pattern {%1};
+
+	#info variable save;
+
+    #local varTable {};
+    #local index {};
+	#loop {1} {&info[VARIABLES][]} {index} {
+		#local name     {$info[VARIABLES][+$index][arg1]};
+		#local class    {$info[VARIABLES][+$index][class]};
+		#local value    {$info[VARIABLES][+$index][arg2]};
+		#local nest     {$info[VARIABLES][+$index][nest]};
+
+        #if { "$class" == "" && "$pattern" != "all" } {
+            #continue;
+        };
+
+        #if { "$class" == "" } {
+            #local class {未分组};
+        };
+
+        #if { "$pattern" != "{|all}" && "$class/$name" != "%*$pattern%*" } {
+            #continue;
+        };
+
+        #local {varTable[$class][$name]} {
+            {nest}{$nest}
+            {value}{$value}
+        };
+	};
+
+    #local format {    %-20s %-30s %-10s %s};
+	#echo {<128>$format} {class} {变量} {类型} {值};
+
+	#draw Yellow scroll line 1 1 1 80;
+
+    #local classList {@sort{*varTable[]}};
+    #local class {};
+    #foreach {$classList} {class} {
+        #local name {};
+        #local nameList {@sort{*varTable[$class][]}};
+        #foreach {$nameList} {name} {
+            #local type {<020>字符串<070>};
+            #local value {<160>$varTable[$class][$name][value]<070>};
+            #local nest  {$varTable[$class][$name][nest]};
+
+            #if { $nest > 0 } {
+                #local type {<050>表格<070>};
+                #local value {<130>[... 共 $nest 项数据]<070>};
+            };
+
+            #echo {<060>$format}
+                {$class}
+                {$name}
+                {$type}
+                {$value};
+        };
+    };
+};
+
+#alias {xtt.ListFunc} {
+    #local pattern {%1};
+
+	#info functions save;
+
+    #local funcsTable {};
+    #local index {};
+	#loop {1} {&info[FUNCTIONS][]} {index} {
+		#local name     {$info[FUNCTIONS][+$index][arg1]};
+		#local class    {$info[FUNCTIONS][+$index][class]};
+
+        #if { "$class" == "" && "$pattern" != "all" } {
+            #continue;
+        };
+
+        #if { "$class" == "" } {
+            #local class {未分组};
+        };
+
+        #if { "$name" == "%*{[^a-zA-Z0-9_./-]}%*" } {
+            #continue;
+        };
+
+        #if { "$pattern" != "{|all}" && "$class/$name" != "%*$pattern%*" } {
+            #continue;
+        };
+
+        #list {funcsTable[$class]} sort {$name};
+	};
+
+    #local format {    %-20s %-30s %-10s};
+	#echo {<128>$format} {class} {函数} {类型};
+
+	#draw Yellow scroll line 1 1 1 80;
+
+    #local classList {@sort{*funcsTable[]}};
+    #local class {};
+    #foreach {$classList} {class} {
+        #local name {};
+        #foreach {${funcsTable[$class][]}} {name} {
+            #local type {<130>自定义<070>};
+
+            #if { "$name" == "%*.{[A-Z][a-zA-Z0-9]+}" } {
+                #local type {<120>开放API<070>};
+            };
+
+            #if { "$class" == "{lib/xtintin|main}" } {
+                #local type {<020>语法增强<070>};
+            };
+
+            #if { "${class}.$name" == "main.%*Log" } {
+                #local type {<120>日志接口<070>};
+            };
+
+            #if { "$pattern" == "" && "$type" == "%*自定义%*" } {
+                #continue;
+            };
+
+            #echo {<060>$format}
+                {$class}
+                {$name}
+                {$type};
+        };
+    };
+};
+
 #alias {xtt.Send} {
     #if { "$xttOptions[DisableOutput]" == "true" } {
         #echo {<160>命令已被抑制: <420>%p<070>} {%0};
