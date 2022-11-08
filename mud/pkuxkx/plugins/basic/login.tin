@@ -53,7 +53,7 @@
             xtt.Answer y;
         };
 
-        #line oneshot #action {^%s{欢迎来到北大侠客行！|重新连线完毕。}%s$} {
+        #line oneshot #action {^%s{欢迎来到北大侠客行！|目前权限：\(player\)|重新连线完毕。}%s$} {
             #delay 0 {
                 #showme 登录成功。;
                 #local handler $login[autoexec];
