@@ -87,14 +87,15 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
     #class char.GetStatusMe open;
 
 #nop ╭───个人状态────┬────┬──────┬────┬──────┬────┬──────╮;
-    #line oneshot #action {^╭───个人状态──{(─|┬)+}─╮$} {
+    #line oneshot #action {^╭─{(─)*}─个人状态──{(─|┬)+}─╮$} {
         #if { "%1" == "gag" } {#line gag};
         char.status_me.parse.output %1;
     };
 
 #nop ╰────┴──────┴────┴──────┴────┴──────┴──北大侠客行────╯;
-    #action {^╰{(─|┴)+}──%S────╯{|ID=char.status}$} {
+    #line oneshot #action {^╰{(─|┴)+}──%S────╯{|ID=char.status}$} {
         #if { "%1" == "gag" } {#line gag};
+        char.status_me.parse.done;
     };
 
     #action {^等等，系统喘气中......$} {
@@ -106,7 +107,8 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
     #alias {char.status_me.parse.done} {
         #class char-parse-status-me kill;
         #class char.GetStatusMe kill;
-        okLog 人物状态信息已更新。;
+        event.UnHandle GA {char.status_me};
+        #delay 0 {okLog 人物状态信息已更新。};
         event.Emit char/status;
     };
 
@@ -122,3 +124,5 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
 
 #alias {status_me}  {char.GetStatusMe gag   {%0}};
 #alias {sm}         {char.GetStatusMe nogag {%0}};
+
+#delay status_me.Init {char.GetStatusMe gag} 3;

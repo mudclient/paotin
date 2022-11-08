@@ -16,6 +16,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 load-lib event;
+load-lib speedo;
 
 event.Define {char/hp}       {无参}  {$MODULE} {已经获取到 hp 命令输出结果，并更新 char[HP]。};
 event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令输出结果，并更新 char[HP]。};
@@ -27,26 +28,21 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
     #var char[HP][经验显示] {};
     #var char[HP][潜能]     {};
     #var char[HP][潜能显示] {};
-    #var char[HP][上次内力] {0};
     #var char[HP][当前内力] {};
     #var char[HP][最大内力] {};
     #var char[HP][加力]     {};
     #var char[HP][内力百分比] {};
-    #var char[HP][上次精力] {0};
     #var char[HP][当前精力] {};
     #var char[HP][最大精力] {};
     #var char[HP][精力百分比] {};
-    #var char[HP][上次气血] {0};
     #var char[HP][当前气血] {};
     #var char[HP][有效气血] {};
     #var char[HP][最大气血] {};
     #var char[HP][气血百分比] {};
-    #var char[HP][上次精神] {0};
     #var char[HP][当前精神] {};
     #var char[HP][有效精神] {};
     #var char[HP][最大精神] {};
     #var char[HP][精神百分比] {};
-    #var char[HP][上次真气] {0};
     #var char[HP][当前真气] {};
     #var char[HP][最大真气] {};
     #var char[HP][真气减伤] {};
@@ -60,12 +56,12 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
     #var char[HP][气势]     {};
     #var char[HP][状态]     {};
     #var char[HP][毒]       {};
-    #var char[HP][上次更新] {0};
     #var char[HP][更新时间] {};
     #var char[HP][状态更新] {};
     #class data/basic/char close;
 
     set hpbrief long,report;
+    #delay {char.Init} {char.GetHP; char.GetHP2} {10};
 
     #return true;
 };
@@ -80,14 +76,16 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
 #nop ├───────────────────┴───────────────────┤;
 #nop │【状态】 健康、怒、星宿火毒、星宿毒掌毒                                       │;
 #nop └──────────────────────────────北大侠客行────┘;
-#nop 战斗状态：
-#action {^╭───个人状态────────────┬───────────────────╮$} {
+#nop 战斗状态：;
+#alias {char.hp.parse.hp} {
     #class char-hp-parse-hp open;
     #action {^│【精神】%s%d%s/%s%d%s[%s%d\%]%!s│【精力】%s%d%s/%s%d%s(+%s%d)%!s│$} {
         #var char[HP][当前精神] {%%2};
         #var char[HP][有效精神] {%%5};
         #var char[HP][当前精力] {%%10};
         #var char[HP][最大精力] {%%13};
+        speedo.Set {当前精神} {$char[HP][当前精神]} {true} {10};
+        speedo.Set {当前精力} {$char[HP][当前精力]} {true} {10};
     };
 	#action {^│【气血】%s%d%s/%s%d%s[%s%d\%]%!s│【内力】%s%d%s/%s%d%s(+%s%d)%!s│$} {
         #var char[HP][当前气血] {%%2};
@@ -95,23 +93,28 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #var char[HP][当前内力] {%%10};
         #var char[HP][最大内力] {%%13};
         #var char[HP][加力]     {%%16};
+        speedo.Set {当前气血} {$char[HP][当前气血]} {true} {10};
+        speedo.Set {当前内力} {$char[HP][当前内力]} {true} {10};
 	};
 	#action {^│【真气】%!s%d%!s/%!s%d%!s[%!s%d\%]%!s│【%!*】%!s%!d\%%!s[%!*]%!s│$} {
         #var char[HP][当前真气] {%%1};
         #var char[HP][最大真气] {%%2};
         #var char[HP][真气减伤] {%%3};
+        speedo.Set {当前真气} {$char[HP][当前真气]} {true} {10};
 	};
     #action {^│【食物】%s%d%s/%s%d%s[%S]%!s│【潜能】%s%S%!s│$} {
         #var char[HP][食物]     {%%2};
         #var char[HP][最大食物] {%%5};
         #var char[HP][饥饿]     {%%7};
         #var char[HP][潜能显示] {%%9};
+        speedo.Set {食物} {$char[HP][食物]} {true} {10};
     };
     #action {^│【饮水】%s%d%s/%s%d%s[%S]%!s│【经验】%s%S%!s│$} {
         #var char[HP][饮水]     {%%2};
         #var char[HP][最大饮水] {%%5};
         #var char[HP][口渴]     {%%7};
         #var char[HP][经验显示] {%%9};
+        speedo.Set {饮水} {$char[HP][饮水]} {true} {10};
     };
     #action {^│【气势】%s%d%s\%%s　【平衡】%s%d%s\%%!s│$} {
         #var char[HP][气势]     {%%2};
@@ -135,10 +138,7 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #replace poison {;$} {};
         #var char[HP][毒] {$poison};
     };
-	#action {^╰─────────────{(─)*}%S────╯{|ID=char.hp}$} {
-    	#class char-hp-parse-hp kill;
-        event.Emit char/hp;
-	};
+
     #class char-hp-parse-hp close;
 };
 
@@ -167,11 +167,14 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #var char[HP][潜能显示] {%2};
         #var char[HP][潜能]     {@__char_hp_expandBigNumber__{%2}};
         #var char[HP][最大内力] {@__char_hp_expandBigNumber__{%3}};
-        #var char[HP][上次内力] {$char[HP][当前内力]};
         #var char[HP][当前内力] {@__char_hp_expandBigNumber__{%4}};
         #var char[HP][最大精力] {@__char_hp_expandBigNumber__{%5}};
-        #var char[HP][上次精力] {$char[HP][当前精力]};
         #var char[HP][当前精力] {@__char_hp_expandBigNumber__{%6}};
+
+        speedo.Set {经验}       {$char[HP][经验]}       {true} {10};
+        speedo.Set {潜能}       {$char[HP][潜能]}       {true} {10};
+        speedo.Set {当前内力}   {$char[HP][当前内力]}   {true} {10};
+        speedo.Set {当前精力}   {$char[HP][当前精力]}   {true} {10};
 
         #math char[HP][内力百分比] { $char[HP][当前内力] * 50 / $char[HP][最大内力] };
         #math char[HP][精力百分比] { $char[HP][当前精力] * 50 / $char[HP][最大精力] };
@@ -182,12 +185,13 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
     #else {
         #var char[HP][最大气血] {@__char_hp_expandBigNumber__{%1}};
         #var char[HP][有效气血] {@__char_hp_expandBigNumber__{%2}};
-        #var char[HP][上次气血] {$char[HP][当前气血]};
         #var char[HP][当前气血] {@__char_hp_expandBigNumber__{%3}};
         #var char[HP][最大精神] {@__char_hp_expandBigNumber__{%4}};
         #var char[HP][有效精神] {@__char_hp_expandBigNumber__{%5}};
-        #var char[HP][上次精神] {$char[HP][当前精神]};
         #var char[HP][当前精神] {@__char_hp_expandBigNumber__{%6}};
+
+        speedo.Set {当前气血} {$char[HP][当前气血]} {true} {10};
+        speedo.Set {当前精神} {$char[HP][当前精神]} {true} {10};
 
         #math char[HP][精神百分比] { $char[HP][当前精神] * 100 / $char[HP][最大精神] };
         #math char[HP][气血百分比] { $char[HP][当前气血] * 100 / $char[HP][最大气血] };
@@ -199,13 +203,16 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
 
 #nop 第三行: 真气，真元，食物，饮水;
 #action {^#%1,%2,%3,%4,{0|1},{0|1}$} {
-    #var char[HP][上次真气]  {$char[HP][当前真气]};
     #var char[HP][当前真气]  {@__char_hp_expandBigNumber__{%1}};
     #var char[HP][当前真元]  {@__char_hp_expandBigNumber__{%2}};
     #var char[HP][食物]      {@__char_hp_expandBigNumber__{%3}};
     #var char[HP][饮水]      {@__char_hp_expandBigNumber__{%4}};
     #var char[HP][战斗中]    {false};
     #var char[HP][忙]        {false};
+
+    speedo.Set {当前真气}   {$char[HP][当前真气]}   {true} {10};
+    speedo.Set {食物}       {$char[HP][食物]}       {true} {10};
+    speedo.Set {饮水}       {$char[HP][饮水]}       {true} {10};
 
     #if { "%5" == "1" } {
         #var char[HP][战斗中] {true};
@@ -215,16 +222,19 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #var char[HP][忙] {true};
     };
 
-    #var char[HP][上次更新] {$char[HP][更新时间]};
+    event.Emit char/hpbrief;
+
+    #unvar char.parsingHP;
+
+    #delay {char.HPSummarize} {char.HPSummarize} {0};
+
+    #line gag;
+} {2.0};
+
+#alias {char.HPSummarize} {
     #format now {%T};
     #var char[HP][更新时间] {$now};
 
-    #unvar char.parsingHP;
-    #line gag;
-    #delay {char.hp.summarize} {char.hp.summarize} {0};
-} {2.0};
-
-#alias {char.hp.summarize} {
     #local color    {<160>};
     #local combat   {};
     #if { "$char[HP][战斗中]" == "true" } {
@@ -237,8 +247,7 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #format combat  {$combat <130>你正忙<070>};
     };
 
-    #local 每秒气血变化 {};
-    #math 每秒气血变化 {($char[HP][当前气血] - $char[HP][上次气血]) / ($char[HP][更新时间] - $char[HP][上次更新])};
+    #local 每秒气血变化 {@speedo.GetSpeed{当前气血}};
     #if { ${每秒气血变化} > 0 } {
         #local 每秒气血变化 {(<120>${每秒气血变化}<070>)};
     };
@@ -249,8 +258,7 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #local 每秒气血变化 {};
     };
 
-    #local 每秒精神变化 {};
-    #math 每秒精神变化 {($char[HP][当前精神] - $char[HP][上次精神]) / ($char[HP][更新时间] - $char[HP][上次更新])};
+    #local 每秒精神变化 {@speedo.GetSpeed{当前精神}};
     #if { ${每秒精神变化} > 0 } {
         #local 每秒精神变化 {(<120>${每秒精神变化}<070>)};
     };
@@ -261,8 +269,7 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #local 每秒精神变化 {};
     };
 
-    #local 每秒内力变化 {};
-    #math 每秒内力变化 {($char[HP][当前内力] - $char[HP][上次内力]) / ($char[HP][更新时间] - $char[HP][上次更新])};
+    #local 每秒内力变化 {@speedo.GetSpeed{当前内力}};
     #if { ${每秒内力变化} > 0 } {
         #local 每秒内力变化 {(<120>${每秒内力变化}<070>)};
     };
@@ -273,8 +280,7 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #local 每秒内力变化 {};
     };
 
-    #local 每秒精力变化 {};
-    #math 每秒精力变化 {($char[HP][当前精力] - $char[HP][上次精力]) / ($char[HP][更新时间] - $char[HP][上次更新])};
+    #local 每秒精力变化 {@speedo.GetSpeed{当前精力}};
     #if { ${每秒精力变化} > 0 } {
         #local 每秒精力变化 {(<120>${每秒精力变化}<070>)};
     };
@@ -285,8 +291,11 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #local 每秒精力变化 {};
     };
 
-    #local {气血受损率} {};
-    #math {气血受损率} { $char[HP][有效气血] * 100 / $char[HP][最大气血] };
+    #local {气血健康度} {};
+    #math {气血健康度} { $char[HP][有效气血] * 100 / $char[HP][最大气血] };
+
+    #local {精神健康度} {};
+    #math {精神健康度} { $char[HP][有效精神] * 100 / $char[HP][最大精神] };
 
     #nop 气血恢复的数值展示为每分钟可以恢复的最大血量的倍数（以百分比形式）;
     #local {气血恢复} {};
@@ -297,17 +306,16 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
     #math {气血治疗} { $char[STATUS][气血治疗] * 100 * 60 / $char[HP][最大气血] };
 
     #local summarize {};
-    #format summarize {$color【HP摘要】<070>气血: %s%s/%s 内力: %s%s 气血恢复: %s/%s 精神: %s%s 精力: %s%s 食物: %s 饮水: %s$combat}
-        {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血受损率}}}
+    #format summarize {$color〔HP摘要〕<070>气血: %s%s/%s 内力: %s%s 气血恢复: %s/%s 精神: %s%s/%s 精力: %s%s 食物: %s(%s) 饮水: %s(%s)$combat}
+        {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血健康度}}}
         {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
         {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
-        {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}}
+        {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{${精神健康度}}}
         {@__char_hp_colorit__{$char[HP][精力百分比]}} {${每秒精力变化}}
-        {$char[HP][食物]} {$char[HP][饮水]};
+        {$char[HP][食物]} {@speedo.GetSpeed{食物;60}}
+        {$char[HP][饮水]} {@speedo.GetSpeed{饮水;60}};
 
     #showme $summarize;
-
-    event.Emit char/hpbrief;
 };
 
 #function {__char_hp_expandBigNumber__} {
@@ -340,22 +348,53 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
     };
 };
 
-#alias {char.GetHP}     {hpbrief;hp};
+#alias {char.GetHP} {
+    #class char.GetHP open;
 
-#alias {hpbrief2} {
-    #class char-hpbrief open;
-    #action {@SyncMessage{hpbrief-end}} {
-        #class char-hpbrief kill;
-        #line gag;
-        hpbrief;
+    #line oneshot #action {^╭─{(─)*}─个人状态──{(─|┬)+}─╮$} {
+        char.hp.parse.hp;
     };
-    #alias {char.hpbrief.done} {
-        #class char-hpbrief kill;
-        #line gag;
-    };
-    #class char-hpbrief close;
 
-    event.HandleOnce {char/hpbrief} {char/hp} {char/hp} {char.hpbrief.done};
-    #send hpbrief;
-    SyncMessage hpbrief-end;
+    #action {^你用HP太频繁了，请尽量使用hpbrief命令，节约系统资源，谢谢。$} {
+        char.hp.parse.done;
+    };
+
+	#action {^╰─────────────{(─)*}%S────╯{|ID=char.hp}$} {
+        #math char[HP][气血百分比] { $char[HP][当前气血] * 100 / $char[HP][最大气血] };
+        #math char[HP][精神百分比] { $char[HP][当前精神] * 100 / $char[HP][最大精神] };
+        #math char[HP][内力百分比] { $char[HP][当前内力] * 50 / $char[HP][最大内力] };
+        #math char[HP][精力百分比] { $char[HP][当前精力] * 50 / $char[HP][最大精力] };
+        event.Emit char/hp;
+        char.hp.parse.done;
+	};
+
+    #alias {char.hp.parse.done} {
+    	#class char-hp-parse-hp kill;
+        #class char.GetHP kill;
+        event.UnHandle GA {char.hp};
+    };
+
+    event.HandleOnce GA {char.hp} {char} {
+        char.hp.parse.done;
+        #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
+    };
+
+    #class char.GetHP close;
+
+    #send hp;
+};
+
+#alias {char.GetHP2} {
+    gmcp status off;
+    hpbrief;
+    gmcp status on;
+};
+
+#alias {hp} {
+    #if { "%0" == "" } {
+        char.GetHP;
+    };
+    #else {
+        #send hp %0;
+    };
 };

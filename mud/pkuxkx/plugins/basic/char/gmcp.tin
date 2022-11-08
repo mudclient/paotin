@@ -1,0 +1,150 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var basic_char_gmcp[META] {
+    {NAME}      {GMCP角色信息}
+    {DESC}      {解析 GMCP.Status 事件提供的角色信息}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+load-lib event;
+load-lib speedo;
+
+event.Define {char/busy}    {无参} {$MODULE} {角色被 busy 了};
+event.Define {char/nobusy}  {无参} {$MODULE} {角色解除 busy 了};
+event.Define {char/fight}   {无参} {$MODULE} {角色战斗开始};
+event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
+
+#function {basic_char_gmcp.Init} {
+    event.Handle {GMCP.Status} {char/gmcp} {basic/char/gmcp} {char.gmcp.status};
+};
+
+#var {gmcp-name-map} {
+    {HP} {
+        {经验}          {经验}          {combat_exp}        {经验}
+        {潜能}          {潜能}          {potential}         {潜能}
+        {最大内力}      {最大内力}      {max_neili}         {最大内力}
+        {内力}          {当前内力}      {neili}             {当前内力}
+        {最大精力}      {最大精力}      {max_jingli}        {最大精力}
+        {精力}          {当前精力}      {jingli}            {当前精力}
+        {最大气血}      {最大气血}      {max_qi}            {最大气血}
+        {有效气血}      {有效气血}      {eff_qi}            {有效气血}
+        {气血}          {当前气血}      {qi}                {当前气血}
+        {最大精神}      {最大精神}      {max_jing}          {最大精神}
+        {有效精神}      {有效精神}      {eff_jing}          {有效精神}
+        {精神}          {当前精神}      {jing}              {当前精神}
+        {真气}          {当前真气}      {vigour/qi}         {当前真气}
+        {真元}          {真元}          {vigour/yuan}       {真元}
+        {食物}          {食物}          {food}              {食物}
+        {饮水}          {饮水}          {water}             {饮水}
+        {忙}            {忙}            {is_busy}           {忙}
+        {战意}          {战意}          {fighter_spirit}    {战意}
+        {战斗中}        {战斗中}        {is_fighting}       {战斗中}
+    }
+
+    {档案} {
+        {头衔}      {头衔}              {title}                 {头衔}
+        {门派}      {门派}              {family/family_name}    {门派}
+        {级别}      {人物等级}          {level}                 {人物等级}
+                                        {id}                    {账号}
+                                        {name}                  {大名}
+    }
+
+    {天赋} {
+        {容貌}      {容貌}              {per}                   {容貌}
+        {膂力}      {膂力}              {str}                   {膂力}
+        {悟性}      {悟性}              {int}                   {悟性}
+        {根骨}      {根骨}              {con}                   {根骨}
+        {身法}      {身法}              {dex}                   {身法}
+    }
+};
+
+#alias {char.gmcp.status} {
+    #local busy     {};
+    #local fight    {};
+    #local hasHP    {};
+
+    #local key      {};
+    #foreach {*gGMCP[Status][]} {key} {
+        #local value {$gGMCP[Status][$key]};
+
+        #local name {$gmcp-name-map[HP][$key]};
+        #if { "$name" != "" } {
+            #local hasHP {true};
+
+            #if { "$name" == "{当前.*|经验|潜能|食物|饮水}" } {
+                speedo.Set {$name} {$value} {true} {10};
+            };
+
+            #if { "$name" == "当前%*" } {
+                #local bakName {$name};
+                #replace bakName {当前} {上次};
+                #var char[HP][$bakName] {$char[HP][$name]};
+
+                #var char[HP][$name] {$value};
+
+                #local maxName {$name};
+                #replace maxName {当前} {最大};
+
+                #if { "$gGMCP[Status][$maxName]" != "" } {
+                    #var char[HP][$maxName] {$gGMCP[Status][$maxName]};
+                };
+
+                #local pctName {$name};
+                #replace pctName {当前%*} {&1百分比};
+
+                #if { "$name" == "当前{内力|精力}" } {
+                    #math char[HP][$pctName] { $char[HP][$name] * 50 / $char[HP][$maxName] };
+                };
+                #else {
+                    #math char[HP][$pctName] { $char[HP][$name] * 100 / $char[HP][$maxName] };
+                };
+
+                #continue;
+            };
+            #else {
+                #if { "$name" == "忙" } {
+                    #local busy {$value};
+                };
+                #elseif { "$name" == "战斗中" } {
+                    #local fight {$value};
+                };
+                #var char[HP][$name] {$value};
+                #continue;
+            };
+        };
+
+        #local name {$gmcp-name-map[档案][$key]};
+        #if { "$name" != "" } {
+            #var char[档案][$name] {$value};
+            #continue;
+        };
+
+        #local name {$gmcp-name-map[天赋][$key]};
+        #if { "$name" != "" } {
+            #var char[档案][天赋][$name] {$value};
+            #continue;
+        };
+
+        warnLog 未能识别的 GMCP 状态信息 $key => $value;
+    };
+
+    #if     { "$hasHP" == "true" }  {
+        event.Emit char/hpbrief;
+        #delay {gmcp.HPSummarize} {char.HPSummarize} {0};
+    };
+
+    #if     { "$busy" == "true" }   {event.Emit char/busy};
+    #elseif { "$busy" == "false" }  {event.Emit char/nobusy};
+
+    #if     { "$fight" == "true" }  {event.Emit char/fight};
+    #elseif { "$fight" == "false" } {event.Emit char/nofight};
+};
