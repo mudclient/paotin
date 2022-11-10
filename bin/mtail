@@ -34,6 +34,8 @@ exit
     };
 
     disable-all-keys;
+    less-mode;
+
     #alias {okLog}          {#0};
     #alias {warnLog}        {#0};
     #alias {prompt.Set}     {#0};
@@ -80,6 +82,15 @@ exit
             #end {\};
         };
     };
+};
+
+#alias {less-mode} {
+    #macro {g}      {#buffer home};
+    #macro {G}      {#buffer end};
+    #macro {j}      {#buffer down 1};
+    #macro {k}      {#buffer up 1};
+    #macro {\cf}    {#buffer down 20};
+    #macro {\cb}    {#buffer up 20};
 };
 
 #alias {switch-log} {
