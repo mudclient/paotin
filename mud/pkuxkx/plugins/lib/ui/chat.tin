@@ -93,4 +93,37 @@
     chat.log 私聊 {%0};
 } {9.999};
 
+#action {~^%c你告诉%c%u%c：%*$} {
+    chat.log 私聊 {%0};
+} {9.999};
+
 set learn_emote 1;
+
+#action {^关闭所有频道。$} {
+    #class chat-turn-on open;
+    #gag {^你现在并没有打开任何频道。$};
+    #gag {^打开 %*频道。$};
+    #gag {^你现在打开的频道：%*。$};
+    #action {^目前你的频道使用情况如下：$} {
+        #class chat-turn-on kill;
+    };
+    #class chat-turn-on close;
+    #line gag;
+};
+
+tune all;
+tune bd;
+tune chat;
+tune fb;
+tune group;
+tune helpme;
+tune jh;
+tune jy;
+tune mp;
+tune nation;
+tune qq;
+tune qy;
+tune rumor;
+tune rw;
+tune tt;
+tune;
