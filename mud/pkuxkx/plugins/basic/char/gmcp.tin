@@ -135,7 +135,14 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 
         #local name {$gmcp-name-map[档案][$key]};
         #if { "$name" != "" } {
-            #var char[档案][$name] {$value};
+            #if { "$name" == "{头衔|大名}" } {
+                #var char[档案][彩色$name] {$value};
+                #replace value {%+1..c} {};
+                #var char[档案][$name] {$value};
+            };
+            #else {
+                #var char[档案][$name] {$value};
+            };
             #continue;
         };
 
