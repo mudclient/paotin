@@ -69,3 +69,6 @@ nmap <silent> M :MRU<CR>
 nnoremap <silent> ,M M
 autocmd BufEnter __MRU_Files__ nnoremap <buffer><silent> M :q<CR>
 autocmd BufEnter -RecentFiles- nnoremap <buffer><silent> M :q<CR>
+
+nmap <C-N> gt
+nmap <C-P> gT
