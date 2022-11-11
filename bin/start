@@ -36,4 +36,6 @@ fi
 $ECHO "\x1b[1;32m启动 tintin...\x1b[0m"
 $ECHO "\x1b[1;32m$TT $START_FILE\x1b[0m"
 
+mkdir -p tmux/$ID
+
 $TT -G -t GAME-$ID $START_FILE

@@ -68,5 +68,6 @@ COPY --from=0 /vim-startify /paotin/.local/share/nvim/plugged/BufExplorer/
 COPY --from=0 /tintin/src/tt++ /paotin/bin/
 
 RUN mkdir -p /paotin/log/
+RUN mkdir -p /paotin/tmux/
 
 ENTRYPOINT ["/bin/bash", "-i", "/paotin/bin/start-ui"]
