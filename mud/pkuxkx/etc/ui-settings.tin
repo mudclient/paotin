@@ -86,4 +86,5 @@
     {{key}{\cob}    {action}{beautify.ToggleSwitch}}
     {{key}{\coe}    {action}{option.Toggle EchoCommand}}
     {{key}{\com}    {action}{option.Toggle GagMove}}
+    {{key}{\cog}    {action}{gmcp.ToggleDebug}}
 };
