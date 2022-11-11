@@ -16,6 +16,12 @@ set tabstop=4
 set softtabstop=4
 set smarttab
 
+" 开启智能缩进
+set smartindent
+
+" 智能缩进开启时，不让 # 删除自动缩进。
+inoremap # X#<LEFT><C-H><RIGHT>
+
 " 开启真彩色
 set termguicolors
 " 开启真彩色配色方案
