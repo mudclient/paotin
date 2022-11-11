@@ -78,7 +78,7 @@ exit
             } {1.000};
         };
         #else {
-            #showme {\e]2;NOLOG\a\};
+            #screen set title {NOLOG};
             #end {\};
         };
     };
@@ -101,7 +101,7 @@ exit
     #session $dir;
     #buffer end;
     #script logname {echo $LOGNAME > tmux/$ID/log-name};
-    #showme {\e]2;MLOG-${ID}-${LOGNAME}\a\};
+    #screen set title {MLOG-${ID}-${LOGNAME}};
 };
 
 #alias {monitor-log%+1..s%+1..S{?:|\s+(.*)}$} {
