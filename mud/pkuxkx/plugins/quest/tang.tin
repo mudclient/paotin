@@ -1,0 +1,602 @@
+#nop vim: set filetype=tt:;
+
+#var quest_tang[META] {
+    {NAME}      {大唐爵位任务}
+    {DESC}      {只实现了举报盗贼，满足条件后会自动提升爵位到男爵}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {}
+};
+
+load-lib speedo;
+
+#var tang-all-location {
+    {西市}              {{room}{773}{name}{西市}        {path}{e;n;w;s}            {exits}{n;w;s;e}}
+    {东市}              {{room}{703}{name}{东市}        {path}{e;n;e;e;e;s}        {exits}{n;w;s;e}}
+    {大雁塔}            {{room}{713}{name}{大慈恩寺}    {path}{e;n;e;s;s;e;se}     {exits}{e;w;nw;se}}
+    {小雁塔}            {{room}{729}{name}{荐福寺}      {path}{e;n;e;s;e}          {exits}{e;w}}
+    {东市附近的顺街}    {{room}{712}{name}{顺街}        {path}{e;n;e;s;s;e}        {exits}{n;w;se}}
+    {西市附近的顺街}    {{room}{784}{name}{顺街}        {path}{e;n;e;s;s;w}        {exits}{n;e}}
+    {通化门大街}        {{room}{768}{name}{通化门大街}  {path}{e;n;n;n;w}          {exits}{e;w}}
+    {国子监}            {{room}{733}{name}{春明门大街}  {path}{e;n;e;e}            {exits}{n;w;s;e}}
+    {长乐坊}            {{room}{694}{name}{通化门大街}  {path}{e;n;e;e;e;n;n;e}    {exits}{n;w;s;e}}
+};
+
+#var tang-job-level-color {
+    {简单} {<120>}
+    {普通} {<030>}
+    {困难} {<110>}
+    {挑战} {<050>}
+};
+
+#var tang-job-log {};
+#var tang-job-list {};
+
+/*
+你向郭隆打听有关『任务信息』的消息。
+官府公布以下任务请全城百姓协助完成：（有意者到衙门领取任务）
+任务标识  任务名称         任务状态  发布时间   截止时间   任务地点       资质要求  认领玩家
+============================================================================================
+  1_1756  缉拿罪犯「挑战」   已完成   15:56:2    16:11:2           小雁塔 无           taizi
+  1_1755  缉拿罪犯「困难」   已完成   15:55:3    16:10:3   西市附近的顺街 无           guzhu
+  1_1754  缉拿罪犯「简单」   已完成  15:54:38    16:9:38             西市 无           taizi
+  1_1753  缉拿罪犯「困难」   已完成  15:54:23    16:9:23           大雁塔 无           guzhu
+  1_1752  缉拿罪犯「困难」   已完成  15:53:23    16:8:23           国子监 无           guzhu
+============================================================================================
+    使用record命令登记或者取消任务，record命令只能取消领取的任务，失败或者成功的
+任务不需要使用record cancel命令取消。
+    领取任务以后到案件发生的地点附近，询问附近的路人案件相关消息，收集完成信息以
+后你可以向官府指证（testify）罪犯或者直接逮捕目标（ask 目标 about 盗贼），向官府
+指证只有一次机会，出错没有任何奖励，直接逮捕罪犯有最多二次确认罪犯的机会，逮捕罪
+犯不能中途终止战斗，否则下次罪犯就会直接逃跑。
+*/
+#alias {tang.job} {
+    #local id   {%1};
+
+    #class tang.data kill;
+    #class tang.data open;
+    #var  {tang.data[罪犯特征]}     {};
+    #var  {tang.data[证人证词]}     {};
+    #list {tang.data[好人名单]}     {create} {};
+    #list {tang.data[嫌疑人名单]}   {create} {};
+    #var  {tang.data[路人位置]}     {};
+    #class tang.data close;
+
+    #class tang.job open;
+
+    #action {^官府公布以下任务请全城百姓协助完成：（有意者到衙门领取任务）$} {
+        #var tang-job-list {};
+        #var 任务难度 {};
+    };
+
+    #action {^%!s%S%!s缉拿罪犯「%%2」%!s新建%!s%S%!s%S%!s%S%!s无%!s%*$} {
+        #list {tang-job-list[%%2]} add {{
+            {ID}{%%1}
+            {地点}{%%6}
+            {难度}{%%2}
+        }};
+    };
+
+    #action {^犯不能中途终止战斗，否则下次罪犯就会直接逃跑。$} {
+        #foreach {困难;挑战;普通;简单} {level} {
+            #if { "${tang-job-list[$level]}" != "" } {
+                #var {tang-job-log[任务难度]} {$level};
+                #send record ${tang-job-list[$level][1][ID]};
+                #list {tang-job-list[$level]} delete {1};
+                #return;
+            };
+        };
+
+        #delay tang.job {tang.job} 19;
+    };
+
+    #action {^最近长安城内出现不少盗窃事件，有人报告%*附近商铺$} {
+        #class tang.job kill;
+        #var {tang-job-log[地点]} {%%1};
+        #delay tang.goto {tang.goto {%%1}} 1;
+    };
+
+    #action {^郭隆说道：你刚刚才问过，等等再来吧。$} {
+        #class tang.job kill;
+        #delay tang.job {tang.job} 19;
+    };
+
+    #action {^这个任务不是你能领取的，请查询一下别的任务。$} {
+        #class tang.job kill;
+        #delay tang.job {tang.job} 19;
+    };
+
+    #action {^你先把手头上的工作完成以后才能接着领下一个任务。$} {
+        #class tang.job kill;
+        tang.cancel;
+        #delay tang.job {tang.job} 1;
+    };
+
+    #class tang.job close;
+
+    #if { "$id" == "" } {
+        ask jingzhao shaoyin about 任务信息;
+    };
+    #else {
+        #send record $id;
+    };
+};
+
+#alias {tang.cancel} {
+    record cancel;
+};
+
+#alias {tang.goto} {
+    #var tang-task-location {%1};
+    #local path     {${tang-all-location[${tang-task-location}][path]}};
+
+    #class tang.inquiry open;
+    #list tang-inquiry-exits create {${tang-all-location[${tang-task-location}][exits]}};
+    #var tang-inquiry-exit-index {0};
+    #var tang-inquiry-luren-index {1};
+
+    #action {^这里没有这个人。{|ID=quest/tang}$} {
+        #nop;
+    };
+
+    #action {^继续看下一位。$} {
+        #math tang-inquiry-luren-index {${tang-inquiry-luren-index} + 1};
+        #delay 1 {
+            tang.look ${tang-inquiry-luren-index};
+            tang.ask ${tang-inquiry-luren-index};
+        };
+    };
+
+    #action {^你要看什么？{|ID=quest/tang}$} {
+        #var tang-inquiry-luren-index {1};
+        #if { ${tang-inquiry-exit-index} != 0 } {
+            #local back {@reverseDir{${tang-inquiry-exits[${tang-inquiry-exit-index}]}}};
+            #echo 回去吧。;
+            #send $back;
+        };
+        #math tang-inquiry-exit-index {${tang-inquiry-exit-index} + 1};
+        #local exit {${tang-inquiry-exits[${tang-inquiry-exit-index}]}};
+        #if { "$exit" == "" } {
+            #showme 已经全部看完了，该做决定了。;
+            tang.back;
+            #return;
+        };
+        #else {
+            #echo 下一个出口;
+            #send $exit;
+            #delay 1 {tang.look 1; tang.ask 1};
+        };
+    };
+
+    #class tang.inquiry close;
+
+    $path;
+    tang.look 1; tang.ask 1;
+};
+
+#alias {tang.look} {
+    #local id   {%1};
+
+    #class tang.look open;
+
+    #var tang-look-exists {false};
+
+    #action {^%+3..s%+3..S%+3..s%S(%%2)$} {
+        #class tang.look open;
+        #var tang[name] {%%4};
+        #var tang[id] {%%6};
+        #class tang.look close;
+    } {9.5};
+
+    #action {^这是一位身材异常魁梧高大的行人。$}        { tang.行人特征.身材 女 高 胖   };
+    #action {^这是一位身材丰满矮小的行人。$}            { tang.行人特征.身材 女 矮 胖   };
+    #action {^这是一个丰胸细腰，身材苗条挺拔的行人。$}  { tang.行人特征.身材 女 高 瘦   };
+    #action {^这是一位娇小玲珑的行人。$}                { tang.行人特征.身材 女 矮 瘦   };
+    #action {^这是一位高大魁梧的行人。$}                { tang.行人特征.身材 男 高 胖   };
+    #action {^这是一位矮小粗胖的行人。$}                { tang.行人特征.身材 男 矮 胖   };
+    #action {^这是一位矮小灵活的行人。$}                { tang.行人特征.身材 男 矮 瘦   };
+    #action {^这是一位宛如一根竹竿的行人。$}            { tang.行人特征.身材 男 高 瘦   };
+
+    #action {^%*{他|她}看起来约%*多岁，身长约%*，体型%*。$}         { tang.行人特征.年龄 {%%2} {%%3}};
+
+    #action {~□%*身穿一件\e[{1;|}3%.m{鹤氅|长袄|棉袄}}             { tang.行人特征.衣服 {%%3} 夹袄 };
+    #action {~□%*身穿一件\e[{1;|}3%.m{狼皮袄|短袄|比甲}}           { tang.行人特征.衣服 {%%3} 夹袄 };
+    #action {~□%*身穿一件\e[{1;|}3%.m{丝织长衫|丝绸短襦|绸袍}}     { tang.行人特征.衣服 {%%3} 丝绸 };
+    #action {~□%*身穿一件\e[{1;|}3%.m{丝织儒衫|轻罗纱|旗袍}}       { tang.行人特征.衣服 {%%3} 丝绸 };
+    #action {~□%*身穿一件\e[{1;|}3%.m{坎肩|圆领衫|灰布衫}}         { tang.行人特征.衣服 {%%3} 布衣 };
+    #action {~□%*身穿一件\e[{1;|}3%.m{灰马褂|百褶裙|蓝马褂}}       { tang.行人特征.衣服 {%%3} 布衣 };
+    #action {~□%*身穿一件\e[{1;|}3%.m{短打劲装|天蓝锦袍}}          { tang.行人特征.衣服 {%%3} 布衣 };
+
+    #action {^  □ 手持一根绣花针(Xiuhua zhen)$}                    { tang.行人特征.性别 {男|女}    };
+    #action {^  □ 戴着一串金项链(Golden necklace)$}                { tang.行人特征.性别 {男|女}    };
+    #action {^  □ 戴着一个金戒指(Golden ring)$}                    { tang.行人特征.性别 {男|女}    };
+
+    #action {~□%*脚蹬一双\e[{1;|}3%.m{绣花鞋|锦鞋|凤鞋}}           { tang.行人特征.鞋子 {%%3} 布鞋 };
+    #action {~□%*脚蹬一双\e[{1;|}3%.m{布鞋|麻鞋|千层底布鞋}}       { tang.行人特征.鞋子 {%%3} 布鞋 };
+    #action {~□%*脚蹬一双\e[{1;|}3%.m{木屐|草鞋|破鞋}}             { tang.行人特征.鞋子 {%%3} 凉鞋 };
+    #action {~□%*脚蹬一双\e[{1;|}3%.m{牛皮短靴|马靴|女式短靴}}     { tang.行人特征.鞋子 {%%3} 靴子 };
+    #action {~□%*脚蹬一双\e[{1;|}3%.m{女式长靴|薄底快靴|七星剑靴}} { tang.行人特征.鞋子 {%%3} 靴子 };
+
+    #action {^{她|他}身上带著：$} {#var tang-look-exists {true}};
+
+    #action {^系统回馈：R:look-end$} {
+        #if { "${tang-look-exists}" == "true" } {
+            tang.分辨;
+            #class tang.look kill;
+        };
+    };
+
+    #class tang.look close;
+
+    look luren $id;
+    #send response R:look-end;
+};
+
+#alias {tang.ask} {
+    #local id       {%1};
+    #local words    {%2};
+
+    #var tang-current-id {$id};
+
+    #class tang.ask open;
+
+    #action {^%%1说道：「%*{男|女}%*」$}                { tang.证词 {%%1} 性别 {%%3} };
+    #action {^%%1说道：「%*流浪汉%*」$}                 { tang.证词 {%%1} 性别 {男}  };
+
+    #action {^%%1说道：「%*{高|矮}个子%*」$}            { tang.证词 {%%1} 身高 {%%3} };
+    #action {^%%1说道：「%*个子不太高%*」$}             { tang.证词 {%%1} 身高 {矮}  };
+
+    #action {^%%1说道：「%*{发胖|有点胖|微微发福}%*」$} { tang.证词 {%%1} 胖瘦 {胖}  };
+    #action {^%%1说道：「%*{竹竿|猴子|偏瘦}%*」$}       { tang.证词 {%%1} 胖瘦 {瘦}  };
+
+    #action {^%%1说道：「%*{花白|白发苍苍|棺材}%*」$}   { tang.证词 {%%1} 年龄 {老}  };
+    #action {^%%1说道：「%*{老大不小|中年}%*」$}        { tang.证词 {%%1} 年龄 {中}  };
+    #action {^%%1说道：「%*{青年|非常年轻|年轻人}%*」$} { tang.证词 {%%1} 年龄 {青}  };
+
+    #action {^%%1说道：「%*{布衣|丝绸|夹袄}%*」$}       { tang.证词 {%%1} 衣服 {%%3} };
+    #action {^%%1说道：「%*{靴子|凉鞋|布鞋}%*」$}       { tang.证词 {%%1} 鞋子 {%%3} };
+    #action {^%%1说道：「%*身穿{深|浅}色衣服%*」$}      { tang.证词 {%%1} 衣色 {%%3} };
+    #action {^%%1说道：「%*脚上穿着{深|浅}色鞋子%*」$}  { tang.证词 {%%1} 鞋色 {%%3} };
+
+    #action {^%%1说道：「我啥消息也不了解啊。」$}       { tang.证词 {%%1} 啥也没说   };
+    #action {^%%1说道：「你找错人了吧？}                { tang.认错人 {%%1} };
+    #action {^%%1说道：「你找错人了。」$}               { say 找错人了 }; 
+    #action {^%%1说道：「你已经问过了}                  { tang.案件进展     };
+
+    #action {引起了盗贼的怀疑，盗贼逃离了长安城。$}     { tang.失败         };
+
+    #class tang.ask close;
+
+    #if { "$words" == "" } {
+        ask luren $id about 消息;
+    };
+    #else {
+        ask luren $id about $words;
+    };
+};
+
+#alias {tang.行人特征.身材} {
+    #class tang.data open;
+    #if { "${tang.data[行人特征][$tang[name]][性别]}" != "%*|%*" } {
+        #var {tang.data[行人特征][$tang[name]][性别]} {%1};
+    };
+    #var {tang.data[行人特征][$tang[name]][身高]} {%2};
+    #var {tang.data[行人特征][$tang[name]][胖瘦]} {%3};
+    #class tang.data close;
+};
+
+#alias {tang.行人特征.性别} {
+    #var {tang.data[行人特征][$tang[name]][性别]} {%1};
+};
+
+#alias {tang.行人特征.年龄} {
+    #class tang.data open;
+    #var {tang.data[行人特征][$tang[name]][称呼]} {%1};
+    #local age {@c2d{%2}};
+    #local ageText {};
+    #switch {"$age"} {
+        #case {"20"} { #local ageText {青}      };
+        #case {"30"} { #local ageText {青|中}   };
+        #case {"40"} { #local ageText {中}      };
+        #case {"50"} { #local ageText {中|老}   };
+        #case {"60"} { #local ageText {老}      };
+        #case {"70"} { #local ageText {老}      };
+        #default {#echo {<110>这是什么年龄？「%2」<070>} };
+    };
+    #var {tang.data[行人特征][$tang[name]][年龄]} {$ageText};
+    #class tang.data close;
+};
+
+#alias {tang.行人特征.衣服} {
+    #local color {%1};
+    #if { "$color" == "{0|1|4|5}" } {
+        #format color {深};
+    };
+    #else {
+        #format color {浅};
+    };
+
+    #class tang.data open;
+    #var {tang.data[行人特征][$tang[name]][衣色]} {$color};
+    #var {tang.data[行人特征][$tang[name]][衣服]} {%2};
+    #class tang.data close;
+};
+
+#alias {tang.行人特征.鞋子} {
+    #local color {%1};
+    #if { "$color" == "{0|1|4|5}" } {
+        #format color {深};
+    };
+    #else {
+        #format color {浅};
+    };
+
+    #class tang.data open;
+    #var {tang.data[行人特征][$tang[name]][鞋色]} {$color};
+    #var {tang.data[行人特征][$tang[name]][鞋子]} {%2};
+    #class tang.data close;
+};
+
+#alias {tang.分辨} {
+    #local clean    {false};
+    #local reason   {};
+    #local idx {};
+
+    #local key {};
+    #local feat {};
+    #foreach {*{tang.data[行人特征][$tang[name]][]}} {key} {
+        #local value {${tang.data[行人特征][$tang[name]][$key]}};
+        #format feat {%s %s} {$feat} {$key($value)};
+    };
+    #echo {%s} {<160>此人特征为：$feat<070>};
+
+    #list {tang.data[好人名单]}   {find} {$tang[name]} {idx};
+    #if { $idx > 0 } {
+        #echo {%s} {<120>之前已经搞清楚了，这是一个好人。<070>};
+        #return;
+    };
+
+    #list {tang.data[嫌疑人名单]} {find} {$tang[name]} {idx};
+    #if { $idx > 0 } {
+        #echo {%s} {<130>之前已经看过了，这是一个嫌疑人。<070>};
+        #return;
+    };
+
+    #foreach {*{tang.data[罪犯特征][]}} {key} {
+        #local 特征点   {$key};
+        #local 罪犯特征 {${tang.data[罪犯特征][$key]}};
+
+        #local 行人特征 {${tang.data[行人特征][$tang[name]][${特征点}]}};
+        #if { "${罪犯特征}" != "{${行人特征}}" } {
+            #format reason {此人的${特征点}特征是${行人特征}，与罪犯特征${罪犯特征}不符};
+            #local clean {true};
+            #break;
+        };
+    };
+
+    #foreach {*{tang.data[证人证词][]}} {name} {
+        #local 特征点   {${tang.data[证人证词][$name][特征点]}};
+        #local 证词     {${tang.data[证人证词][$name][特征值]}};
+
+        #local 行人特征 {${tang.data[行人特征][$tang[name]][${特征点}]}};
+        #if { "${证词}" != "{${行人特征}}" && "$name" != "$tang[name]" } {
+            #format reason {此人的${特征点}特征是${行人特征}，与证人$name的证词「${证词}」不符};
+            #local clean {true};
+            #break;
+        };
+    };
+
+    #if { "$clean" == "true" } {
+        #echo {%s} {<120>由于${reason}，因此这是一个好人。<070>};
+        #list {tang.data[好人名单]} {sort} {$tang[name]};
+    };
+    #else {
+        #echo {%s} {<130>由于缺乏必要的证据，无法判定此人清白，因此这是一个嫌疑人。<070>};
+        #list {tang.data[嫌疑人名单]} {sort} {$tang[name]};
+    };
+
+    #showme 继续看下一位。;
+};
+
+#alias {tang.证词} {
+    #local 证人     {%1};
+    #local 特征点   {%2};
+    #local 特征值   {%3};
+
+    #var {tang.data[路人位置][${证人}]} {
+        {id}{${tang-current-id}}
+        {exit}{${tang-inquiry-exits[${tang-inquiry-exit-index}]}}
+    };
+
+    #if { "${特征点}" == "啥也没说" } {
+        tang.案件进展;
+        #return;
+    };
+
+    #var {tang.data[证人证词][${证人}][特征点]} {${特征点}};
+    #var {tang.data[证人证词][${证人}][特征值]} {${特征值}};
+
+    #echo {证人指认的是个<130>%s是%s<070>的人} {${特征点}} {${特征值}};
+
+    #local {新增好人} {};
+
+    #local idx {};
+    #loop {&{tang.data[嫌疑人名单][]}} {1} {idx} {
+        #if { $idx == 0 } {#break};
+
+        #local 嫌疑人       {${tang.data[嫌疑人名单][$idx]}};
+        #local 嫌疑人特征   {${tang.data[行人特征][${嫌疑人}][${特征点}]}};
+        #local 证人特征     {${tang.data[行人特征][${证人}][${特征点}]}};
+
+        #if { "${嫌疑人}" == "${证人}" } {
+            #if { "${特征值}" == "{${证人特征}}" } {
+                #echo {由于证人指认的特点与自身相符，因此判断他是一个<120>好人<070>};
+                #list {新增好人} sort {${证人}};
+            };
+        };
+        #else {
+            #if { "${特征值}" != "{${嫌疑人特征}}" } {
+                #echo {根据证人所说，<120>%s<070>应该是一个好人} {${嫌疑人}};
+                #list {新增好人} sort {${嫌疑人}};
+            };
+        };
+    };
+
+    #list {新增好人} {simplify};
+
+    #echo {由于证人作证，本次新增好人名单: <120>${新增好人}<070>};
+
+    tang.确认好人 {${新增好人}};
+
+    tang.案件进展;
+};
+
+#alias {tang.确认好人} {
+    #local args {%1};
+
+    #if { "$args" == "" } {
+        #return;
+    };
+
+    #local cleanManList {};
+    #list cleanManList create {$args};
+
+    #while {1} {
+        #local newCleanManList {};
+        #local idx {};
+        #foreach {*cleanManList[]} {idx} {
+            #local cleanManName {$cleanManList[$idx]};
+
+            #nop 将这个好人从嫌疑人名单移入好人名单;
+            #local idx {};
+            #list {tang.data[嫌疑人名单]} {find} {$cleanManName} {idx};
+            #list {tang.data[嫌疑人名单]} {delete} {$idx};
+            #list {tang.data[好人名单]} {sort} {$cleanManName};
+
+            #local testimony {${tang.data[证人证词][$cleanManName]}};
+            #if { "$testimony" == "" } {
+                #continue;  #nop 这个好人还不曾被询问，或者不曾提供证言;
+            };
+
+            #nop 如果这个好人曾经有证词的话，那么根据证词再发现更多的好人。;
+            #unvar {tang.data[证人证词][$cleanManName]};
+
+            #local {featName}   {$testimony[特征点]};
+            #local {featValue}  {$testimony[特征值]};
+            #var {tang.data[罪犯特征][$featName]} {$featValue};
+
+            #if { &{tang.data[嫌疑人名单][]} == 0 } {
+                #return;
+            };
+
+            #local idx {};
+            #loop {&{tang.data[嫌疑人名单][]}} {1} {idx} {
+                #local suspect      {${tang.data[嫌疑人名单][$idx]}};
+                #local suspectFeat  {${tang.data[行人特征][$suspect][$featName]}};
+                #if { "$featValue" != "{$suspectFeat}" } {
+                    #list newCleanMan sort {$suspect};
+                };
+            };
+        };
+
+        #if { &newCleanManList[] > 0 } {
+            #echo {由于前面一批好人被确认，推出本次新增好人名单: <120>$newCleanManList<070>};
+            #local cleanManList {$newCleanManList};
+        };
+        #else {
+            #break;
+        };
+    };
+};
+
+#alias {tang.案件进展} {
+    #class tang.ask kill;
+
+    #local list {@list2string{{${tang.data[好人名单]}}}};
+    #replace list {;} { };
+    #echo {目前发现的好人  : <120>$list<070>};
+    #local list {@list2string{{${tang.data[嫌疑人名单]}}}};
+    #replace list {;} { };
+    #echo {目前发现的嫌疑人: <130>$list<070>};
+
+};
+
+#alias {tang.认错人} {
+    #local idx {};
+    #list {tang.data[嫌疑人名单]} {find} {%1} {idx};
+    #list {tang.data[嫌疑人名单]} {delete} {$idx};
+    #list {tang.data[好人名单]} {sort} {%1};
+
+    tang.案件进展;
+};
+
+#alias {tang.失败} {
+    #class tang.ask kill;
+};
+
+#alias {tang.back} {
+    #local name {};
+    #if { &{tang.data[嫌疑人名单][]} > 0 } {
+        #local name {${tang.data[嫌疑人名单][1]}};
+    };
+    #else {
+        #nop 没有嫌疑人时随便指认一个。;
+        #local name {${tang.data[好人名单][1]}};
+    };
+
+    #local exit {${tang.data[路人位置][$name][exit]}};
+    #local id   {${tang.data[路人位置][$name][id]}};
+    #if { "$exit" == "" } {
+        testify luren $id;
+    };
+    #else {
+        $exit; testify luren $id; @reverseDir{$exit};
+    };
+        
+    #local place {${tang-all-location[${tang-task-location}]}};
+    #local path {@reverseCmds{{$place[path]}}};
+    $path;
+
+    #class tang.back open;
+
+    #action {^由于你的突出贡献，特奖励{爵位贡献|任务积分}%*点，用于{提升爵位|兑换本爵位相关的任务奖励}。$} {
+        #class tang.back kill;
+        #local level {${tang-job-log[任务难度]}};
+        #local point {@c2d{%%2}};
+        speedo.Add {爵位积分} {$point} {true} {600};
+        #format point {%+2s} {$point};
+        questLog 【<130>爵位任务<070>】【$tang-job-level-color[$level]$level<070>】【<120>任务成功<070>】奖励爵位积分【$point】【${tang-job-log[地点]}】;
+    };
+
+    #action {^你未领取任务，也不能领取奖励。$} {
+        #class tang.back kill;
+        #local level {${tang-job-log[任务难度]}};
+        questLog 【<130>爵位任务<070>】【$tang-job-level-color[$level]$level<070>】【<110>任务失败<070>】奖励爵位积分【 0】【${tang-job-log[地点]}】;
+    };
+
+    #class tang.back close;
+
+    #delay tang.finish {ask jingzhao shaoyin about 领赏} 2;
+    #delay tang.job {tang.job} 3;
+};
+
+/*
+    五十多岁 算 花白
+    五十多岁 算 中年
+    三十多岁 算 中年
+    三十多岁 算 年轻
+
+    青年 20~30
+    中年 30~50
+    老年 50~70
+
+    他的笑容蕴藏着一种很怪的魅力，让你觉得他似乎是你的兄弟那样令人放心，又像你的姐妹那般容易亲近。
+    他现在粉面朱唇，身姿俊俏，举止风流无限。
+  □ 手持一根绣花针(Xiuhua zhen)
+  □ 戴着一串金项链(Golden necklace)
+  □ 戴着一个金戒指(Golden ring)
+
+你发现了正准备潜逃的罪犯，向附近巡街的金吾卫举报了，可以去衙门领奖了。
+你向附近的金吾卫错误地指证上铺的盗劫犯，惊动了真正的盗贼，使得他立即逃离长安城。
+你未领取任务，也不能领取奖励。
+由于你的突出贡献，特奖励爵位贡献二十四点，用于提升爵位。
+*/
