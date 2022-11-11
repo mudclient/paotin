@@ -61,7 +61,7 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
     #class data/basic/char close;
 
     set hpbrief long,report;
-    #delay {char.Init} {char.GetHP; char.GetHP2} {10};
+    #delay {char.Init} {char.GetHP; char.GetHP2} {1};
 
     #return true;
 };

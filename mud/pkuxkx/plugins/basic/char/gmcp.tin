@@ -54,8 +54,8 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
         {头衔}      {头衔}              {title}                 {头衔}
         {门派}      {门派}              {family/family_name}    {门派}
         {级别}      {人物等级}          {level}                 {人物等级}
-                                        {id}                    {账号}
-                                        {name}                  {大名}
+        {ＩＤ}      {账号}              {id}                    {账号}
+        {姓名}      {大名}              {name}                  {大名}
     }
 
     {天赋} {
@@ -71,6 +71,17 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
     #local busy     {};
     #local fight    {};
     #local hasHP    {};
+
+    #local id {$gGMCP[Status][id]};
+    #if { "$id" == "" } {
+        #local id {$gGMCP[Status][ＩＤ]};
+    };
+
+    #nop ID 中包含 # 号的，是 NPC，没有 # 号但和自己 ID 不同的，是玩家。;
+    #nop 没有 ID 或者 ID 和自己相同的，才是自己的数据。;
+    #if { "$id" != "" && "$id" != "$user[id]" } {
+        #return;
+    };
 
     #local key      {};
     #foreach {*gGMCP[Status][]} {key} {
