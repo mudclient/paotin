@@ -19,9 +19,13 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #alias {speedo.Add} {
     #local key          {%1};
-    #local value        {%2};
-    #local monotone     {%3};
-    #local keepalive    {%4};
+    #local value        {@defaultInt{%2;0}};
+    #local monotone     {@default{%3;false}};
+    #local keepalive    {@defaultInt{%4;60}};
+
+    #if { @isEmpty{$key} } {
+        #return;
+    };
 
     #math value {$value + @speedo.Get{{$key}}};
     speedo.Set {$key} {$value} {$monotone} {$keepalive};
@@ -29,9 +33,13 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #alias {speedo.Set} {
     #local key          {%1};
-    #local value        {%2};
-    #local monotone     {%3};
-    #local keepalive    {%4};
+    #local value        {@defaultInt{%2;0}};
+    #local monotone     {@default{%3;false}};
+    #local keepalive    {@defaultInt{%4;60}};
+
+    #if { @isEmpty{$key} } {
+        #return;
+    };
 
     #format {now} {%T};
 
@@ -52,13 +60,14 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         };
     };
 
-    #line local #math interval {$now - $gSpeedo[$key][update]};
+    #local interval {0};
+    #math interval {$now - $gSpeedo[$key][update]};
 
     #nop Set 会导致继续统计，但之前暂停时经过的时间将被扣除;
     #nop 超过 keepalive 的间隔也会被扣除;
-    #if {  "$gSpeedo[$key][paused]" == "true" || ("$keepalive" != "" && $interval > $keepalive) } {
+    #if { "$gSpeedo[$key][paused]" == "true" || $interval > $keepalive } {
         #var {gSpeedo[$key][paused]} {false};
-        #math {gSpeedo[$key][deduction]} {$gSpeedo[$key][deduction] + $interval};
+        #math {gSpeedo[$key][deduction]} {$gSpeedo[$key][deduction] + $interval - $keepalive};
     };
     
     #var {gSpeedo[$key][value]}     {$value};
@@ -67,6 +76,10 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #function {speedo.Get} {
     #local key {%1};
+
+    #if { @isEmpty{$key} } {
+        #return {0};
+    };
 
     #if { "$gSpeedo[$key]" == "" } {
         #return {0};
@@ -89,31 +102,38 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return {0};
     };
 
-    #return {$speedInfo[value]};
+    #return {$speedInfo[speed]};
 };
 
 #function {speedo.GetSpeedInfo} {
-    #local key {%1};
-    #local interval {%2};
+    #local key      {%1};
+    #local interval {@defaultInt{%2;1}};
 
-    #if { "$interval" == "" } {
-        #local interval 1;
-    };
-
-    #if { "$gSpeedo[$key]" == "" } {
+    #if { @isEmpty{$key} } {
         #return {};
     };
 
-    #local value {0};
-    #math value {
-            ( $gSpeedo[$key][value] - $gSpeedo[$key][base] ) * $interval
-        /   ( $gSpeedo[$key][update] - $gSpeedo[$key][baseTime] - $gSpeedo[$key][deduction])
+    #local data {$gSpeedo[$key]};
+
+    #if { "$data" == "" } {
+        #return {};
+    };
+
+    #local delta {0};
+    #math delta {$data[value] - $data[base]};
+
+    #local speed {0};
+    #math speed {
+            ( $delta * $interval )
+        /   ( $data[update] - $data[baseTime] - $data[deduction] )
     };
 
     #return {
-        {begin}     {$gSpeedo[$key][baseTime]}
-        {end}       {$gSpeedo[$key][update]}
-        {value}     {$value}
+        {begin}     {$data[baseTime]}
+        {end}       {$data[update]}
+        {delta}     {$delta}
+        {speed}     {$speed}
+        {deduction} {$data[deduction]}
     };
 };
 
@@ -148,4 +168,26 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #var {gSpeedo[$key][paused]}    {false};
     #var {gSpeedo[$key][value]}     {0};
     #var {gSpeedo[$key][update]}    {$now};
+};
+
+#alias {speedo.List} {
+    #local interval {@defaultInt{%1;1}};
+    #local pattern  {@default{%2;{%*}}};
+
+	#echo {<128>     %-14s %+10s %+10s %+14s %-20s %-20s %+10s} {统计对象} {统计结果} {平均值} {测算周期(秒)} {样本开始时间} {样本截止时间} {发呆时间};
+	#draw Yellow scroll line 1 1 1 110;
+
+    #local key {};
+    #foreach {*gSpeedo[]} {key} {
+        #if { "$key" != "$pattern" } {
+            #continue;
+        };
+
+        #local speedInfo {@speedo.GetSpeedInfo{{$key};{$interval}}};
+	    #echo {<168>     %-14s %+10s %+10s %+14s %t  %t  %+10s}
+            {$key} {$speedInfo[delta]} {$speedInfo[speed]} {$interval}
+            {{%Y-%m-%d %H:%M:%S}{$speedInfo[begin]}}
+            {{%Y-%m-%d %H:%M:%S}{$speedInfo[end]}}
+            {$speedInfo[deduction]};
+    };
 };
