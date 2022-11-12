@@ -306,14 +306,24 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
     #math {气血治疗} { $char[STATUS][气血治疗] * 100 * 60 / $char[HP][最大气血] };
 
     #local summarize {};
-    #format summarize {$color〔HP摘要〕<070>气血: %s%s/%s 内力: %s%s 气血恢复: %s/%s 精神: %s%s/%s 精力: %s%s 食物: %s(%s) 饮水: %s(%s)$combat}
-        {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血健康度}}}
-        {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
-        {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
-        {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{${精神健康度}}}
-        {@__char_hp_colorit__{$char[HP][精力百分比]}} {${每秒精力变化}}
-        {$char[HP][食物]} {@speedo.GetSpeed{食物;60}}
-        {$char[HP][饮水]} {@speedo.GetSpeed{饮水;60}};
+    #if { "$char[HP][战斗中]" == "true" } {
+        #format summarize {$color〔HP摘要〕<070>气血: %s%s/%s 内力: %s%s 气血恢复: %s/%s 精神: %s%s/%s 食水: %s/%s$combat}
+            {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血健康度}}}
+            {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
+            {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
+            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{${精神健康度}}}
+            {$char[HP][食物]} {$char[HP][饮水]}
+    };
+    #else {
+        #format summarize {$color〔HP摘要〕<070>气血: %s%s/%s 内力: %s%s 气血恢复: %s/%s 精神: %s%s/%s 精力: %s%s 食水: %s/%s(%s/%s)$combat}
+            {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血健康度}}}
+            {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
+            {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
+            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{${精神健康度}}}
+            {@__char_hp_colorit__{$char[HP][精力百分比]}} {${每秒精力变化}}
+            {$char[HP][食物]} {$char[HP][饮水]}
+            {@speedo.GetSpeed{食物;60}} {@speedo.GetSpeed{饮水;60}};
+    };
 
     #showme $summarize;
 };
