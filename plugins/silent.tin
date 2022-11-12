@@ -9,7 +9,7 @@
     rumor;          rumor*;         tell;           say;
     bd;             bd*;            group;          group*;
     nation;         nation*;        ask;            i2;
-    buy;            list;           node;
+    buy;            list;           node; 			fullme;
 
     amber_alert;    status_me;      set;            unset;
 };
