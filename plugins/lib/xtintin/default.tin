@@ -1,0 +1,83 @@
+#nop 字符串默认值;
+#function {default} {
+    #local value    {%1};
+    #local default  {%2};
+
+    #if { @isEmpty{$value} } {
+        #return {$default};
+    };
+
+    #return {$value};
+};
+
+#nop 整数默认值;
+#function {defaultInt} {
+    #local value    {%1};
+    #local default  {%2};
+
+    #if { @isEmpty{$value} } {
+        #return {$default};
+    };
+
+    #if { $value == 0 } {
+        #return {$default};
+    };
+
+    #return {$value};
+};
+
+#nop 变量展开的时候，如果变量不存在会直接展开成 $var 形式的变量名自身，;
+#nop 这种情况下也允许用 default 值代替;
+#function {defaultVar} {
+    #local value    {%1};
+    #local default  {%2};
+
+    #if { @isEmptyVar{$value} } {
+        #return {$default};
+    };
+
+    #return {$value};
+};
+
+#nop 变量展开的时候，如果变量不存在会直接展开成 $var 形式的变量名自身，;
+#nop 这种情况下也允许用 default 值代替;
+#function {defaultIntVar} {
+    #local value    {%1};
+    #local default  {%2};
+
+    #if { @isEmptyVar{$value} } {
+        #return {$default};
+    };
+
+    #if { $value == 0 } {
+        #return {$default};
+    };
+
+    #return {$value};
+};
+
+#nop 判断参数是否为空;
+#function {isEmpty} {
+    #local value {%0};
+
+    #if { "$value" == "" } {
+        #return 1;
+    };
+
+    #return 0;
+};
+
+#nop 判断参数是否为空，或者变量展开失败;
+#function {isEmptyVar} {
+    #local value {%0};
+
+    #if { "$value" == "" } {
+        #return 1;
+    };
+
+    #if { "$value" == "$%*" } {
+        #return 1;
+    };
+
+    #return 0;
+};
