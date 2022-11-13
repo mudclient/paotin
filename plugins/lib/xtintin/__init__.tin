@@ -14,3 +14,4 @@ load-file plugins/lib/xtintin/debug.tin;
 load-file plugins/lib/xtintin/fp.tin;
 load-file plugins/lib/xtintin/answer.tin;
 load-file plugins/lib/xtintin/default.tin;
+load-file plugins/lib/xtintin/diff.tin;
