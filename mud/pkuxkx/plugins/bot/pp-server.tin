@@ -1,0 +1,409 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#var pp-server[META] {
+    {NAME}      {PP服务器}
+    {DESC}      {PP 大米专用，为其他人提供 PP 服务}
+    {AUTHOR}    {担子炮}
+};
+
+#nop 普通订单;
+#var pp-svip-order      {};
+#nop VIP 订单;
+#var pp-vip-order       {};
+#nop SVIP 订单;
+#var pp-public-order    {};
+
+#nop VIP 清单;
+#var pp-vip-list        {};
+#nop SVIP 清单;
+#var pp-svip-list       {};
+#nop 黑名单;
+#var pp-black-list      {};
+
+load-lib storage;
+
+#function {pp-server.Init} {
+    storage.Load {pp-server} {pp-vip-list;pp-svip-list;pp-black-list};
+
+    #return {true};
+};
+
+#action {^%u(%w)告诉你：find %*$} {
+    pp.find {%1} {%2} {%3};
+};
+
+#action {^【求助】%1(%2): find %*$} {
+    pp.find {%1} {%2} {%3};
+} {4};
+
+#alias {pp.find} {
+    #local name     {%1};
+    #local uid      {%2};
+    #local qid      {%3};
+
+    #format uid {%l} {$uid};
+    #format uid {%p} {$uid};
+    #format qid {%l} {$qid};
+    #format qid {%p} {$qid};
+
+    #replace qid {%S%s...%s%+1S} {&1 &4};
+
+    #if { "$qid" == "{.*[^a-z ].*|}" } {
+        #return;
+    };
+
+    #local now {};
+    #format now {%T};
+
+    #local order {
+        {name}  {$name}
+        {uid}   {$uid}
+        {qid}   {$qid}
+        {retry} {0}
+        {time}  {$now}
+    };
+
+    #if { &pp-svip-list[$uid][] > 0 } {
+        pp.add-order {pp-svip-order} {$order{source}{SVIP}};
+    };
+    #elseif { &pp-vip-list[$uid][] > 0 } {
+        pp.add-order {pp-vip-order} {$order{source}{VIP}};
+    };
+    #elseif { &pp-black-list[$uid][] > 0 } {
+        infoLog 黑名单用户，跳过;
+    };
+    #elseif { "$pp-invalid-id[$qid]" == "" } {
+        pp.add-order {pp-public-order} {$order{source}{PUBLIC}};
+    };
+
+    pp.check;
+};
+
+#nop 剔重，下单。普通用户只能排队一个订单，VIP/SVIP 可以排队多个订单;
+#alias {pp.add-order} {
+    #local order-list-name  {%1};
+    #local new-order        {%2};
+
+    #if { "$new-order[uid]$new-order[qid]" === "$pp-current-order[uid]$pp-current-order[qid]" } {
+        #return;
+    };
+
+    #local index {};
+    #foreach {*{${order-list-name}[]}} {index} {
+        #local order {${${order-list-name}[$index]}};
+        #if { "$new-order[source]/$order[uid]" === "PUBLIC/$new-order[uid]" } {
+            #var {${order-list-name}[$index]} {$new-order};
+            #return;
+        };
+        #if { "$order[uid]/$order[qid]" === "$new-order[uid]/$new-order[qid]" } {
+            #return;
+        };
+    };
+
+    #list {$order-list-name} add {{$new-order}};
+};
+
+#var pp-working         {false};
+#var pp-current-order   {};
+
+#tick pp.check {pp.check} 1;
+
+#alias {pp.check} {
+    #if { "$pp-working" == "true" } {
+        #return;
+    };
+
+    #local order {};
+
+    #if { &pp-svip-order[] > 0 } {
+        #local order {$pp-svip-order[1]};
+        #list pp-svip-order delete 1;
+    };
+    #elseif { &pp-vip-order[] > 0 } {
+        #local order {$pp-vip-order[1]};
+        #list pp-vip-order delete 1;
+    };
+    #elseif { &pp-public-order[] > 0 } {
+        #local order {$pp-public-order[1]};
+        #list pp-public-order delete 1;
+    };
+
+    #if { "$order" == "" } {
+        pp.idle;
+        #return;
+    };
+
+    #var pp-working {true};
+
+    #var pp-current-order {$order};
+    halt; yun regenerate; pp.do;
+};
+
+#alias {pp.do} {
+    #class pp.do open;
+
+    #local ID {|ID=pp-server};
+
+    #action {^不要频繁的查询，谢谢！{$ID}$} {
+        #class pp.do kill;
+        #delay pp.retry {pp.retry} 1;
+    };
+
+    #nop watch dog，防止未知的服务器反馈导致 pp.do 永远无法结束。;
+    #delay pp.do {
+        #class pp.do kill;
+        #delay pp.retry {pp.retry} 1;
+    } 10;
+
+    #action {^你默运玄功，将功力聚集于耳目，顿时觉得灵台一片空明。{$ID}$} {
+        #class pp.do kill;
+        pp.parse.result;
+        #nop;
+    };
+
+    #nop PP 对象不存在;
+    #action {^现在没这个人。{$ID}$} {
+        #class pp.do kill;
+        pp.add-invalid-id;
+        pp.result 失败;
+    };
+
+    #action {^你的精力不够，无法感应别人的位置。{$ID}$} {
+        #class pp.do kill;
+        pp.result 失败;
+    };
+
+    #class pp.do close;
+
+    infoLog perceive $pp-current-order[qid];
+    perceive $pp-current-order[qid];
+};
+
+#nop CD 期间如果接收到 VIP/SVIP 订单，则放弃普通订单。;
+#alias {pp.retry} {
+    #if { "$pp-current-order[source]" == "PUBLIC" } {
+        #if { &pp-svip-order[] + &pp-vip-order[] > 0 } {
+            #var pp-working {false};
+            pp.check;
+            #return;
+        };
+    };
+
+    pp.do;
+};
+
+#alias {pp.parse.result} {
+    #class pp.parse.result open;
+
+    #action {^你掐指一算，感觉%*(%*)现在好象在%*一带活动。$} {
+        #class pp.parse.result kill;
+        #local qid {%%2};
+        #format qid {%l} {$qid};
+        pp.result 成功 {%%1} {$qid} {%%3};
+    };
+
+    #action {^你费了半天的力气，就是感应不出%*的位置。$} {
+        #class pp.parse.result kill;
+        pp.result 失败 {%%1};
+    };
+
+    #action {^你费了半天的力气，完全无法感应出%*的位置。$} {
+        #class pp.parse.result kill;
+        pp.result 失败 {%%1};
+    };
+
+    #action {^你费了半天的力气，完全感应不出任何状况。$} {
+        #class pp.parse.result kill;
+        pp.result 失败 {};
+    };
+
+    #action {^此人已经隐姓埋名，你费了半天的力气，就是感应不出其位置。$} {
+        #class pp.parse.result kill;
+        pp.add-invalid-id;
+        pp.result 失败 {};
+    };
+
+    #class pp.parse.result close;
+};
+
+#alias {pp.result} {
+    #local answer   {%1};
+    #local qname    {%2};
+    #local qid      {@default{{%3};{$pp-current-order[qid]}}};
+    #local place    {%4};
+
+    #local uname    {$pp-current-order[name]};
+    #local uid      {@default{{$pp-current-order[uid]};{$user[id]}}};
+    #local source   {$pp-current-order[source]};
+
+    #local elapse {};
+    #format elapse {%T};
+    #math elapse {$elapse - $pp-current-order[time]};
+
+    #local prefix {<160>普通订单<070>};
+    #if { "$source" == "VIP" } {
+        #local prefix {<130>VIP 订单<070>};
+    };
+    #elseif { "$source" == "SVIP" } {
+        #local prefix {<150>SVIP订单<070>};
+    };
+
+    #if { "$answer" == "成功" } {
+        #local prefix {【$prefix】【<120>成功<070>】【<120>$uid<070>】【<160>$uname<070>】【<170>$qid<070>】};
+    };
+    #else {
+        #local prefix {【$prefix】【<110>失败<070>】【<120>$uid<070>】【<160>$uname<070>】【<170>$qid<070>】};
+    };
+
+    pp.add-history-id;
+
+    #if { "$answer" == "成功" } {
+        #if { "$qid" == "$pp-current-order[qid]" } {
+            ppLog $prefix【<140>$qname<070>】【<120>$place<070>】【<160>$elapse 秒<070>】;
+            tell $uid 【$qname($qid)】目前在【$place】,快去摁死它吧!;
+        };
+    };
+    #else {
+        #switch {"$source/$qname"} {
+            #case {"PUBLIC/"} {
+                ppLog $prefix【<110>未知<070>】【<110>查无此人<070>】【<160>$elapse 秒<070>】;
+            };
+            #case {"PUBLIC/%+"} {
+                ppLog $prefix【<140>$qname<070>】【<130>感应不到<070>】【<160>$elapse 秒<070>】;
+            };
+            #case {"{VIP|SVIP}/" } {
+                ppLog $prefix【<110>未知<070>】【<110>查无此人<070>】【<160>$elapse 秒<070>】;
+                tell $uid 据我所查，【$qid】已不在人世了;
+            };
+            #case {"{VIP|SVIP}/%+" } {
+                ppLog $prefix【<140>$qname<070>】【<130>感应不到<070>】【<160>$elapse 秒<070>】;
+                tell $uid 恕贫僧道行尚浅，无法查到【$qid】的具体下落，只知其人名曰【$qname】;
+            };
+        };
+    };
+
+    #var pp-working         {false};
+    #var pp-current-order   {};
+};
+
+#nop 最近一段时间查过的 ID;
+#var pp-history-id {};
+
+#alias {pp.add-history-id} {
+    #local {qid} {$pp-current-order[qid]};
+    #local now {};
+    #format now {%T};
+    #var {pp-history-id[$qid]} {$now};
+};
+
+#nop 如果一个 ID 曾经被查到过，后来又查无此人，则认为该 ID 已死亡，标注为无效 ID;
+#var pp-invalid-id {};
+
+#alias {pp.add-invalid-id} {
+    #local {qid} {$pp-current-order[qid]};
+
+    #if { "$pp-history-id[$qid]" == "" } {
+        pp.add-history-id;
+        #return;
+    };
+
+    #local now {};
+    #format now {%T};
+    #unvar {pp-history-id[$qid]};
+    #var {pp-invalid-id[$qid]} {$now};
+};
+
+#tick pp.clean-history {pp.clean-history} 600;
+
+#alias {pp.clean-history} {
+    #local now {};
+    #format now {%T};
+
+    #local id {};
+    #foreach {*pp-invalid-id[]} {id} {
+        #local time {$pp-invalid-id[$id]};
+        #if { $now - $time > 600 } {
+            #unvar {pp-invalid-id[$id]};
+        };
+    };
+
+    #local id {};
+    #foreach {*pp-history-id[]} {id} {
+        #local time {$pp-history-id[$id]};
+        #if { $now - $time > 300 } {
+            #unvar {pp-history-id[$id]};
+        };
+    };
+};
+
+#alias {pp.AddVIP}  {pp.add-list VIP    pp-vip-list   %1};
+#alias {pp.AddSVIP} {pp.add-list SVIP   pp-svip-list  %1};
+#alias {pp.BlockID} {pp.add-list 黑名单 pp-black-list %1};
+
+#alias {pp.add-list} {
+    #local list-name {%1};
+    #local list-var  {%2};
+    #local uid       {@trim{@toLower{%3}}};
+
+    #if { "$uid" != "{[a-z]{3,}}" } {
+        ppLog 添加 $list-name 失败，ID【$uid】格式有误。;
+        #return;
+    };
+
+    #var {${list-var}[$uid]} {
+        {uid}   {$uid}
+    };
+
+    ppLog 【<170>@alignLeft{$list-name;4}维护<070>】【<120>$uid<070>】【共 &{${list-var}[]} 位 VIP】【*{${list-var}[]}】;
+
+    pp.store-vip;
+};
+
+#alias {pp.idle} {
+    #if { $char[HP][最大内力] < $char[Skills][基本内功][jifa-level] * 10 } {
+        pp.dazuo;
+    };
+    #elseif { $char[HP][最大精力] < $char[Skills][基本内功][jifa-level] * 10 } {
+        pp.tuna;
+    };
+};
+
+#alias {pp.tuna} {
+    #if { "$char[HP][忙]" == "true" } {
+        #return;
+    };
+    #if { $char[HP][当前精力] + 10 > $char[HP][最大精力] * 2 } {
+        tuna 10;
+    };
+    #else {
+        #if { $char[HP][精神百分比] < 10 || $char[HP][内力百分比] < 90 } {
+            yun regenerate;
+        };
+        tuna max;
+    };
+};
+
+#alias {pp.dazuo} {
+    #if { "$char[HP][忙]" == "true" } {
+        #return;
+    };
+    #if { $char[HP][当前内力] + 10 > $char[HP][最大内力] * 2 } {
+        dazuo 10;
+    };
+    #else {
+        #if { $char[HP][气血百分比] < 10 || $char[HP][内力百分比] < 90 } {
+            yun recover;
+        };
+        dazuo max;
+    };
+};
+
+#alias {pp.store-vip} {
+    storage.Save {pp-server} {pp-vip-list;pp-svip-list;pp-black-list};
+};
