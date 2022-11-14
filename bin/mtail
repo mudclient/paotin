@@ -116,7 +116,7 @@ exit
     #foreach {$logs[]} {log} {
         #local file {$path/${log}.log};
         #script {tmp} {touch $file};
-        #run {log-$log} {tail -n 1000 -f $path/${log}.log};
+        #line quiet #run {log-$log} {tail -n 1000 -f $path/${log}.log};
         #var LOGNAME {$log};
         #var ID      {$id};
     };
