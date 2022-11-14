@@ -1,0 +1,185 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+///=== {
+///// 采药/帮贡通用机器人
+///// };
+
+#var bot_gather[META] {
+    {NAME}      {采集机器人}
+    {DESC}      {采药、帮贡资材通用机器人}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+#func {bot/gather.Init} {
+    #return true;
+};
+
+VAR {采集机器人工作模式，开始寻找}  {gather.find}   {bhfind};
+VAR {采集机器人工作模式，开始采集}  {gather.cmd}    {bhgather};
+VAR {采集机器人工作模式，移动角色}  {gather.move}   {bhmove};
+
+#alias {gather.Find} {
+    #local task {%1};
+
+    #if { "$task" == "{bh|bg|banghui|bangpai|banggong|帮派}" } {
+        #var gather.find    {bhfind};
+        #var gather.cmd     {bhgather};
+        #var gather.move    {bhmove};
+    };
+    #elseif { "$task" == "{yao|cy|caiyao|yaoshi|采药|药师}" } {
+        #var gather.find    {gather};
+        #var gather.cmd     {gather};
+        #var gather.move    {lookfor};
+    };
+
+    #class gather.lookfor open;
+
+    #var caiyao-move-dir {};
+
+    #alias {caiyao.lookfor.reset} {
+        #class {gather.lookfor} open;
+        #var caiyao-map-lineNo      {0};
+        #var caiyao-map-me          {};
+        #list caiyao-map-yao create {};
+        #class {gather.lookfor} close;
+    };
+
+    #alias {caiyao.lookfor.move} {
+        #local idx      {};
+        #local meRow    {$caiyao-map-me[row]};
+        #local meCol    {$caiyao-map-me[col]};
+
+        #local first-d      {9999};
+
+        #foreach {*caiyao-map-yao[]} {idx} {
+            #local yao {$caiyao-map-yao[$idx]};
+            #local row {$yao[row]};
+            #local col {$yao[col]};
+
+            #local distance {0};
+            #local row-diff {0};
+            #local col-diff {0};
+            #local cmd1     {};
+            #local cmd2     {};
+
+            #if { $row > $meRow } {
+                #math row-diff {$row - $meRow};
+                #format cmd1 {s};
+            };
+            #elseif { $meRow > $row } {
+                #math row-diff {$meRow - $row};
+                #format cmd1 {n};
+            };
+            #else {
+                #format row-diff {0};
+                #format cmd1 {};
+            };
+
+            #if { $col > $meCol } {
+                #math col-diff {$col - $meCol};
+                #format cmd2 {e};
+            };
+            #elseif { $meCol > $col } {
+                #math col-diff {$meCol - $col};
+                #format cmd2 {w};
+            };
+            #else {
+                #format col-diff {0};
+                #format cmd2 {};
+            };
+
+            #if { $row-diff > $col-diff } {
+                #format distance {$row-diff};
+            };
+            #else {
+                #format distance {$col-diff};
+            };
+
+            #if { $distance < $first-d } {
+                #format first-d         {$distance};
+                #format caiyao-move-dir {$cmd1$cmd2};
+            };
+        };
+
+        #if { $first-d < 9999 } {
+            #delay gather.move {$gather.move $caiyao-move-dir} 2;
+        };
+    };
+
+    #action {^看你手忙脚乱的！采药不是赶集。$} {
+        #delay gather.move { $gather.move $caiyao-move-dir} 1;
+    };
+
+    #action {^你现在搜索的位置似乎有些{药材|帮派资材}，可以用{bh|}gather命令采集。$} {
+        $gather.cmd;
+    };
+
+    #action {^你采集到了一些%%1。$}                 { caiyaoLog %%0 };
+    #action {^可是什么也没有采到。$}                { caiyaoLog %%0 };
+    #action {^%*摘采难度大大超过了你能力范围%*$}    { caiyaoLog %%0 };
+    #action {^这里的药材被采完了。$}                { lookfor       };
+    #action {^你要采药，必须需要找个药锄来。$}      { wield yao chu };
+    #action {药锄，因为多次使用，已经被彻底损坏了$} { wield yao chu };
+
+    #action {^这里不是你要寻找帮派资材的地方。$}    { #class gather.lookfor kill };
+
+    #action {^这里的药材已经被采光了。$} {
+        okLog 采药完成。;
+        #class gather.lookfor kill;
+    };
+
+    #action {^$} {
+        #if { $caiyao-map-lineNo != 0 } {
+            caiyao.lookfor.move;
+            caiyao.lookfor.reset;
+        };
+    };
+
+    #action {^你发现了%%1份帮派资材，并运送回了} {
+        okLog 帮贡任务完成。;
+        gquery -me;
+        #class gather.lookfor kill;
+    };
+
+    #action {^{(█|★|♀)+}$} {
+        #local line {%%0};
+        #replace line {█} {.;};
+        #replace line {★} {O;};
+        #replace line {♀} {*;};
+
+        #math caiyao-map-lineNo  {$caiyao-map-lineNo + 1};
+        #local item     {};
+        #local index    {1};
+        #foreach {$line} {item} {
+            #if { "$item" == "*" } {
+                #var caiyao-map-me {
+                    {row}{$caiyao-map-lineNo}
+                    {col}{$index}
+                };
+            };
+            #elseif { "$item" == "O" } {
+                #local yao {
+                    {row}{$caiyao-map-lineNo}
+                    {col}{$index}
+                };
+
+                #list caiyao-map-yao add {{$yao}};
+            };
+
+            #math index {$index + 1};
+        };
+    };
+
+    #class gather.lookfor close;
+
+    $gather.find;
+};
