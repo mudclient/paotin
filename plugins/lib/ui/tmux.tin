@@ -82,4 +82,8 @@
 
 load-lib event;
 
-event.Handle {char/status} {tmux} {ui} {tmux.UpdateCharData};
+#if { "@mkdir{{tmux/$user[id]}}" == "false" } {
+    errLog 创建 tmux UI 通信管道(tmux/$user[id])失败;
+};
+
+event.Handle {char/score} {tmux} {ui} {tmux.UpdateCharData};

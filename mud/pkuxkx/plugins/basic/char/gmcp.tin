@@ -70,7 +70,8 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 #alias {char.gmcp.status} {
     #local busy     {};
     #local fight    {};
-    #local hasHP    {};
+    #local hasHP    {0};
+    #local hasScore {0};
 
     #local id {$gGMCP[Status][id]};
     #if { "$id" == "" } {
@@ -89,7 +90,7 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 
         #local name {$gmcp-name-map[HP][$key]};
         #if { "$name" != "" } {
-            #local hasHP {true};
+            #local hasHP {1};
 
             #if { "$name" == "{当前.*|经验|潜能|食物|饮水}" } {
                 speedo.Set {$name} {$value} {true} {10};
@@ -135,6 +136,7 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 
         #local name {$gmcp-name-map[档案][$key]};
         #if { "$name" != "" } {
+            #local hasScore {1};
             #if { "$name" == "{头衔|大名}" } {
                 #var char[档案][彩色$name] {$value};
                 #replace value {%+1..c} {};
@@ -148,6 +150,7 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 
         #local name {$gmcp-name-map[天赋][$key]};
         #if { "$name" != "" } {
+            #local hasScore {1};
             #var char[档案][天赋][$name] {$value};
             #continue;
         };
@@ -155,10 +158,12 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
         warnLog 未能识别的 GMCP 状态信息 $key => $value;
     };
 
-    #if     { "$hasHP" == "true" }  {
+    #if     { $hasHP } {
         event.Emit char/hpbrief;
         #delay {gmcp.HPSummarize} {char.HPSummarize} {0};
     };
+
+    #if     { $hasScore }           {event.Emit char/score};
 
     #if     { "$busy" == "true" }   {event.Emit char/busy};
     #elseif { "$busy" == "false" }  {event.Emit char/nobusy};
