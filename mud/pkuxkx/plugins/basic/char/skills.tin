@@ -1,3 +1,14 @@
+#nop vim: set filetype=tt:;
+
+#var basic_char_skills[META] {
+    {NAME}      {技能列表}
+    {DESC}      {解析 skills 命令的输出结果，并写入到 char[Skills]}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {技能小点和激发关系分别由 skbrief 和 jifa 命令提供，都合并在一起}
+    {CONFIG}    {
+    }
+};
+
 #nop ╭───技能列表(共十六项)─┬─────────────┬──────┬──────┬──────╮
 #nop │名称                      │ID                        │描述        │级别        │最大级别    │
 #nop ├───一项职业技能────┼─────────────┼──────┼──────┼──────┤
@@ -23,6 +34,11 @@
 #nop ╰─────────────┴─────────────┴──────┴────北大侠客行────╯
 #nop;
 
+load-lib event;
+
+event.Define {char/skills}  {无参}  {$MODULE} {已经获取到 skills 命令输出结果，并更新 char[Skills]。};
+event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令输出结果，并更新 char[Skills]。};
+
 #function {basic_char_skills.Init} {
     #class data/basic/char open;
     #var char[Skills] {};
@@ -30,15 +46,17 @@
     #return true;
 };
 
-#alias {skills} {char.skills};
-#alias {sk}     {char.skills};
-#alias {cha}    {char.skills};
+#alias {skills}     {char.Skills};
+#alias {sk}         {char.Skills};
+#alias {cha}        {char.Skills};
+#alias {skbrief}    {char.Skbrief {%1} nogag};
 
-#alias {char.skills} {
+#alias {char.Skills} {
     #local args {%0};
 
     #if { "$args" == "" } {
         #line oneshot #action {^╭───技能列表(共%*项){(─|┬)*}──╮$} {
+            #var char[Skills][count] {@c2d{%%1}};
             char.skills.parse.output;
         };
     };
@@ -49,7 +67,8 @@
 #alias {char.skills.parse.output} {
     #class {ParseSkills} open;
 
-    #var char[Skills][currentType] {};
+    #var char[Skills][currentType]  {};
+    #var char[Skills][nameList]     {};
 
     #gag {^│名称};
 
@@ -75,21 +94,23 @@
         #if { "$limit" == "%s%d%s" } {
             #math limit {$limit + 0};
         };
-        #else {
+        #elseif { "$limit" == "%s-%s" } {
+            #nop 知识类技能没有上限;
             #local limit {0};
         };
-
-        #if { $limit > 0 } {
-            #nop 给技能加上彩色进度条，用来表示当前级别距离上限的程度;
-            #local newCode {@__char_skills_colorit__{{$code};$level;$limit}};
-            #replace code { } {};
-            #replace line {$code\x1b[2;37;0m%s} {$newCode\e[0m};
-            #echo {%s} {@Beautify{{$line}}};
-            #local line {Skill/%%1/%%2/%%3/%%4/$limit};
-            #replace line { } {};
-            #showme {$line};
-            #line gag;
+        #else {
+            #return;
         };
+
+        #nop 给技能加上彩色进度条，用来表示当前级别距离上限的程度;
+        #local newCode {@__char_skills_colorit__{{$code};$level;$limit}};
+        #replace code { } {};
+        #replace line {$code\x1b[2;37;0m%s} {$newCode\e[0m};
+        #echo {%s} {@Beautify{{$line}}};
+        #local line {Skill/%%1/%%2/%%3/%%4/$limit};
+        #replace line { } {};
+        #showme {$line};
+        #line gag;
     };
 
     #action {^Skill/{□|Θ|}%%2/%%3/%%4/%%5/%%6$} {
@@ -110,7 +131,10 @@
             #format enabled {false};
         };
 
+        #list char[Skills][nameList] add {$name};
+
         #var {char[Skills][$name]} {
+            $char[Skills][$name]
             {name}{$name}
             {type}{$type}
             {enabled}{$enabled}
@@ -124,20 +148,44 @@
     };
 
     #action {^╰───{(┴|─)*}─%S────╯{|ID=char.skills}$} {
-        #unvar char[Skills][currentType];
-        #class {ParseSkills} kill;
+        char.skills.parse.done;
     };
 
     #action {^你不是查看过吗？{|ID=char/skills}$} {
-        #unvar char[Skills][currentType];
-        #class {ParseSkills} kill;
+        char.skills.parse.done;
     };
 
-    event.HandleOnce GA {char.skills} {char} {
+    #alias {char.skills.parse.done} {
+        #local __unused {%%0};
+
+        event.UnHandle GA {char.skills};
+
+        #local nameList {$char[Skills][nameList]};
+        #local count    {$char[Skills][count]};
+
         #unvar char[Skills][currentType];
+        #unvar char[Skills][nameList];
+        #unvar char[Skills][count];
+
         #class {ParseSkills} kill;
-        #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
+
+        #if { &nameList[] != $count } {
+            #line sub var #delay 0 {
+                errLog skills 命令结果解析不完整，识别到了 &nameList[] 条记录。数据可能有误，请联系开发者。;
+            };
+            #return;
+        };
+
+        #list nameList collapse {|};
+        #local skillName {};
+        #foreach {*char[Skills][]} {skillName} {
+            #if { "$skillName" != "{$nameList}" } {
+                #unvar {char[Skills][$skillName]};
+            };
+        };
     };
+
+    event.HandleOnce GA {char.skills} {char} {char.skills.parse.done};
 
     #class {ParseSkills} close;
 };
@@ -197,4 +245,39 @@
     #format {right} {<g08>%r} {$right};
 
     #return {$left$right};
+};
+
+#alias {char.Skbrief} {
+    #local id   {%1};
+
+    #line oneshot #action {^系统回馈：R:skbrief-begin$} {
+        #class char-skbrief-parse-output open;
+        #line oneshot #action {^#%d/%d{|ID=char/skbrief}$} {
+            #local skill {};
+            #foreach {*char[Skills][]} {skill} {
+                #if { "$char[Skills][$skill][code]" == "%1" } {
+                    #var char[Skills][$skill][lvl]      {%%%1};
+                    #var char[Skills][$skill][point]    {%%%2};
+                    event.Emit {char/skbrief};
+                    #break;
+                };
+            };
+            #local gag {@default{%2;gag}};
+            #if { "$gag" == "gag" } {
+                #line gag;
+            };
+        };
+        #line oneshot #action {^系统回馈：R:skbrief-end$} {
+            #line gag;
+            #class char-skbrief-parse-output kill;
+        };
+        #class char-skbrief-parse-output close;
+        #line gag;
+    };
+
+    #if { "$id" == "" } {
+        #return;
+    };
+
+    #send {#response R:skbrief-begin;skbrief $id;response R:skbrief-end#};
 };
