@@ -31,6 +31,8 @@ option.Define {GMCPDebug} {Bool} {是否显示 GMCP 原始数据} {false};
     #line sub var #event {IAC SB GMCP $key IAC SE} {$handler};
 };
 
+#var gGMCP {};
+
 #alias {gmcp.pkuxkx.Enable} {
     gmcp.Handle GMCP.Move {
         #line sub escape #var gGMCP[Move] {%%0};

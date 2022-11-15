@@ -100,6 +100,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
    倒计时结束后，如果 cooldown 时间比倒计时时间还要长，则还会继续显示一段时间之
    后才会被隐藏。
 */
+#var prompt-fields {};
 #list prompt-fields create {};
 
 #nop 配色主题，注意这里不要直接嵌入 SGR（ansi codes），否则计算宽度时会有问题。;
@@ -122,6 +123,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
 };
 
 #nop 热键绑定;
+#var global-key-bindings {};
 #list global-key-bindings create {
     {{key}{\cos}    {action}{prompt.ToggleSwitch}}
 };
@@ -335,6 +337,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
             #local fields {$botLines[$line]};
             #local text {@__prompt_build_line__{{$fields}}};
             #if { $text[width] > 0 } {
+                #local realLine {};
                 #math realLine {$line - $botMaxLine - 1};
                 #list content {add} {{{line}{$realLine}{text}{$text[text]}}};
             };
@@ -356,6 +359,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     #if { "${prompt-top-max-line}" != "$topMaxLine" || "${prompt-bot-max-line}" != "$botMaxLine" } {
         #local lineWidth {};
         #screen get COLS lineWidth;
+        #local spaceLine {};
         #format spaceLine {%-${lineWidth}s} {};
 
         #local newMax {$topMaxLine};

@@ -10,6 +10,8 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ===========
 */
 
+#class main open;
+
 #nop 一些中文 MUD 服务器在接收到 quit 命令时会让角色从服务器上下线，;
 #nop 这往往会导致玩家丢失背包里的物品。;
 #nop 为了避免悲剧发生，这里特别映射一下，改成仅断开连接，而不退出服务器角色。;
@@ -51,3 +53,5 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #undelay KeepAlive;
     #delay KeepAlive {#zap} 180;
 };
+
+#class main close;

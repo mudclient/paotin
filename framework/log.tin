@@ -24,6 +24,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #function {InitLog} {
     #local path {%1};
 
+    #local output {};
     #script output {test -d var && echo true || echo false};
     #if { "$output[1]" == "true" } {
         #var gLog[PATH] {var/log};
@@ -53,6 +54,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {dbgLog}     {log.write {$gLog[debug]}  {%0}};
 
 #alias {{[a-z]{1,10}}Log %*} {
+    #local logName {};
     #format logName {%l} {%1};
     log.write {${logName}.log} {%2};
 };

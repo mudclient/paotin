@@ -4,6 +4,8 @@
     {AUTHOR}    {担子炮}
 };
 
+#var chat-channel {};
+
 #list chat-channel create {
     {{pattern}{求助}                        {action}{helpmeLog}     {gag}{true}}
     {{pattern}{北侠QQ群}                    {action}{qqLog}         {gag}{true}}
