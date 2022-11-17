@@ -48,13 +48,40 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
         #gag {^%*$};
     };
 
-#nop 　气血恢复  　340.21  　气血治疗  　65.47   　精神恢复  　605.26  　精神治疗  　65.47   　;
+#nop │气血恢复│6.42    │气血治疗│0.11    │精神恢复│3.16    │精神治疗│0.11    │;
     #action {^│气血恢复│%S%!s│气血治疗│%S%!s│精神恢复│%S%!s│精神治疗│%S%!s│$} {
         #var char[STATUS][气血恢复] {@trim{%%1}};
         #var char[STATUS][气血治疗] {@trim{%%2}};
         #var char[STATUS][精神恢复] {@trim{%%3}};
         #var char[STATUS][精神治疗] {@trim{%%4}};
     };
+
+#nop │内力恢复│4.11    │精力恢复│12.63   │内力精纯│97.69%  │加力减耗│0%      │;
+    #action {^│内力恢复│%S%!s│精力恢复│%S%!s│内力精纯│%S\%%!s│加力减耗│%*│$} {
+        #var char[STATUS][内力恢复] {@trim{%%1}};
+        #var char[STATUS][精力恢复] {@trim{%%2}};
+        #var char[STATUS][内力精纯] {@trim{%%3}};
+    };
+
+#nop 兜底儿的触发，捕获其它所有数值类型字段;
+    #action {^│%*│%S%!s│%*│%S%!s│%*│%S%!s│%*│%S%!s│$} {
+        #local data {
+            {%%1}   {%%2}
+            {%%3}   {%%4}
+            {%%5}   {%%6}
+            {%%7}   {%%8}
+        };
+
+        #local key {};
+        #foreach {*data[]} {key} {
+            #local value {@trim{$data[$key]}};
+            #local key   {@trim{$key}};
+            #if { "$key" != "" } {
+                #replace value {{[^0-9.-]+}} {};
+                #var char[STATUS][$key] {$value};
+            };
+        };
+    } {5.1};
 
 #nop ├───健康状态────────────────────────────────────────┤;
 #nop │ 受伤、怒、梯云纵(127秒)、太极剑· 随(11秒)、太极剑· 连(4秒)、太极剑· 缠(1秒)                   │;
