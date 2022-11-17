@@ -1,0 +1,106 @@
+#nop vim: set filetype=tt:;
+
+#var basic_char_jifa[META] {
+    {NAME}      {武功激发检查}
+    {DESC}      {解析 jifa 命令的输出结果，并写入到 char[Skills]}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {解析结果并不会覆盖 skills 原有数据，只是增加了 skill 之间的激发关系}
+    {CONFIG}    {
+    }
+};
+
+/*
+╭───基本功夫──────┬─────────────┬─────────────╮
+│内功 (force)              │八荒六合唯我独尊功        │有效等级：  420           │
+│躲闪 (dodge)              │月影舞步                  │有效等级：  769           │
+│招架 (parry)              │天山六阳掌                │有效等级：  419           │
+├───常用兵器──────┼─────────────┼─────────────┤
+│剑法 (sword)              │天羽奇剑                  │有效等级：  419           │
+├───常用拳脚──────┼─────────────┼─────────────┤
+│手法 (hand)               │天山折梅手[互备]          │有效等级：  419           │
+│掌法 (strike)             │天山六阳掌[互备]          │有效等级：  419           │
+├───其他功夫──────┼─────────────┼─────────────┤
+│暗器 (throwing)           │天山六阳掌                │有效等级：  419           │
+╰─────────────┴─────────────┴────北大侠客行────╯
+*/
+
+load-lib event;
+
+event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命令输出结果，并更新 char[Skills]。};
+
+#function {basic_char_jifa.Init} {
+    #return true;
+};
+
+#alias {jifa}   {char.Jifa};
+#alias {enable} {char.Jifa};
+
+#alias {char.Jifa} {
+    #local args {%0};
+    #if { "$args" != "" } {
+        #send {jifa $args};
+        #return;
+    };
+
+    #class char.Jifa open;
+
+    #action {^╭───基本功夫─{(─|┬)*}───╮$} {
+        #local skillName {};
+        #foreach {*char[Skills][]} {skillName} {
+            #unvar char[Skills][$skillName][jifa-to];
+        };
+
+        char.jifa.parse.output;
+    };
+
+    #class char.Jifa close;
+
+    #send jifa;
+};
+
+#alias {char.jifa.parse.output} {
+    #class char.Jifa open;
+
+    #var char-jifa-type {基本功夫};
+
+    #action {{*UTF8}^├───{\p{Han}{4}}──{(─|┼)*}─┤{|ID=char/jifa}$} {
+        #var char-jifa-type {%%1};
+    };
+
+    #action {^│%S (%*) %s│%S{|\[互备\]} %s│有效等级：%s %d %s │$} {
+        #local baseName     {基本%%1};
+        #if { "$baseName" == "基本躲闪" } {
+            #local baseName {基本轻功};
+        };
+        #local skillName    {%%4};
+        #local jifaLevel    {%%8};
+        #if { &char[Skills][$baseName][] > 0 } {
+            #var char[Skills][$baseName][jifa-to]       {$skillName};
+            #var char[Skills][$baseName][jifa-level]    {$jifaLevel};
+            #var char[Skills][$baseName][jifa-type]     {$char-jifa-type};
+        };
+        #if { &char[Skills][$skillName][] > 0 } {
+            #if { "$char[Skills][$skillName][jifa-to]" == "" } {
+                #var char[Skills][$skillName][jifa-to]  {$baseName};
+            };
+            #else {
+                #cat char[Skills][$skillName][jifa-to]  {;$baseName};
+            };
+            #var char[Skills][$skillName][jifa-level]   {$jifaLevel};
+        };
+    };
+
+    #action {^╰───{(┴|─)*}──%S────╯{|ID=char/jifa}$} {
+        char.jifa.done;
+    };
+
+    #alias {char.jifa.done} {
+        #class char.Jifa kill;
+        event.UnHandle {GA} {jifa.parser};
+        event.Emit {char/jifa};
+    };
+
+    event.HandleOnce {GA} {jifa.parser} {char/jifa} {char.jifa.done};
+
+    #class char.Jifa close;
+};

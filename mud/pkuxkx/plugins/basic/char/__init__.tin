@@ -7,3 +7,4 @@ load-module {basic/char/i2};
 load-module {basic/char/sachet};
 load-module {basic/char/score};
 load-module {basic/char/gmcp};
+load-module {basic/char/jifa};

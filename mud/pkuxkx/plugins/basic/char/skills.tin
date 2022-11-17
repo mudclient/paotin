@@ -43,6 +43,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
     #class data/basic/char open;
     #var char[Skills] {};
     #class data/basic/char close;
+    #delay char.skills.init {skills;jifa} 1;
     #return true;
 };
 
