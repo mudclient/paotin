@@ -1,0 +1,725 @@
+#nop vim: set filetype=tt:;
+
+#var bot_fullsk[META] {
+    {NAME}      {fullsk 机器人}
+    {DESC}      {根据 jifa 状态自动补满武功，有多种策略可供选择}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {零触发练功机器人，支持全门派，全技能，全经验阶段}
+    {CONFIG}    {
+        {path-lw2lx}        {从领悟房间到练习房间的路径}
+        {path-lx2lw}        {从练习房间到领悟房间的路径}
+        {path-lx2sleep}     {从练习房间到睡觉房间的路径}
+        {path-sleep2lx}     {从睡觉房间到练习房间的路径}
+        {path-lw2sleep}     {从领悟房间到睡觉房间的路径}
+        {path-sleep2lw}     {从睡觉房间到领悟房间的路径}
+        {food}              {饿了吃什么，默认与全局偏好食物(char[favorite][food])相同}
+        {water}             {渴了喝什么，默认与全局偏好饮料(char[favorite][water])相同}
+        {fullme-bot}        {吃饭喝水机器人，如果身上没有食水会自动前往吃喝}
+        {auto-path}         {如果设置为「true」，则根据门派和当前位置自动匹配方案}
+        {skills}            {字符串列表，需要补满哪些技能（ID或名称）。默认按照 jifa 列表}
+        {allow-jifa}        {是否允许重新激发，不允许则按当前 jifa 状态。}
+        {allow-xiulian}     {是否允许修炼，如果不允许则跳过特殊内功}
+    }
+};
+
+/*
+* 核心技术
+    - 通过 jifa 和 skills 自动配置 fullsk 任务列表，无需手动配置，或者简化配置
+    - 通过 skbrief 来检测是否已经停止练习，自动切换下一个武功，防止触发不到
+    - 检测气血和精神的消耗情况，动态调整练习次数
+* 练功目标
+    - 设定时间，到点就停
+    - 练一级就停
+    - 一直练下去，直到目标达成
+* 设定练功范围
+    - 默认补满 jifa 的武功，优先特殊，然后基本
+    - 可自定义武功列表
+* 是否允许重新 jifa
+    - 不允许则按照当前 jifa 状态练习
+    - 如果允许的话，则尝试 jifa 到 parry，或者别的武功进行练习，完事之后可以再激发回来
+* 练功顺序
+    - 优先基本内功
+    - 其次招架
+    - 其次轻功
+    - 其次常用兵器
+    - 其次常用拳脚
+    - 最后其它武功
+* 其它注意事项
+    - 切换武器
+    - 空闲利用
+    - 是否睡觉
+
+几种恢复内力的方式比较：
+睡觉：每次恢复 50% 内力，气血/精神全部加满；缺点：约 20 秒的睡眠时间，另外有 50 秒的 CD。
+打坐：每秒恢复相当于内功有效等级的 10% 的内力。20 秒恢复 200%。缺点：会消耗气血，而且还需要补精神
+发呆：每秒恢复少量气血、精神和内力。初期可忽略不计，但如果有练功装则效果惊人
+
+结论：
+1，小号睡觉为主
+2，有练功装在身的时候，也许发呆才是最好的
+3，大号可以打坐，但睡觉仍不失为一种好手段，如果遇到睡觉 CD，则可以考虑打坐，但不需要 dazuo max。
+   此时可进一步做计算
+
+如果回复内力+气血+精神超过睡觉收益，则应该发呆
+#math scale {$char[Skills][基本内功][jifa-level] / 100};
+发呆收益: ( $char[STATUS][内力恢复] + $char[STATUS][精神恢复] / $scale ) * 20
+睡觉收益: ( $char[HP][最大内力] / 2 + ($char[HP][最大精神] - $char[HP][当前精神]) / $scale )
+打坐收益: ( $char[Skills][基本内功][jifa-level] / 10 + 1 ) * 20
+*/
+
+load-lib event;
+
+#function {bot_fullsk.Init} {
+    score;
+    skills;
+    jifa;
+
+    load-file {etc/fullsk.tin};
+
+    #local pathPair {
+        {lx2lw}     {lw2lx}
+        {lx2sleep}  {sleep2lx}
+        {lw2sleep}  {sleep2lw}
+    };
+
+    #local menpai {};
+    #foreach {*fullsk-path[]} {menpai} {
+        #local left {};
+        #foreach {*pathPair[]} {left} {
+            #local right        {$pathPair[$left]};
+            #local leftCmds     {$fullsk-path[$menpai][$left]};
+            #local rightCmds    {$fullsk-path[$menpai][$right]};
+            #if { "$leftCmds" != "" && "$rightCmds" == "" } {
+                #var {fullsk-path[$menpai][$right]} {@reverseCmds{$leftCmds}};
+            };
+            #elseif { "$leftCmds" == "" && "$rightCmds" != "" } {
+                #var {fullsk-path[$menpai][$left]} {@reverseCmds{$rightCmds}};
+            };
+        };
+    };
+
+    event.HandleOnce {char/jifa} {fullsk/init} {bot/fullsk} {fullsk.init};
+
+    #return true;
+};
+
+#alias {fullsk.init} {
+    #local skills {};
+
+    #nop 如果指定了武功列表，则只补满指定的武功;
+    #if { "$bot_fullsk[config][skills]" != "" } {
+        #local skill {};
+        #foreach {$bot_fullsk[config][skills]} {skill} {
+            #local skillName {};
+            #foreach {*char[Skills][]} {skillName} {
+                #local skillID {$char[Skills][$skillName][code]};
+
+                #if { "$skillName$skillID" != "%*$skill%*" } {
+                    #continue;
+                };
+
+                #local level   {$char[Skills][$skillName][level]};
+                #local limit   {$char[Skills][$skillName][limit]};
+                #if { $level >= $limit } {
+                    #continue;
+                };
+
+                #local jifa    {$char[Skills][$skillName][jifa-to]};
+                #if { "$jifa" != "" } {
+                    #list skills add {$skillName};
+                    #list skills add {$jifa};
+                    #continue;
+                };
+
+                #if { "$bot_fullsk[config][allow-jifa]" == "true" } {
+                    #list skills add {$skillName};
+                    #continue;
+                };
+
+                warnLog 技能「$skillName」尚未被激发，无法提高，跳过。;
+            };
+        };
+    };
+    #else {
+        #nop 否则补满全部已经激发的武功;
+        #local skillName {};
+        #foreach {*char[Skills][]} {skillName} {
+            #if { "$skillName" != "基本%*" } {
+                #continue;
+            };
+
+            #local level    {$char[Skills][$skillName][level]};
+            #local limit    {$char[Skills][$skillName][limit]};
+            #if { $level < $limit } {
+                #list skills add {$skillName};
+            };
+
+            #if { "$skillName" == "基本内功" && "$bot_fullsk[config][allow-xiulian]" != "true" } {
+                #continue;
+            };
+
+            #local jifa     {$char[Skills][$skillName][jifa-to]};
+            #if { "$jifa" == "{无|}" } {
+                #continue;
+            };
+
+            #local jifa     {$char[Skills][$jifa]};
+            #if { $jifa[level] < $jifa[limit] } {
+                #list skills add {$jifa[name]};
+            };
+        };
+    };
+
+    #var bot_fullsk[config][skills] {$skills};
+
+    #delay 0 {
+        okLog fullsk 初始化完成。;
+        okLog 下面是本插件的设置情况。如果设置有误请重新加载。;
+        look-module bot/fullsk;
+        okLog 本机器要求在领悟房间开始运行，请确认你现在是否站在领悟房间，如果是，请输入 fullsk.qnod。;
+        okLog 否则你现在还来得及前往领悟房间，抵达后输入 fullsk.qnod 即可开始。;
+
+        #line oneshot #alias {fullsk.qnod} {
+            okLog 那么，就要开始了。;
+            fullsk.goto sleep;
+            #delay 1 {fullsk.fullme};
+        };
+    };
+};
+
+#var fullsk-fullme-last-food    {-1};
+#var fullsk-fullme-last-water   {-1};
+
+#alias {fullsk.fullme} {
+    #nop 优先采用身上的补给物进行补充;
+    #nop 如果身上的东西不能够解决问题，就用 fullme 机器人。;
+    #if {   $char[HP][食物] <= $fullsk-fullme-last-food
+        ||  $char[HP][饮水] <= $fullsk-fullme-last-water } {
+        #if { "$bot_fullsk[config][fullme-bot]" != "" } {
+            $bot_fullsk[config][fullme-bot] {
+                fullsk.goto lw;
+                fullsk.next-skill;
+            };
+        };
+        #else {
+            #delay 0 {errLog 没有食物和饮料了，无法继续练功。};
+        };
+        #var fullsk-fullme-last-food    {-1};
+        #var fullsk-fullme-last-water   {-1};
+        #return;
+    };
+
+    #local wait {};
+    #if { $char[HP][食物] < $char[HP][最大食物] / 2 } {
+        #local food {$char[favorite][food]};
+        #if { "$bot_fullsk[config][food]" != "" } {
+            #local food {$bot_fullsk[config][food]};
+        };
+
+        #if { "$food" != "" } {
+            #3 eat $bot_fullsk[config][food];
+            #local wait {true};
+            #var fullsk-fullme-last-food {$char[HP][食物]};
+        };
+        #else {
+            #delay 0 {errLog 配置错误，没吃没喝，又不 fullme，怎么练功？};
+            #return;
+        };
+    };
+
+    #if { $char[HP][饮水] < $char[HP][最大饮水] / 2 } {
+        drink;
+        #local wait {true};
+        #var fullsk-fullme-last-water {$char[HP][饮水]};
+    };
+
+    #nop 如果吃过喝过了，就等待食物和饮水回复;
+    #if { "$wait" == "true" } {
+        #delay {fullsk.fullme} {fullsk.fullme} 3;
+        #return;
+    };
+
+    fullsk.next-skill;
+};
+
+#var fullsk-current-skill-idx   {0};
+
+#alias {fullsk.next-skill} {
+    #math {fullsk-current-skill-idx} {$fullsk-current-skill-idx + 1};
+    #if { $fullsk-current-skill-idx > &bot_fullsk[config][skills][] } {
+        #var fullsk-current-skill-idx {0};
+        #nop 稍微停顿一下，再来一遍，防止 BUG 时刷屏;
+        #delay fullsk.next-skill {fullsk.next-skill} {60};
+        #return;
+    };
+
+    #local skillName {$bot_fullsk[config][skills][$fullsk-current-skill-idx]};
+    fullskLog 接下来需要提高的是「$skillName」;
+
+    #if { "$skillName" == "基本%*" } {
+        fullsk.goto lw;
+        fullsk.lingwu $skillName;
+    };
+    #else {
+        fullsk.goto lx;
+        fullsk.lianxi $skillName;
+    };
+};
+
+#alias {fullsk.lingwu} {
+    #local skillName {%1};
+    #if { "$skillName" == "" } {
+        errLog 你要领悟什么？;
+        #return;
+    };
+
+    #local skill {$char[Skills][$skillName]};
+    #if { &skill[] == 0 } {
+        errLog 你还不会「$skillName」这个技能。;
+        #return;
+    };
+
+    okLog 开始领悟「$skillName」。;
+
+    #class fullsk.lingwu open;
+
+    #var fullsk-lingwu-skill        {$skill};
+    #var fullsk-lingwu-skill[lvl]   {0};
+    #var fullsk-lingwu-skill[point] {0};
+    #var fullsk-lingwu-times        {10};
+
+    #alias {fullsk.lingwu.do} {
+        #local times {@defaultNum{$fullsk-lingwu-times;10}};
+        #local multiple {};
+        #if { $times >= 1000 } {
+            #local multiple {10};
+            #local times    {100};
+        };
+        #else {
+            #math multiple {$times / 100 + 1};
+            #math times {$times / $multiple};
+        };
+        #local code {$fullsk-lingwu-skill[code]};
+        yun regenerate; do $multiple lingwu $code $times;
+        skbrief $code;
+    };
+
+    #var fullsk-lingwu-checked {false};
+
+    #nop skbrief 回调;
+    #alias {fullsk.lingwu.check} {
+        #local name     {$fullsk-lingwu-skill[name]};
+        #local limit    {$char[Skills][$name][limit]};
+        #local lvl      {$char[Skills][$name][lvl]};
+        #local point    {$char[Skills][$name][point]};
+
+        #if { $lvl >= $limit } {
+            okLog 技能已经抵达经验支持的上限。;
+            #list bot_fullsk[config][skills] filter {} {$name};
+            fullsk.lingwu.done;
+            #return;
+        };
+
+        #if {   $lvl    == $fullsk-lingwu-skill[lvl]
+            &&  $point  == $fullsk-lingwu-skill[point]
+        } {
+            #if { $char[HP][当前内力] > 100 } {
+                okLog 功力已经无法进步。;
+                fullsk.lingwu.done;
+                #return;
+            };
+        };
+        #else {
+            #var fullsk-lingwu-checked      {true};
+            #var fullsk-lingwu-skill[lvl]   {$lvl};
+            #var fullsk-lingwu-skill[point] {$point};
+        };
+    };
+
+    #nop hpbrief 回调;
+    #alias {fullsk.lingwu.calc} {
+        #local checked {$fullsk-lingwu-checked};
+        #var fullsk-lingwu-checked {false};
+
+        #if { $char[HP][内力百分比] < 20 } {
+            #if { $char[HP][内力百分比] > 2 || $char[HP][精神百分比] > 80 } {
+                fullsk.lingwu.do;
+            };
+            #else {
+                #nop TODO: 决定是睡觉还是打坐，再要不发呆;
+                fullsk.recover;
+            };
+            #return;
+        };
+
+        #nop 如果剩余精神过少，则不再调整次数。;
+        #if { $char[HP][精神百分比] < 10 } {
+            fullsk.lingwu.do;
+            #return;
+        };
+
+        #if { "$checked" == "true" } {
+            #local old {$fullsk-lingwu-times};
+
+            #nop 由于某些原因，有效精神可能会超过最大精神，因此领悟时以有效精神为准计算比例;
+            #local percent {@eval{$char[HP][当前精神] * 100 / $char[HP][有效精神]}};
+
+            #nop 如果剩余精神过多，也不再做精细调整，防止触发 TinTin++ BUG 导致崩溃。;
+            #nop 只有精神消耗正常时才动态精细调整;
+            #if { $percent > 90 } {
+                #math fullsk-lingwu-times {$fullsk-lingwu-times * 10};
+            };
+            #else {
+                #math fullsk-lingwu-times {$fullsk-lingwu-times * 98 / ( 100 - $percent )};
+            };
+
+            #nop 无论如何，次数上限为 1000，因为这是 do 10 lingwu xxx 100 的上限。;
+            #var fullsk-lingwu-times {@min{$fullsk-lingwu-times;1000}};
+
+            #if { $old != $fullsk-lingwu-times } {
+                okLog 领悟加速中，因为精神剩余 $char[HP][精神百分比]%，所以次数从 $old 调整到 $fullsk-lingwu-times。;
+            };
+        };
+
+        fullsk.lingwu.do;
+    };
+
+    #alias {fullsk.lingwu.done} {
+        #class fullsk.lingwu kill;
+        event.UnHandle {char/skbrief} {fullsk.lingwu};
+        event.UnHandle {char/hpbrief} {fullsk.lingwu};
+        fullsk.next-skill;
+    };
+
+    event.Handle {char/skbrief} {fullsk.lingwu} {bot/fullsk} {fullsk.lingwu.check};
+    event.Handle {char/hpbrief} {fullsk.lingwu} {bot/fullsk} {fullsk.lingwu.calc};
+
+    #local skill {$fullsk-lingwu-skill[jifa-to]};
+    #if { "$skill" == "" } {
+        #nop TODO: 自动激发;
+        errLog 技能尚未激发，无法领悟。;
+        fullsk.lingwu.done;
+        #return;
+    };
+
+    #class fullsk.lingwu close;
+
+    fullsk.lingwu.do;
+};
+
+#alias {fullsk.lianxi} {
+    #local skillName {%1};
+    #if { "$skillName" == "" } {
+        errLog 你要练什么？;
+        #return;
+    };
+
+    #local skill {$char[Skills][$skillName]};
+    #if { &skill[] == 0 } {
+        errLog 你还不会「$skillName」这个技能。;
+        #return;
+    };
+
+    #class fullsk.lianxi open;
+
+    #var fullsk-lianxi-skill        {$skill};
+    #var fullsk-lianxi-skill[lvl]   {0};
+    #var fullsk-lianxi-skill[point] {0};
+    #var fullsk-lianxi-times        {10};
+    #var fullsk-lianxi-yun-what     {recover};
+
+    #alias {fullsk.lianxi.do} {
+        #local times {@defaultNum{$fullsk-lianxi-times;10}};
+        #local multiple {};
+        #if { $times >= 500 } {
+            #local multiple {10};
+            #local times    {50};
+        };
+        #else {
+            #math multiple {$times / 50 + 1};
+            #math times {$times / $multiple};
+        };
+        #var baseName {$fullsk-lianxi-skill[jifa-to]};
+        #local code {$char[Skills][$baseName][code]};
+        yun $fullsk-lianxi-yun-what;
+        do $multiple lian $code $times;
+        skbrief $fullsk-lianxi-skill[code];
+    };
+
+    #var fullsk-lianxi-checked {false};
+
+    #alias {fullsk.lianxi.check} {
+        #local name     {$fullsk-lianxi-skill[name]};
+        #local limit    {$char[Skills][$name][limit]};
+        #local lvl      {$char[Skills][$name][lvl]};
+        #local point    {$char[Skills][$name][point]};
+
+        #if { $lvl >= $limit } {
+            okLog 技能已经抵达经验支持的上限。;
+            #list bot_fullsk[config][skills] filter {} {$name};
+            fullsk.lianxi.done;
+            #return;
+        };
+
+        #if {   $lvl    == $fullsk-lianxi-skill[lvl]
+            &&  $point  == $fullsk-lianxi-skill[point]
+        } {
+            #if { $char[HP][当前内力] > 100 } {
+                okLog 功力已经无法进步。;
+                fullsk.lianxi.done;
+                #return;
+            };
+        };
+        #else {
+            #var fullsk-lianxi-skill[lvl]   {$lvl};
+            #var fullsk-lianxi-skill[point] {$point};
+            #var fullsk-lianxi-checked      {true};
+        };
+    };
+
+    #alias {fullsk.lianxi.calc} {
+        #local checked {$fullsk-lianxi-checked};
+        #var fullsk-lianxi-checked {false};
+
+        #nop 个别武功练习时不消耗气血，而是消耗精神。;
+        #if {  "$fullsk-lianxi-yun-what" == "recover"
+            && $char[HP][气血百分比] >= 100
+            && $char[HP][当前内力] >= 100
+            && "$checked" == "true"
+        } {
+            #var fullsk-lianxi-yun-what {regenerate};
+        };
+
+        #local percent {0};
+        #if { "$fullsk-lianxi-yun-what" == "recover" } {
+            #local percent {$char[HP][气血百分比]};
+        };
+        #else {
+            #local percent {$char[HP][精神百分比]};
+        };
+
+        #if { $char[HP][内力百分比] < 20 } {
+            #if { $char[HP][内力百分比] > 2 || ( $percent > 80 && $percent < 100 ) } {
+                fullsk.lianxi.do;
+            };
+            #else {
+                #nop TODO: 决定是睡觉还是打坐，再要不发呆;
+                fullsk.recover;
+            };
+            #return;
+        };
+
+        #nop 如果剩余气血/精神过少，则不再调整次数。;
+        #if { $percent < 10 } {
+            fullsk.lianxi.do;
+            #return;
+        };
+
+        #if { "$checked" == "true" } {
+            #local old {$fullsk-lianxi-times};
+
+            #nop 如果剩余气血/精神过多，也不再做精细调整，防止触发 TinTin++ BUG 导致崩溃。;
+            #nop 只有气血消耗正常时才动态精细调整;
+            #if { $percent > 90 } {
+                #math fullsk-lianxi-times {$fullsk-lianxi-times * 10};
+            };
+            #else {
+                #math fullsk-lianxi-times {$fullsk-lianxi-times * 98 / ( 100 - $percent )};
+            };
+
+            #nop 无论如何，次数上限为 500，因为这是 do 10 lian xxx 50 的上限。;
+            #var fullsk-lianxi-times   {@min{$fullsk-lianxi-times;500}};
+
+            #if { $old != $fullsk-lianxi-times } {
+                okLog 练习加速中，因为气血（也可能是精神）剩余 $percent%，所以次数从 $old 调整到 $fullsk-lianxi-times。;
+            };
+        };
+
+        fullsk.lianxi.do;
+    };
+
+    #alias {fullsk.lianxi.done} {
+        #class fullsk.lianxi kill;
+        event.UnHandle {char/skbrief} {fullsk.lianxi};
+        event.UnHandle {char/hpbrief} {fullsk.lianxi};
+        fullsk.next-skill;
+    };
+
+    event.Handle {char/skbrief} {fullsk.lianxi} {bot/fullsk} {fullsk.lianxi.check};
+    event.Handle {char/hpbrief} {fullsk.lianxi} {bot/fullsk} {fullsk.lianxi.calc};
+
+    #class fullsk.lianxi close;
+
+    #local base {$fullsk-lianxi-skill[jifa-to]};
+    #if { "$base" == "" } {
+        #nop TODO: 自动激发;
+        errLog 技能尚未激发，无法练习;
+        fullsk.lianxi.done;
+        #return;
+    };
+
+    #local maxBase {};
+    #local baseName {};
+    #foreach {$base} {baseName} {
+        #if { "$maxBase" == "" } {
+            #local maxBase {$baseName};
+        };
+        #elseif { $char[Skills][$baseName][level] > $char[Skills][$maxBase][level] } {
+            #local maxBase {$baseName};
+        };
+    };
+
+    #var fullsk-lianxi-skill[jifa-to] {$maxBase};
+    okLog 开始练习激发到「$maxBase」上的「$skillName」。;
+
+    #local code {$char[Skills][$maxBase][code]};
+    unwield right;
+    #nop 基本功夫 force dodge parry;
+    #nop 拳脚 claw unarmed cuff finger hand strike throwing iron-cloth leg;
+    #nop 兵器 sword staff dagger blade club hammer axe spear whip halberd;
+    #if { "$code" == "{sword|staff|dagger|blade|club|hammer|axe|spear|whip|halberd}" } {
+        wield $code at right;
+        #local others {$fullsk-weapons[$char[档案][门派]][$code]};
+        #if { "$others" != "" } {
+            #foreach {$others} {code} {
+                wield $code at right;
+            };
+        };
+    };
+
+    fullsk.lianxi.do;
+};
+
+#alias {fullsk.xiulian} {
+    #local skillName    {$char[Skills][基本内功][jifa-to]};
+    #local skillID      {$char[Skills][$skillName][code]};
+
+    #class fullsk.xiulian open;
+
+    #var fullsk-xiulian-skill {$char[Skills][$skillName]};
+
+    #alias {fullsk.xiulian.check} {
+        #local name     {$fullsk-xiulian-skill[name]};
+        #local lvl      {$char[Skills][$name][lvl]};
+        #local point    {$char[Skills][$name][point]};
+        #local limit    {$char[Skills][$name][limit]};
+
+        #if { $lvl >= $limit } {
+            okLog 技能已经抵达经验支持的上限。;
+            #list bot_fullsk[config][skills] filter {} {$name};
+            fullsk.xiulian.done;
+            #return;
+        };
+
+        #if {   $lvl    == $fullsk-lingwu-skill[lvl]
+            &&  $point  == $fullsk-lingwu-skill[point]
+        } {
+            #if { $char[HP][当前内力] > 100 } {
+                okLog 功力已经无法进步。;
+                fullsk.lingwu.done;
+                #return;
+            };
+        };
+
+        #var fullsk-xiulian-skill[lvl]   {$lvl};
+        #var fullsk-xiulian-skill[point] {$point};
+
+        fullsk.xiulian.do;
+    };
+
+    #alias {fullsk.xiulian.do} {
+        #local skill {$fullsk-xiulian-skill[code]};
+        xiulian $skill;
+        char.WaitBusy {
+            event.Handle {char/skbrief} {fullsk.xiulian} {bot/fullsk} {fullsk.xiulian.check};
+            skbrief $skill;
+        };
+    };
+
+    #alias {fullsk.xiulian.done} {
+        #class fullsk.xiulian kill;
+        event.UnHandle {char/skbrief} {fullsk.xiulian};
+        fullsk.next-skill;
+    };
+
+    #class fullsk.xiulian close;
+
+    fullsk.xiulian.do;
+};
+
+#alias {fullsk.recover} {
+    #local scale {1};
+    #math scale {$char[Skills][基本内功][jifa-level] / 100};
+    #local scale {@defaultNum{$scale;1}};
+    #local 发呆收益 {0};
+    #local 睡觉收益 {0};
+    #local 打坐收益 {0};
+    #local 先天根骨 {@defaultNum{$char[档案][先天][根骨];25}};
+    #local 预期睡觉时间 {20};
+    #math 预期睡觉时间  {50 - ${先天根骨}};
+
+    #math 打坐收益 {
+          ( $char[Skills][基本内功][jifa-level] / 10 + 1 )
+        *   $char[STATUS][内力精纯] / 100 * ${预期睡觉时间}
+    };
+    #math 发呆收益 {(
+            $char[STATUS][内力恢复]
+        +   $char[STATUS][精神恢复] * 2 / $scale
+        +   $char[STATUS][气血恢复] * 1 / $scale
+        ) * ${预期睡觉时间}
+    };
+    #math 睡觉收益 {
+            $char[HP][最大内力] / 2
+        +   ( $char[HP][最大精神] - $char[HP][当前精神] ) / $scale
+        +   ( $char[HP][最大气血] - $char[HP][当前气血] ) / $scale
+    };
+
+    #echo {打坐收益: ${打坐收益} 睡觉收益: ${睡觉收益} 发呆收益: ${发呆收益}};
+    #if { ${睡觉收益} > ${发呆收益} && ${睡觉收益} > ${打坐收益} } {
+        okLog 该睡觉了。;
+    };
+    #elseif { ${发呆收益} >= ${睡觉收益} && ${发呆收益} >= ${打坐收益} } {
+        okLog 呆会儿继续。;
+    };
+    #else {
+        okLog 要不先去打个坐？;
+    };
+};
+
+#var fullsk-current-room {lw};
+
+#alias {fullsk.goto} {
+    #local target {%1};
+
+    #if { "$target" != "{lw|lx|sleep}" } {
+        errLog 机器出错了;
+        #return;
+    };
+
+    #if { "$target" == "$fullsk-current-room" } {
+        #return;
+    };
+
+    #local path {${fullsk-current-room}2$target};
+    #local cmds {$bot_fullsk[config][path-$path]};
+    #if { "$cmds" != "" } {
+        $cmds;
+    };
+    #elseif { "$fullsk-path[$char[档案][门派]][$path]" != "" } {
+        $fullsk-path[$char[档案][门派]][$path];
+    };
+
+    #var fullsk-current-room {$target};
+};
+
+#action {~^%c你的「%*」进步了！$CE} {fullskLog %0};
+
+#alias {fullsk.test} {
+    load-module wd;
+    reload-module bot/fullsk {
+        {food}              {guo}
+        {water}             {cha}
+        {fullme-bot}        {wudang.fullme}
+        {skills}            {太极拳;太极剑}
+    };
+};

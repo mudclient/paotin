@@ -1,0 +1,10 @@
+#var fullsk-path {
+    {武当派} {{lw2lx}{} {lw2sleep}{e;e;s;e;e}   {lx2sleep}{e;e;s;e;e}   }
+    {星宿派} {{lw2lx}{} {lw2sleep}{w;s}         {lx2sleep}{w;s}         }
+    {灵鹫宫} {{lw2lx}{} {lw2sleep}{n;w;s}       {lx2sleep}{n;w;s}       }
+    {神龙教} {{lw2lx}{} {lw2sleep}{s;w}         {lx2sleep}{s;w}         }
+};
+
+#var fullsk-weapons {
+    {星宿派} {{staff}{bingpo zhang;po zhang;zhang}}
+};
