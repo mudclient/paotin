@@ -390,7 +390,7 @@ class.open module-loader;
         #local desc  {$config[$key]};
         #local prefix {$moduleName};
         #replace prefix {/} {_};
-        #echo {$format} {light cyan} {$key} {$value} {$desc};
+        #echo {$format} {light cyan} {$key} {{$value}} {$desc};
     };
 
     #echo {%c%h} {cyan} { 共列出 $count 项配置信息 };

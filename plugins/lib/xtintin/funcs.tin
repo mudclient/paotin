@@ -12,7 +12,12 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local cmds  {%1};
     #local newCmds {};
     #foreach {$cmds} {item} {
-        #format {newCmds} {%s;%s} @reverseDir{$item} {$newCmds};
+        #if { "$newCmds" == "" } {
+            #local newCmds {@reverseDir{$item}};
+        };
+        #else {
+            #format {newCmds} {%s;%s} {@reverseDir{$item}} {$newCmds};
+        };
     };
 
     #return {$newCmds};
