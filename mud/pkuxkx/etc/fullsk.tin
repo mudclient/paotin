@@ -1,0 +1,14 @@
+#var fullsk.path {
+    {武当派}    {{lw2lx}{}  {lw2sleep}{e;e;s;e;e}   {lx2sleep}{e;e;s;e;e}   }
+    {星宿派}    {{lw2lx}{}  {lw2sleep}{w;s}         {lx2sleep}{w;s}         }
+    {灵鹫宫}    {{lw2lx}{}  {lw2sleep}{n;w;s}       {lx2sleep}{n;w;s}       }
+    {雪山派}    {{lw2lx}{}  {lw2sleep}{w;s}         {lx2sleep}{w;s}         }
+    {神龙教}    {{lw2lx}{}  {lw2sleep}{s;w}         {lx2sleep}{s;w}         }
+    {帮派驻地}  {{lw2lx}{}  {lw2sleep}{e;n;n;w}     {lx2sleep}{e;n;n;w}     }
+};
+
+#var fullsk.weapon.replacements {
+    {sword} {flute;wushi dao}
+    {blade} {hook}
+    {staff} {bingpo zhang;po zhang;zhang}
+};
