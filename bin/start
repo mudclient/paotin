@@ -38,4 +38,30 @@ $ECHO "\x1b[1;32m$TT $START_FILE\x1b[0m"
 
 mkdir -p tmux/$ID
 
-$TT -G -t GAME-$ID $START_FILE
+log() {
+    MSG=$1
+    TIME=$(date +'%Y-%m-%d %H:%M:%S')
+    echo $TIME $START_FILE $MSG >> log/tintin.log
+}
+
+tintin() {
+    log "TinTin++ 启动。"
+    $TT -G -t GAME-$ID $START_FILE
+}
+
+tintin
+CODE=$?
+INTERVAL=1
+MAX_INTERVAL=1800
+while [ "$CODE" -ne "0" ]; do
+    if [ "$INTERVAL" -gt "$MAX_INTERVAL" ]; then
+        INTERVAL=$MAX_INTERVAL
+    fi
+    log "TinTin++ 非正常退出，exit code = $CODE，等待 $INTERVAL 秒后重新启动。"
+    sleep $INTERVAL
+    INTERVAL=$(expr $INTERVAL '*' 2)
+    tintin
+    CODE=$?
+done
+
+log "TinTin++ 正常退出，exit code = $CODE"
