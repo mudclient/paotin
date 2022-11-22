@@ -8,38 +8,52 @@
 
 #config {mouse} on;
 
-#EVENT {SCROLLED CTRL MOUSE WHEEL DOWN} {
-    #if {%1 == 0 || %1 == 1} {
-        #cursor history next;
+load-lib ui/keyboard;
+
+#event {SCROLLED CTRL MOUSE WHEEL DOWN} {
+    #if {%2 * -1 <= $prompt-bot-max-line + 1 } {
+        #cursor {history next};
     };
     #else {
+        keyboard.LessMode;
         #buffer down 1;
     };
 };
 
-#EVENT {SCROLLED CTRL MOUSE WHEEL UP} {
-    #if {%1 == 0 || %1 == 1} {
-        #cursor history prev;
+#event {SCROLLED CTRL MOUSE WHEEL UP} {
+    #if {%2 * -1 <= $prompt-bot-max-line + 1 } {
+        #cursor {history prev};
     };
     #else {
+        keyboard.LessMode;
         #buffer up 1;
     };
 };
 
-#EVENT {SCROLLED MOUSE WHEEL DOWN} {
-    #if {%1 == 0 || %1 == 1} {
-        #cursor history next;
+#event {SCROLLED MOUSE WHEEL DOWN} {
+    #if {%2 * -1 <= $prompt-bot-max-line + 1 } {
+        #cursor {history next};
     };
     #else {
+        keyboard.LessMode;
         #buffer down 10;
     };
 };
 
-#EVENT {SCROLLED MOUSE WHEEL UP} {
-    #if {%1 == 0 || %1 == 1} {
-        #cursor history prev;
+#event {SCROLLED MOUSE WHEEL UP} {
+    #if {%2 * -1 <= $prompt-bot-max-line + 1 } {
+        #cursor {history prev};
     };
     #else {
+        keyboard.LessMode;
         #buffer up 10;
     };
+};
+
+#event {SHORT-CLICKED LINK SEND MOUSE BUTTON ONE} {
+    #send {%4};
+};
+
+#event {SHORT-CLICKED LINK EXEC MOUSE BUTTON ONE} {
+    %4;
 };

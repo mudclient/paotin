@@ -6,7 +6,19 @@
     {AUTHOR}    {担子炮}
 };
 
+#var keyboard-mode {normal};
+
+/*
+TODO: 缺搜索功能，缺 history 翻页功能，缺当前模式的显示
+*/
+
 #alias {keyboard.LessMode} {
+    #if { "$keyboard-mode" == "less" } {
+        #return;
+    };
+
+    #var keyboard-mode {less};
+
     keyboard.DisableAllKeys;
 
     #class mouse-less-mode open;
@@ -23,6 +35,12 @@
 };
 
 #alias {keyboard.NormalMode} {
+    #if { "$keyboard-mode" == "normal" } {
+        #return;
+    };
+
+    #var keyboard-mode {normal};
+
     #kill macro;
 
     #local count {&macro-backup[]};
@@ -74,7 +92,6 @@
         #macro {$ch} {#0}   {1.000};
     };
 
-    #macro {\e}   {#0}      {1.000};
     #macro {\x7B} {#0}      {1.000};
     #macro {\x7D} {#0}      {1.000};
 
