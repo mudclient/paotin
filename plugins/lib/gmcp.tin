@@ -8,13 +8,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 */
 
 load-lib telnet;
-load-lib event;
 load-lib option;
-
-event.Define {GMCP.Move}    {无参} {$MODULE} {接收到 GMCP 移动信息，已更新 gGMCP[Move]};
-event.Define {GMCP.Status}  {无参} {$MODULE} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
-event.Define {GMCP.Combat}  {无参} {$MODULE} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
-event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
 
 option.Define {GMCPDebug} {Bool} {是否显示 GMCP 原始数据} {false};
 
@@ -24,58 +18,6 @@ option.Define {GMCPDebug} {Bool} {是否显示 GMCP 原始数据} {false};
     };
 };
 
-#alias {gmcp.Handle} {
-    #local key      {%1};
-    #local handler  {%2};
-
-    #line sub var #event {IAC SB GMCP $key IAC SE} {$handler};
-};
-
 #var gGMCP {};
 
-#alias {gmcp.pkuxkx.Enable} {
-    gmcp.Handle GMCP.Move {
-        #line sub escape #var gGMCP[Move] {%%0};
-        #var gGMCP[Move] {$gGMCP[Move][1]};
-        event.Emit GMCP.Move {};
-    };
-
-    gmcp.Handle GMCP.Status {
-        #line sub escape #var gGMCP[Status] {%%0};
-        event.Emit GMCP.Status {};
-    };
-
-    gmcp.Handle GMCP.Combat {
-        #line sub escape #var gGMCP[Combat] {%%0};
-        event.Emit GMCP.Combat {};
-    };
-
-    gmcp.Handle GMCP.Buff {
-        #line sub escape #var gGMCP[Buff] {%%0};
-        event.Emit GMCP.Buff {};
-    };
-
-    gmcp status on;
-    gmcp move on;
-    gmcp buff on;
-    gmcp combat on;
-};
-
-#alias {gmcp.ToggleDebug} {
-    option.Toggle GMCPDebug;
-
-    #if { "$gCurrentMUDLIB" == "pkuxkx" } {
-        #if { @option.IsEnable{GMCPDebug} } {
-            event.Handle GMCP.Status {gmcp.Debug} {gmcp} {#var gGMCP[Status]};
-            event.Handle GMCP.Move   {gmcp.Debug} {gmcp} {#var gGMCP[Move]};
-            event.Handle GMCP.Buff   {gmcp.Debug} {gmcp} {#var gGMCP[Buff]};
-            event.Handle GMCP.Combat {gmcp.Debug} {gmcp} {#var gGMCP[Combat]};
-        };
-        #else {
-            event.UnHandle GMCP.Status {gmcp.Debug} {gmcp} {#var gGMCP[Status]};
-            event.UnHandle GMCP.Move   {gmcp.Debug} {gmcp} {#var gGMCP[Move]};
-            event.UnHandle GMCP.Buff   {gmcp.Debug} {gmcp} {#var gGMCP[Buff]};
-            event.UnHandle GMCP.Combat {gmcp.Debug} {gmcp} {#var gGMCP[Combat]};
-        };
-    };
-};
+#alias {gmcp.ToggleDebug} {option.Toggle GMCPDebug};

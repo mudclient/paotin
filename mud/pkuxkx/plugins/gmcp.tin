@@ -1,0 +1,79 @@
+#nop GMCP 北侠支持库;
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+load-lib telnet;
+load-lib option;
+load-lib event;
+load-lib gmcp;
+
+event.Define {GMCP.Move}    {无参} {$MODULE} {接收到 GMCP 移动信息，已更新 gGMCP[Move]};
+event.Define {GMCP.Status}  {无参} {$MODULE} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
+event.Define {GMCP.Combat}  {无参} {$MODULE} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
+event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
+
+#alias {gmcp.pkuxkx.Enable} {
+    #event {IAC SB GMCP GMCP.Status IAC SE} {gmcp.pkuxkx.OnStatus {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Move IAC SE}   {gmcp.pkuxkx.OnMove {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Combat IAC SE} {gmcp.pkuxkx.OnCombat {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Buff IAC SE}   {gmcp.pkuxkx.OnBuff {%%1} {%%2}};
+
+    gmcp status on;
+    gmcp move on;
+    gmcp buff on;
+    gmcp combat on;
+};
+
+#alias {gmcp.pkuxkx.OnStatus} {
+    mudLog GMCP.Status: {%2};
+
+    #line sub escapes #var gGMCP[Status] {%1};
+
+    #if { @option.IsEnable{GMCPDebug} } {
+        #var gGMCP[Status];
+    };
+
+    event.Emit GMCP.Status {};
+};
+
+#alias {gmcp.pkuxkx.OnMove} {
+    mudLog GMCP.Move: {%2};
+
+    #line sub escapes #var gGMCP[Move] {%1};
+    #var gGMCP[Move] {$gGMCP[Move][1]};
+
+    #if { @option.IsEnable{GMCPDebug} } {
+        #var gGMCP[Move];
+    };
+
+    event.Emit GMCP.Move {};
+};
+
+#alias {gmcp.pkuxkx.OnCombat} {
+    mudLog GMCP.Combat: {%2};
+
+    #line sub escapes #var gGMCP[Combat] {%1};
+
+    #if { @option.IsEnable{GMCPDebug} } {
+        #var gGMCP[Combat];
+    };
+
+    event.Emit GMCP.Combat {};
+};
+
+#alias {gmcp.pkuxkx.OnBuff} {
+    mudLog GMCP.Buff: {%2};
+
+    #line sub escapes #var gGMCP[Buff] {%1};
+
+    #if { @option.IsEnable{GMCPDebug} } {
+        #var gGMCP[Buff];
+    };
+
+    event.Emit GMCP.Buff {};
+};

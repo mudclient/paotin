@@ -61,7 +61,10 @@
                 #class login kill;
                 $handler;
                 #if { "$user[GMCP]" == "true" } {
-                    #delay 1 gmcp.pkuxkx.Enable;
+                    #delay 1 {
+                        load-module gmcp;
+                        gmcp.pkuxkx.Enable;
+                    };
                 };
             };
         };
