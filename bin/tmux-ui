@@ -56,7 +56,7 @@ if [ "x$ELEMENT" == "xPANE" ]; then
             echo -n " "
         fi
     elif [ "x$ARG" == "xGAME" ]; then
-        echo -n " $(cat tmux/$ID/char-data || echo 尚未找到 $ID 的角色数据，请检查机器人版本) "
+        echo -n "$(cat tmux/$ID/game-border || echo " 尚未找到 $ID 的游戏数据，请检查机器人版本 ")"
     else
         WIDTH=${ARG3-0}
         if [ $WIDTH -gt 100 ]; then

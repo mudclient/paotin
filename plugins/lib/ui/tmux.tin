@@ -1,55 +1,135 @@
-#alias {tmux.UpdateCharData} {
+#nop vim: set filetype=tt:;
+
+#var lib_ui_tmux[META] {
+    {NAME}      {TMUX UI}
+    {DESC}      {支持丰富的自定义选项，用户可定制自己的 tmux 边框样式。}
+    {AUTHOR}    {担子炮}
+};
+
+#nop tmux pane 边框的样式;
+#var tmux-pane-border-format    {};
+
+#nop 绑定事件，发生何种事件时，需要更新 UI;
+#var tmux-update-events         {};
+
+#nop 当前展示的边框样式的 theme。;
+#var tmux-theme {};
+
+#function {lib_ui_tmux.Init} {
+    #if { "@mkdir{{tmux/$user[id]}}" == "false" } {
+        errLog 创建 tmux UI 通信管道(tmux/$user[id])失败;
+    };
+    #return {true};
+};
+
+#nop 切换 tmux 当前主题，比如可以为发呆、任务、战斗、练功设置不同的主题。;
+#alias {tmux.SetTheme} {
+    #local theme {@default{%1;GAME}};
+
+    #if { "$tmux-theme" == "$theme" } {
+        #return;
+    };
+
+    #local event {};
+
+    #if { "$tmux-theme" != "" } {
+        #foreach {$tmux-update-events[DEFAULT];$tmux-update-events[$tmux-theme]} {event} {
+            event.UnHandle {$event} {tmux};
+        };
+    };
+
+    #var tmux-theme {$theme};
+    #local events {@default{{$tmux-update-events[$tmux-theme]};{$tmux-update-events[DEFAULT]}}};
+    #foreach {$events} {event} {
+        event.Handle {$event} {tmux} {ui/tmux} {tmux.Update};
+    };
+};
+
+#alias {tmux.Update} {
     #if { "$char[档案][账号]" == "" } {
         #return;
     };
 
-    #local id       {#[fg=brightwhite]$char[档案][账号]#[default]};
+    #local theme {$tmux-theme};
 
-    #local name     {$char[档案][彩色大名]};
-    #if { "$name" == "" } {#local name {$char[档案][大名]}};
-    #local name     {@tmux.ConvertFromANSI{{$name}}};
+    #local left     {@default{
+        {$tmux-pane-border-format[$theme][left]};
+        {$tmux-pane-border-format[DEFAULT][left]}}};
+    #local centre   {@default{
+        {$tmux-pane-border-format[$theme][centre]};
+        {$tmux-pane-border-format[DEFAULT][centre]}}};
+    #local right    {@default{
+        {$tmux-pane-border-format[$theme][right]};
+        {$tmux-pane-border-format[DEFAULT][right]}}};
 
-    #local title    {$char[档案][彩色头衔]};
-    #if { "$title" == "" } {#local title {$char[档案][头衔]}};
-    #local title    {@tmux.ConvertFromANSI{{$title}}};
+    #line sub functions #line sub var #line sub escapes #line sub colors {
+        #format left   {%s} {$left};
+        #format centre {%s} {$centre};
+        #format right  {%s} {$right};
+    };
 
-    #local file     {tmux/$char[档案][账号]/char-data};
+    #local left   {@tmux.ConvertFromANSI{{$left}}};
+    #local centre {@tmux.ConvertFromANSI{{$centre}}};
+    #local right  {@tmux.ConvertFromANSI{{$right}}};
 
-    #script {tmp} {echo "ID: [$id] 大名: [$name] 头衔: [$title]" > $file};
+    #local line {};
+    #if { @tmux.Width{{$left}} > 0 } {
+        #cat line {#[align=left] $left };
+    };
+
+    #if { @tmux.Width{{$centre}} > 0 } {
+        #cat {line} {#[align=centre] $centre };
+    };
+
+    #if { @tmux.Width{{$right}} > 0 } {
+        #cat {line} {#[align=right] $right };
+    };
+
+    #local file {tmux/$char[档案][账号]/game-border};
+    #script {tmp} {echo '$line' > $file};
     #script {tmp} {tmux refresh};
 };
 
+#function {TMUX} {
+    #return {@tmux.ConvertFromANSI{{%1}}};
+};
+
 #function {tmux.ConvertFromANSI} {
-    #local title {%1};
+    #local text {%1};
+
+    #replace {text} {{\e\[(3|4)8;5;(\d+)m}}                 {@tmux.ansi2tmux{&2;5;&3}};
+    #replace {text} {{\e\[22;(3|4)8;5;(\d+)m}}              {#[none]@tmux.ansi2tmux{&2;5;&3}};
+    #replace {text} {{\e\[(3|4)8;2;(\d+);(\d+);(\d+)m}}     {@tmux.ansi2tmux{&2;2;&3;&4;&5}};
+    #replace {text} {{\e\[22;(3|4)8;2;(\d+);(\d+);(\d+)m}}  {#[none]@tmux.ansi2tmux{&2;2;&3;&4;&5}};
 
     #local {mode} {TEXT};
     #local output {};
     #local pending {};
     #local ch {};
-    #parse {$title} {ch} {
+    #parse {$text} {ch} {
         #switch {"$mode"} {
             #case {"TEXT"} {
                 #switch {"$ch"} {
-                    #case {"\e"}    {#local mode {ESC}};
-                    #case {";"}     {#cat output { }};
-                    #default        {#cat output {$ch}};
+                    #case {"\e"}        {#local mode {ESC}};
+                    #case {";"}         {#cat output { }};
+                    #default            {#cat output {$ch}};
                 };
             };
             #case {"ESC"} {
                 #switch {"$ch"} {
-                    #case {"["}     {#cat output {#[};  #local mode {SGR}};
-                    #default        {#cat output {$ch}; #local mode {TEXT}};
+                    #case {"["}         {#cat output {#[};  #local mode {SGR}};
+                    #default            {#cat output {$ch}; #local mode {TEXT}};
                 };
             };
             #case {"SGR"} {
                 #switch {"$ch"} {
-                    #case {"0"}     {#cat output {default}};
-                    #case {"1"}     {#cat output {bold}};
-                    #case {"2"}     {#cat output {dim}};
-                    #case {"3"}     {#local mode {PENDING3}};
-                    #case {"4"}     {#local mode {PENDING4}};
-                    #case {"5"}     {#cat output {blink}};
-                    #case {";"}     {#cat output { }};
+                    #case {"0"}         {#cat output {default}};
+                    #case {"1"}         {#cat output {bold}};
+                    #case {"2"}         {#cat output {dim}};
+                    #case {"3"}         {#local mode {PENDING3}};
+                    #case {"4"}         {#local mode {PENDING4}};
+                    #case {"5"}         {#cat output {blink}};
+                    #case {";"}         {#cat output { }};
                     #default {
                         #if { "$pending" == "[" } {#cat output {default}};
                         #cat output {]};
@@ -59,31 +139,70 @@
             };
             #case {"PENDING3"} {
                 #switch {"$ch"} {
-                    #case {"%d"}    {#cat output {fg=colour$ch}; #local mode {SGR}};
-                    #case {";"}     {#cat output {italics }; #local mode {SGR}};
-                    #case {"m"}     {#cat output {italics]}; #local mode {TEXT}};
-                    #default        {#cat output {$ch]}; #local mode {TEXT}};
+                    #case {"{[0-7]}"}   {#cat output {fg=colour$ch}; #local mode {SGR}};
+                    #case {"9"}         {#cat output {fg=default}; #local mode {SGR}};
+                    #case {";"}         {#cat output {italics }; #local mode {SGR}};
+                    #case {"m"}         {#cat output {italics]}; #local mode {TEXT}};
+                    #default            {#cat output {$ch]}; #local mode {TEXT}};
                 };
             };
             #case {"PENDING4"} {
                 #switch {"$ch"} {
-                    #case {"%d"}    {#cat output {bg=colour$ch}; #local mode {SGR}};
-                    #case {";"}     {#cat output {underscore }; #local mode {SGR}};
-                    #case {"m"}     {#cat output {underscore]}; #local mode {TEXT}};
-                    #default        {#cat output {$ch]}; #local mode {TEXT}};
+                    #case {"{[0-7]}"}   {#cat output {bg=colour$ch}; #local mode {SGR}};
+                    #case {"9"}         {#cat output {bg=default}; #local mode {SGR}};
+                    #case {";"}         {#cat output {underscore }; #local mode {SGR}};
+                    #case {"m"}         {#cat output {underscore]}; #local mode {TEXT}};
+                    #default            {#cat output {$ch]}; #local mode {TEXT}};
                 };
             };
         };
         #local {pending} {$ch};
     };
 
+    #return {$output#[default]};
+};
+
+#function {tmux.ansi2tmux} {
+    #local {type} {%1};
+    #local {mode} {%2};
+    #local {arg1} {%3};
+    #local {arg2} {%4};
+    #local {arg3} {%5};
+
+    #local output {};
+
+    #nop 3 == 前景色, 4 == 背景色;
+    #if { $type == 3 } {
+        #cat output {#[fg=};
+    };
+    #elseif { $type == 4 } {
+        #cat output {#[bg=};
+    };
+    #else {
+        #return {};
+    };
+
+    #nop 5 == indexed colors, 2 == RGB colors;
+    #if { $mode == 5 } {
+        #cat output {colour$arg1]};
+    };
+    #elseif { $mode == 2 } {
+        #local code {};
+        #format code {#%+02X%+02X%+02X} {$arg1} {$arg2} {$arg3};
+        #cat output {$code]};
+    };
+    #else {
+        #return {};
+    };
+
     #return {$output};
 };
 
-load-lib event;
-
-#if { "@mkdir{{tmux/$user[id]}}" == "false" } {
-    errLog 创建 tmux UI 通信管道(tmux/$user[id])失败;
+#function {tmux.Width} {
+    #local arg {%1};
+    #replace {arg} {{#\[[^\]]*\]}} {};
+    #return {@len{{$arg}}};
 };
 
-event.Handle {char/score} {tmux} {ui} {tmux.UpdateCharData};
+#nop 默认每分钟更新一次。;
+#tick tmux.Update {tmux.Update} 60;

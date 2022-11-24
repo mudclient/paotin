@@ -1,3 +1,10 @@
+#var tmux-update-events[DEFAULT] {char/score};
+#var tmux-pane-border-format[DEFAULT] {
+    {left}      {ID: [<g23><188>\$char[档案][账号]<099>]}
+    {centre}    {大名: [\$char[档案][彩色大名]]}
+    {right}     {头衔: [\$char[档案][彩色头衔]]}
+};
+
 #nop {Top} {TopSepBar} {MidSepBar} {Bot} {BotSepBar};
 #list prompt-fields create {
     { {place}{MidSepBar}        {label}{重启}       {name}{reboot}   {countdown}{Auto} }
