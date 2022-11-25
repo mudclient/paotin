@@ -1,0 +1,82 @@
+#nop vim: set filetype=tt:;
+
+#var lib_ui_keyboard[META] {
+    {NAME}      {键盘绑定}
+    {DESC}      {允许玩家在正常输入模式和翻屏模式之间切换}
+    {AUTHOR}    {担子炮}
+};
+
+#alias {keyboard.LessMode} {
+    keyboard.DisableAllKeys;
+
+    #class mouse-less-mode open;
+
+    #macro {g}      {#buffer home};
+    #macro {G}      {keyboard.NormalMode};
+    #macro {j}      {#buffer down 1};
+    #macro {k}      {#buffer up 1};
+    #macro {\cf}    {#buffer down 20};
+    #macro {\cb}    {#buffer up 20};
+    #macro {\cc}    {keyboard.NormalMode};
+
+    #class mouse-less-mode close;
+};
+
+#alias {keyboard.NormalMode} {
+    #kill macro;
+
+    #local count {&macro-backup[]};
+    #if { $count > 0 } {
+        #local idx {};
+        #loop {1} {$count} {idx} {
+            #local key      {*macro-backup[+$idx]};
+            #local action   {$macro-backup[+$idx]};
+            #line sub var #macro {$key} {$action};
+        };
+    };
+
+    #class mode-disable-all-keys kill;
+    #class mouse-less-mode kill;
+
+    #buffer end;
+};
+
+#alias {keyboard.DisableAllKeys} {
+    #class mouse-disable-all-keys open;
+
+    #info macro {save};
+    #var macro-backup {};
+    #local count {&info[MACROS][]};
+    #if { $count > 0 } {
+        #local id {};
+        #loop {1} {&info[MACROS][]} {id} {
+            #line sub var #var key      {$info[MACROS][+$id][arg1]};
+            #replace key {\\} {\\};
+            #var action   {$info[MACROS][+$id][arg2]};
+            #line sub var #var {macro-backup[$key]} {$action};
+        };
+    };
+
+    #unvar key;
+
+    #local ch {};
+    #parse {abcdefghijklmnopqrstuvwxyz} {ch} {
+        #macro {\c$ch} {#0} {1.000};
+        #macro {$ch} {#0}   {1.000};
+    };
+    #parse {ABCDEFGHIJKLMNOPQRSTUVWXYZ} {ch} {
+        #macro {$ch} {#0}   {1.000};
+    };
+    #parse {`1234567890-=~!@#$%^&*()_+} {ch} {
+        #macro {$ch} {#0}   {1.000};
+    };
+    #parse {,./<>?;':"[]\\|} {ch} {
+        #macro {$ch} {#0}   {1.000};
+    };
+
+    #macro {\e}   {#0}      {1.000};
+    #macro {\x7B} {#0}      {1.000};
+    #macro {\x7D} {#0}      {1.000};
+
+    #class mouse-disable-all-keys close;
+};

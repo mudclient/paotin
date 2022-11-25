@@ -1,3 +1,11 @@
+#nop vim: set filetype=tt:;
+
+#var lib_ui_mouse[META] {
+    {NAME}      {鼠标支持}
+    {DESC}      {支持鼠标和触摸板操作，允许上下翻屏、点击按钮}
+    {AUTHOR}    {担子炮}
+};
+
 #config {mouse} on;
 
 #EVENT {SCROLLED CTRL MOUSE WHEEL DOWN} {
