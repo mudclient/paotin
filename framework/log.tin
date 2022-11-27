@@ -87,7 +87,9 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { "$needEcho" == "true" } {
-        #echo {<020>%t INPUT: <420>%s<070>} {%Y-%m-%d %H:%M:%S} {<420>%0<070>};
+        #local input {%0};
+        #replace input {<} {\<};
+        #echo {<020>%t INPUT: <420>%s<070>} {%Y-%m-%d %H:%M:%S} {$input};
     };
 };
 
@@ -98,8 +100,9 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #log append {$gLog[PATH]/$gLog[buffer]};
     #event {RECEIVED LINE} {mudLog %%0};
     #event {SEND OUTPUT} {
-        #local text {};
-        #format text {<020>SEND: <420>%p<070>} {%%0};
+        #local text {%%0};
+        #replace text {<} {\<};
+        #format text {<020>SEND: <420>%p<070>} {$text};
         mudLog $text;
         #if { @option.IsEnable{EchoCommand} } {
             #echo {<020>%t %s} {%Y-%m-%d %H:%M:%S} {$text};
