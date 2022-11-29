@@ -40,7 +40,6 @@ exit
     #alias {warnLog}        {#0};
     #alias {prompt.Set}     {#0};
     #alias {prompt.refresh} {#0};
-    #read plugins/lib/ui/mouse.tin;
     #read plugins/lib/ui/beautify.tin;
     #local _ {@lib_ui_beautify.Init{}};
     monitor-log %0;
@@ -63,6 +62,7 @@ exit
     };
     #macro {\x7B} {#0};
     #macro {\x7D} {#0};
+    #macro { }    {#0};
 
     #macro {\cn}    {switch-log +};
     #macro {\cp}    {switch-log -};
@@ -85,6 +85,11 @@ exit
 };
 
 #alias {less-mode} {
+    #config {mouse} on;
+    #event {SCROLLED MOUSE WHEEL DOWN}      {#buffer down 10};
+    #event {SCROLLED MOUSE WHEEL UP}        {#buffer up 10};
+    #event {SCROLLED CTRL MOUSE WHEEL DOWN} {#buffer down 1};
+    #event {SCROLLED CTRL MOUSE WHEEL UP}   {#buffer up 1};
     #macro {g}      {#buffer home};
     #macro {G}      {#buffer end};
     #macro {j}      {#buffer down 1};
