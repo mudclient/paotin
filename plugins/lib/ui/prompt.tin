@@ -175,8 +175,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     #local text {%1};
 
     #var prompt-prompt {$text};
-
-    prompt.refresh;
+    #echo {{\r\e[K$prompt-prompt}{-1}};
 };
 
 #nop 设置字段值，被设置的字段值将立即显示在屏幕上，但会在一段时间后消失;
@@ -386,7 +385,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
 
     #local prompt {${prompt-prompt}};
     #if { "$prompt" != "" } {
-        #local prompt {$prompt: };
+        #local prompt {$prompt};
         #echo {{$prompt}{-1}};
     };
 };

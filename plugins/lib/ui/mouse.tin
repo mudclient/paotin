@@ -15,6 +15,12 @@ load-lib ui/keyboard;
         #cursor {history next};
     };
     #else {
+        #local info {};
+        #buffer info save info;
+        #if { $info[LINE] < 0 || $info[LINE] >= $info[USED] } {
+            keyboard.NormalMode;
+            #return;
+        };
         keyboard.LessMode;
         #buffer down 1;
     };
@@ -25,6 +31,11 @@ load-lib ui/keyboard;
         #cursor {history prev};
     };
     #else {
+        #local info {};
+        #buffer info save info;
+        #if { $info[LINE] == 0 } {
+            #return;
+        };
         keyboard.LessMode;
         #buffer up 1;
     };
@@ -35,6 +46,12 @@ load-lib ui/keyboard;
         #cursor {history next};
     };
     #else {
+        #local info {};
+        #buffer info save info;
+        #if { $info[LINE] < 0 || $info[LINE] >= $info[USED] } {
+            keyboard.NormalMode;
+            #return;
+        };
         keyboard.LessMode;
         #buffer down 10;
     };
@@ -45,6 +62,11 @@ load-lib ui/keyboard;
         #cursor {history prev};
     };
     #else {
+        #local info {};
+        #buffer info save info;
+        #if { $info[LINE] == 0 } {
+            #return;
+        };
         keyboard.LessMode;
         #buffer up 10;
     };

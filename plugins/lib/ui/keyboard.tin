@@ -6,30 +6,50 @@
     {AUTHOR}    {担子炮}
 };
 
-#var keyboard-mode {normal};
-
-/*
-TODO: 缺搜索功能，缺 history 翻页功能，缺当前模式的显示
-*/
+#var keyboard-mode {};
 
 #alias {keyboard.LessMode} {
     #if { "$keyboard-mode" == "less" } {
         #return;
     };
 
-    #var keyboard-mode {less};
-
     keyboard.DisableAllKeys;
+
+    #var keyboard-mode {less};
 
     #class mouse-less-mode open;
 
     #macro {g}      {#buffer home};
-    #macro {G}      {keyboard.NormalMode};
+    #macro {G}      {#buffer end};
     #macro {j}      {#buffer down 1};
     #macro {k}      {#buffer up 1};
     #macro {\cf}    {#buffer down 20};
     #macro {\cb}    {#buffer up 20};
+
+    #macro {n}      {keyboard.Search next};
+    #macro {N}      {keyboard.Search prev};
+
     #macro {\cc}    {keyboard.NormalMode};
+    #macro {?}      {keyboard.SearchMode up};
+    #macro {/}      {keyboard.SearchMode down};
+
+    #local mode {};
+    #if { {$keyboard-search-pattern} == {} } {
+        #local mode {<130>【翻页模式】<070>};
+    };
+    #elseif { "$keyboard-search-dir" == "down" } {
+        #local mode {<150>【向下搜索】<070>};
+    };
+    #else {
+        #local mode {<120>【向上搜索】<070>};
+    };
+
+    prompt.Change {$mode<160>Ctrl+b<070>/<160>Ctrl+f<070> 前后翻页
+        <160>j<070>/<160>k<070> 上下滚动
+        <160>g<070>/<160>G<070> 到开头/结尾
+        <160>Ctrl+C<070> 回到正常模式
+        <160>?<070>/<160>/<070> 输入搜索条件
+        <160>n<070>/<160>N<070> 前后搜索};
 
     #class mouse-less-mode close;
 };
@@ -39,29 +59,23 @@ TODO: 缺搜索功能，缺 history 翻页功能，缺当前模式的显示
         #return;
     };
 
-    #var keyboard-mode {normal};
-
-    #kill macro;
-
-    #local count {&macro-backup[]};
-    #if { $count > 0 } {
-        #local idx {};
-        #loop {1} {$count} {idx} {
-            #local key      {*macro-backup[+$idx]};
-            #local action   {$macro-backup[+$idx]};
-            #line sub var #macro {$key} {$action};
-        };
+    #if { "$keyboard-mode" != "" } {
+        keyboard.restore-macro;
     };
 
-    #class mode-disable-all-keys kill;
-    #class mouse-less-mode kill;
+    #var keyboard-mode {normal};
+    #var keyboard-search-pattern    {};
+    #var keyboard-search-dir        {};
 
     #buffer end;
+
+    prompt.Set {{search}{}};
+    prompt.Change {};
+
+    #macro {\cb}    {keyboard.LessMode; #buffer up 20};
 };
 
-#alias {keyboard.DisableAllKeys} {
-    #class mouse-disable-all-keys open;
-
+#alias {keyboard.backup-macro} {
     #info macro {save};
     #var macro-backup {};
     #local count {&info[MACROS][]};
@@ -76,6 +90,26 @@ TODO: 缺搜索功能，缺 history 翻页功能，缺当前模式的显示
     };
 
     #unvar key;
+};
+
+#alias {keyboard.restore-macro} {
+    #kill macro;
+
+    #local count {&macro-backup[]};
+    #if { $count > 0 } {
+        #local idx {};
+        #loop {1} {$count} {idx} {
+            #local key      {*macro-backup[+$idx]};
+            #local action   {$macro-backup[+$idx]};
+            #line sub var #macro {$key} {$action};
+        };
+    };
+};
+
+#alias {keyboard.DisableAllKeys} {
+    #if { "$keyboard-mode" == "normal" } {
+        keyboard.backup-macro;
+    };
 
     #local ch {};
     #parse {abcdefghijklmnopqrstuvwxyz} {ch} {
@@ -94,6 +128,103 @@ TODO: 缺搜索功能，缺 history 翻页功能，缺当前模式的显示
 
     #macro {\x7B} {#0}      {1.000};
     #macro {\x7D} {#0}      {1.000};
-
-    #class mouse-disable-all-keys close;
+    #macro { } {#0}         {1.000};
 };
+
+#alias {keyboard.checkBufferEnd} {
+    #local info {};
+    #buffer info save info;
+
+    #if { $info[LINE] < 0 || $info[LINE] >= $info[USED] } {
+        keyboard.NormalMode;
+    };
+};
+
+#nop 搜索条件;
+#var keyboard-search-pattern {};
+
+#nop 进入搜索模式;
+#alias {keyboard.SearchMode} {
+    #local dir {%1};
+
+    #if { "$keyboard-mode" == "search" } {
+        #return;
+    };
+
+    #kill macro;
+
+    #class keyboard-search-mode open;
+
+    #var keyboard-mode          {search};
+    #var keyboard-search-dir    {$dir};
+
+    #macro {\cc}    {keyboard.LessMode};
+
+    #macro {\n} {
+        #local input {};
+        #cursor get input;
+        #if { {$input} != {} } {
+            #var keyboard-search-pattern {$input};
+
+            #cursor clear;
+        };
+
+        keyboard.LessMode;
+        keyboard.Search next;
+
+        #if { "$keyboard-search-dir" == "down" } {
+            prompt.Set {{search}{<150>$keyboard-search-pattern}};
+        };
+        #else {
+            prompt.Set {{search}{<120>$keyboard-search-pattern}};
+        };
+    };
+
+    #if { "$dir" == "up" } {
+        #if { $keyboard-search-skip > 0 } {
+            #var keyboard-search-skip {0};
+            #var keyboard-search-last-find {0};
+        };
+        prompt.Change {<120>向上搜索<070>: };
+    };
+    #else {
+        #if { $keyboard-search-skip < 0 } {
+            #var keyboard-search-last-find {0};
+            #var keyboard-search-skip {0};
+        };
+        prompt.Change {<150>向下搜索<070>: };
+    };
+
+    #class keyboard-search-mode close;
+};
+
+#var keyboard-search-skip      {0};
+#var keyboard-search-last-find {0};
+
+#alias {keyboard.Search} {
+    #local dir {%1};
+    #if { {$keyboard-search-pattern} == {} } {
+        #return;
+    };
+
+    #local old {$keyboard-search-skip};
+
+    #switch {"$keyboard-search-dir/$dir"} {
+        #case {"up/next"}   {#math keyboard-search-skip {$keyboard-search-skip - 1}};
+        #case {"up/prev"}   {#math keyboard-search-skip {$keyboard-search-skip + 1}};
+        #case {"down/next"} {#math keyboard-search-skip {$keyboard-search-skip + 1}};
+        #case {"down/prev"} {#math keyboard-search-skip {$keyboard-search-skip - 1}};
+    };
+
+    #local line {};
+    #line quiet #buffer find {$keyboard-search-skip} {$keyboard-search-pattern} {line};
+    #if { "$line" == "{|0|$keyboard-search-last-find}" } {
+        #var keyboard-search-skip {$old};
+    };
+    #else {
+        #var keyboard-search-last-find {$line};
+        #buffer jump $line;
+    };
+};
+
+keyboard.NormalMode;
