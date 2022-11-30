@@ -139,6 +139,26 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         #var char[HP][毒] {$poison};
     };
 
+	#action {^╰─────────────{(─)*}%S────╯{|ID=char.hp}$} {
+        #math char[HP][气血百分比] { $char[HP][当前气血] * 100 / $char[HP][最大气血] };
+        #math char[HP][精神百分比] { $char[HP][当前精神] * 100 / $char[HP][最大精神] };
+        #math char[HP][内力百分比] { $char[HP][当前内力] * 50 / $char[HP][最大内力] };
+        #math char[HP][精力百分比] { $char[HP][当前精力] * 50 / $char[HP][最大精力] };
+        event.Emit char/hp;
+        char.hp.parse.done;
+	};
+
+    #alias {char.hp.parse.done} {
+    	#class char-hp-parse-hp kill;
+        #class char.GetHP kill;
+        event.UnHandle GA {char.hp};
+    };
+
+    event.HandleOnce GA {char.hp} {char} {
+        char.hp.parse.done;
+        #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
+    };
+
     #class char-hp-parse-hp close;
 };
 
@@ -361,32 +381,14 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
 #alias {char.GetHP} {
     #class char.GetHP open;
 
-    #line oneshot #action {^╭─{(─)*}─个人状态──{(─|┬)+}─╮$} {
+    #nop ╭───个人状态────────────┬───────────────────╮;
+    #action {^╭─{(─)*}─个人状态─{((─)+┬){1}}──{(─)*}─╮$} {
+        #class char.GetHP kill;
         char.hp.parse.hp;
     };
 
     #action {^你用HP太频繁了，请尽量使用hpbrief命令，节约系统资源，谢谢。$} {
-        char.hp.parse.done;
-    };
-
-	#action {^╰─────────────{(─)*}%S────╯{|ID=char.hp}$} {
-        #math char[HP][气血百分比] { $char[HP][当前气血] * 100 / $char[HP][最大气血] };
-        #math char[HP][精神百分比] { $char[HP][当前精神] * 100 / $char[HP][最大精神] };
-        #math char[HP][内力百分比] { $char[HP][当前内力] * 50 / $char[HP][最大内力] };
-        #math char[HP][精力百分比] { $char[HP][当前精力] * 50 / $char[HP][最大精力] };
-        event.Emit char/hp;
-        char.hp.parse.done;
-	};
-
-    #alias {char.hp.parse.done} {
-    	#class char-hp-parse-hp kill;
         #class char.GetHP kill;
-        event.UnHandle GA {char.hp};
-    };
-
-    event.HandleOnce GA {char.hp} {char} {
-        char.hp.parse.done;
-        #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
     };
 
     #class char.GetHP close;

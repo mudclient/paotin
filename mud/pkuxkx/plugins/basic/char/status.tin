@@ -104,31 +104,10 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
         #var char[STATUS][识图检查] {@trim{%%3}};
     };
 
-    #class char-parse-status-me close;
-};
-
-#alias {char.GetStatusMe} {
-    #local silent {%1};
-    #local args   {%2};
-
-    #class char.GetStatusMe open;
-
-#nop ╭───个人状态────┬────┬──────┬────┬──────┬────┬──────╮;
-    #line oneshot #action {^╭─{(─)*}─个人状态──{(─|┬)+}─╮$} {
-        #if { "%1" == "gag" } {#line gag};
-        char.status_me.parse.output %1;
-    };
-
 #nop ╰────┴──────┴────┴──────┴────┴──────┴──北大侠客行────╯;
     #line oneshot #action {^╰{(─|┴)+}──%S────╯{|ID=char.status}$} {
         #if { "%1" == "gag" } {#line gag};
         char.status_me.parse.done;
-    };
-
-    #action {^等等，系统喘气中......$} {
-        #class char-parse-status-me kill;
-        #class char.GetStatusMe kill;
-        event.UnHandle GA {char.status_me};
     };
 
     #alias {char.status_me.parse.done} {
@@ -142,6 +121,33 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
     event.HandleOnce GA {char.status_me} {char} {
         char.status_me.parse.done;
         #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
+    };
+
+    #class char-parse-status-me close;
+};
+
+#alias {char.GetStatusMe} {
+    #local silent {%1};
+    #local args   {%2};
+
+    #class char.GetStatusMe open;
+
+#nop ╭───个人状态─────┬────────────┬─────────────╮;
+    #action {^╭─{(─)*}─个人状态─{((─)+┬){2}}──{(─)*}─╮$} {
+        #if { "%1" == "gag" } {#line gag};
+        #class char.GetStatusMe kill;
+        char.status_me.parse.output %1;
+    };
+
+#nop │当头炮(Dtp)             │级别:64                 │战斗力:99999999           │;
+    #action {^│%S(%S)%s│级别:%d%s│战斗力:%d%s│$} {
+        #if { "%1" == "gag" } {#line gag};
+        #class char.GetStatusMe kill;
+        char.status_me.parse.output %1;
+    };
+
+    #action {^等等，系统喘气中......$} {
+        #class char.GetStatusMe kill;
     };
 
     #class char.GetStatusMe close;
