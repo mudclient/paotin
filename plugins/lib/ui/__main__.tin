@@ -1,0 +1,17 @@
+#nop vim: set filetype=tt:;
+
+load-module lib/ui/tmux;
+load-module lib/ui/prompt;
+load-module lib/ui/beautify;
+load-module lib/ui/keyboard;
+
+/*
+鼠标支持尚不完善，和 tmux 相比还很弱，
+但 mslp 又不得不用，所以开不开让玩家自己选择吧。不喜欢 mslp 的用户建议关掉它。
+*/
+#if { "$user[MOUSE]" == "true" } {
+    load-module lib/ui/mouse;
+};
+
+load-module lib/ui/chat;
+load-module lib/ui/move;

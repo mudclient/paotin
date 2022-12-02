@@ -42,6 +42,9 @@ mudlib.Set {pkuxkx};
 #nop 是否开启 GMCP，默认开启;
 #var user[GMCP]             true;
 
+#nop 是否开启鼠标支持，默认开启;
+#var user[MOUSE]            true;
+
 #nop 默认的食物和饮料;
 #var char[favorite][food]   {gan liang};
 #var char[favorite][water]  {niurou tang};
