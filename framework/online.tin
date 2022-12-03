@@ -34,6 +34,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #ticker {drink}     {xtt.Send drink $char[favorite][water]} {60};
 
 #delay 1 {
+    load-lib    ga;
     load-module basic/char;
     load-module shortcut;
     load-module silent;
