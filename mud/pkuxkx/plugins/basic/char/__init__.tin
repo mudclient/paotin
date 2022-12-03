@@ -8,3 +8,7 @@ load-module {basic/char/sachet};
 load-module {basic/char/score};
 load-module {basic/char/gmcp};
 load-module {basic/char/jifa};
+
+event.HandleOnce {user-online} {char/init} {basic/char} {
+    set table_pattern 1;
+};

@@ -159,4 +159,6 @@ load-lib event;
 
 event.Define {char/score} {无参} {$MODULE} {score 命令的数据解析成功时，发送本事件}
 
-score;
+event.HandleOnce {user-online} {score/init} {basic/char} {
+    score;
+};

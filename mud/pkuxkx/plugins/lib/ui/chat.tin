@@ -99,8 +99,6 @@
     chat.log 私聊 {%0};
 } {9.999};
 
-set learn_emote 1;
-
 #action {^关闭所有频道。$} {
     #class chat-turn-on open;
     #gag {^你现在并没有打开任何频道。$};
@@ -113,19 +111,23 @@ set learn_emote 1;
     #line gag;
 };
 
-tune all;
-tune bd;
-tune chat;
-tune fb;
-tune group;
-tune helpme;
-tune jh;
-tune jy;
-tune mp;
-tune nation;
-tune qq;
-tune qy;
-tune rumor;
-tune rw;
-tune tt;
-tune;
+event.HandleOnce {user-online} {chat/init} {ui/chat} {
+    tune all;
+    tune bd;
+    tune chat;
+    tune fb;
+    tune group;
+    tune helpme;
+    tune jh;
+    tune jy;
+    tune mp;
+    tune nation;
+    tune qq;
+    tune qy;
+    tune rumor;
+    tune rw;
+    tune tt;
+    tune;
+
+    set learn_emote 1;
+};

@@ -44,6 +44,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #%0 {
         log.Open;
         load-module lib/event;
+        event.Define {user-online} {无参} {framework} {已经登录到服务器，所有命令都可以正常使用了。};
         load-module lib/ui;
     };
 };
