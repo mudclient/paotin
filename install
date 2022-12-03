@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
 git submodule init
+(cd tintin && git fetch --all --prune)
 git submodule update
 (cd tintin/src && ./configure && make && strip tt++)
 cp tintin/src/tt++ bin/
