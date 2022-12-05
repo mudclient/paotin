@@ -80,7 +80,7 @@ docker run --rm -it --name tt --hostname tt mudclient/paotin
 mkdir -p $HOME/my-paotin/
 
 # 创建游戏目录结构
-mkdir -p $HOME/my-paotin/{ids,etc,log,plugins}
+mkdir -p $HOME/my-paotin/{ids,etc,data,log,plugins}
 
 docker run -d -it --name tt --hostname tt -v $HOME/my-paotin:/paotin/var mudclient/paotin daemon
 ```
@@ -194,7 +194,8 @@ PaoTin++ 大部分模块源码文件都支持重定位，你可以在 `var/` 目
 Docker 方式下，可以将本地工作目录 mount 到容器内的 /paotin/var 目录，那么就可以实现容器内外的文件共享。
 
 ```
-mkdir -p $HOME/my-paotin   # 先创建一个本地工作目录
+# 先创建一个本地工作目录
+mkdir -p $HOME/my-paotin/{ids,etc,data,log,plugins}
 docker run -d -it --name tt --hostname tt -v $HOME/my-paotin:/paotin/var mudclient/paotin daemon
 ```
 
@@ -213,7 +214,7 @@ ID 配置文件和数据配置文件可分别放置在 `$HOME/my-paotin/ids/` �
 建议另外新建一个目录，用来存放你的源代码，并将 `var/` 目录通过符号链接指向该目录。例如：
 
 ```
-mkdir -p ../my-paotin/{etc,ids,plugins,log}
+mkdir -p ../my-paotin/{ids,etc,data,log,plugins}
 ln -s ../my-paotin var
 ```
 

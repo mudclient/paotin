@@ -1,0 +1,52 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#var lib_storage[META] {
+    {NAME}      {通用存储引擎}
+    {DESC}      {可以存储和载入变量，这允许其它模块可以持久化自己的数据}
+    {AUTHOR}    {担子炮}
+};
+
+#function {lib_storage.Init} {
+    #local _ {@mkdir{data}};
+    #return {true};
+};
+
+#alias {storage.Save} {
+    #local file {%1};
+    #local vars {%2};
+
+    #class comm-store-tmp open;
+    #local var {};
+    #foreach {$vars} {var} {
+        #var {dump-$var} {${$var}};
+    };
+    #class comm-store-tmp close;
+
+    #local files {};
+    #line quiet #scan dir {var/data/} files;
+
+    #if { &files[] > 0 } {
+        #class comm-store-tmp write {var/data/${file}.tin};
+    };
+    #else {
+        #class comm-store-tmp write {data/${file}.tin};
+    };
+};
+
+#alias {storage.Load} {
+    #local file {%1};
+    #local vars  {%2};
+
+    #line quiet #class comm-store-tmp {assign} {load-file data/${file}.tin};
+    #local var {};
+    #foreach {$vars} {var} {
+        #var {$var} {${dump-$var}};
+    };
+    #class comm-store-tmp kill;
+};
