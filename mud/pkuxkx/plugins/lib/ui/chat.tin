@@ -68,6 +68,10 @@
         #return;
     };
 
+    #if { "$type" == "求助" && {$text} == {%c【求助】{我是大高手|大高手告诉|大高手说}%*} } {
+        #return;
+    };
+
     #class chat.log open;
 
     #action {~^%*{|ID=chat.log}$} {
