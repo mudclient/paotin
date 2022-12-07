@@ -91,13 +91,10 @@
     #class chat.log close;
 };
 
-#action {~^%c%u%c(%w)告诉你：%*$} {
-    chat.log 私聊 {%0};
-} {9.999};
-
-#action {~^%c你告诉%c%u%c：%*$} {
-    chat.log 私聊 {%0};
-} {9.999};
+#action {~^%c%u%c(%w)告诉你：%*$}   {chat.log 私聊 {%0}} {9.999};
+#action {~^%c%u%c回答你：%*$}       {chat.log 私聊 {%0}} {9.999};
+#action {~^%c你告诉%c%u%c：%*$}     {chat.log 私聊 {%0}} {9.997};
+#action {~^%c你回答%c%u%c：%*$}     {chat.log 私聊 {%0}} {9.997};
 
 #action {^关闭所有频道。$} {
     #class chat-turn-on open;
