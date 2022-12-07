@@ -1,0 +1,59 @@
+#nop vim: set filetype=tt:;
+
+load-lib event;
+
+/*
+你找了个空位座下，等着上茶。
+桌子上的还人动过呢。
+你拿起粗磁大碗咕噜噜地喝了几口茶水。
+你已经将粗磁大碗里的茶水喝得一滴也不剩了。
+你端起杯香茶，有滋有味地品了几口。
+你端起雕花小杯，把剩下的香茶一饮而尽。
+这里没有任何可以让你解渴的水源。
+*/
+#alias {wudang.fullme} {
+    #class wudang.fullme open;
+
+    #var wudang-fullme-cb {%1};
+
+    #action {^你将剩下的水蜜桃吃得干干净净。{|ID=wudang.fullme}$}   {#delay 0 {knock table}};
+    #action {^你身上没有mi tao这种食物。{|ID=wudang.fullme}$}       {#delay 0 {knock table}};
+    #action {^这里没有任何可以让你解渴的水源。{|ID=wudang.fullme}$} {#delay 0 {knock table}};
+
+    #alias {wudang.fullme.check} {
+        #local done {1};
+
+        #if { $char[HP][食物] < $char[HP][最大食物] } {
+            eat mi tao;
+            #local done {0};
+        };
+
+        #if { $char[HP][饮水] < $char[HP][最大饮水] } {
+            drink da wan;
+            drink xiang cha;
+            #local done {0};
+        };
+
+        #if { !$done } {
+            #return;
+        };
+
+        #local callback {$wudang-fullme-cb};
+        #class wudang.fullme kill;
+
+        event.UnHandle {char/hpbrief} {wudang.fullme};
+        n;w;s;s;s;e;e;
+
+        #if { "$callback" != "" } {
+            $callback;
+        };
+    };
+
+    event.Handle {char/hpbrief} {wudang.fullme} {test/wudang} {wudang.fullme.check};
+
+    w;w;n;n;n;e;s;
+    sit chair;
+    xtt.Tick {wudang.fullme} {wudang.fullme.check} 3;
+
+    #class wudang.fullme close;
+};
