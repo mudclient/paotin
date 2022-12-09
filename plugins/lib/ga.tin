@@ -41,7 +41,8 @@ event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参�
 #event {RECEIVED PROMPT} {
     #local rawLine  {%0};
     #local line     {%1};
-    #if { "$line" == "== 未完继续 %*== (q 离开%*，其他继续下一页)%*" } {
+    #if { "$line" == "== 未完继续 %*== (%*继续下一页%*)%*" } {
+        #line gag;
         #cr;
         #return;
     };
