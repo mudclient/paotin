@@ -26,7 +26,14 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #function {dirName}     { #return @convertDir{name; %1; %2}; };
 #function {shortDir}    { #return @convertDir{short; %1; %2}; };
 #function {longDir}     { #return @convertDir{long; %1; %2}; };
-#function {reverseDir}  { #return @convertDir{reverse; %1; %2}; };
+#function {reverseDir}  {
+    #if { "%1" == "enter{| .*}" } {
+        #return {out};
+    };
+    #else {
+        #return @convertDir{reverse; %1; %2};
+    };
+};
 
 #var xtt.dir.table {
     {east}      {{name}{正东}   {short}{e}  {long}{east}        {reverse}{west}     }
