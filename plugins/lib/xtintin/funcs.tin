@@ -208,7 +208,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
                 #format number1 {};
             };
             #case {"万"}    {
-                #math number3 {($number2 + $number1) * 10000};
+                #math number3 {$number3 + ($number2 + $number1) * 10000};
                 #format number1 {};
                 #format number2 {0};
             };
