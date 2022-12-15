@@ -63,7 +63,7 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
 
     #var char-jifa-type {基本功夫};
 
-    #action {{*UTF8}^├───{\p{Han}{4}}──{(─|┼)*}─┤{|ID=char/jifa}$} {
+    #action {{*UTF8}{?:^}├───{\p{Han}{4}}──{(─|┼)*}─┤{|ID=char/jifa}$} {
         #var char-jifa-type {%%1};
     };
 
