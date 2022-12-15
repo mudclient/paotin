@@ -37,5 +37,12 @@ fi
 
 export TMUXCMD="tmux -L MUD -f $TMUXCONFPATH"
 
-test -f .bash_profile || ln -s profile.sh .bash_profile
+BASHPROFILE="$HOME/var/profile.sh"
+if [ ! -f $BASHPROFILE ]; then
+    BASHPROFILE="$HOME/profile.sh"
+fi
+
+rm -f .bash_profile
+ln -s $BASHPROFILE .bash_profile
+
 exec bash -l start-ui
