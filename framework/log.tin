@@ -64,7 +64,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local text {%2};
     #local echo {%3};
 
-    #line log {$gLog[PATH]/$file} {$text<070>};
+    #line logmode stamp #line log {$gLog[PATH]/$file} {$text<070>};
 
     #if { "$echo" == "ECHO" } {
         #echo {%s} {$text<070>};
