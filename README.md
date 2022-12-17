@@ -73,7 +73,7 @@ docker run --rm -it --name tt --hostname tt mudclient/paotin
 
 如果一切正常，你将会看到一个带有蓝色状态栏的 tmux 界面。和一个简单的游戏指引。
 
-如果想要结束体验，可以按 `<ctrl+a> d` 组合键，就会退出游戏，并自动删除刚刚创建的 Docker 容器。
+如果想要结束体验，可以按 <kbd>ctrl+a</kbd> <kbd>d</kbd> 组合键，就会退出游戏，并自动删除刚刚创建的 Docker 容器。
 
 如果你想要长期挂机，则要使用下面的命令：
 
@@ -93,7 +93,7 @@ docker run -d -it --name tt --hostname tt -v $HOME/my-paotin:/paotin/var mudclie
 docker exec -it tt start-ui
 ```
 
-同样可以用 `<ctrl+a> d` 组合键退出游戏。但这并不会终止 TinTin++ 进程，下次用上面的命令可以继续游戏。
+同样可以用 <kbd>ctrl+a</kbd> <kbd>d</kbd> 组合键退出游戏。但这并不会终止 TinTin++ 进程，下次用上面的命令可以继续游戏。
 
 ### 自行构建 Docker 镜像
 
