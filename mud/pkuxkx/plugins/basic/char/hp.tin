@@ -66,17 +66,19 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
     #return true;
 };
 
-#nop hp 有两种格式，非战斗状态：
-#nop ┌───个人状态────────────┬───────────────────┐;
-#nop │【精神】 5978    / 5978     [103%]    │【精力】 12102   / 6051    (+   0)    │;
-#nop │【气血】 23372   / 23372    [101%]    │【内力】 5369    / 7063    (+   1)    │;
-#nop │【真气】 1367    / 1367     [  9%]    │【静气】 101%               [正常]    │;
-#nop │【食物】 874     / 900      [正常]    │【潜能】 7.67万                       │;
-#nop │【饮水】 874     / 900      [正常]    │【经验】 1349.88万                    │;
-#nop ├───────────────────┴───────────────────┤;
-#nop │【状态】 健康、怒、星宿火毒、星宿毒掌毒                                       │;
-#nop └──────────────────────────────北大侠客行────┘;
-#nop 战斗状态：;
+/*
+hp 有两种格式，非战斗状态：
+┌───个人状态────────────┬───────────────────┐
+│【精神】 5978    / 5978     [103%]    │【精力】 12102   / 6051    (+   0)    │
+│【气血】 23372   / 23372    [101%]    │【内力】 5369    / 7063    (+   1)    │
+│【真气】 1367    / 1367     [  9%]    │【静气】 101%               [正常]    │
+│【食物】 874     / 900      [正常]    │【潜能】 7.67万                       │
+│【饮水】 874     / 900      [正常]    │【经验】 1349.88万                    │
+├───────────────────┴───────────────────┤
+│【状态】 健康、怒、星宿火毒、星宿毒掌毒                                       │
+└──────────────────────────────北大侠客行────┘
+战斗状态：
+*/
 #alias {char.hp.parse.hp} {
     #class char-hp-parse-hp open;
     #action {^│【精神】%s%d%s/%s%d%s[%s%d\%]%!s│【精力】%s%d%s/%s%d%s(+%s%d)%!s│$} {
@@ -162,13 +164,66 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
     #class char-hp-parse-hp close;
 };
 
-#nop hp -neili 格式：
-#nop ┌──内力显示─────────────────────────────┐
-#nop │□太极神功 (taiji-shengong)                 　 -   2117/  5109(6040)  │
-#nop ├──其他信息───────────┬─────────────────┤
-#nop │【走火入魔】 -41.50%              │【极限内力】 6040                 │
-#nop └─────────────────┴────────◎北大侠客行◎──┘
-#nop 
+/*
+hp -neili 格式：
+┌──内力显示─────────────────────────────┐
+│□太极神功 (taiji-shengong)                 　 -   2117/  5109(6040)  │
+├──其他信息───────────┬─────────────────┤
+│【走火入魔】 -41.50%              │【极限内力】 6040                 │
+└─────────────────┴─────────北大侠客行───┘
+┌─内力显示──────────────────────────────┐
+│  北冥神功 (beiming-shengong)               　 -   8385/  8385(8578)  │
+│□逍遥派内功 (xiaoyao-neigong)              　 -   2865/  2865(4480)  │
+│  观花诀 (guanhua-jue)                      　 -   1695/  1695(4662)  │
+├─其他信息────────────┬─────────────────┤
+│【走火入魔】 -1.13 %              │【极限内力】 11613                │
+└─────────────────┴─────────北大侠客行───┘
+*/
+
+#alias {char.hp.parse.hp-neili} {
+    #class char-hp-parse-hp-neili open;
+
+    #action {^│{□|  }%S (%S)%s　 - %s%d/%s%d(%d)%s│$} {
+        #local name     {@trim{%%2}};
+        #local id       {@trim{%%3}};
+        #local current  {@trim{%%6}};
+        #local max      {@trim{%%8}};
+        #local limit    {@trim{%%9}};
+
+        #if { "%%1" == "□" } {
+            #local name {$char[Skills][基本内功][jifa-to]};
+            #var char[HP][当前内力] {$current};
+            #var char[HP][最大内力] {$max};
+            #var char[HP][内力上限] {$limit};
+        };
+
+        #if { "$char[Skills][$name]" != "" } {
+            #var char[Skills][$name][neili]         {$current};
+            #var char[Skills][$name][max-neili]     {$max};
+            #var char[Skills][$name][neili-limit]   {$limit};
+        };
+    };
+
+    #action {^│【走火入魔】 %*% %s│【极限内力】 %d%s │$} {
+        #var char[HP][走火入魔] {@trim{%%1}};
+    };
+
+	#action {^└─────────────{(─)*}%S─{(─)*}─┘{|ID=char.hp-neili}$} {
+        char.hp-neili.parse.done;
+	};
+
+    #alias {char.hp-neili.parse.done} {
+        #local __unused {%%0};
+    	#class char-hp-parse-hp-neili kill;
+        #class char.GetHP kill;
+        event.UnHandle GA {char.hp-neili};
+    };
+
+    event.HandleOnce GA {char.hp-neili} {char} {char.hp-neili.parse.done};
+
+    #class char-hp-parse-hp-neili close;
+};
+
 #nop hpbrief 格式：
 #nop 第一行: 经验，潜能，最大内力，当前内力，最大精力，当前精力
 #nop 第二行: 最大气血，有效气血，当前气血，最大精神，有效精神，当前精神
@@ -387,13 +442,19 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
         char.hp.parse.hp;
     };
 
+    #nop ┌─内力显示──────────────────────────────┐;
+    #action {^┌─内力显示──{(─)*}───────┐$} {
+        #class char.GetHP kill;
+        char.hp.parse.hp-neili;
+    };
+
     #action {^你用HP太频繁了，请尽量使用hpbrief命令，节约系统资源，谢谢。$} {
         #class char.GetHP kill;
     };
 
     #class char.GetHP close;
 
-    #send hp;
+    #send {hp %0};
 };
 
 #alias {char.GetHP2} {
@@ -403,8 +464,8 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
 };
 
 #alias {hp} {
-    #if { "%0" == "" } {
-        char.GetHP;
+    #if { "%0" == "{|-neili}" } {
+        char.GetHP %0;
     };
     #else {
         #send hp %0;
