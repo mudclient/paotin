@@ -60,6 +60,51 @@
     #local text {%2};
     chat.log {$type} {$text};
 
+    #if { "$type" == "本地" } {
+        #if { {$text} == {%*天空中突然闪出一道绚丽的火花%*} } {
+            #class chat.log open;
+
+            #action {~^%*{|ID=chat.log}$} {
+                chat.log {%1} {%%0};
+            } {4.993};
+
+            #action {~^%c{\e\[2;37;0m|}\e[36m{|\e\[2;37;0m }{|\e\[0m}{|ID=chat.log}$} {
+                chat.log {%1} {%%0};
+                #class chat.log kill;
+            } {4.992};
+
+            #class chat.log close;
+        };
+    };
+
+    #if { "$type" == "江湖" } {
+        #if { {$text} == {%*神力和纵跃排行榜%*} } {
+            #class chat.log open;
+
+            #action {~^%*{|ID=chat.log}$} {
+                chat.log {%1} {%%0};
+            } {4.993};
+
+            #action {~^%c{[' -]+}\e[2;37;0m {|\e\[0m}{|ID=chat.log}$} {
+                chat.log {%1} {%%0};
+                #class chat.log kill;
+            } {4.992};
+
+            #class chat.log close;
+        };
+        #elseif { {$text} == {%*{[^m )]}\e[0m} } {
+            #local lines {1};
+            #if { {$text} == {%*请大家挖泥之余去各大BBS和论坛宣传北大侠客行，宣传内容详见%*} } {
+                #local lines {2};
+            };
+            #line multishot $lines #action {~^%*{|ID=chat.log}$} {
+                chat.log {%1} {%%0};
+            } {4.993};
+        };
+
+        #return;
+    };
+
     #if { "$type" != "{闲聊|求助|谣言}" } {
         #return;
     };
@@ -88,7 +133,7 @@
     } {4.992};
 
     #if { "$type" == "{闲聊|谣言}" } {
-        #action {~^%* {\e\[0m}{|ID=chat.log}$} {
+        #action {~^%*{\S \e\[0m}{|ID=chat.log}$} {
             chat.log {%1} {%%0};
             #class chat.log kill;
         } {4.992};
