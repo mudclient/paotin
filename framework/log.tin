@@ -53,6 +53,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {infoLog}    {log.write {$gLog[info]}   {%0}        {ECHO}};
 #alias {dbgLog}     {log.write {$gLog[debug]}  {%0}};
 
+#alias {noLog}      {#0};
+
 #alias {{[a-z]{1,10}}Log %*} {
     #local logName {};
     #format logName {%l} {%1};
