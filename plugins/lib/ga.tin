@@ -17,7 +17,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #config {IAC GA} {ON};
 
-#function {lib_ga.Init} {
+#func {lib_ga.Init} {
     #class data/lib/ga open;
     #list gXttPipeLine create {};
     #class data/lib/ga close;

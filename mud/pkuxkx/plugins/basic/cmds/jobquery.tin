@@ -41,7 +41,7 @@ jobquery 本来就有两个别名：
 #alias {^jobquery{| %*}$}  {job.Query gag   {%1}};
 #alias {^jq{| %*}$}        {job.Query nogag {%1}};
 
-#function {basic_cmds_jobquery.Init} {
+#func {basic_cmds_jobquery.Init} {
     #class data/basic/cmds/jobquery open;
     #var gJobState {};
     #var gJobStateUpdate {0};

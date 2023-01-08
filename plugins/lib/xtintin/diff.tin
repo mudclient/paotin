@@ -1,5 +1,5 @@
 #nop 两个字符串参数，其中一个比另一个多包含了一个子串，本函数可返回该子串（即任务信息）;
-#function {diff} {
+#func {diff} {
     #local str1 {%1};
     #local str2 {%2};
 

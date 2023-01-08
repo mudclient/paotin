@@ -6,7 +6,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#function {filter} {
+#func {filter} {
     #local table {%1};
     #local cond {%2};
 
@@ -27,7 +27,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newTable}
 };
 
-#function {filterMap} {
+#func {filterMap} {
     #local table {%1};
     #local cond {%2};
     #local body {%3};
@@ -52,7 +52,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newTable}
 };
 
-#function {mapIf} {
+#func {mapIf} {
     #local table {%1};
     #local cond {%2};
     #local body {%3};
@@ -82,7 +82,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newTable}
 };
 
-#function {map} {
+#func {map} {
     #local table {%1};
     #local body {%2};
 

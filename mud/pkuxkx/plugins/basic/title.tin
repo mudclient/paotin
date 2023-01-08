@@ -6,7 +6,7 @@
 #nop             剑术神通「陷空洞中执九剑，能使龙池飞霹雳！」小小霹雳鼠 🗡(Xxpls);
 #nop             一品堂 供奉「大　爷　我　的　爱」护寺僧人 🦅 (Molia) <发呆一分钟>;
 #nop             大宗师 予人玫瑰 ★ 剑胆琴心★  「语多难寄一寸相思卿安否」黑袍人 🐅 🧡 (Heipao ren);
-#function {ParseTitle} {
+#func {ParseTitle} {
     #local obj {%0};
 
     #nop 小技巧：replace 匹配之前不会将 &1~&99 清空，因此匹配可选项时会保留上一次的值。;

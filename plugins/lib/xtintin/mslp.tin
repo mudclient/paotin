@@ -1,10 +1,10 @@
-#function {mslpExec} {
+#func {mslpExec} {
     #local exec {%1};
     #local text {%2};
     #return {\e]68;1;EXEC;$exec\a\e[4m$text\e[24m};
 };
 
-#function {mslpSend} {
+#func {mslpSend} {
     #local send {%1};
     #local text {%2};
     #return {\e]68;1;SEND;$send\a\e[4m$text\e[24m};

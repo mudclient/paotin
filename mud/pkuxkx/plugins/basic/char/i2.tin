@@ -26,7 +26,7 @@
 #nop 锦囊(Jin nang)
 #nop;
 
-#function {basic_char_i2.Init} {
+#func {basic_char_i2.Init} {
     char.reset.i2;
     char.reset.bag;
     char.reset.sachet;

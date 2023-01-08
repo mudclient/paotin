@@ -4,7 +4,7 @@
     {AUTHOR}    {担子炮}
 };
 
-#function {lib_ui_beautify.Init} {
+#func {lib_ui_beautify.Init} {
     #class data/lib/ui/beautify open;
     #var beautify-switch {OFF};
     #var beautify-eol-mark {<g03>.};
@@ -87,7 +87,7 @@
     prompt.refresh;
 };
 
-#function {Beautify} {
+#func {Beautify} {
     #local text {%1};
 
     #if { "${beautify-switch}" != "ON" } {

@@ -144,7 +144,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
 #nop 提示符;
 #var prompt-prompt {Input};
 
-#function {lib_ui_prompt.Init} {
+#func {lib_ui_prompt.Init} {
     load-file {etc/ui-settings.tin};
     prompt.Set {};
     prompt.bindKey;
@@ -390,7 +390,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     };
 };
 
-#function {__prompt_build_line__} {
+#func {__prompt_build_line__} {
     #local fields       {%1};
     #local text         {};
     #local order        {};
@@ -492,7 +492,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     #return {{width}{$lineWidth}{text}{$text}};
 };
 
-#function {__prompt_countdown__} {
+#func {__prompt_countdown__} {
     #local value    {%1};
     #local count    {%2};
 
@@ -504,7 +504,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     #return {$value};
 };
 
-#function {__prompt_show_countdown__} {
+#func {__prompt_show_countdown__} {
     #local type     {%1};
     #local secs     {%2};
     #local ret      {};
@@ -540,7 +540,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     #return {$ret};
 };
 
-#function {__prompt_fill_line__} {
+#func {__prompt_fill_line__} {
     #local text     {%1};
     #local width    {%2};
     #local color    {%3};

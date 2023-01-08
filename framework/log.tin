@@ -21,7 +21,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #var gLog[PATH]     {log};
 
-#function {InitLog} {
+#func {InitLog} {
     #local path {%1};
 
     #local output {};

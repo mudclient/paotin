@@ -10,7 +10,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ===========
 */
 
-#function {existsAlias} {
+#func {existsAlias} {
     #local pName     {%1};
     #local pClass    {%2};
 
@@ -29,7 +29,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {false};
 };
 
-#function {existsFunction} {
+#func {existsFunction} {
     #local pName    {%1};
     #local pClass   {%2};
 
@@ -48,31 +48,31 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {false};
 };
 
-#function {existsFile} {
+#func {existsFile} {
     #local file {%1};
     #local output {};
     #script output {test -f $file && echo true || test -f var/$file && echo true || echo false};
     #return $output[1];
 };
 
-#function {existsJobPlugin} {
+#func {existsJobPlugin} {
     #local job {%1};
     #return {@existsPlugin{job/$job}};
 };
 
-#function {existsPlugin} {
+#func {existsPlugin} {
     #local plugin {%1};
     #return {@existsFile{plugins/$plugin.tin}};
 };
 
-#function {mkdir} {
+#func {mkdir} {
     #local dir {%1};
     #local output {};
     #script output {mkdir -p $dir 2>/dev/null && test -d $dir && echo true || echo false};
     #return $output[1];
 };
 
-#function {uuid} {
+#func {uuid} {
     #local now      {};
     #local random   {};
 

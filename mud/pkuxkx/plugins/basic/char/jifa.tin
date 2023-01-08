@@ -28,7 +28,7 @@ load-lib event;
 
 event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命令输出结果，并更新 char[Skills]。};
 
-#function {basic_char_jifa.Init} {
+#func {basic_char_jifa.Init} {
     #return true;
 };
 

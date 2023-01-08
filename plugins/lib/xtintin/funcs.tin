@@ -8,7 +8,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #nop ############################ 小工具-方向处理 #################################;
 
-#function {reverseCmds} {
+#func {reverseCmds} {
     #local cmds  {%1};
     #local newCmds {};
     #foreach {$cmds} {item} {
@@ -23,10 +23,10 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newCmds};
 };
 
-#function {dirName}     { #return @convertDir{name; %1; %2}; };
-#function {shortDir}    { #return @convertDir{short; %1; %2}; };
-#function {longDir}     { #return @convertDir{long; %1; %2}; };
-#function {reverseDir}  {
+#func {dirName}     { #return @convertDir{name; %1; %2}; };
+#func {shortDir}    { #return @convertDir{short; %1; %2}; };
+#func {longDir}     { #return @convertDir{long; %1; %2}; };
+#func {reverseDir}  {
     #if { "%1" == "enter{| .*}" } {
         #return {out};
     };
@@ -85,7 +85,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {enter}     {{name}{进去}   {short}{enter}  {long}{enter}   {reverse}{out}      }
 };
 
-#function {convertDir} {
+#func {convertDir} {
     #local field        {%1};
     #local dir          {%2};
     #local restricted   {%2};
@@ -106,7 +106,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #nop ############################ 小工具-语法增强 #################################;
 
-#function {boolAnd} {
+#func {boolAnd} {
     #if { "%1" == "true" && "%2" == "true" } {
         #return {true};
     };
@@ -114,7 +114,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {false};
 };
 
-#function {reverseList} {
+#func {reverseList} {
     #var l {%1};
 
     #list {l} size len;
@@ -125,33 +125,33 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
-#function {eval}            {#math result {%1}};
-#function {space}           {#var result {@repeat{%1;{ }}}};
-#function {repeat}          {#var result {}; #loop 1 %1 tmp {#var result {${result}%2}}};
-#function {string2list}     {#list result {create} {%1}};
-#function {list2string}     {#var l {%1}; #list l simplify; #return {$l}};
-#function {strListSize}     {#list l create {%1}; #list l size result};
-#function {indexOfStrList}  {#list l create {%1}; #list l find {%2} result};
-#function {indexOf}         {#var l {%1}; #list l find {%2} result};
-#function {trim}            {#format {result} {%p} {%1}};
-#function {trimAll}         {#var result {%1}; #replace {result} { } {}};
-#function {sort}            {#var l {%0}; #var result {}; #foreach {$l} {tmp} {#list result {sort} {$tmp}}; #return {@list2string{{$result}}}};
-#function {sortList}        {#var l {@list2string{{%0}}}; #var result {}; #foreach {$l} {tmp} {#list result {sort} {$tmp}}};
-#function {listSize}        {#var l {%1}; #list l size result};
-#function {listSet}         {#var l {%1}; #loc idx {%2}; #loc data {%3}; #var l @listExtend{{$l};$idx}; #list l set {$idx} {$data}; #return {$l} };
-#function {listExtend}      {#var l {%1}; #loc len {%2}; #loc size {@listSize{{$l}}}; #math len {$len - $size}; #if { $len > 0 } { #loop {1} {$len} {id} { #list l add {{}} } }; #return {$l} };
-#function {len}             {#format result {%L} {%1}};
-#function {toLower}         {#format result {%l} {%1}};
-#function {toUpper}         {#format result {%u} {%1}};
-#function {capital}         {#format result {%n} {%1}};
-#function {replace}         {#var result %1;#replace result {%2} {%3}};
-#function {inList}          {#math result { @indexOf{{%1};{%2}} > 0 }};
-#function {center}          {#format len {%L} {%1}; #math left {(%2 - $len) / 2 + $len}; #math right {%2 - $left}; #format result {%${left}s%${right}s} {%1} {}};
+#func {eval}            {#math result {%1}};
+#func {space}           {#var result {@repeat{%1;{ }}}};
+#func {repeat}          {#var result {}; #loop 1 %1 tmp {#var result {${result}%2}}};
+#func {string2list}     {#list result {create} {%1}};
+#func {list2string}     {#var l {%1}; #list l simplify; #return {$l}};
+#func {strListSize}     {#list l create {%1}; #list l size result};
+#func {indexOfStrList}  {#list l create {%1}; #list l find {%2} result};
+#func {indexOf}         {#var l {%1}; #list l find {%2} result};
+#func {trim}            {#format {result} {%p} {%1}};
+#func {trimAll}         {#var result {%1}; #replace {result} { } {}};
+#func {sort}            {#var l {%0}; #var result {}; #foreach {$l} {tmp} {#list result {sort} {$tmp}}; #return {@list2string{{$result}}}};
+#func {sortList}        {#var l {@list2string{{%0}}}; #var result {}; #foreach {$l} {tmp} {#list result {sort} {$tmp}}};
+#func {listSize}        {#var l {%1}; #list l size result};
+#func {listSet}         {#var l {%1}; #loc idx {%2}; #loc data {%3}; #var l @listExtend{{$l};$idx}; #list l set {$idx} {$data}; #return {$l} };
+#func {listExtend}      {#var l {%1}; #loc len {%2}; #loc size {@listSize{{$l}}}; #math len {$len - $size}; #if { $len > 0 } { #loop {1} {$len} {id} { #list l add {{}} } }; #return {$l} };
+#func {len}             {#format result {%L} {%1}};
+#func {toLower}         {#format result {%l} {%1}};
+#func {toUpper}         {#format result {%u} {%1}};
+#func {capital}         {#format result {%n} {%1}};
+#func {replace}         {#var result %1;#replace result {%2} {%3}};
+#func {inList}          {#math result { @indexOf{{%1};{%2}} > 0 }};
+#func {center}          {#format len {%L} {%1}; #math left {(%2 - $len) / 2 + $len}; #math right {%2 - $left}; #format result {%${left}s%${right}s} {%1} {}};
 
-#function {max}             {#var result {%1}; #foreach {%0} {i} {#if { $i > $result} { #var result {$i}}}};
-#function {min}             {#var result {%1}; #foreach {%0} {i} {#if { $i < $result} { #var result {$i}}}};
+#func {max}             {#var result {%1}; #foreach {%0} {i} {#if { $i > $result} { #var result {$i}}}};
+#func {min}             {#var result {%1}; #foreach {%0} {i} {#if { $i < $result} { #var result {$i}}}};
 
-#function {parseTime} {
+#func {parseTime} {
     #local {timeStr} {%1};
 
     #nop 注意这里用了个小技巧，末尾的空格不要去掉;
@@ -165,7 +165,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$time};
 };
 
-#function {c2d} {
+#func {c2d} {
     #local string {%1};
 
     #local number1  {};
@@ -229,7 +229,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return $number;
 };
 
-#function {strWidth} {
+#func {strWidth} {
     #local str {%1};
     #replace {str} {<{[gG0-9A-Fa-f]{1,8}}>} {};
     #replace {str} {{\e\[[0-9;]+m}} {};

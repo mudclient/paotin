@@ -23,7 +23,7 @@ event.Define {char/nobusy}  {无参} {$MODULE} {角色解除 busy 了};
 event.Define {char/fight}   {无参} {$MODULE} {角色战斗开始};
 event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 
-#function {basic_char_gmcp.Init} {
+#func {basic_char_gmcp.Init} {
     event.Handle {GMCP.Status} {char/gmcp} {basic/char/gmcp} {char.gmcp.status};
 };
 

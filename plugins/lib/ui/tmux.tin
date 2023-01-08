@@ -15,7 +15,7 @@
 #nop 当前展示的边框样式的 theme。;
 #var tmux-theme {};
 
-#function {lib_ui_tmux.Init} {
+#func {lib_ui_tmux.Init} {
     #if { "@mkdir{{tmux/$user[id]}}" == "false" } {
         errLog 创建 tmux UI 通信管道(tmux/$user[id])失败;
     };
@@ -90,11 +90,11 @@
     #script {tmp} {tmux refresh};
 };
 
-#function {TMUX} {
+#func {TMUX} {
     #return {@tmux.ConvertFromANSI{{%1}}};
 };
 
-#function {tmux.ConvertFromANSI} {
+#func {tmux.ConvertFromANSI} {
     #local text {%1};
 
     #replace {text} {{\e\[(3|4)8;5;(\d+)m}}                 {@tmux.ansi2tmux{&2;5;&3}};
@@ -162,7 +162,7 @@
     #return {$output#[default]};
 };
 
-#function {tmux.ansi2tmux} {
+#func {tmux.ansi2tmux} {
     #local {type} {%1};
     #local {mode} {%2};
     #local {arg1} {%3};
@@ -198,7 +198,7 @@
     #return {$output};
 };
 
-#function {tmux.Width} {
+#func {tmux.Width} {
     #local arg {%1};
     #replace {arg} {{#\[[^\]]*\]}} {};
     #return {@len{{$arg}}};
