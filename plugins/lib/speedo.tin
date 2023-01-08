@@ -12,7 +12,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {AUTHOR}    {担子炮}
 };
 
-#function {lib_speedo.Init} {
+#func {lib_speedo.Init} {
     #var gSpeedo {};
     #return {true};
 };
@@ -74,7 +74,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #var {gSpeedo[$key][update]}    {$now};
 };
 
-#function {speedo.Get} {
+#func {speedo.Get} {
     #local key {%1};
 
     #if { @isEmpty{$key} } {
@@ -93,7 +93,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$gSpeedo[$key][update]};
 };
 
-#function {speedo.GetSpeed} {
+#func {speedo.GetSpeed} {
     #local key      {%1};
     #local interval {%2};
 
@@ -105,7 +105,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$speedInfo[speed]};
 };
 
-#function {speedo.GetSpeedInfo} {
+#func {speedo.GetSpeedInfo} {
     #local key      {%1};
     #local interval {@defaultInt{%2;1}};
 

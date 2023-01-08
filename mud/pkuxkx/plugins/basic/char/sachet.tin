@@ -67,7 +67,7 @@
     #class char-parse-sachet close;
 };
 
-#function {__char_sachet_parse__} {
+#func {__char_sachet_parse__} {
     #local item {%1};
 
     #replace {item} {[%S]%*{☆|★|◎}%**%d} {

@@ -12,7 +12,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {AUTHOR}    {担子炮}
 };
 
-#function {lib_option.Init} {
+#func {lib_option.Init} {
     #class lib/option open;
     #var gOptions {};
     #class lib/option close;
@@ -65,7 +65,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #echo {};
 };
 
-#function {option.Get} {
+#func {option.Get} {
     #local {option} {%1};
 
     #if { "$gOptions[$option]" == "" } {
@@ -76,7 +76,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$gOptions[$option][value]};
 };
 
-#function {option.Set} {
+#func {option.Set} {
     #local {option} {%1};
     #local {value}  {%2};
 
@@ -91,7 +91,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$old};
 };
 
-#function {option.IsEnable} {
+#func {option.IsEnable} {
     #local option {%1};
     #local value {@option.Get{$option}};
     #if { "$value" == "true" } {
@@ -102,7 +102,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
-#function {option.IsDisable} {
+#func {option.IsDisable} {
     #local option {%1};
     #local value {@option.Get{$option}};
     #if { "$value" == "false" } {
@@ -120,7 +120,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local _ {@option.Set{$option;{$value}}};
 };
 
-#function {option.Toggle} {
+#func {option.Toggle} {
     #local {option} {%1};
 
     #local value {@option.Get{$option}};

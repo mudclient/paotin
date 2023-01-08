@@ -15,7 +15,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {NOTE}      {本文件属于 PaoTin++ 的一部分}
 };
 
-#function {lib_event.Init} {
+#func {lib_event.Init} {
     #class data/lib/event open;
     #var gEventHandlers {};
     #var gValidEvent    {};
@@ -24,7 +24,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return true;
 };
 
-#function {__xtt_event_name_is_valid__} {
+#func {__xtt_event_name_is_valid__} {
     #local name {%1};
     #if { "$name" == "{[_a-zA-Z]([./_a-zA-Z0-9-]*[./_a-zA-Z0-9])?}" } {
         #return {true};

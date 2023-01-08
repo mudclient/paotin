@@ -77,7 +77,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #echo {%c%h} {light cyan};
 };
 
-#function {xtt.GenHelpDoc} {
+#func {xtt.GenHelpDoc} {
     #local args {%1};
 
     #if { "$args[check]" == "'XTinTinAPI" } {
@@ -149,7 +149,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 注意第二个 args 有两种写法，如果是函数就用键值对，如果是别名就用列表(前面加{1}{2}{3})。
 其中参数名用感叹号打头表示必选，问号打头表示可选，默认必选。
 */
-#function {xtt.HelpDoc} {
+#func {xtt.HelpDoc} {
     #local args {%1};
 
     #if { "$args[check]" == "'XTinTinAPI" } {

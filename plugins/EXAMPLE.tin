@@ -26,7 +26,7 @@
 };
 
 #nop 纯模块允许有一个 Init 函数，会在模块加载后自动调用。;
-#function {EXAMPLE.Init} {
+#func {EXAMPLE.Init} {
     #nop load-module 时提供的参数最终会保存到 $EXAMPLE[config] 变量里，供插件使用。;
     #var EXAMPLE[config];
     okLog EXAMPLE 初始化中…;

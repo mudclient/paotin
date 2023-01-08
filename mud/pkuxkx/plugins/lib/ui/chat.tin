@@ -16,7 +16,7 @@
     {{pattern}{%*}                          {action}{groupLog}      {gag}{true}}
 };
 
-#function {lib_ui_chat.Init} {
+#func {lib_ui_chat.Init} {
     load-file {etc/ui-chat.tin};
     #return true;
 };

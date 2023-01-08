@@ -21,7 +21,7 @@ load-lib speedo;
 event.Define {char/hp}       {无参}  {$MODULE} {已经获取到 hp 命令输出结果，并更新 char[HP]。};
 event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令输出结果，并更新 char[HP]。};
 
-#function {basic_char_hp.Init} {
+#func {basic_char_hp.Init} {
     #class data/basic/char open;
     #var char[HP]           {};
     #var char[HP][经验]     {};
@@ -403,7 +403,7 @@ hp -neili 格式：
     #showme $summarize;
 };
 
-#function {__char_hp_expandBigNumber__} {
+#func {__char_hp_expandBigNumber__} {
     #local number {%1};
     #replace number {K} {*1000};
     #replace number {M} {*1000000};
@@ -411,7 +411,7 @@ hp -neili 格式：
     #return $number;
 };
 
-#function {__char_hp_colorit__} {
+#func {__char_hp_colorit__} {
     #local p {%1};
     #if { $p < 15 } {
         #return {<010>$p%<070>};
