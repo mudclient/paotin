@@ -24,40 +24,38 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
 #func {basic_char_hp.Init} {
     #class data/basic/char open;
     #var char[HP]           {};
-    #var char[HP][经验]     {};
-    #var char[HP][经验显示] {};
-    #var char[HP][潜能]     {};
-    #var char[HP][潜能显示] {};
-    #var char[HP][当前内力] {};
-    #var char[HP][最大内力] {};
-    #var char[HP][加力]     {};
-    #var char[HP][内力百分比] {};
-    #var char[HP][当前精力] {};
-    #var char[HP][最大精力] {};
-    #var char[HP][精力百分比] {};
-    #var char[HP][当前气血] {};
-    #var char[HP][有效气血] {};
-    #var char[HP][最大气血] {};
-    #var char[HP][气血百分比] {};
-    #var char[HP][当前精神] {};
-    #var char[HP][有效精神] {};
-    #var char[HP][最大精神] {};
-    #var char[HP][精神百分比] {};
-    #var char[HP][当前真气] {};
-    #var char[HP][最大真气] {};
-    #var char[HP][真气减伤] {};
-    #var char[HP][真元]     {};
-    #var char[HP][食物]     {};
-    #var char[HP][最大食物] {};
+    #var char[HP][经验]     {1};
+    #var char[HP][经验显示] {1};
+    #var char[HP][潜能]     {1};
+    #var char[HP][潜能显示] {1};
+    #var char[HP][当前内力] {0};
+    #var char[HP][最大内力] {1};
+    #var char[HP][加力]     {0};
+    #var char[HP][内力百分比] {0};
+    #var char[HP][当前精力] {0};
+    #var char[HP][最大精力] {1};
+    #var char[HP][精力百分比] {0};
+    #var char[HP][当前气血] {0};
+    #var char[HP][有效气血] {1};
+    #var char[HP][最大气血] {1};
+    #var char[HP][气血百分比] {0};
+    #var char[HP][当前精神] {0};
+    #var char[HP][有效精神] {1};
+    #var char[HP][最大精神] {1};
+    #var char[HP][精神百分比] {0};
+    #var char[HP][当前真气] {0};
+    #var char[HP][最大真气] {1};
+    #var char[HP][真气减伤] {0};
+    #var char[HP][真元]     {0};
+    #var char[HP][食物]     {0};
+    #var char[HP][最大食物] {1};
     #var char[HP][饥饿]     {};
-    #var char[HP][饮水]     {};
-    #var char[HP][最大饮水] {};
+    #var char[HP][饮水]     {0};
+    #var char[HP][最大饮水] {1};
     #var char[HP][口渴]     {};
-    #var char[HP][气势]     {};
+    #var char[HP][气势]     {0};
     #var char[HP][状态]     {};
     #var char[HP][毒]       {};
-    #var char[HP][更新时间] {};
-    #var char[HP][状态更新] {};
     #class data/basic/char close;
 
     set hpbrief long,report;
@@ -89,7 +87,7 @@ hp 有两种格式，非战斗状态：
         speedo.Set {当前精神} {$char[HP][当前精神]} {true} {10};
         speedo.Set {当前精力} {$char[HP][当前精力]} {true} {10};
     };
-	#action {^│【气血】%s%d%s/%s%d%s[%s%d\%]%!s│【内力】%s%d%s/%s%d%s(+%s%d)%!s│$} {
+    #action {^│【气血】%s%d%s/%s%d%s[%s%d\%]%!s│【内力】%s%d%s/%s%d%s(+%s%d)%!s│$} {
         #var char[HP][当前气血] {%%2};
         #var char[HP][有效气血] {%%5};
         #var char[HP][当前内力] {%%10};
@@ -97,13 +95,13 @@ hp 有两种格式，非战斗状态：
         #var char[HP][加力]     {%%16};
         speedo.Set {当前气血} {$char[HP][当前气血]} {true} {10};
         speedo.Set {当前内力} {$char[HP][当前内力]} {true} {10};
-	};
-	#action {^│【真气】%!s%d%!s/%!s%d%!s[%!s%d\%]%!s│【%!*】%!s%!d\%%!s[%!*]%!s│$} {
+    };
+    #action {^│【真气】%!s%d%!s/%!s%d%!s[%!s%d\%]%!s│【%!*】%!s%!d\%%!s[%!*]%!s│$} {
         #var char[HP][当前真气] {%%1};
         #var char[HP][最大真气] {%%2};
         #var char[HP][真气减伤] {%%3};
         speedo.Set {当前真气} {$char[HP][当前真气]} {true} {10};
-	};
+    };
     #action {^│【食物】%s%d%s/%s%d%s[%S]%!s│【潜能】%s%S%!s│$} {
         #var char[HP][食物]     {%%2};
         #var char[HP][最大食物] {%%5};
@@ -141,17 +139,17 @@ hp 有两种格式，非战斗状态：
         #var char[HP][毒] {$poison};
     };
 
-	#action {^╰─────────────{(─)*}%S────╯{|ID=char.hp}$} {
+    #action {^╰─────────────{(─)*}%S────╯{|ID=char.hp}$} {
         #math char[HP][气血百分比] { $char[HP][当前气血] * 100 / $char[HP][最大气血] };
         #math char[HP][精神百分比] { $char[HP][当前精神] * 100 / $char[HP][最大精神] };
         #math char[HP][内力百分比] { $char[HP][当前内力] * 50 / $char[HP][最大内力] };
         #math char[HP][精力百分比] { $char[HP][当前精力] * 50 / $char[HP][最大精力] };
         event.Emit char/hp;
         char.hp.parse.done;
-	};
+    };
 
     #alias {char.hp.parse.done} {
-    	#class char-hp-parse-hp kill;
+        #class char-hp-parse-hp kill;
         #class char.GetHP kill;
         event.UnHandle GA {char.hp};
     };
@@ -166,6 +164,9 @@ hp 有两种格式，非战斗状态：
 
 /*
 hp -neili 格式：
+┌─其他信息────────────┬─────────────────┐
+│【走火入魔】 0.00  %              │【极限内力】 0                    │
+└─────────────────┴─────────北大侠客行───┘
 ┌──内力显示─────────────────────────────┐
 │□太极神功 (taiji-shengong)                 　 -   2117/  5109(6040)  │
 ├──其他信息───────────┬─────────────────┤
@@ -182,6 +183,8 @@ hp -neili 格式：
 
 #alias {char.hp.parse.hp-neili} {
     #class char-hp-parse-hp-neili open;
+
+    #var char[HP][内力上限] {1};
 
     #action {^│{□|  }%S (%S)%s　 - %s%d/%s%d(%d)%s│$} {
         #local name     {@str.Trim{%%2}};
@@ -208,13 +211,13 @@ hp -neili 格式：
         #var char[HP][走火入魔] {@str.Trim{%%1}};
     };
 
-	#action {^└─────────────{(─)*}%S─{(─)*}─┘{|ID=char.hp-neili}$} {
+    #action {^└─────────────{(─)*}%S─{(─)*}─┘{|ID=char.hp-neili}$} {
         char.hp-neili.parse.done;
-	};
+    };
 
     #alias {char.hp-neili.parse.done} {
         #local __unused {%%0};
-    	#class char-hp-parse-hp-neili kill;
+        #class char-hp-parse-hp-neili kill;
         #class char.GetHP kill;
         event.UnHandle GA {char.hp-neili};
     };
@@ -307,27 +310,43 @@ hp -neili 格式：
 } {2.0};
 
 #alias {char.HPSummarize} {
-    #format now {%T};
-    #var char[HP][更新时间] {$now};
-
-    #local color    {<160>};
+    #local color    {<168>};
     #local combat   {};
+    #local safety   {};
+
+    #if { $char[HP][气血百分比] < 30 || $char[HP][精神百分比] < 70 } {
+        #local safety {危险};
+    };
+    #elseif { $char[HP][气血百分比] > 80 && $char[HP][精神百分比] > 95 } {
+        #local safety {安全};
+    };
+
     #if { "$char[HP][战斗中]" == "true" } {
-        #format color   {<110>};
-        #format combat  { <110>战斗中<070>};
+        #if { "$safety" == "安全" } {
+            #format color   {<B040><128>};
+            #format combat  { <118>战<278> <128>安<278>};
+        };
+        #elseif { "$safety" == "危险" } {
+            #format color   {<B400><118>};
+            #format combat  { <118>战<278> <118>危<278>};
+        };
+        #else {
+            #format color   {<218>};
+            #format combat  { <118>战<278>};
+        };
     };
 
     #if { "$char[HP][忙]" == "true" } {
-        #format color   {<110>};
-        #format combat  {$combat <130>你正忙<070>};
+        #format color   {<118>};
+        #format combat  {$combat <138>忙<278>};
     };
 
     #local 每秒气血变化 {@speedo.GetSpeed{当前气血}};
     #if { ${每秒气血变化} > 0 } {
-        #local 每秒气血变化 {(<120>${每秒气血变化}<070>)};
+        #local 每秒气血变化 {(<128>${每秒气血变化}<278>)};
     };
     #elseif { ${每秒气血变化} < 0 } {
-        #local 每秒气血变化 {(<110>${每秒气血变化}<070>)};
+        #local 每秒气血变化 {(<118>${每秒气血变化}<278>)};
     };
     #else {
         #local 每秒气血变化 {};
@@ -335,10 +354,10 @@ hp -neili 格式：
 
     #local 每秒精神变化 {@speedo.GetSpeed{当前精神}};
     #if { ${每秒精神变化} > 0 } {
-        #local 每秒精神变化 {(<120>${每秒精神变化}<070>)};
+        #local 每秒精神变化 {(<128>${每秒精神变化}<278>)};
     };
     #elseif { ${每秒精神变化} < 0 } {
-        #local 每秒精神变化 {(<110>${每秒精神变化}<070>)};
+        #local 每秒精神变化 {(<118>${每秒精神变化}<278>)};
     };
     #else {
         #local 每秒精神变化 {};
@@ -346,10 +365,10 @@ hp -neili 格式：
 
     #local 每秒内力变化 {@speedo.GetSpeed{当前内力}};
     #if { ${每秒内力变化} > 0 } {
-        #local 每秒内力变化 {(<120>${每秒内力变化}<070>)};
+        #local 每秒内力变化 {(<128>${每秒内力变化}<278>)};
     };
     #elseif { ${每秒内力变化} < 0 } {
-        #local 每秒内力变化 {(<110>${每秒内力变化}<070>)};
+        #local 每秒内力变化 {(<118>${每秒内力变化}<278>)};
     };
     #else {
         #local 每秒内力变化 {};
@@ -357,10 +376,10 @@ hp -neili 格式：
 
     #local 每秒精力变化 {@speedo.GetSpeed{当前精力}};
     #if { ${每秒精力变化} > 0 } {
-        #local 每秒精力变化 {(<120>${每秒精力变化}<070>)};
+        #local 每秒精力变化 {(<128>${每秒精力变化}<278>)};
     };
     #elseif { ${每秒精力变化} < 0 } {
-        #local 每秒精力变化 {(<110>${每秒精力变化}<070>)};
+        #local 每秒精力变化 {(<118>${每秒精力变化}<278>)};
     };
     #else {
         #local 每秒精力变化 {};
@@ -377,7 +396,7 @@ hp -neili 格式：
 
     #local summarize {};
     #if { "$char[HP][战斗中]" == "true" } {
-        #format summarize {$color〔HP摘要〕<070>气血: %s%s/%s 内力: %s%s 气血恢复: %s/%s 精神: %s%s/%s 食水: %s/%s$combat}
+        #format summarize {<099>$color〔HP摘要〕<278>气血: %s%s/%s 内力: %s%s 回气: %s/%s 精神: %s%s/%s 食水: %s/%s$combat<099>}
             {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血健康度}}}
             {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
             {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
@@ -385,12 +404,12 @@ hp -neili 格式：
             {$char[HP][食物]} {$char[HP][饮水]}
     };
     #else {
-        #format summarize {$color〔HP摘要〕<070>气血: %s%s/%s 内力: %s%s 气血恢复: %s/%s 精神: %s%s/%s 精力: %s%s 食水: %s/%s(%s/%s)$combat}
+        #local jingli {@if{$chat[HP][精力百分比] < 30;{@__char_hp_colorit__{$char[HP][精力百分比]} ${每秒精力变化}}}};
+        #format summarize {<099>$color〔HP摘要〕<278>气血: %s%s/%s 内力: %s%s 回气: %s/%s 精神: %s%s/%s $jingli食水: %s/%s(%s/%s)$combat<099>}
             {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血健康度}}}
             {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
             {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
             {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{${精神健康度}}}
-            {@__char_hp_colorit__{$char[HP][精力百分比]}} {${每秒精力变化}}
             {$char[HP][食物]} {$char[HP][饮水]}
             {@speedo.GetSpeed{食物;60}} {@speedo.GetSpeed{饮水;60}};
     };
@@ -408,7 +427,7 @@ hp -neili 格式：
 
 #func {__char_hp_colorit__} {
     #local percent {@math.Int{@defaultNum{%1;0}}};
-    #return {@util.Grade{$percent;<010>;15;<110>;30;<030>;60;<130>;90;<120>;101;<160>}$percent%<070>};
+    #return {@util.Grade{$percent;<218>;15;<118>;30;<238>;60;<138>;90;<128>;101;<168>}$percent%<278>};
 };
 
 #alias {char.GetHP} {
