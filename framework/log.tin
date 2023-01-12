@@ -5,7 +5,7 @@
 模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
 版权声明：本文件属于 PaoTin++ 的一部分
 ===========
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 ===========
 */
@@ -33,8 +33,8 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #var gLog[PATH] {log};
     };
 
-    #if { "@mkdir{$gLog[PATH]/$path}" != "true" } {
-        #return {false};
+    #if { !@mkdir{$gLog[PATH]/$path} } {
+        #return 0;
     };
 
     #var gLog[PATH] {$gLog[PATH]/$path};
@@ -42,7 +42,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     load-lib option;
     option.Define {EchoCommand} {Bool} {是否回显发送的命令} {false};
 
-    #return {true};
+    #return 1;
 };
 
 #alias {mudLog}     {log.write {$gLog[socket]} {%0}};
@@ -74,7 +74,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #event {RECEIVED INPUT} {
     #local needEcho {false};
 
-    #if { @option.IsDisable{EchoCommand} } {
+    #if @option.IsDisable{EchoCommand} {
         #local needEcho {true};
     };
     #else {
@@ -104,7 +104,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #replace text {<} {\<};
         #format text {<020>SEND: <420>%p<070>} {$text};
         mudLog $text;
-        #if { @option.IsEnable{EchoCommand} } {
+        #if @option.IsEnable{EchoCommand} {
             #echo {<020>%t %s} {%Y-%m-%d %H:%M:%S} {$text};
         };
     };

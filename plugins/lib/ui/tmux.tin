@@ -22,7 +22,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #var tmux-theme {};
 
 #func {lib_ui_tmux.Init} {
-    #if { "@mkdir{{tmux/$user[id]}}" == "false" } {
+    #if { !@mkdir{{tmux/$user[id]}} } {
         errLog 创建 tmux UI 通信管道(tmux/$user[id])失败;
     };
     #return {true};

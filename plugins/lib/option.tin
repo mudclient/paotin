@@ -2,7 +2,7 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
@@ -94,23 +94,13 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {option.IsEnable} {
     #local option {%1};
     #local value {@option.Get{$option}};
-    #if { "$value" == "true" } {
-        #return 1;
-    };
-    #else {
-        #return 0;
-    };
+    #return @isTrue{$value};
 };
 
 #func {option.IsDisable} {
     #local option {%1};
     #local value {@option.Get{$option}};
-    #if { "$value" == "false" } {
-        #return 1;
-    };
-    #else {
-        #return 0;
-    };
+    #return @isFalse{$value};
 };
 
 #alias {option.Set} {
