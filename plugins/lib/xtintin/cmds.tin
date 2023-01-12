@@ -17,6 +17,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     $code;
 };
 
+#alias {TICKS} {xtt.ListTicker};
 #alias {xtt.ListTicker} {
 	#info tickers save;
 
@@ -38,6 +39,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 	};
 };
 
+#alias {ALIASES} {xtt.ListAlias};
 #alias {xtt.ListAlias} {
     #local pattern {%1};
 
@@ -117,6 +119,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+#alias {VARS} {xtt.ListVar};
 #alias {xtt.ListVar} {
     #local pattern {%1};
 
@@ -177,6 +180,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+#alias {FUNCS} {xtt.ListFunc};
 #alias {xtt.ListFunc} {
     #local pattern {%1};
 
