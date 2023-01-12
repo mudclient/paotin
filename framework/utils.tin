@@ -5,7 +5,7 @@
 模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
 版权声明：本文件属于 PaoTin++ 的一部分
 ===========
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 ===========
 */
@@ -22,11 +22,11 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local class {$info[ALIASES][$idx][class]};
 
         #if { "$name" == "$pName" && ( "$pClass" == "" || "$class" == "$pClass" ) } {
-            #return {true};
+            #return 1;
         };
     };
 
-    #return {false};
+    #return 0;
 };
 
 #func {existsFunction} {
@@ -41,17 +41,17 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local class {$info[FUNCTIONS][$idx][class]};
 
         #if { "$name" == "$pName" && ( "$pClass" == "" || "$class" == "$pClass" ) } {
-            #return {true};
+            #return 1;
         };
     };
 
-    #return {false};
+    #return 0;
 };
 
 #func {existsFile} {
     #local file {%1};
     #local output {};
-    #script output {test -f $file && echo true || test -f var/$file && echo true || echo false};
+    #script output {test -f $file && echo 1 || test -f var/$file && echo 1 || echo 0};
     #return $output[1];
 };
 
@@ -68,7 +68,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {mkdir} {
     #local dir {%1};
     #local output {};
-    #script output {mkdir -p $dir 2>/dev/null && test -d $dir && echo true || echo false};
+    #script output {mkdir -p $dir 2>/dev/null && test -d $dir && echo 1 || echo 0};
     #return $output[1];
 };
 
