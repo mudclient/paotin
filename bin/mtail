@@ -30,7 +30,7 @@ exit
 
 #event {PROGRAM START} {
     #if { "%0" == "" } {
-        #end {\};
+        #line quiet #end {\};
     };
 
     disable-all-keys;
@@ -79,7 +79,7 @@ exit
         };
         #else {
             #screen set title {NOLOG};
-            #end {\};
+            #line quiet #end {\};
         };
     };
 };
