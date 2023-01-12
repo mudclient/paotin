@@ -3,7 +3,7 @@
 /*
 本文件属于 PaoTin++ 的一部分
 ===========
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 ===========
 */
@@ -62,3 +62,13 @@ event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参�
     #line gag;
 
 } {1.000};
+
+#alias {ga.Off} {
+    #send {$TELNET[IAC]$TELNET[WILL]$TELNET[LINEMODE]\};
+    #send {$TELNET[IAC]$TELNET[DO]$TELNET[SGA]\};
+};
+
+#alias {ga.On} {
+    #send {$TELNET[IAC]$TELNET[WILL]$TELNET[LINEMODE]\};
+    #send {$TELNET[IAC]$TELNET[DONT]$TELNET[SGA]\};
+};
