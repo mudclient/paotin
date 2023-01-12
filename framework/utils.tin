@@ -10,6 +10,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ===========
 */
 
+#func {existsSession} {
+    #local session {%1};
+    #if { !@existsFunction{$session} && {@{$session}{true}} == {true} } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
 #func {existsAlias} {
     #local pName     {%1};
     #local pClass    {%2};
