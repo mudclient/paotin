@@ -2,20 +2,22 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#var TELNET[IAC]  {\xFF};
-#var TELNET[DONT] {\xFE};
-#var TELNET[DO]   {\xFD};
-#var TELNET[WONT] {\xFC};
-#var TELNET[WILL] {\xFB};
-#var TELNET[SB]   {\xFA};
-#var TELNET[SE]   {\xF0};
-#var TELNET[GMCP] {\xC9};
-#var TELNET[MXP]  {\x5B};
-#var TELNET[CR]   {\x0D};
-#var TELNET[LF]   {\x0A};
-#var TELNET[GA]   {\xF9};
-#var TELNET[EOR]  {\xEF};
+#var TELNET[IAC]        {\xFF};
+#var TELNET[DONT]       {\xFE};
+#var TELNET[DO]         {\xFD};
+#var TELNET[WONT]       {\xFC};
+#var TELNET[WILL]       {\xFB};
+#var TELNET[SB]         {\xFA};
+#var TELNET[SE]         {\xF0};
+#var TELNET[GMCP]       {\xC9};
+#var TELNET[MXP]        {\x5B};
+#var TELNET[CR]         {\x0D};
+#var TELNET[LF]         {\x0A};
+#var TELNET[GA]         {\xF9};
+#var TELNET[EOR]        {\xEF};
+#var TELNET[SGA]        {\x03};
+#var TELNET[LINEMODE]   {\x22};
