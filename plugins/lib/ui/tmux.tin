@@ -68,7 +68,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         {$tmux-pane-border-format[$theme][right]};
         {$tmux-pane-border-format[DEFAULT][right]}}};
 
-    #line sub functions #line sub var #line sub escapes #line sub colors {
+    #line sub {functions;var;escapes;colors} {
         #format left   {%s} {$left};
         #format centre {%s} {$centre};
         #format right  {%s} {$right};
@@ -93,7 +93,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #local file {tmux/$char[档案][账号]/game-border};
     #script {tmp} {echo '$line' > $file};
-    #script {tmp} {tmux refresh};
+    #script {tmp} {tmux refresh 2>/dev/null};
 };
 
 #func {TMUX} {
