@@ -6,7 +6,28 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#nop 字符串默认值;
+#nop 本文件是 xtintin 的一部分，实现了一些默认值处理函数。;
+
+///=== {
+///// 默认值处理函数：
+//
+// #@ isEmpty <字符串>
+//    判断字符串是否为空，为空则返回真。
+// };
+#func {isEmpty} {
+    #local value {%0};
+
+    #if { "$value" == "" } {
+        #return 1;
+    };
+
+    #return 0;
+};
+
+///=== {
+// #@ default <字符串> <默认值>
+//    判断字符串是否为空，为空则返回默认值。
+// };
 #func {default} {
     #local value    {%1};
     #local default  {%2};
@@ -18,7 +39,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$value};
 };
 
-#nop 数值默认值;
+///=== {
+// #@ defaultNum <字符串> <默认值>
+//    如果字符串为空，或者格式不像是一个数值（允许负数、小数）、或者等于 0，则返回默认值。
+// };
 #func {defaultNum} {
     #local value    {%1};
     #local default  {%2};
@@ -38,8 +62,28 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$value};
 };
 
-#nop 变量展开的时候，如果变量不存在会直接展开成 $var 形式的变量名自身，;
-#nop 这种情况下也允许用 default 值代替;
+///=== {
+// #@ isEmptyVar <字符串>
+//    判断参数是否为空，或者变量展开失败。如果是则返回真。
+// };
+#func {isEmptyVar} {
+    #local value {%0};
+
+    #if { "$value" == "" } {
+        #return 1;
+    };
+
+    #if { "$value" == "$%*" } {
+        #return 1;
+    };
+
+    #return 0;
+};
+
+///=== {
+// #@ defaultVar <字符串> <默认值>
+//    判断参数是否为空，或者变量展开失败。如果是则返回默认值。
+// };
 #func {defaultVar} {
     #local value    {%1};
     #local default  {%2};
@@ -51,8 +95,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$value};
 };
 
-#nop 变量展开的时候，如果变量不存在会直接展开成 $var 形式的变量名自身，;
-#nop 这种情况下也允许用 default 值代替;
+///=== {
+// #@ defaultNumVar <字符串> <默认值>
+//    判断参数是否不像是一个数字，或者变量展开失败。如果是则返回默认值。
+//
+///// 由于 TinTin++ 的变量展开有个特点，那就是如果不存在变量 foo，则 $foo 展开的
+///// 结果并不是空字符串，而是字符串 "$foo"，会导致误以为不是空串。
+///// 以上三个函数将该情形也视同为空字符串并做相应处理。
+// };
 #func {defaultNumVar} {
     #local value    {%1};
     #local default  {%2};
@@ -70,30 +120,4 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #return {$value};
-};
-
-#nop 判断参数是否为空;
-#func {isEmpty} {
-    #local value {%0};
-
-    #if { "$value" == "" } {
-        #return 1;
-    };
-
-    #return 0;
-};
-
-#nop 判断参数是否为空，或者变量展开失败;
-#func {isEmptyVar} {
-    #local value {%0};
-
-    #if { "$value" == "" } {
-        #return 1;
-    };
-
-    #if { "$value" == "$%*" } {
-        #return 1;
-    };
-
-    #return 0;
 };

@@ -1,11 +1,91 @@
-#func {mslpExec} {
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#nop 本文件是 xtintin 的一部分，实现了一些 MSLP 工具函数。;
+
+///=== {
+///// MSLP 工具函数：
+//
+// #@ mslp.Send <命令> <文本>
+//    生成链接。当点击指定的文本时，会向服务器发送指定的命令。本函数返回生成的链接代码，#echo 后即可生效。
+// };
+#func {mslp.Send} {
+    #local send {%1};
+    #local text {%2};
+    #return {\e]68;1;SEND;$send\a\e[4m$text\e[24m};
+};
+
+///=== {
+// #@ mslp.Exec <代码> <文本>
+//    生成链接。当点击指定的文本时，会执行指定的代码。本函数返回生成的链接代码，#echo 后即可生效。
+// };
+#func {mslp.Exec} {
     #local exec {%1};
     #local text {%2};
     #return {\e]68;1;EXEC;$exec\a\e[4m$text\e[24m};
 };
 
-#func {mslpSend} {
-    #local send {%1};
+///=== {
+// #@ mslp.Help <关键字> <文本>
+//    生成链接。当点击指定的文本时，会执行 HELP <关键字>。本函数返回生成的链接代码，#echo 后即可生效。
+// };
+#func {mslp.Help} {
+    #local word {%1};
     #local text {%2};
-    #return {\e]68;1;SEND;$send\a\e[4m$text\e[24m};
+    #return {\e]68;1;EXEC;HELP $word\a\e[4m$text\e[24m};
 };
+
+///=== {
+// #@ mslp.Module <模块名称> <文本>
+//    生成链接。当点击指定的文本时，会执行 MOD <模块名称>。本函数返回生成的链接代码，#echo 后即可生效。
+// };
+#func {mslp.Module} {
+    #local name {%1};
+    #local text {%2};
+    #return {\e]68;1;EXEC;MOD $name\a\e[4m$text\e[24m};
+};
+
+#alias {xtt.mslp-helper} {
+    #local cmd {%1};
+    $cmd;
+    #buffer end;
+};
+
+///=== {
+// #@ mslp.TinTin <关键字> <文本>
+//    生成链接。当点击指定的文本时，会执行 #help <关键字>。本函数返回生成的链接代码，#echo 后即可生效。
+// };
+#func {mslp.TinTin} {
+    #local word {%1};
+    #local text {%2};
+    #return {\e]68;1;EXEC;xtt.mslp-helper {#help $word}\a\e[4m$text\e[24m};
+};
+
+///=== {
+// #@ mslp.Var <变量名> <文本>
+//    生成链接。当点击指定的文本时，会显示变量的值。本函数返回生成的链接代码，#echo 后即可生效。
+// };
+#func {mslp.Var} {
+    #local name {%1};
+    #local text {%2};
+    #return {\e]68;1;EXEC;xtt.mslp-helper {#var $name}\a\e[4m$text\e[24m};
+};
+
+///=== {
+// #@ mslp.Alias <别名> <文本>
+//    生成链接。当点击指定的文本时，会显示别名的代码。本函数返回生成的链接代码，#echo 后即可生效。
+// };
+#func {mslp.Alias} {
+    #local name {%1};
+    #local text {%2};
+    #return {\e]68;1;EXEC;xtt.mslp-helper {#alias $name}\a\e[4m$text\e[24m};
+};
+
+///=== {
+///// MSLP 需要鼠标支持。请确认你的终端已经正确配置了鼠标，并在 PaoTin++ 中打开了鼠标支持。
+// };

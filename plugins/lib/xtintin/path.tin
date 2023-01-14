@@ -6,33 +6,66 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#func {dirName}     { #return @convertDir{name; %1; %2}; };
-#func {shortDir}    { #return @convertDir{short; %1; %2}; };
-#func {longDir}     { #return @convertDir{long; %1; %2}; };
+#nop 本文件是 xtintin 的一部分，实现了一些方向和路径运算函数;
 
-#func {reverseDir}  {
+///=== {
+///// 方向和路径运算函数：
+//
+// #@ dir.Name <方向全拼|方向缩写> [<严格模式>]
+//    给出指定方向的中文名称。方向可以通过英文单词或者英文单词的缩写给出。
+//
+// #@ dir.Short <方向全拼> [<严格模式>]
+//    给出方向对应的英文单词缩写。
+//
+// #@ dir.Long <方向缩写> [<严格模式>]
+//    给出方向对应的英文单词全拼。
+//
+// #@ dir.Reverse <方向> [<严格模式>]
+//    给出方向对应的相反方向。
+//
+///// 以上函数中，凡是支持严格模式参数的，如果严格模式为 true，则给错误方向给出空字符串结果。
+// };
+#func {dir.Name}    { #return @__dir_convert_dir__{name; %1; %2}; };
+#func {dir.Short}   { #return @__dir_convert_dir__{short; %1; %2}; };
+#func {dir.Long}    { #return @__dir_convert_dir__{long; %1; %2}; };
+
+#func {dir.Reverse}  {
     #if { "%1" == "enter{| .*}" } {
         #return {out};
     };
     #else {
-        #return @convertDir{reverse; %1; %2};
+        #return @__dir_convert_dir__{reverse; %1; %2};
     };
 };
 
-#func {reverseCmds} {
-    #local cmds     {%0};
-    #local newCmds  {};
+///=== {
+// #@ dir.IsDir <方向全拼|方向缩写>
+//    检查参数是否是一个合格的方向指令。
+// };
+#func {dir.IsDir} {
+    #local cmd {%0};
+    #if { "@dir.Name{$cmd}" == "" } {
+        #return 0;
+    };
+    #else {
+        #return 1;
+    };
+};
 
-    #foreach {$cmds} {item} {
-        #if { "$newCmds" == "" } {
-            #local newCmds {@reverseDir{$item}};
-        };
-        #else {
-            #format {newCmds} {%s;%s} {@reverseDir{$item}} {$newCmds};
-        };
+///=== {
+// #@ path.Reverse <路径>
+//    给出路径对应的反向路径。
+// };
+#func {path.Reverse} {
+    #local path     {%0};
+    #local newPath  {};
+
+    #local step {};
+    #foreach {$path} {step} {
+        #list newPath insert {1} {@dir.Reverse{$step}};
     };
 
-    #return {$newCmds};
+    #return {@slist.FromList{$newPath}};
 };
 
 #var xtt.dir.table {
@@ -85,7 +118,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {enter}     {{name}{进去}   {short}{enter}  {long}{enter}   {reverse}{out}      }
 };
 
-#func {convertDir} {
+#func {__dir_convert_dir__} {
     #local field        {%1};
     #local dir          {%2};
     #local restricted   {%2};
@@ -107,4 +140,48 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #else {
         #return {$entry[$field]};
     };
+};
+
+///=== {
+// #@ path.Compact <路径>
+//    压缩路径。返回压缩后的新路径。
+// };
+#func {path.Compact} {
+    #local path {@list.FromSlist{%0}};
+    #local count {&path[]};
+    #if { $count == 0 } {
+        #return {};
+    };
+
+    #local idx {1};
+    #while { $idx < $count } {
+        #local current {$path[$idx]};
+        #local next {$path[@math.Eval{$idx + 1}]};
+        #if { "@dir.Long{$current}" !== "@dir.Reverse{@dir.Long{$next}}" } {
+            #math idx {$idx + 1};
+            #continue;
+        };
+
+        #list path delete $idx 2;
+        #local idx      {@math.Max{1;@math.Eval{$idx - 2}}};
+        #local count    {@math.Eval{$count - 2}};
+    };
+
+    #return {@slist.FromList{$path}};
+};
+
+///=== {
+// #@ path.Long <路径>
+//    返回长版本的路径。路径中的每个方向命令都会被扩展成完整的单词。
+// };
+#func {path.Long} {
+    #return {@fp.Transform{{%0};{\@dir.Long{VALUE}}}};
+};
+
+///=== {
+// #@ path.Short <路径>
+//    返回长版本的路径。路径中的每个方向命令都会被简化。
+// };
+#func {path.Short} {
+    #return {@fp.Transform{{%0};{\@dir.Short{VALUE}}}};
 };

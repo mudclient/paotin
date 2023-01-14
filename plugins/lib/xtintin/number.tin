@@ -6,27 +6,84 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#func {eval}    {#math result {%0}};
+#nop 本文件是 xtintin 的一部分，实现了一些数值计算函数;
 
-#func {random} {
+///=== {
+///// 数值计算函数：
+//
+// #@ math.Eval <字符串>
+//    将给定字符串作为算术表达式，进行算术运算，并返回结果。参见 #help math。
+//    本函数也可以简写为 eval，两个名称用途和用法完全相同。
+// };
+#func {eval}        {#math result {%0}};
+#func {math.Eval}   {#math result {%0}};
+
+///=== {
+// #@ math.Random <最小值> <最大值>
+//    给出一个介于最小值和最大值之间的随机整数，注意随机范围包含了最小值和最大值，为闭区间。
+//    本函数也可以简写为 random，两个名称用途和用法完全相同。
+// };
+#func {random} {#return @math.Random{%0}};
+#func {math.Random} {
     #local min {%1};
     #local max {%2};
-    #local range {@eval{$max - $min + 1}};
+    #local range {@math.Eval{$max - $min + 1}};
 
     #math result { ( 1 d $range ) + $min - 1 };
 };
 
-#func {int}     {#return @floor{@eval{%0 + 0.5}}};
-#func {floor}   {#format result {%d} {%0}};
-#func {ceil}    {#return @eval{@floor{%0} + 1}};
+///=== {
+// #@ math.Int <值>
+//    对参数值按照四舍五入取整。
+//    本函数也可以简写为 int，两个名称用途和用法完全相同。
+//
+// #@ math.Floor <值>
+//    对参数值向下取整。
+//
+// #@ math.Ceil <值>
+//    对参数值向上取整。
+// };
+#func {int}         {#return @math.Floor{1.000 * %0 + 0.5}};
+#func {math.Int}    {#return @math.Floor{1.000 * %0 + 0.5}};
+#func {math.Floor}  {#format result {%d} {1.000 * %0}};
+#func {math.Ceil} {
+    #local value @math.Eval{1.000 * %0};
+    #local floor @math.Floor{%0};
+    #if { $floor < $value } {
+        #return @math.Eval{$floor + 1};
+    };
+    #else {
+        #return $floor;
+    };
+};
 
-#func {power}   {#return @eval{%1 ** %2}};
-#func {root}    {#return @eval{%1 // %2}};
+///=== {
+// #@ math.Power <底数> <指数>
+//    幂运算。
+//
+// #@ math.Root <幂> <指数>
+//    开方运算。
+// };
+#func {math.Power}  {#return @math.Eval{%1 ** %2}};
+#func {math.Root}   {#return @math.Eval{%1 // %2}};
 
-#func {abs}     {#if {%0 >= 0} {#return %0} {#math result {- %0}}};
-#func {sign}    {#if {%0 >= 0} {#return 1}  {#return -1}};
+///=== {
+// #@ math.Abs <值>
+//    取绝对值。
+//
+// #@ math.Sign <值>
+//    取符号。
+// };
+#func {math.Abs}    {#if {%0 >= 0} {#return %0} {#math result {- %0}}};
+#func {math.Sign}   {#if {%0 >= 0} {#return 1}  {#return -1}};
 
-#func {max} {
+///=== {
+// #@ math.Max <值1> [<值2> ...]
+//    求一系列值的最大值。
+//    本函数也可以简写为 max，两个名称用途和用法完全相同。
+// };
+#func {max} {#return @math.Max{%0}};
+#func {math.Max} {
     #var result {%1};
     #local elem {};
     #foreach {%0} {elem} {
@@ -39,7 +96,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
-#func {min} {
+///=== {
+// #@ math.Min <值1> [<值2> ...]
+//    求一系列值的最小值。
+//    本函数也可以简写为 min，两个名称用途和用法完全相同。
+// };
+#func {min} {#return @math.Min{%0}};
+#func {math.Min} {
     #var result {%1};
     #local elem {};
     #foreach {%0} {elem} {
@@ -52,7 +115,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
-#func {sum} {
+///=== {
+// #@ math.Sum <值1> [<值2> ...]
+//    求一系列值的和。
+//    本函数也可以简写为 sum，两个名称用途和用法完全相同。
+// };
+#func {sum} {#return @math.Sum{%0}};
+#func {math.Sum} {
     #local sum {0};
     #local tmp {};
     #foreach {%0} {tmp} {
@@ -61,7 +130,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$sum};
 };
 
-#func {avg} {
+///=== {
+// #@ math.Avg <值1> [<值2> ...]
+//    求一系列值的算术平均值。
+//    本函数也可以简写为 avg，两个名称用途和用法完全相同。
+// };
+#func {avg} {#return @math.Avg{%0}};
+#func {math.Avg} {
     #var sum {0};
     #local tmp {};
     #local count {0};
@@ -74,11 +149,17 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return 0;
     };
     #else {
-        #return @eval{$sum / $count};
+        #return @math.Eval{$sum / $count};
     };
 };
 
-#func {c2d} {
+///=== {
+// #@ math.ParseCN <中文数字串>
+//    将中文数字串转换成十进制整数。
+//    本函数也可以简写为 c2d，两个名称用途和用法完全相同。
+// };
+#func {c2d} {#return @math.ParseCN{%0}};
+#func {math.ParseCN} {
     #local string {%0};
 
     #local number1  {0};    #nop 个位（覆盖）;
@@ -87,7 +168,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local number4  {0};    #nop 亿位（乘法）;
 
     #local ch {};
-	#parse {$string} {ch} {
+    #parse {$string} {ch} {
         #if { "$ch" == "{1|2|3|4|5|6|7|8|9|0|\.}" } {
             #format number1 {%d} {$number1$ch};
             #continue;
@@ -138,7 +219,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return $number;
 };
 
-#func {grade} {
+///=== {
+// #@ util.Grade <当前值> <地板结果> <阈值1> <结果1> [...]
+//    根据当前值，计算落入哪个区间，返回对应的结果。阈值被定义为区间的下边沿。
+//    如果当前值比最小的区间的阈值还要小，则返回地板结果。
+// };
+#func {util.Grade} {
     #local current {@defaultNum{%1;0}};
     #local default {%2};
 
@@ -151,8 +237,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #list grade create {};
     #local count {0};
     #while { $count < &args[] } {
-        #local threshold    {$args[@eval{$count + 1}]};
-        #local value        {$args[@eval{$count + 2}]};
+        #local threshold    {$args[@math.Eval{$count + 1}]};
+        #local value        {$args[@math.Eval{$count + 2}]};
         #list grade {add} {{
             {threshold}{$threshold}
             {value}{$value}

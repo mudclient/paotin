@@ -2,7 +2,7 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
@@ -52,7 +52,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             };
         };
     };
-    #elseif { @indexOfStrList{{$aliasList}; $what} > 0 } {
+    #elseif { @slist.IndexOf{{$aliasList}; $what} > 0 } {
         #var __XTinTinAPIDoc__ {};
         $what 'XTinTinAPI;
         #if { "$__XTinTinAPIDoc__" == "" } {
@@ -62,7 +62,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             #local _ @xtt.GenHelpDoc{{$__XTinTinAPIDoc__}};
         };
     };
-    #elseif { @indexOfStrList{{$funcList}; $what} > 0 } {
+    #elseif { @slist.IndexOf{{$funcList}; $what} > 0 } {
         #var __XTinTinAPIDoc__ {};
         #local {funcCall} {#local _ {@$what{'XTinTinAPI}}};
         $funcCall;
@@ -211,3 +211,263 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #return $ok;
 };
+
+#var xtt.module-doc {};
+
+#alias {HELP} {xtt.Help %0; #buffer end};
+#alias {xtt.Help} {
+    #local keyword {%1};
+    #local len {@str.Len{$keyword}};
+
+    #if { $len == 0 } {
+        warnLog 用法: HELP <关键字>;
+        #return;
+    };
+
+    #local maybe {};
+    #local module {};
+    #foreach {*xtt.module-doc[]} {module} {
+        #if { "$module" == "%*$keyword%*" } {
+            #local likely {@math.Eval{$len * 100 / @str.Len{$module}}};
+            #list maybe {add} {{
+                {likely} {$likely}
+                {module} {$module}
+                {keyword}{__MODULE__}
+            }};
+            #continue;
+        };
+
+        #local key {};
+        #foreach {*xtt.module-doc[$module][]} {key} {
+            #if { "$key" == "__MODULE__" } {
+                #continue;
+            };
+            #if { "$key" == "%*$keyword%*" } {
+                #local likely {@math.Eval{$len * 100 / @str.Len{$key}}};
+                #list maybe {add} {{
+                    {likely} {$likely}
+                    {module} {$module}
+                    {keyword}{$key}
+                }};
+            };
+        };
+    };
+
+    #local doc {};
+    #if { &maybe[] == 0 } {
+        errLog 没有找到关键字「$keyword」;
+        #return;
+    };
+
+    #local doc {$maybe[1]};
+
+    #if { &maybe[] > 1 } {
+        #list maybe {indexate} {likely};
+        #list maybe order;
+        #local doc {$maybe[-1]};
+        #if { "$doc[module]/$doc[keyword]" == "%*/$keyword/" } {
+            okLog 以下是模块 $doc[module] 的文档。;
+        };
+        #elseif { $doc[likely] < 100 } {
+            warnLog 找到 &maybe[] 个关键字，我猜你想看的是 <110>$doc[keyword]<120>@$doc[module]<099>;
+        };
+        #else {
+            okLog 以下是关键字 $doc[keyword] 的文档。;
+        };
+    };
+
+    #local module {$doc[module]};
+    #local keyword {$doc[keyword]};
+
+    #local idx {};
+    #loop 1 {&xtt.module-doc[$module][$keyword][]} {idx} {
+        #local line {$xtt.module-doc[$module][$keyword][$idx]};
+        #regex {$line} {{##|#@} %S %*} {
+            #if { "&1" == "##" } {
+                #echo {<099>%s} {<B407><128> ## 别名 <138>&2 <868>&3<099>};
+            };
+            #else {
+                #echo {<099>%s} {<B04a><128> ## 函数 <138>&2 <868>&3<099>};
+            };
+        } {
+            #echo {<099>%s} {$line};
+        };
+    };
+
+    #if { &maybe[] > 1 } {
+        warnLog 也许你还想看看：;
+        #local idx {};
+        #loop {&maybe[]-1} {1} {idx} {
+            #if { "$maybe[$idx][keyword]" == "__MODULE__" } {
+                #echo {%s} {@mslp.Exec{xtt.Help $maybe[$idx][module];<120>$maybe[$idx][module] 模块<099>}};
+            };
+            #else {
+                #echo {%s} {@mslp.Exec{xtt.Help $maybe[$idx][keyword];<120>$maybe[$idx][module] 模块的 <110>$maybe[$idx][keyword]<099>}};
+            };
+        };
+    };
+};
+
+#alias {///===} {xtt.Doc};
+
+#alias {xtt.Doc} {
+    #local doc {%1};
+    #replace {doc} {;} {\x3b};
+    #replace {doc} {\x7B} {\x7b};
+    #replace {doc} {\x7D} {\x7d};
+    #replace {doc} {///// } {;== };
+    #replace {doc} {/////;} {;== ;};
+    #replace {doc} {// } {;= };
+    #replace {doc} {//;} {;= ;};
+
+    #class xtt.doc.parse open;
+
+    #var xtt-doc-keyword {};
+
+    #alias {xtt.doc.add.module-doc} {
+        #local doc {%%1};
+
+        #regex {$doc} {== %*} {
+            #list {xtt.module-doc[$MODULE][__MODULE__]} add {<060>&1<099>};
+        };
+    };
+
+    #alias {xtt.doc.add.keyword-doc} {
+        #local doc {%%1};
+        #regex {$doc} {={([ ]{3,})- (\d\.\s*)?(\S+?)(: |：)| }%*} {
+            #local text {};
+            #if { "&1" != " " } {
+                #local text {<099>&2- <168>&3&4<278>&5&6};
+            };
+            #else {
+                #local text {<099> &6};
+            };
+            #list {xtt.module-doc[$MODULE][__MODULE__]} add {$text};
+            #if { "$xtt-doc-keyword" != "" } {
+                #list {xtt.module-doc[$MODULE][$xtt-doc-keyword]} add {$text};
+            };
+        };
+    };
+
+    #alias {xtt.doc.found.keyword} {
+        #local doc {%%1};
+        #if { !@isEmpty{$xtt-doc-keyword} } {
+            #LOCAL idx {};
+            #loop {&xtt.module-doc[$MODULE][$xtt-doc-keyword][]} {1} {idx} {
+                #if @isEmpty{$xtt.module-doc[$MODULE][$xtt-doc-keyword][$idx]} {
+                    #list {xtt.module-doc[$MODULE][$xtt-doc-keyword]} delete {$idx};
+                };
+            };
+        };
+        #regex {$doc} {= {##|#@} %S %*} {
+            #var xtt-doc-keyword {&2};
+            xtt.doc.add.keyword-doc {= &1 &2 &3};
+        };
+    };
+    #class xtt.doc.parse close;
+
+    #local line {};
+    #foreach {$doc} {line} {
+        #switch {{$xtt-doc-keyword/$line}} {
+            #case {{/}}             {#0};
+            #case {{%*/= #@ %S %*}} {xtt.doc.found.keyword {$line}};
+            #case {{%*/= ## %S %*}} {xtt.doc.found.keyword {$line}};
+            #case {{%*/= %*}}       {xtt.doc.add.keyword-doc {$line}};
+            #default                {xtt.doc.add.module-doc {$line}; #var xtt-doc-keyword {}};
+        };
+    };
+
+    #class xtt.doc.parse kill;
+};
+
+///=== {
+///// xtintin 是一个 TinTin++ 功能扩展集合，主要包含一些 MUD 无关的函数和别名，用于对 TinTin++ 的语法进行增强。
+///// 类似于其它语言的标准库。
+/////
+///// 本文档采用 xtintin 的文档化注释系统生成。
+///// 有关 xtintin 的文档化注释，请查看 HELP xtt.Doc。
+/////
+// ## DataType
+//    打印 TinTin++ 和 xtintin 的<130>数据类型<299>说明文档。
+//
+//    TinTin++ 中存在几种不同的数据类型，xtintin 基于这些数据类型扩展了一些函数，
+//    以增强对它们的处理能力。下面简单予以介绍：
+//
+//      - 字符串: 简单变量，可以包含拉丁字母、阿拉伯数字、标点符号、UTF-8 中文、表情符号。
+//            理论上，所有其它类型的变量都有字符串表达形式，也都可以看作是字符串来操作。
+//
+//            字符串支持变量内插，也就是说字符串当中出现的变量和复合变量表达式都会被替换
+//            成相应的值，而函数调用则会被替换成调用结果。参见 #help SUBSTITUTIONS
+//
+//      - 数值: TinTin++ 中并不严格区分字符串和数值，凡是内容长得像是数字一样的字符串，都
+//            可以直接当作数值来使用，主要是进行算术运算。大部分场合下数字都像字符串一样。
+//            只有少数几个场合才会被当成数值，请参考 #help math。
+//
+//      - 布尔值: TinTin++ 中的 bool 值可以用来进行布尔逻辑运算，或者作为条件判断的条件。
+//            1 表示真，0 表示假。为了提高可读性，PaoTin++ 允许用 true 来表示真，用 false
+//            来表示假。
+//
+//      - 正则表达式: 正则表达式是具有特殊含义的字符串。仅在正则表达式上下文中生效。
+//            TinTin++ 中有两类正则表达式，一类是 TinTin++ 自身的语法，参见 #help regex，
+//            还有一类是 pcre 语法，参见 #help pcre。有关 pcre 的更多信息和高级用法，可以
+//            参考 man pcre 和 man pcresyntax。
+//
+//      - 字符串列表: 字符串列表是由多个字符串构成的一个列表，多个字符串之间以分号隔开。
+//            例如 {a;b;c;d}。如前所述，字符串列表本身也可以看作是一个字符串。但由于其
+//            特殊的结构，可以视作是多个字符串构成的序列。
+//
+//            TinTin++ 原生对字符串列表的支持不多，仅可用来遍历，或者是作为 #list 命令的
+//            参数。xtintin 对它进行了扩充，并基于字符串列表实现了集合运算。
+//
+//            还有另一种字符串列表，那就是用花括号代替分号分隔的字符串序列，例如
+//            {a}{b}{c}{d}，也被称为花括号列表，由于花括号列表在使用时存在一些限制，
+//            并且大部分情况下可以用分号分隔的字符串列表代替，所以不建议大家使用。
+//            即使如此，在许多要求使用字符串列表的场合，仍可接受大括号列表。本文档中将
+//            不再特别说明，请自行体会。
+//
+//      - 表格: 表格是指由多组键值对构成的一种高级结构。类似与其它编程语言的 map(C++)、
+//            hash(Perl)、dict(Python)、table(Lua)、Object(JSON)。例如：
+//
+//            {a}{AAA}{b}{BBB}{c}{CCC}
+//
+//            习惯上一般把 a/b/c 称为 KEY(键)，把 AAA/BBB/CCC 称为 VALUE(值)。键和值
+//            都可以是任意字符串。但习惯上 KEY 一般是一个简单字符串，而 VALUE 则可以
+//            包含复杂的数据结构（别忘了 TinTin++ 里任何数据结构都可以当作是字符串），
+//            因此表格实际上是可以嵌套的。TinTin++ 为嵌套的表格提供了专门的语法，可以
+//            方便地访问其中的元素。
+//
+//            请注意表格中的键值对通常被视作是没有顺序的。
+//
+//      - 列表: 列表实际上是一种特殊的表格，也就是说，这个表格的所有键都是数值，
+//            并且是按顺序排列的、从 1 开始的。参见 #help list。
+//
+//            尽管如此，但列表在内存中的结构却和看上去并不相同。内存中的列表可以用
+//            #list 命令高效操作，花括号在内存中实际上并不存在，只是在代码中和输出
+//            表达中为了区分键和值的边界而存在。
+//
+//            和表格一样，列表的值可以存储任意字符串，从而达到嵌套的目的。
+//
+//      - 表格列表: 表格列表不是一种新的数据结构，只是说如果一个列表的所有值都是
+//            同一种格式的表格，那么这个数据结构就可以被称为表格列表。TinTin++ 和
+//            xtintin 都为表格列表提供了更多的支持。参见 #help list。
+//
+//      - 嵌套数据结构: 上面已经提到，所有的数据结构都可以被当作是字符串。而字符串
+//            又是 TinTin++ 中最基本的数据结构。所以这就为嵌套提供了语法基础。
+//            嵌套的数据结构有许多用处，最常见的比如表格列表。此外还可以模拟面向对象
+//            编程，或者是抽象数据类型。请自行体会。
+//
+//    你可以通过 #help lists 来了解详细说明。或者是参考小乖乖的中文手册:
+//    https://github.com/zixijian/tt/blob/master/Wiki.md#lists
+//
+///// 下面是 xtintin 的全部内容：
+// };
+
+#alias {xtt.Usage} {
+    #local name     {%1};
+    #local message  {@default{%2;用法不对}};
+
+    errLog $message。正确用法如下：;
+    xtt.Help $name;
+};
+
+#alias {DataType} {HELP DataType};

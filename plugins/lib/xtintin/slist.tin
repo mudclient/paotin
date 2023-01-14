@@ -1,0 +1,435 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#nop 本文件是 xtintin 的一部分，实现了一些字符串列表处理函数;
+
+///=== {
+///// 字符串列表处理函数：
+//
+// #@ slist.FromList <列表>
+//    将列表转换为字符串列表。
+//    <119>注意<299>，由于 TinTin++ 自身语法的缺陷，字符串列表的第一个元素只能是
+//    简单字符串，不能是列表、字符串列表、表格，其余元素不受此限制。
+// };
+#func {slist.FromList} {
+    #local list {%0};
+
+    #if { &list[] == 0 } {
+        #return {};
+    };
+
+    #local output {};
+    #local idx {};
+    #loop {1} {&list[]} {idx} {
+        #local elem {$list[$idx]};
+        #local complex {false};
+        #if { {$elem} == {%*;%*} || {$elem} == {{\{.*\}}} } {
+            #local complex {true};
+        };
+
+        #if { $idx == 1 } {
+            #if { @isTrue{$complex} } {
+                #line sub {var;escapes;secure} #cat output {$elem};
+            };
+            #else {
+                #cat output {$elem};
+            };
+        };
+        #elseif { @isTrue{$complex} } {
+            #cat output {;{$elem}};
+        };
+        #else {
+            #cat output {;$elem};
+        };
+    };
+
+    #return {$output};
+};
+
+///=== {
+// #@ slist.Size <字符串列表>
+//    计算字符串列表中一共有几项内容。
+// };
+#func {slist.Size} {
+    #local l {};
+    #list l create {%0};
+    #list l size result;
+};
+
+///=== {
+// #@ slist.Append <字符串列表> <字符串>
+//    往字符串列表里追加新内容。
+//    <119>注意<299>，由于 TinTin++ 自身语法的缺陷，字符串列表的第一个元素只能是
+//    简单字符串，不能是列表、字符串列表、表格，其余元素不受此限制。
+// };
+#func {slist.Append} {
+    #local list {%1};
+    #local str  {%2};
+
+    #if { {$list} === {} } {
+        #line sub {var;secure} #cat list $str;
+    };
+    #elseif { "$str" == "%*;%*" } {
+        #cat list {;{$str}};
+    };
+    #elseif { "&str" == "{.*}" } {
+        #cat list {;{$str}};
+    };
+    #else {
+        #cat list {;$str};
+    };
+
+    #return {$list};
+};
+
+///=== {
+// #@ slist.Insert <字符串列表> <位置> <字符串>
+//    在字符串列表的指定位置插入新内容，元素位置从 1 开始计。
+//    <119>注意<299>，由于 TinTin++ 自身语法的缺陷，字符串列表的第一个元素只能是
+//    简单字符串，不能是列表、字符串列表、表格，其余元素不受此限制。
+// };
+#func {slist.Insert} {
+    #local list     {%1};
+    #local index    {%2};
+    #local str      {%3};
+
+    #local l {};
+    #list l create {%1};
+
+    #local l {@list.Extend{{$l};@math.Eval{$index - 1}}};
+
+    #if { $index > &l[] } {
+        #list l add {{$str}};
+    };
+    #else {
+        #if { $index == 1 } {
+            #line sub {var;secure} #format str {%s} $str;
+        };
+        #list l insert {$index} {$str};
+    };
+
+    #return {@slist.FromList{$l}};
+};
+
+///=== {
+// #@ slist.Remove <字符串列表> <位置> [<N>]
+//    删除字符串列表中，从指定位置开始的连续 N 个元素，元素位置从 1 开始计。
+//    N 为可选值，默认为 1。
+// };
+#func {slist.Remove} {
+    #local index    {%2};
+    #local amount   {@defaultNum{%3;1}};
+
+    #local l {};
+    #list l create {%1};
+
+    #list l delete {$index} {$amount};
+
+    #return {@slist.FromList{$l}};
+};
+
+///=== {
+// #@ slist.IndexOf <字符串列表> <字符串>
+//    从字符串列表中查找某个字符串，并返回其位置（从 1 开始计），0 表示没找到。
+// };
+#func {slist.IndexOf} {
+    #local list {%1};
+    #local str  {%2};
+
+    #local idx {0};
+    #local elem {};
+    #foreach {$list} {elem} {
+        #math idx {$idx + 1};
+        #if { {$elem} === {$str} } {
+            #return $idx;
+        };
+    };
+
+    #return 0;
+};
+
+///=== {
+// #@ slist.Find <字符串列表> <正则表达式>
+//    从字符串列表中按顺序查找某个模式，并返回第一个符合模式的元素的位置（从 1 开始计），0 表示没找到。
+// };
+#func {slist.Find} {
+    #local list {%1};
+    #local str  {%2};
+
+    #local idx {0};
+    #local elem {};
+    #foreach {$list} {elem} {
+        #math idx {$idx + 1};
+        #if { "$elem" == "$str" } {
+            #return $idx;
+        };
+    };
+
+    #return 0;
+};
+
+///=== {
+// #@ slist.Filter <字符串列表> <正则表达式>
+//    遍历字符串列表，根据正则表达式过滤元素并生成新字符串列表。如果条件为真则收集，否则跳过。
+//    本函数与 select 作用类似。但 select 支持条件表达式，可进行逻辑运算，本函数仅支持模式匹配。
+// };
+#func {slist.Filter} {
+    #local list     {%1};
+    #local regex    {%2};
+
+    #local output {};
+    #local elem {};
+    #foreach {$list} {elem} {
+        #if { "$elem" == "$regex" } {
+            #local output {@slist.Append{{$output};{$elem}}};
+        };
+    };
+
+    #return {$output};
+};
+
+///=== {
+// #@ slist.Contains <字符串列表> <字符串>
+//    判断字符串是否在字符串列表中。
+// };
+#func {slist.Contains}       {#return {@math.Eval{@slist.IndexOf{{%1};{%2}} > 0 }}};
+
+///=== {
+// #@ slist.Sort <字符串列表>
+//    按照字母顺序重新排序字符串列表中的各项。
+//
+// #@ slist.Order <字符串列表>
+//    按照数值顺序重新排序字符串列表中的各项。
+// };
+#func {slist.Sort}     {#return {@slist.FromList{@list.Sort{@list.FromSlist{%0}}}}};
+#func {slist.Order}    {#return {@slist.FromList{@list.Order{@list.FromSlist{%0}}}}};
+
+///=== {
+// #@ slist.Reverse <字符串列表>
+//    按照倒序重新排列字符串列表内容。
+// };
+#func {slist.Reverse} {
+    #return {@slist.FromList{@list.Reverse{@list.FromSlist{%0}}}};
+};
+
+///=== {
+// #@ slist.Get <字符串列表> <下标>
+//    从字符串列表中按照下标取出一个值。
+// };
+#func {slist.Get} {
+    #local list     {%1};
+    #local index    {%2};
+
+    #local index {@math.Floor{@defaultNum{$index;0}}};
+
+    #local n {0};
+    #local elem {};
+    #local selected {};
+    #foreach {$list} {elem} {
+        #math n {$n + 1};
+        #if { $index > 0 } {
+            #if { $n == $index } {
+                #local selected {$elem};
+                #if { $index == 1 } {
+                    #line sub {var;escapes} #format selected {%s} {$selected};
+                };
+                #break;
+            };
+        };
+        #else {
+            #math random {1 d $n};
+            #if { $random == 1 } {
+                #local selected {$elem};
+            };
+        };
+    };
+
+    #return {$selected};
+};
+
+///=== {
+// #@ slist.RandomGet <字符串列表>
+//    从字符串列表中随机取出一个值。
+// };
+#func {slist.RandomGet} {
+    #return {@slist.Get{{%0};}};
+};
+
+///=== {
+// #@ slist.Range <开始值> <结束值> [<步长>]
+//    生成等差数列，从开始值开始，一直到不超过结束值为止。结果用字符串列表表示。
+//    可选的步长用来决定公差，默认为 1。
+//    如果开始值小于结束值，则步长自动取正值。
+//    如果开始值大于结束值，则步长自动取其负值（如果参数为正则取相反数否则不变）。
+// };
+#func {slist.Range} {
+    #local begin {%1};
+    #local end   {%2};
+    #local delta {@defaultNum{%3;1}};
+
+    #local op       {<=};
+    #local delta    {@math.Abs{$delta}};
+    #if { $begin > $end } {
+        #local op       {>=};
+        #local delta    {@math.Eval{- $delta}};
+    };
+
+    #local list {$begin};
+    #math begin {$begin + $delta};
+    #while { $begin $op $end } {
+        #cat list {;$begin};
+        #math begin {$begin + $delta};
+    };
+
+    #return {$list};
+};
+
+///=== {
+// #@ slist.Join <字符串列表> <分隔符> [<是否保留空元素>]
+//    将字符串列表的每个元素用分隔符连接在一起。返回连接后的字符串。
+//    第三个参数是可选的，用来指定是否保留字符串列表中的空元素。
+//    默认不保留，如果想要保留请设置为 true。
+// };
+#func {slist.Join} {#return {@slist.JoinAs{{%1};;%2;%3}}};
+
+///=== {
+// #@ slist.JoinAs <字符串列表> <格式串> <分隔符> [<是否保留空元素>]
+//    将字符串列表的每个元素用格式串渲染之后，再用分隔符连接在一起。
+//    返回连接后的字符串。
+//    格式串默认为 %s。
+//    第四个参数是可选的，用来指定是否保留字符串列表中的空元素。
+//    默认不保留，如果想要保留请设置为 true。
+// };
+#func {slist.JoinAs} {
+    #local strList  {%1};
+    #local format   {@default{%2;%s}};
+    #local sep      {%3};
+    #local keepNull {@isTrue{@default{%4;false}}};
+
+    #local str {};
+
+    #local first {1};
+    #local elem {};
+    #foreach {$strList} {elem} {
+        #if { @isEmpty{$elem} && !$keepNull } {
+            #continue;
+        };
+
+        #format elem {$format} {$elem};
+
+        #if $first {
+            #local str {$elem};
+            #local first {0};
+        };
+        #else {
+            #cat str {$sep$elem};
+        };
+    };
+
+    #return {$str};
+};
+
+///=== {
+// #@ slist.Zip <列表1> <列表2> [...]
+//    将多个列表合并成一个列表。结果列表的每个元素分别对应参数列表中对应位置的元素。
+//    各个参数列表中的元素将按顺序一一对应，以分号分隔连接到一起成为结果列表的元素。
+// };
+#func {slist.Zip} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {%1};
+    };
+
+    #local i {};
+    #local maxSize {0};
+    #loop {1} {&argv[]} {i} {
+        #local list {};
+        #list list create {$argv[+$i]};
+        #local {argv[+$i]} {$list};
+        #local size {&list[]};
+        #if { $size > $maxSize } {
+            #local maxSize $size;
+        };
+    };
+
+    #if { $maxSize < 1 } {
+        #return {};
+    };
+
+    #local zipped {};
+    #loop {1} {$maxSize} {i} {
+        #local n {};
+        #local l {};
+        #loop {1} {&argv[]} {n} {
+            #if { $i > &argv[+$n][] } {
+                #list l add {{}};
+            };
+            #else {
+                #list l add {{$argv[+$n][$i]}};
+            };
+        };
+        #list zipped {add} {{@slist.FromList{$l}}};
+    };
+
+    #return {@slist.FromList{$zipped}};
+};
+
+///=== {
+// #@ slist.ZipAs <格式串> <列表1> <列表2> [...]
+//    将多个列表合并成一个列表。结果列表的每个元素分别对应参数列表中对应位置的元素。
+//    合并时使用格式串对所有参数列表中的元素进行格式化合并。
+// };
+#func {slist.ZipAs} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+    #local format {$argv[1]};
+    #list argv delete {1};
+
+    #if { &argv[] < 1 } {
+        #return {};
+    };
+
+    #local i {};
+    #local maxSize {0};
+    #loop {1} {&argv[]} {i} {
+        #local list {};
+        #list list create {$argv[+$i]};
+        #local {argv[+$i]} {$list};
+        #local size {&list[]};
+        #if { $size > $maxSize } {
+            #local maxSize $size;
+        };
+    };
+
+    #if { $maxSize < 1 } {
+        #return {};
+    };
+
+    #local zipped {};
+    #loop {1} {$maxSize} {i} {
+        #local n {};
+        #local l {};
+        #loop {1} {&argv[]} {n} {
+            #if { $i > &argv[+$n][] } {
+                #list l add {{}};
+            };
+            #else {
+                #list l add {{$argv[+$n][$i]}};
+            };
+        };
+        #local value {};
+        #line sub var #format value {$format} $l[];
+        #list zipped {add} {{$value}};
+    };
+
+    #return {@slist.FromList{$zipped}};
+};
