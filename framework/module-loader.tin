@@ -81,7 +81,7 @@ class.open module-loader;
         };
     };
 
-     errLog 模块 $moduleName 加载失败。;
+    errLog 模块 $moduleName 加载失败。;
     #return;
 };
 
@@ -176,6 +176,8 @@ class.open module-loader;
         };
     };
     #var {xtt-modules} {$modules};
+
+    #unvar xtt.module-doc[$moduleName];
 
     #local prefix {$moduleName};
     #replace prefix {/} {_};
@@ -279,15 +281,11 @@ class.open module-loader;
         #local hasConfig {有};
         #local hasEvents {无};
 
-        #if { "$cnName" != "" } {
-            #local cnName {(<160>$cnName<070>)};
-        };
-
         #if { "$config" == "" } {
             #local hasConfig {无};
         };
 
-        #local event {@filter{{$gValidEvent};{"VALUE[module]"=="$name"}}};
+        #local event {@fp.Filter{{$gValidEvent};{"VALUE[module]"=="$name"}}};
         #if { &event[] > 0 } {
             #local hasEvents {<160>&event[]个<070>};
         };
@@ -303,13 +301,13 @@ class.open module-loader;
             #local enable {<110>禁用<070>};
         };
 
-        #echo {$format} {white} {$name $cnName} {$author} {$type} {$enable} {$hasEvents} {$hasConfig} {$desc};
+        #echo {$format} {white} {@genModuleLink{$name;MOD}} {$author} {$type} {$enable} {$hasEvents} {$hasConfig} {$desc};
     };
     #echo {%c%h} {cyan} { 共列出 $count 项模块信息 };
 };
 
 #nop 列出所有已加载模块以及它们的开关状态、配置参数;
-#alias {MOD} {look-module};
+#alias {MOD} {look-module %0; #buffer end};
 #alias {look-module} {
     #local moduleName   {%1};
     #local metaInfo     {${xtt-modules[$moduleName]}};
@@ -339,12 +337,9 @@ class.open module-loader;
         #local enable {<120>开启<070>};
     };
 
-    #if { "$cnName" != "" } {
-        #local cnName { (<160>$cnName<070>)<060>};
-    };
-
-    #echo {%c%h}    {cyan} { $moduleName$cnName };
-    #echo {%s}      {    <060>名称:<070> $moduleName$cnName <060>类型:<070> $type <060>状态:<070> $enable <060>作者:<070> $author};
+    #local moduleLink {@genModuleLink{$moduleName;HELP}};
+    #echo {%c%h}    {cyan} { $moduleLink<060> };
+    #echo {%s}      {    <060>名称:<070> $moduleLink <060>类型:<070> $type <060>状态:<070> $enable <060>作者:<070> $author};
     #echo {%s}      {    <060>脚本路径:<070> $path};
 
     #if { "$type" == "弱模块" } {
@@ -361,7 +356,7 @@ class.open module-loader;
 
     #local format {    %c%-20s %-20s %s};
 
-    #local event {@filter{{$gValidEvent};{"VALUE[module]"=="$moduleName"}}};
+    #local event {@fp.Filter{{$gValidEvent};{"VALUE[module]"=="$moduleName"}}};
     #if { &event[] > 0 } {
         #local name {};
         #echo {%s}      {    <060>提供事件列表:<070>};
@@ -451,6 +446,41 @@ class.open module-loader;
 #alias {reload-lib} {
     kill-module {lib/%1};
     load-lib {%1} {%2};
+};
+
+#nop 给出一个用于屏幕显示的模块名称。会自动根据是否有文档点亮 MSLP 链接;
+#func {genModuleLink} {
+    #local {name}   {%1};
+    #local {cmd}    {%2};
+
+    #if { "$name" == "" } {
+        #return {};
+    };
+
+    #if { &xtt-modules[$name][] == 0 } {
+        #return {$name};
+    };
+
+    #local cnName {$xtt-modules[$name][NAME]};
+
+    #if { "$cnName" != "" } {
+        #local cnName { (<160>$cnName<070>)};
+    };
+
+    #if { "$cmd" != "{MOD|HELP}" } {
+        #return {$name$cnName};
+    };
+
+    #if { "$cmd" == "HELP" && &xtt.module-doc[$name][] > 0 } {
+        #local name {@mslp.Help{$name;$name}};
+        #local name {<140>$name<270>$cnName};
+    };
+    #else {
+        #local name {@mslp.Module{$name;$name}};
+        #local name {<140>$name<270>$cnName};
+    };
+
+    #return {$name};
 };
 
 class.close module-loader;

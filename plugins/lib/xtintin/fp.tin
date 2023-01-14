@@ -8,7 +8,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #nop 本文件是 xtintin 的一部分，实现了一些 FP 风格函数;
 
-#func {map} {
+///=== {
+///// FP 风格函数：
+//
+// #@ fp.Map <表格> <内容表达式>
+//    遍历表格，根据内容表达式重新生成新内容。
+// };
+#func {fp.Map} {
     #local table {%1};
     #local body {%2};
 
@@ -29,7 +35,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newTable};
 };
 
-#func {mapIf} {
+///=== {
+// #@ fp.MapIf <表格> <条件表达式> <内容表达式>
+//    遍历表格，对符合条件的表格项，根据内容表达式重新生成新内容，不符合条件的保留原值。
+// };
+#func {fp.MapIf} {
     #local table {%1};
     #local cond {%2};
     #local body {%3};
@@ -57,7 +67,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newTable};
 };
 
-#func {filter} {
+///=== {
+// #@ fp.Filter <表格> <条件表达式>
+//    遍历表格，根据过滤条件生成新表格。如果条件为真则收集，否则跳过。
+// };
+#func {fp.Filter} {
     #local table {%1};
     #local cond  {%2};
 
@@ -80,7 +94,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newTable};
 };
 
-#func {filterMap} {
+///=== {
+// #@ fp.FilterMap <表格> <条件表达式> <内容表达式>
+//    遍历表格，根据过滤条件生成新表格。如果条件为真则收集，否则跳过。
+//    收集的内容可以通过内容表达式重新生成。
+//
+///// 上述函数中，条件表达式和内容表达式都可以通过 KEY 和 VALUE 关键字来指代表格项的 key 和 value。
+// };
+#func {fp.FilterMap} {
     #local table {%1};
     #local cond {%2};
     #local body {%3};
@@ -108,7 +129,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newTable};
 };
 
-#func {transform} {
+///=== {
+// #@ fp.Transform <字符串列表> <内容表达式>
+//    遍历字符串列表，根据内容表达式重新生成新内容
+// };
+#func {fp.Transform} {
     #local strList {%1};
     #local body {%2};
 
@@ -125,7 +150,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newStrList};
 };
 
-#func {transformIf} {
+///=== {
+// #@ fp.TransformIf <字符串列表> <条件表达式> <内容表达式>
+//    遍历字符串列表，对符合条件的项，根据内容表达式重新生成新内容，不符合条件的保留原值。
+// };
+#func {fp.TransformIf} {
     #local strList {%1};
     #local cond {%2};
     #local body {%3};
@@ -148,7 +177,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newStrList};
 };
 
-#func {select} {
+///=== {
+// #@ fp.Select <字符串列表> <条件表达式>
+//    遍历字符串列表，根据过滤条件生成新字符串列表。如果条件为真则收集，否则跳过。
+// };
+#func {fp.Select} {
     #local strList {%1};
     #local cond {%2};
 
@@ -169,7 +202,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$newStrList};
 };
 
-#func {selectTransform} {
+///=== {
+// #@ fp.SelectTransform <字符串列表> <条件表达式> <内容表达式>
+//    遍历字符串列表，根据过滤条件生成新字符串列表。如果条件为真则收集，否则跳过。
+//    收集的内容可以通过内容表达式重新生成。
+//
+///// 上述函数中，条件表达式和内容表达式都可以通过 VALUE 关键字来指代字符串列表中的项。
+///// 不难看出，上述四个函数与前面四个很像，只是针对字符串列表而不是表格。
+// };
+#func {fp.SelectTransform} {
     #local strList {%1};
     #local cond {%2};
     #local body {%3};

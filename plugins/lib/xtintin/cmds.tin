@@ -6,6 +6,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
+#nop 本文件是 xtintin 的一部分，实现了一些实用命令。;
+
+///=== {
+///// 实用命令：
+//
+// ## xtt.Tick <ID> <代码> <间隔时间>
+//    跟 #tick 功能类似，但是会立即执行一次代码。对于间隔时间比较长的定时器来说尤其有用。
+//    你也可以通过 Tick 别名来使用本别名。
+// };
 #alias {Tick} {xtt.Tick};
 #alias {xtt.Tick} {
     #local id       {%1};
@@ -17,39 +26,52 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     $code;
 };
 
+///=== {
+// ## xtt.ListTicker
+//    列出系统中所有的定时器。因为定时器一般不会很多因此暂时没有做过滤功能。
+//    你也可以通过 TICKS 别名来使用本别名。
+// };
 #alias {TICKS} {xtt.ListTicker};
 #alias {xtt.ListTicker} {
-	#info tickers save;
+    #info tickers save;
 
-	#echo {<128>%+20s %+20s %+20s} {定时器名称} {执行间隔} {距离下次执行(s)};
+    #echo {<128>   %-30s %+20s %+10s %+20s} {所属模块} {定时器名称} {执行周期} {距离下次执行(s)};
 
-	#draw Yellow scroll line 1 1 1 62;
+    #draw Yellow scroll line 1 1 1 90;
 
-	#format utime %U;
+    #format utime %U;
 
     #local index {};
-	#loop {1} {&info[TICKERS][]} {index} {
+    #loop {1} {&info[TICKERS][]} {index} {
         #local uval {};
-		#math uval $info[TICKERS][+$index][arg3] * 1000000;
+        #math uval $info[TICKERS][+$index][arg3] * 1000000;
 
-		#echo {%+20s %+20s %+20m}
-			{$info[TICKERS][+$index][arg1]}
-			{$info[TICKERS][+$index][arg3]}
-			{($uval - ($utime - $info[TICKERS][+$index][arg4]) % $uval) / 1000000.00};
-	};
+        #echo {   %-30s %+20s %+10s %+20m}
+            {@genModuleLink{$info[TICKERS][+$index][class];MOD}}
+            {$info[TICKERS][+$index][arg1]}
+            {$info[TICKERS][+$index][arg3]}
+            {($uval - ($utime - $info[TICKERS][+$index][arg4]) % $uval) / 1000000.00};
+    };
 };
 
+///=== {
+// ## xtt.ListAlias [<正则表达式>]
+//    列出系统中符合条件的别名，如果省略条件则列出所有别名。
+//    一些不够规整的别名不会被列出。只有符合 PaoTin++ 规范的别名才会被列出。
+//    正则表达式会被运用到别名所属模块名称和别名名称上，两者符合其一即可被列出。
+//    你也可以通过 ALIASES 别名来使用本别名。
+// };
 #alias {ALIASES} {xtt.ListAlias};
 #alias {xtt.ListAlias} {
     #local pattern {%1};
 
-	#info aliases save;
+    #info aliases save;
 
     #local aliasTable {};
     #local index {};
-	#loop {1} {&info[ALIASES][]} {index} {
-		#local name     {$info[ALIASES][+$index][arg1]};
-		#local class    {$info[ALIASES][+$index][class]};
+    #loop {1} {&info[ALIASES][]} {index} {
+        #local name     {$info[ALIASES][+$index][arg1]};
+        #local class    {$info[ALIASES][+$index][class]};
 
         #if { "$class" == "" && "$pattern" != "all" } {
             #continue;
@@ -68,14 +90,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         };
 
         #list {aliasTable[$class]} sort {$name};
-	};
+    };
 
-    #local format {    %-20s %-30s %-10s};
-	#echo {<128>$format} {class} {别名} {类型};
+    #local format {    %-30s %-30s %-10s};
+    #echo {<128>$format} {class} {别名} {类型};
 
-	#draw Yellow scroll line 1 1 1 80;
+    #draw Yellow scroll line 1 1 1 80;
 
-    #local classList {@sort{*aliasTable[]}};
+    #local classList {@list.Sort{*aliasTable[]}};
     #local class {};
     #foreach {$classList} {class} {
         #local name {};
@@ -112,26 +134,33 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             };
 
             #echo {<060>$format}
-                {$class}
-                {$name}
+                {@genModuleLink{$class;MOD}<060>}
+                {@linkToHelp{$class;$name}}
                 {$type};
         };
     };
 };
 
+///=== {
+// ## xtt.ListVar [<正则表达式>]
+//    列出系统中符合条件的变量，如果省略条件则列出所有变量。
+//    一些不够规整的变量不会被列出。只有符合 PaoTin++ 规范的变量才会被列出。
+//    正则表达式会被运用到变量所属模块名称和变量名称上，两者符合其一即可被列出。
+//    你也可以通过 VARS 别名来使用本别名。
+// };
 #alias {VARS} {xtt.ListVar};
 #alias {xtt.ListVar} {
     #local pattern {%1};
 
-	#info variable save;
+    #info variable save;
 
     #local varTable {};
     #local index {};
-	#loop {1} {&info[VARIABLES][]} {index} {
-		#local name     {$info[VARIABLES][+$index][arg1]};
-		#local class    {$info[VARIABLES][+$index][class]};
-		#local value    {$info[VARIABLES][+$index][arg2]};
-		#local nest     {$info[VARIABLES][+$index][nest]};
+    #loop {1} {&info[VARIABLES][]} {index} {
+        #local name     {$info[VARIABLES][+$index][arg1]};
+        #local class    {$info[VARIABLES][+$index][class]};
+        #local value    {$info[VARIABLES][+$index][arg2]};
+        #local nest     {$info[VARIABLES][+$index][nest]};
 
         #if { "$class" == "" && "$pattern" != "all" } {
             #continue;
@@ -149,18 +178,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             {nest}{$nest}
             {value}{$value}
         };
-	};
+    };
 
-    #local format {    %-20s %-30s %-10s %s};
-	#echo {<128>$format} {class} {变量} {类型} {值};
+    #local format {    %-30s %-30s %-10s %s};
+    #echo {<128>$format} {class} {变量} {类型} {值};
 
-	#draw Yellow scroll line 1 1 1 80;
+    #draw Yellow scroll line 1 1 1 80;
 
-    #local classList {@sort{*varTable[]}};
+    #local classList {@slist.Sort{*varTable[]}};
     #local class {};
     #foreach {$classList} {class} {
         #local name {};
-        #local nameList {@sort{*varTable[$class][]}};
+        #local nameList {@slist.Sort{*varTable[$class][]}};
         #foreach {$nameList} {name} {
             #local type {<020>字符串<070>};
             #local value {<160>$varTable[$class][$name][value]<070>};
@@ -168,29 +197,36 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
             #if { $nest > 0 } {
                 #local type {<050>表格<070>};
-                #local value {<130>[... 共 $nest 项数据]<070>};
+                #local value {@mslp.Var{$name;<130>[... 共 $nest 项数据]<070>}};
             };
 
             #echo {<060>$format}
-                {$class}
-                {$name}
+                {@genModuleLink{$class;MOD}<060>}
+                {@linkToHelp{$class;$name}}
                 {$type}
                 {$value};
         };
     };
 };
 
+///=== {
+// ## xtt.ListFunc [<正则表达式>]
+//    列出系统中符合条件的函数，如果省略条件则列出所有函数。
+//    正则表达式会被运用到函数所属模块名称和函数名称上，两者符合其一即可被列出。
+//    一些不够规整的函数不会被列出。只有符合 PaoTin++ 规范的函数才会被列出。
+//    你也可以通过 FUNCS 别名来使用本别名。
+// };
 #alias {FUNCS} {xtt.ListFunc};
 #alias {xtt.ListFunc} {
     #local pattern {%1};
 
-	#info functions save;
+    #info functions save;
 
     #local funcsTable {};
     #local index {};
-	#loop {1} {&info[FUNCTIONS][]} {index} {
-		#local name     {$info[FUNCTIONS][+$index][arg1]};
-		#local class    {$info[FUNCTIONS][+$index][class]};
+    #loop {1} {&info[FUNCTIONS][]} {index} {
+        #local name     {$info[FUNCTIONS][+$index][arg1]};
+        #local class    {$info[FUNCTIONS][+$index][class]};
 
         #if { "$class" == "" && "$pattern" != "all" } {
             #continue;
@@ -209,14 +245,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         };
 
         #list {funcsTable[$class]} sort {$name};
-	};
+    };
 
-    #local format {    %-20s %-30s %-10s};
-	#echo {<128>$format} {class} {函数} {类型};
+    #local format {    %-30s %-30s %-10s};
+    #echo {<128>$format} {class} {函数} {类型};
 
-	#draw Yellow scroll line 1 1 1 80;
+    #draw Yellow scroll line 1 1 1 80;
 
-    #local classList {@sort{*funcsTable[]}};
+    #local classList {@list.Sort{*funcsTable[]}};
     #local class {};
     #foreach {$classList} {class} {
         #local name {};
@@ -240,31 +276,74 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             };
 
             #echo {<060>$format}
-                {$class}
-                {$name}
+                {@genModuleLink{$class;MOD}<060>}
+                {@linkToHelp{$class;$name}}
                 {$type};
         };
     };
 };
 
+///=== {
+// ## xtt.Send <命令> [<参数> ...]
+//    向服务器发送命令。如果命令拦截总开关被打开，则不会真的向服务器发送。
+// };
 #alias {xtt.Send} {
     #if { "$xttOptions[DisableOutput]" == "true" } {
         #echo {<160>命令已被抑制: <420>%p<070>} {%0};
         #return;
     };
 
-    #send %0
+    #send %0;
 };
 
+///=== {
+// ## xtt.SendAtOnce <分号分隔的命令序列>
+//    一次性向服务器发送多条命令。
+//    有的 MUD 服务器专门为这种方式开辟了通道，本方法可以使用这种通道。
+//    TODO: 需要区分 MUD，需要支持定制的命令分隔符。
+// };
 #alias {xtt.SendAtOnce} {
     #local cmds {%1};
     #send {#$cmds#};
 };
 
+///=== {
+// ## xtt.Answer <问题答复>
+//    如果游戏中有需要回答的问题，并且给出了特定的提示符（就是不带换行的文本），
+//    那么由于 TinTin++ 的某种机制，导致回答的内容和问题就会有重叠，不能正确显示。
+//    此时建议用 xtt.Answer 来回答此类问题。将会留下美观的 buffer 记录。
+// };
 #alias {xtt.Answer} {
     #delay 0 {
         #echo {};
         #buffer end;
         #send {%1};
     };
+};
+
+#func {linkToHelp} {
+    #local module   {%1};
+    #local keyword  {%2};
+
+    #local text {$keyword};
+    #local cmd {HELP $keyword};
+    #if { "$keyword" == "" } {
+        #local text {$module};
+        #local keyword {MODULE};
+        #local cmd {HELP $module};
+    };
+
+    #if { "$module" == "" } {
+        #return {$text};
+    };
+
+    #if { &xtt.module-doc[$module][] == 0 } {
+        #return {$text};
+    };
+
+    #if { &xtt.module-doc[$module][$keyword][] == 0 } {
+        #return {$text};
+    };
+
+    #return {<140>@mslp.Exec{{$cmd};{$text}}<270>};
 };

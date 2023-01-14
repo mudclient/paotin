@@ -2,7 +2,7 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
@@ -10,25 +10,44 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #var XTinTin[debug] {false};
 
+///=== {
+///// 调试开关函数：
+/////
+///// 由于 beautify 和 prompt 插件都会带来大量的代码调用，
+///// 所以为了尽量减少调试信息，设计了这组函数以开启或者关闭调试开关，
+///// 并在调试开启期间，临时禁用 beautify 和 prompt 插件。
+//
+// ## xtt.ToggleDebug
+//    切换调试状态。有一个短别名叫做 D，优先级非常低。方便玩家随时征用这个名字。
+// };
+#alias {D} {xtt.ToggleDebug} {9.999};
 #alias {xtt.ToggleDebug} {
     #if { "$XTinTin[debug]" == "false" } {
-        beautify.Off;
-        prompt.Disable;
         xtt.DebugOn;
     };
     #else {
         xtt.DebugOff;
-        prompt.Enable;
-        beautify.On;
     };
 };
 
+///=== {
+// ## xtt.DebugOn
+//    开启调试状态。
+// };
 #alias {xtt.DebugOn} {
     #var XTinTin[debug] {true};
-    #debug all on;
+    beautify.Off;
+    prompt.Disable;
+    #line quiet #debug all on;
 };
 
+///=== {
+// ## xtt.DebugOff
+//    关闭调试状态。
+// };
 #alias {xtt.DebugOff} {
     #var XTinTin[debug] {false};
-    #debug all off;
+    #line quiet #debug all off;
+    prompt.Enable;
+    beautify.On;
 };

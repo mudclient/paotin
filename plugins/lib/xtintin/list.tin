@@ -6,21 +6,132 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#func {string2list}     {#list result {create} {%0}};
-#func {list2string}     {#var result {%0}; #list result simplify};
+#nop 本文件是 xtintin 的一部分，实现了一些列表处理函数;
 
-#func {strListSize}     {#list l create {%0}; #list l size result};
-#func {indexOfStrList}  {#list l create {%1}; #list l find {%2} result};
-#func {indexOf}         {#var l {%1}; #list l find {%2} result};
-#func {inList}          {#math result { @indexOf{{%1};{%2}} > 0 }};
+///=== {
+///// 列表/表格列表处理函数：
+//
+// #@ list.FromSlist <字符串列表>
+//    将字符串列表转换为列表。
+// };
+#func {list.FromSlist} {
+    #list result {create} {%0};
+};
 
-#func {sort}            {#var l {%0}; #var l2 {}; #foreach {$l} {tmp} {#list l2 {sort} {$tmp}}; #return {@list2string{$l2}}};
-#func {sortList}        {#var l {@list2string{%0}}; #var result {}; #foreach {$l} {tmp} {#list result {sort} {$tmp}}};
+///=== {
+// #@ list.IndexOf <列表> <字符串>
+//    从列表中查找某个字符串，并返回其位置（从 1 开始计），0 表示没找到。
+// };
+#func {list.IndexOf} {
+    #local list  {%1};
+    #local str   {%2};
 
-#func {listSet}         {#var l {%1}; #loc idx {%2}; #loc data {%3}; #var l @listExtend{{$l};$idx}; #list l set {$idx} {$data}; #return {$l} };
-#func {listExtend}      {#var l {%1}; #loc len {@eval{@defaultNum{%2;0} - &l[]}}; #if { $len > 0 } { #loop {1} {$len} {id} { #list l add {{}} } }; #return {$l} };
+    #local idx {0};
+    #foreach {*list[]} {idx} {
+        #if { {$list[$idx]} === {$str} } {
+            #return $idx;
+        };
+    };
 
-#func {reverseList} {
+    #return 0;
+};
+
+///=== {
+// #@ list.Contains <列表> <字符串>
+//    判断字符串是否在列表中。
+// };
+#func {list.Contains} {
+    #if { @list.IndexOf{{%1};{%2}} > 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ list.Sort <列表>
+//    按照值的字母顺序重新排序列表。
+//
+// #@ list.Order <列表>
+//    按照值的数值顺序重新排序列表。
+//
+// #@ list.SortBy <表格列表> <关键字段>
+//    按照值的关键字段的字母顺序重新排序列表。
+//
+// #@ list.OrderBy <表格列表> <关键字段>
+//    按照值的关键字段的数值顺序重新排序列表。
+// };
+#func {list.Sort}            {#var result {%0}; #list result sort};
+#func {list.Order}           {#var result {%0}; #list result order};
+#func {list.SortBy}          {#var result {%1}; #list result {indexate} {%2}; #list result sort};
+#func {list.OrderBy}         {#var result {%1}; #list result {indexate} {%2}; #list result order};
+
+///=== {
+// #@ list.Extend <列表> <长度>
+//    将列表长度扩展至指定长度。如果长度已经足够，则什么也不做。
+// };
+#func {list.Extend} {
+    #local l {%1};
+    #local len {@math.Eval{@defaultNum{%2;0} - &l[]}};
+    #if { $len > 0 } {
+        #local idx {};
+        #loop {1} {$len} {idx} {
+            #list l add {{}};
+        };
+    };
+    #return {$l};
+};
+
+///=== {
+// #@ list.Append <列表> <内容>
+//    向列表的末尾追加新的元素。
+// };
+#func {list.Append} {
+    #local l {%1};
+    #loc data {%2};
+    #list l add {{$data}};
+    #return {$l};
+};
+
+///=== {
+// #@ list.Set <列表> <下标> <内容>
+//    根据下标设置列表的单个元素的值，如果下标超过列表现有长度，则先扩展列表。
+// };
+#func {list.Set} {
+    #local l {%1};
+    #loc idx {%2};
+    #loc data {%3};
+    #var l {@list.Extend{{$l};$idx}};
+    #list l set {$idx} {$data};
+    #return {$l};
+};
+
+///=== {
+// #@ list.Insert <列表> <下标> <内容>
+//    将内容插入到列表的指定下标处，如果下标超过列表现有长度，则先扩展列表。
+// };
+#func {list.Insert} {
+    #local l {%1};
+    #loc idx {%2};
+    #loc data {%3};
+
+    #var l {@list.Extend{{$l};@math.Eval{$idx - 1}}};
+    #if { $idx > &l[] } {
+        #list l add {$data};
+    };
+    #else {
+        #list l set {$idx} {$data};
+    };
+
+    #return {$l};
+};
+
+///=== {
+// #@ list.Reverse <列表>
+//    按照倒序重新排列列表内容。
+// };
+#func {list.Reverse} {
     #local list {%0};
     #var result {};
 
@@ -31,4 +142,122 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             #list {result} add $list[$idx];
         };
     };
+};
+
+///=== {
+// #@ list.Get <列表> <下标>
+//    从列表中按照下标取出一个值。
+// };
+#func {list.Get} {
+    #local list     {%1};
+    #local index    {@defaultNum{%2;1}};
+
+    #return {$list[+$index]};
+};
+
+///=== {
+// #@ list.RandomGet <列表>
+//    从列表中随机取出一个值。
+// };
+#func {list.RandomGet} {
+    #local list     {%1};
+
+    #local index {@math.Random{1;&list[]}};
+    #return {$list[+$index]};
+};
+
+///=== {
+// #@ list.Zip <列表1> <列表2> [...]
+//    将多个列表合并成一个列表。结果列表的每个元素分别对应参数列表中对应位置的元素。
+//    各个参数列表中的元素将按顺序一一对应，以分号分隔连接到一起成为结果列表的元素。
+// };
+#func {list.Zip} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {%1};
+    };
+
+    #local i {};
+    #local maxSize {0};
+    #loop {1} {&argv[]} {i} {
+        #local list {$argv[+$i]};
+        #local size {&list[]};
+        #if { $size > $maxSize } {
+            #local maxSize $size;
+        };
+    };
+
+    #if { $maxSize < 1 } {
+        #return {};
+    };
+
+    #local zipped {};
+    #loop {1} {$maxSize} {i} {
+        #local n {};
+        #local l {};
+        #loop {1} {&argv[]} {n} {
+            #if { $i > &argv[+$n][] } {
+                #list l add {{}};
+            };
+            #else {
+                #list l add {{$argv[+$n][$i]}};
+            };
+        };
+        #list zipped {add} {{@slist.FromList{$l}}};
+    };
+
+    #return {$zipped};
+};
+
+///=== {
+// #@ list.ZipAs <格式串> <列表1> <列表2> [...]
+//    将多个列表合并成一个列表。结果列表的每个元素分别对应参数列表中对应位置的元素。
+//    合并时使用格式串对所有参数列表中的元素进行格式化合并。
+// };
+#func {list.ZipAs} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+    #local format {$argv[1]};
+    #list argv delete {1};
+
+    #if { &argv[] < 1 } {
+        #return {};
+    };
+
+    #local i {};
+    #local maxSize {0};
+    #loop {1} {&argv[]} {i} {
+        #local list {$argv[+$i]};
+        #local size {&list[]};
+        #if { $size > $maxSize } {
+            #local maxSize $size;
+        };
+    };
+
+    #if { $maxSize < 1 } {
+        #return {};
+    };
+
+    #local zipped {};
+    #loop {1} {$maxSize} {i} {
+        #local n {};
+        #local l {};
+        #loop {1} {&argv[]} {n} {
+            #if { $i > &argv[+$n][] } {
+                #list l add {{}};
+            };
+            #else {
+                #list l add {{$argv[+$n][$i]}};
+            };
+        };
+        #local value {};
+        #line sub var #format value {$format} $l[];
+        #list zipped {add} {{$value}};
+    };
+
+    #return {$zipped};
 };

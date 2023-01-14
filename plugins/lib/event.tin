@@ -3,7 +3,7 @@
 /*
 本文件属于 PaoTin++ 的一部分
 ===========
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 ===========
 */
@@ -70,8 +70,8 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #echo {%h} { 已经定义的事件列表 };
 
-    #echo {%-20s %-5s %-20s %s} {事件/已注册的钩子} {类型} {模块} {说明/代码};
-    #echo {%-20s %-5s %-20s %s} {--------------------} {----} {----------} {------------};
+    #echo {%-20s %-5s %-30s %s} {事件/已注册的钩子} {类型} {模块} {说明/代码};
+    #echo {%-20s %-5s %-30s %s} {@str.Repeat{20;-}} {----} {@str.Repeat{30;-}} {------------};
 
     #foreach {*gValidEvent[]} {event} {
         #local type {有参};
@@ -79,7 +79,9 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             #local type {无参};
         };
 
-        #echo {%-20s %-5s %-20s %s} {$event} {$type} {$gValidEvent[$event][module]} {$gValidEvent[$event][desc]};
+        #echo {%-20s %-5s %-30s %s}{$event} {$type}
+            {@genModuleLink{$gValidEvent[$event][module];MOD}}
+            {$gValidEvent[$event][desc]};
         #local hook {};
         #local count {0};
         #foreach {*gEventHandlers[$event][]} {hook} {
@@ -91,9 +93,9 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             #if { $count == &gEventHandlers[$event][] } {
                 #Local lead {╰};
             };
-            #echo { $lead@repeat{$len;─} %s        %-20s %s}{$hook}
-                            {$gEventHandlers[$event][$hook][module]}
-                            {$gEventHandlers[$event][$hook][code]};
+            #echo { $lead@str.Repeat{$len;─} %s        %-30s %s}{$hook}
+                {@genModuleLink{$gEventHandlers[$event][$hook][module];MOD}}
+                {$gEventHandlers[$event][$hook][code]};
         };
     };
 

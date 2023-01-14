@@ -6,9 +6,21 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#func {now} {#format result {%T}};
+#nop 本文件是 xtintin 的一部分，实现了一些时间处理函数;
 
-#func {parseCDuration} {
+///=== {
+///// 时间处理函数：
+//
+// #@ time.Now
+//    返回当前系统时间戳。
+// };
+#func {time.Now} {#format result {%T}};
+
+///=== {
+// #@ time.ParseDoC <时间长度文本>
+//    将中文书写的时间长度（Duration of Chinese）文本转换成以秒为单位的整数值。
+// };
+#func {time.ParseDoC} {
     #local {timeStr} {%0};
 
     #nop 兼容不同的写法;
@@ -18,13 +30,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #replace {timeStr} {分钟} {分};
 
     #nop 注意这里用了个小技巧，末尾的空格不要去掉;
-    #replace timeStr {%S年}     {@c2d{&1}*31104000+ };
-    #replace timeStr {%S月}     {@c2d{&1}*2592000+ };
-    #replace timeStr {%S周}     {@c2d{&1}*604800+ };
-    #replace timeStr {%S天}     {@c2d{&1}*86400+ };
-    #replace timeStr {%S时}     {@c2d{&1}*3600+ };
-    #replace timeStr {%S分}     {@c2d{&1}*60+ };
-    #replace timeStr {%S秒}     {@c2d{&1}};
+    #replace timeStr {%S年}     {@math.ParseCN{&1}*31104000+ };
+    #replace timeStr {%S月}     {@math.ParseCN{&1}*2592000+ };
+    #replace timeStr {%S周}     {@math.ParseCN{&1}*604800+ };
+    #replace timeStr {%S天}     {@math.ParseCN{&1}*86400+ };
+    #replace timeStr {%S时}     {@math.ParseCN{&1}*3600+ };
+    #replace timeStr {%S分}     {@math.ParseCN{&1}*60+ };
+    #replace timeStr {%S秒}     {@math.ParseCN{&1}};
 
     #local time {};
     #math time {$timeStr + 0};
@@ -32,9 +44,123 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$time};
 };
 
-#func {formatTime} {
-    #local time   {@defaultNum{%1;@now{}}};
+///=== {
+// #@ time.Format [<时间戳> [<格式字符串>]]
+//    将指定时间戳按照格式字符串要求，转换成字符串。
+//    格式字符串参见 #help time，如果省略则为 %Y-%m-%d %H:%M:%S。
+//    时间戳如果省略则为当前系统时间。
+// };
+#func {time.Format} {
+    #local time   {@defaultNum{%1;@time.Now{}}};
     #local format {@default{%2;{%Y-%m-%d %H:%M:%S}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};
+
+///=== {
+// #@ time.FormatNow [<格式字符串>]]
+//    将指定时间戳按照格式字符串要求，转换成字符串。
+//    格式字符串参见 #help time，如果省略则为 %Y-%m-%d %H:%M:%S。
+// };
+#func {time.FormatNow} {
+    #local time   {@time.Now{}};
+    #local format {@default{%1;{%Y-%m-%d %H:%M:%S}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};
+
+///=== {
+// #@ time.Date [<时间戳>]
+//    将指定时间戳转换成 YYYY-mm-dd 格式的日期字符串。
+//    时间戳如果省略则为当前系统时间。
+// };
+#func {time.Date} {
+    #local time   {@defaultNum{%1;@time.Now{}}};
+    #local format {@default{%2;{%Y-%m-%d}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};
+
+///=== {
+// #@ time.Year [<时间戳>]
+//    将指定时间戳所在的年份，四位数字。
+//    时间戳如果省略则为当前系统时间。
+// };
+#func {time.Year} {
+    #local time   {@defaultNum{%1;@time.Now{}}};
+    #local format {@default{%2;{%Y}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};
+
+///=== {
+// #@ time.Month [<时间戳>]
+//    将指定时间戳所在的月份，两位数字。
+//    时间戳如果省略则为当前系统时间。
+// };
+#func {time.Month} {
+    #local time   {@defaultNum{%1;@time.Now{}}};
+    #local format {@default{%2;{%m}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};
+
+///=== {
+// #@ time.Day [<时间戳>]
+//    将指定时间戳所在的日期，两位数字。
+//    时间戳如果省略则为当前系统时间。
+// };
+#func {time.Day} {
+    #local time   {@defaultNum{%1;@time.Now{}}};
+    #local format {@default{%2;{%d}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};
+
+///=== {
+// #@ time.Time [<时间戳>]
+//    将指定时间戳转换成 HH:MM:SS 格式的时间字符串。
+//    时间戳如果省略则为当前系统时间。
+// };
+#func {time.Time} {
+    #local time   {@defaultNum{%1;@time.Now{}}};
+    #local format {@default{%2;{%H:%M:%S}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};
+
+///=== {
+// #@ time.Hour [<时间戳>]
+//    将指定时间戳所在时刻的小时值，24 小时制，两位数字。
+//    时间戳如果省略则为当前系统时间。
+// };
+#func {time.Hour} {
+    #local time   {@defaultNum{%1;@time.Now{}}};
+    #local format {@default{%2;{%H}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};
+
+///=== {
+// #@ time.Minute [<时间戳>]
+//    将指定时间戳所在时刻的分钟值，两位数字。
+//    时间戳如果省略则为当前系统时间。
+// };
+#func {time.Minute} {
+    #local time   {@defaultNum{%1;@time.Now{}}};
+    #local format {@default{%2;{%M}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};
+
+///=== {
+// #@ time.Second [<时间戳>]
+//    将指定时间戳所在时刻的秒值，两位数字。
+//    时间戳如果省略则为当前系统时间。
+// };
+#func {time.Second} {
+    #local time   {@defaultNum{%1;@time.Now{}}};
+    #local format {@default{%2;{%S}}};
     #format result {%t} {{$format}{$time}};
     #return {$result};
 };

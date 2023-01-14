@@ -1,0 +1,637 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#nop 本文件是 xtintin 的一部分，实现了一些集合处理函数;
+
+///=== {
+///// 集合处理函数：
+/////
+///// 集合在 TinTin++ 中并无原生概念对应，PaoTin++ 中的集合用 #list 来实现，保证每个元素都不相同。
+///// 也就是说，无论是对集合进行何种运算，重复元素在集合中只会出现一次。
+/////
+///// 由于 PaoTin++ 中是用 #list 来存储 set，因此 #list 相关的命令和 xtintin API 都可以用于集合。
+//
+// #@ set.Create <元素> [...]
+//    利用提供的多个元素创建新集合。
+// };
+#func {set.Create} {
+    #return {@set.Add{{};%0}};
+};
+
+///=== {
+// #@ set.FromList <列表>
+//    将列表转换成集合。
+// };
+#func {set.FromList} {
+    #local list {%0};
+    #return {@set.Add{{};$list[%*]}};
+};
+
+///=== {
+// #@ set.Size <集合>
+//    计算集合的元素数量。
+// };
+#func {set.Size} {
+    #local set {%0};
+    #return &set[];
+};
+
+///=== {
+// #@ set.Contains <集合> <元素>
+//    判断元素是否在集合中。
+// };
+#func {set.Contains} {
+    #info arguments save;
+    #local set  {$info[ARGUMENTS][1]};
+    #local elem {$info[ARGUMENTS][2]};
+
+    #if { @list.IndexOf{{$set};{$elem}} > 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ set.Add <集合> <元素> [...]
+//    将一个或者多个元素添加到集合当中。
+// };
+#func {set.Add} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {$argv[1]};
+    };
+
+    #local set  {$argv[1]};
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #local elem {$argv[+$idx]};
+        #if { !@set.Contains{{$set};{$elem}} } {
+            #list set {add} {{$elem}};
+        };
+    };
+
+    #return {$set};
+};
+
+///=== {
+// #@ set.Remove <集合> <元素> [...]
+//    从集合中删除一个或者多个元素。
+// };
+#func {set.Remove} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {$argv[1]};
+    };
+
+    #local set  {$argv[1]};
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #local elem {$argv[+$idx]};
+        #local idx @list.IndexOf{{$set};{$elem}};
+        #if { $idx > 0 } {
+            #list set {delete} {$idx};
+        };
+    };
+
+    #return {$set};
+};
+
+///=== {
+// #@ set.Equal <集合1> <集合2>
+//    判断集合1和集合2是否相等。
+//    📖  如果两个集合中包含的元素是相同的，那么就判定为相等。相等判定并不要求元素顺序相同。
+// };
+#func {set.Equal} {
+    #local set1  {%1};
+    #local set2  {%2};
+
+    #if { @set.IsSubset{{$set1};{$set2}} && &set1[] == &set2[] } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ set.IsSubset <集合1> <集合2>
+//    判断集合2是否为集合1的子集。
+//    📖  如果集合1包含了集合2中的每个元素，那么集合2就是集合1的子集。
+// };
+#func {set.IsSubset} {
+    #local set1  {%1};
+    #local set2  {%2};
+
+    #local idx {0};
+    #foreach {*set2[]} {idx} {
+        #if { !@set.Contains{{$set1};{$set2[$idx]}} } {
+            #return 0;
+        };
+    };
+
+    #return 1;
+};
+
+///=== {
+// #@ set.IsProperSubset <集合1> <集合2>
+//    判断集合2是否为集合1的真子集。
+//    📖  如果集合1包含了集合中2的每个元素，而且集合1比集合2的元素还要多，
+//       那么集合2就是集合1的真子集。
+// };
+#func {set.IsProperSubset} {
+    #local set1  {%1};
+    #local set2  {%2};
+
+    #if { @set.IsSubset{{$set1};{$set2}} && &set1[] > &set2[] } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ set.IsSuperset <集合1> <集合2>
+//    判断集合2是否为集合1的超集。
+//    📖  如果集合2包含了集合1中的每个元素，那么集合2就是集合1的超集。
+// };
+#func {set.IsSuperset} {
+    #return {@set.IsSubset{{%2};{%1}}};
+};
+
+///=== {
+// #@ set.IsProperSuperset <集合1> <集合2>
+//    判断集合2是否为集合1的真超集。
+//    📖  如果集合2包含了集合中1的每个元素，而且集合2比集合1的元素还要多，
+//       那么集合2就是集合1的真超集。
+// };
+#func {set.IsProperSuperset} {
+    #return {@set.IsProperSubset{{%2};{%1}}};
+};
+
+///=== {
+// #@ set.Union <集合1> <集合2> [...]
+//    求两个或者多个集合的并集。
+//    📖  并集是指把所有集合元素放在一块儿之后得到的新集合。
+// };
+#func {set.Union} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {$argv[1]};
+    };
+
+    #local set  {$argv[1]};
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #local other {$argv[+$idx]};
+        #local set {@set.Add{{$set};$other[%*]}};
+    };
+
+    #return {$set};
+};
+
+///=== {
+// #@ set.Intersection <集合1> <集合2> [...]
+//    求两个或者多个集合的交集。
+//    📖  交集是指由同时出现在所有集合中的元素组成的新集合。
+// };
+#func {set.Intersection} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {};
+    };
+
+    #local set  {$argv[1]};
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #if { &set[] == 0 } {
+            #return {};
+        };
+
+        #local other {$argv[+$idx]};
+        #loop {&set[]} {1} {idx} {
+            #local elem {$set[$idx]};
+            #if { !@set.Contains{{$other};{$elem}} } {
+                #list set {delete} {$idx};
+            };
+        };
+    };
+
+    #return {$set};
+};
+
+///=== {
+// #@ set.IsDisjoint <集合1> <集合2> [...]
+//    判断两个或者多个集合是否为不交集。
+//    📖  不交集是交集为空的意思。
+// };
+#func {set.IsDisjoint} {
+    #local set {@set.Intersection{%0}};
+    #if { &set[] == 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ set.Product <集合1> <集合2> [...]
+//    计算两个或者多个集合的笛卡尔积。返回结果集合中的每个元素都是一个字符串列表，
+//    其值分别来自各个参数集合的元素。
+//    📖  两个集合的笛卡尔积是指由两个集合的元素组成的所有可能的有序对的集合。
+//       多个集合的积也可由此扩展。
+// };
+#func {set.Product} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {};
+    };
+
+    #local set  {$argv[1]};
+    #if { &set[] == 0 } {
+        #return {};
+    };
+
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #local other {$argv[+$idx]};
+        #if { &other[] == 0 } {
+            #return {};
+        };
+
+        #local newSet {};
+        #local left {};
+        #local right {};
+        #loop {1} {&set[]} {left} {
+            #local left {$set[+$left]};
+            #loop {1} {&other[]} {right} {
+                #local right {$other[+$right]};
+                #list newSet {add} {{$left;$right}};
+            };
+        };
+
+        #local set {$newSet};
+    };
+
+    #return {$set};
+};
+
+///=== {
+// #@ set.Diff <集合1> <集合2> [...]
+//    计算集合1与其它集合的相对差。
+//    📖  相对差是指从集合1中去掉所有在其它集合中出现过的元素之后剩下的集合。
+// };
+#func {set.Diff} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {$argv[1]};
+    };
+
+    #local set  {$argv[1]};
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #if { &set[] == 0 } {
+            #return {};
+        };
+
+        #local other {$argv[+$idx]};
+        #local set {@set.Remove{{$set};$other[%*]}};
+    };
+
+    #return {$set};
+};
+
+///=== {
+// #@ set.SymmDiff <集合1> <集合2>
+//    计算集合1与集合2的对称差。
+//    📖  对称差是指并集与交集的相对差。
+// };
+#func {set.SymmDiff} {
+    #return {@set.Diff{{@set.Union{{%1};{%2}}};{@set.Intersection{{%1};{%2}}}}};
+};
+
+///=== {
+///// 下面这一组 API 采用字符串列表来作为集合表达。功能与上面相同。只是数据类型不一样。
+///// 为了和上面以示区分，前缀 set 改为 sset，意指 string set。
+//
+// #@ sset.Create <字符串列表>
+//    从字符串列表创建集合。
+// };
+#func {sset.Create} {
+    #return {@sset.Add{{};%0}};
+};
+
+///=== {
+// #@ sset.Size <集合>
+//    计算集合的元素数量。
+// };
+#func {sset.Size} {
+    #return {@slist.Size{%0}};
+};
+
+///=== {
+// #@ sset.Contains <集合> <元素>
+//    判断元素是否在集合中。
+// };
+#func {sset.Contains} {
+    #info arguments save;
+    #local set  {$info[ARGUMENTS][1]};
+    #local elem {$info[ARGUMENTS][2]};
+
+    #if { @slist.IndexOf{{$set};{$elem}} > 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ sset.Add <集合> <元素> [...]
+//    将一个或者多个元素添加到集合当中。
+// } ;
+#func {sset.Add} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {$argv[1]};
+    };
+
+    #local set  {$argv[1]};
+    #return {@slist.FromList{@set.Add{{@list.FromSlist{$set}};$argv[2..-1]}}};
+};
+
+///=== {
+// #@ sset.Remove <集合> <元素> [...]
+//    从集合中删除一个或者多个元素。
+// };
+#func {sset.Remove} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {$argv[1]};
+    };
+
+    #local set  {$argv[1]};
+    #return {@slist.FromList{@set.Remove{{@list.FromSlist{$set}};$argv[2..-1]}}};
+};
+
+///=== {
+// #@ sset.Equal <集合1> <集合2>
+//    判断集合1和集合2是否相等。
+//    📖  如果两个集合中包含的元素是相同的，那么就判定为相等。相等判定并不要求元素顺序相同。
+// };
+#func {sset.Equal} {
+    #local set1  {%1};
+    #local set2  {%2};
+
+    #if { @sset.IsSubset{{$set1};{$set2}} && @slist.Size{$set1} == @slist.Size{$set2} } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ sset.IsSubset <集合1> <集合2>
+//    判断集合2是否为集合1的子集。
+//    📖  如果集合1包含了集合2中的每个元素，那么集合2就是集合1的子集。
+// };
+#func {sset.IsSubset} {
+    #local set1  {%1};
+    #local set2  {%2};
+
+    #local elem {0};
+    #foreach {$set2} {elem} {
+        #if { !@sset.Contains{{$set1};{$elem}} } {
+            #return 0;
+        };
+    };
+
+    #return 1;
+};
+
+///=== {
+// #@ sset.IsProperSubset <集合1> <集合2>
+//    判断集合2是否为集合1的真子集。
+//    📖  如果集合1包含了集合中2的每个元素，而且集合1比集合2的元素还要多，
+//       那么集合2就是集合1的真子集。
+// };
+#func {sset.IsProperSubset} {
+    #local set1  {%1};
+    #local set2  {%2};
+
+    #if { @sset.IsSubset{{$set1};{$set2}} && @slist.Size{$set1} > @slist.Size{$set2} } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ sset.IsSuperset <集合1> <集合2>
+//    判断集合2是否为集合1的超集。
+//    📖  如果集合2包含了集合1中的每个元素，那么集合2就是集合1的超集。
+// };
+#func {sset.IsSuperset} {
+    #return {@sset.IsSubset{{%2};{%1}}};
+};
+
+///=== {
+// #@ sset.IsProperSuperset <集合1> <集合2>
+//    判断集合2是否为集合1的真超集。
+//    📖  如果集合2包含了集合中1的每个元素，而且集合2比集合1的元素还要多，
+//       那么集合2就是集合1的真超集。
+// };
+#func {sset.IsProperSuperset} {
+    #return {@sset.IsProperSubset{{%2};{%1}}};
+};
+
+///=== {
+// #@ sset.Union <集合1> <集合2> [...]
+//    求两个或者多个集合的并集。
+//    📖  并集是指把所有集合放在一块儿之后得到的新集合。
+// };
+#func {sset.Union} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {$argv[1]};
+    };
+
+    #local set  {@list.FromSlist{$argv[1]}};
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #local other {$argv[+$idx]};
+        #local set {@set.Add{{$set};$other}};
+    };
+
+    #return {@slist.FromList{$set}};
+};
+
+///=== {
+// #@ sset.Intersection <集合1> <集合2> [...]
+//    求两个或者多个集合的交集。
+//    📖  交集是指由同时出现在所有集合中的元素组成的新集合。
+// };
+#func {sset.Intersection} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {};
+    };
+
+    #local set  {@list.FromSlist{$argv[1]}};
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #if { &set[] == 0 } {
+            #return {};
+        };
+
+        #local other {$argv[+$idx]};
+        #loop {&set[]} {1} {idx} {
+            #local elem {$set[$idx]};
+            #if { !@sset.Contains{{$other};{$elem}} } {
+                #list set {delete} {$idx};
+            };
+        };
+    };
+
+    #return {@slist.FromList{$set}};
+};
+
+///=== {
+// #@ sset.IsDisjoint <集合1> <集合2> [...]
+//    判断两个或者多个集合是否为不交集。
+//    📖  不交集是交集为空的意思。
+// };
+#func {sset.IsDisjoint} {
+    #local set {@sset.Intersection{%0}};
+    #if { @slist.Size{$set} == 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ sset.Product <集合1> <集合2> [...]
+//    计算两个或者多个集合的笛卡尔积。返回结果集合中的每个元素都是一个字符串，
+//    其值由各个参数集合的元素拼接而成。
+//    如果调用前设置了环境变量 sset-product-divider，则会以它为分隔符拼接。
+//    <171>注意<299>，sset-product-divider 不能被设置为分号，这会导致灾难性的后果。
+//    📖  两个集合的笛卡尔积是指由两个集合的元素组成的所有可能的有序对的集合。
+//       多个集合的积也可由此扩展。
+// };
+#func {sset.Product} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {};
+    };
+
+    #local set  {@list.FromSlist{$argv[1]}};
+    #if { &set[] == 0 } {
+        #return {};
+    };
+
+    #local divider {@defaultVar{$sset-product-divider}};
+
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #local other {$argv[+$idx]};
+        #if { "$other" == "" } {
+            #return {};
+        };
+
+        #local newSet {};
+        #local left {};
+        #local right {};
+        #loop {1} {&set[]} {left} {
+            #local left {$set[+$left]};
+            #foreach {$other} {right} {
+                #list newSet {add} {{$left$divider$right}};
+            };
+        };
+
+        #local set {$newSet};
+    };
+
+    #return {@slist.FromList{$set}};
+};
+
+///=== {
+// #@ sset.Diff <集合1> <集合2> [...]
+//    计算集合1与其它集合的相对差。
+//    📖  相对差是指从集合1中去掉所有在其它集合中出现过的元素之后剩下的集合。
+// };
+#func {sset.Diff} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local argv {$info[ARGUMENTS]};
+
+    #if { &argv[] < 2 } {
+        #return {$argv[1]};
+    };
+
+    #local set  {@list.FromSlist{$argv[1]}};
+    #local idx  {0};
+    #loop {2} {&argv[]} {idx} {
+        #if { &set[] == 0 } {
+            #return {};
+        };
+
+        #local other {$argv[+$idx]};
+        #local set {@set.Remove{{$set};$other}};
+    };
+
+    #return {@slist.FromList{$set}};
+};
+
+///=== {
+// #@ sset.SymmDiff <集合1> <集合2>
+//    计算集合1与集合2的对称差。
+//    📖  对称差是指并集与交集的相对差。
+// };
+#func {sset.SymmDiff} {
+    #return {@sset.Diff{{@sset.Union{{%1};{%2}}};{@sset.Intersection{{%1};{%2}}}}};
+};

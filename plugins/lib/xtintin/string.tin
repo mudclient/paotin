@@ -6,41 +6,168 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#func {len}         {#format result {%L} {%0}};
-#func {width}       {#format result {%W} {%0}};
+#nop 本文件是 xtintin 的一部分，实现了一些字符串处理函数;
 
-#func {space}       {#var result {@repeat{%0;{ }}}};
-#func {repeat}      {#var result {}; #loop 1 %1 tmp {#cat result {%2}}};
-#func {reverseStr}  {#var result {}; #parse {%1} {tmp} {#var result {$tmp$result}}};
+///=== {
+///// 字符串处理函数：
+//
+// #@ str.Len <字符串>
+//    给出指定字符串的长度。
+//    本函数也可以简写为 len，两个名称用途和用法完全相同。
+//
+// #@ str.Width <字符串>
+//    给出指定字符串的屏幕显示宽度（忽略颜色等控制字符，每个汉字按两个字符宽度计算。
+//    本函数也可以简写为 width，两个名称用途和用法完全相同。
+// };
+#func {str.Len}     {#format result {%L} {%0}};
+#func {len}         {#return {@str.Len{%0}}};
 
-#func {trim}        {#format result {%p} {%0}};
-#func {trimAll}     {#var result {%0}; #replace {result} {%+1..s} {}};
-#func {plain}       {#format result {%P} {%0}};
+#func {str.Width}   {#format result {%W} {%0}};
+#func {width}       {#return {@str.Width{%0}}};
 
-#func {replace}     {#var result %1; #replace result {%2} {%3}};
-#func {toLower}     {#format result {%l} {%0}};
-#func {toUpper}     {#format result {%u} {%0}};
-#func {capital}     {#format result {%n} {%0}};
+///=== {
+// #@ str.Space <长度>
+//    生成指定长度的空白字符串。
+//    本函数也可以简写为 space，两个名称用途和用法完全相同。
+//
+// #@ str.Repeat <次数> <字符串>
+//    将指定的字符串重复若干次。
+//    本函数也可以简写为 repeat，两个名称用途和用法完全相同。
+//
+// #@ str.Reverse <字符串>
+//    将字符串按照倒序重排每个字符并返回新的字符串。
+// };
+#func {str.Space}   {#return {@str.Repeat{{%0};{ }}}};
+#func {space}       {#return {@str.Space{%0}}};
 
-#func {char}        {#format result {%X} {%0}; #format result {%x} {$result}};
-#func {codepoint}   {#format result {%A} {%0}};
-#func {hex2char}    {#format result {%x} {%0}};
-#func {char2hex}    {#format result {%A} {%0}; #format result {%X} {$result}};
+#func {str.Repeat}  {#var result {}; #loop 1 {%1} tmp {#cat result {%2}}};
+#func {repeat}      {#return {@str.Repeat{%0}}};
 
-#func {format}      {#format result {%1} {%2}};
+#func {str.Reverse} {#var result {}; #parse {%0} {tmp} {#var result {$tmp$result}}};
 
-#func {left}        {#local width {%2}; #if {$width<=0} {#return {}} {#format result {%.${width}s} {%1}}};
-#func {right}       {#local width {%2}; #if {$width<=0} {#return {}} {#format result {%.-${width}s} {%1}}};
-#func {substr}      {#return {@left{{@right{{%1}; @eval{@width{%1} - %2}}}; %3}}};
+///=== {
+// #@ str.Trim <字符串>
+//    去除给定字符串首尾的连续空白。
+//    本函数也可以简写为 trim，两个名称用途和用法完全相同。
+//
+// #@ str.TrimAll <字符串>
+//    去除字符串中全部的空白。
+//    本函数也可以简写为 trimAll，两个名称用途和用法完全相同。
+//
+// #@ str.Plain <字符串>
+//    去除字符串中的颜色代码和 ANSI 控制字符。
+// };
+#func {str.Trim}    {#format result {%p} {%0}};
+#func {trim}        {#return {@str.Trim{%0}}};
 
-#func {alignLeft}   {#format result {%-%2s} {%1}};
-#func {alignRight}  {#format result {%+%2s} {%1}};
+#func {str.TrimAll} {#var result {%0}; #replace {result} {%+1..s} {}};
+#func {trimAll}     {#return {@str.TrimAll{%0}}};
 
-#func {alignCenter}  {
+#func {str.Plain}   {#format result {%P} {%0}};
+
+///=== {
+// #@ str.Replace <字符串> <正则表达式> <替换表达式>
+//    在给定字符串中执行替换，凡是被正则表达式匹配的东西都会用替换表达式进行替换。
+//
+// #@ str.ToLower <字符串>
+//    将给定字符串转换成小写。
+//    本函数也可以简写为 toLower，两个名称用途和用法完全相同。
+//
+// #@ str.ToUpper <字符串>
+//    将给定字符串转换成大写。
+//    本函数也可以简写为 toUpper，两个名称用途和用法完全相同。
+//
+// #@ str.Capital <字符串>
+//    将给定字符串转换成首字母大写。
+// };
+#func {str.Replace} {#var result {%1}; #replace result {%2} {%3}};
+
+#func {str.ToLower} {#format result {%l} {%0}};
+#func {toLower}     {#return {@str.ToLower{%0}}};
+
+#func {str.ToUpper} {#format result {%u} {%0}};
+#func {toUpper}     {#return {@str.ToUpper{%0}}};
+
+#func {str.Capital} {#format result {%n} {%0}};
+
+///=== {
+// #@ str.FromCode <十进制代码>
+//    将十进制代码转换成对应的 ASCII 或者 Unicode 字符。
+//    本函数也可以简写为 char，两个名称用途和用法完全相同。
+//
+// #@ str.ToCode <字符>
+//    获得该字符在 Unicode 编码中的码点，以十进制整数形式表示。
+//    本函数也可以简写为 codepoint，两个名称用途和用法完全相同。
+//
+// #@ str.FromHexCode <十六进制代码>
+//    将十六进制代码转换成对应的 ASCII 或者 Unicode 字符。
+//    本函数也可以简写为 hex2char，两个名称用途和用法完全相同。
+//
+// #@ str.ToHexCode <字符>
+//    获得该字符在 Unicode 编码中的码点，以十六进制整数形式表示。
+//    本函数也可以简写为 char2hex，两个名称用途和用法完全相同。
+// };
+#func {str.FromCode}    {#format result {%X} {%0}; #format result {%x} {$result}};
+#func {char}            {#return {@str.FromCode{%0}}};
+
+#func {str.ToCode}      {#format result {%A} {%0}};
+#func {codepoint}       {#return {@str.ToCode{%0}}};
+
+#func {str.FromHexCode} {#format result {%x} {%0}};
+#func {hex2char}        {#return {@str.FromHexCode{%0}}};
+
+#func {str.ToHexCode}   {#format result {%A} {%0}; #format result {%X} {$result}};
+#func {char2hex}        {#return {@str.ToHexCode{%0}}};
+
+///=== {
+// #@ str.Format <格式> <参数>
+//    执行 #format result <格式> <参数> 操作。
+//    本函数也可以简写为 format，两个名称用途和用法完全相同。
+// };
+#func {str.Format}  {#format result {%1} {%2}};
+#func {format}      {#return {@str.Format{%0}}};
+
+///=== {
+// #@ str.Left <字符串> <截取宽度>
+//    按照屏幕宽度标准，截取字符串左边的若干字符。
+//    本函数也可以简写为 left，两个名称用途和用法完全相同。
+//
+// #@ str.Right <字符串> <截取宽度>
+//    按照屏幕宽度标准，截取字符串右边的若干字符。
+//    本函数也可以简写为 right，两个名称用途和用法完全相同。
+//
+// #@ str.Sub <字符串> <开始宽度> <截取宽度>
+//    按照屏幕宽度标准，从字符串开始的某个宽度，截取连续的若干字符。
+//    本函数也可以简写为 substr，两个名称用途和用法完全相同。
+// };
+#func {str.Left}    {#local width {%2}; #if {$width<=0} {#return {}} {#format result {%.${width}s} {%1}}};
+#func {left}        {#return {@str.Left{%0}}};
+
+#func {str.Right}   {#local width {%2}; #if {$width<=0} {#return {}} {#format result {%.-${width}s} {%1}}};
+#func {right}       {#return {@str.Right{%0}}};
+
+#func {str.Sub}     {#return {@str.Left{{@str.Right{{%1}; @math.Eval{@str.Width{%1} - %2}}}; %3}}};
+#func {substr}      {#return {@str.Sub{%0}}};
+
+///=== {
+// #@ str.AlignLeft <字符串> <宽度>
+//    按照屏幕宽度标准，在字符串后面补空白，延长至指定宽度并使之居左对齐。
+//
+// #@ str.AlignRight <字符串> <宽度>
+//    按照屏幕宽度标准，在字符串前面补空白，延长至指定宽度并使之居右对齐。
+// };
+#func {str.AlignLeft}   {#format result {%-%2s} {%1}};
+#func {str.AlignRight}  {#format result {%+%2s} {%1}};
+
+///=== {
+// #@ str.AlignCenter <字符串> <宽度>
+//    按照屏幕宽度标准，在字符串前后补空白，延长至指定宽度并使之居中对齐。
+// };
+#func {str.AlignCenter}  {
     #local str  {%1};
     #local max  {@default{%2;80}};
 
-    #local width {@width{$str}};
+    #local width {@str.Width{$str}};
 
     #local left {};
     #local right {};
@@ -52,7 +179,26 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$result};
 };
 
-#func {colorBar} {
+///=== {
+// #@ str.Split <字符串> <分隔符>
+//    将字符串按照分隔符拆分成多个子串，并作为字符串列表返回。
+//    这里的分隔符可以通过正则表达式来指定。
+//    本函数也可以简写为 split，两个名称用途和用法完全相同。
+// };
+#func {str.Split} {
+    #local str {%1};
+    #local sep {%2};
+    #replace str {$sep} {;};
+    #return {$str};
+};
+
+#func {split} {#return {@str.Split{%0}}};
+
+///=== {
+// #@ util.ColorBar <字符串> <颜色1> <权重1> <颜色2> <权重2> [...]
+//    将字符串按照颜色及其对应的权重占比，渲染成彩色字符串。注意颜色参数须按顺序排列。
+// };
+#func {util.ColorBar} {
     #local str {%1};
 
     #local args {};
@@ -64,8 +210,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local count {0};
     #local sum {0};
     #while { $count < &args[] } {
-        #local color    {$args[@eval{$count + 1}]};
-        #local weight   {@defaultNum{$args[@eval{$count + 2}];0}};
+        #local color    {$args[@math.Eval{$count + 1}]};
+        #local weight   {@defaultNum{$args[@math.Eval{$count + 2}];0}};
         #list parts {add} {{
             {color}{$color}
             {weight}{$weight}
@@ -75,13 +221,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #local elem {};
-    #local len {@len{$str}};
+    #local len {@str.Len{$str}};
     #local leftLen {0};
     #local leftWeight {0};
     #local colorStr {};
     #foreach {$parts[%*]} {elem} {
-        #local elemLen {@eval{($elem[weight] + $leftWeight) * $len / $sum - $leftLen}};
-        #local text {@substr{{$str};$leftLen;$elemLen}};
+        #local elemLen {@math.Eval{($elem[weight] + $leftWeight) * $len / $sum - $leftLen}};
+        #local text {@str.Sub{{$str};$leftLen;$elemLen}};
         #cat colorStr {$elem[color]$text<099>};
         #math leftLen {$leftLen + $elemLen};
         #math leftWeight {$leftWeight + $elem[weight]};

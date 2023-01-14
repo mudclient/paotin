@@ -6,9 +6,27 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
+#nop 本文件是 xtintin 的一部分，实现了一些布尔运算函数;
+
+///=== {
+///// 布尔运算函数：
+//
+// #@ true
+//    永远为真。
+//
+// #@ false
+//    永远为假。
+// };
 #func {true}    {#return 1};
 #func {false}   {#return 0};
 
+///=== {
+// #@ isTrue <值>
+//    判断一个值是否为字符串 true 或者整数值 1，如果是则返回真，否则反之。
+//
+// #@ isFalse <值>
+//    判断一个值是否为字符串 false 或者整数值 0，如果是则返回真，否则反之。
+// };
 #func {isTrue} {
     #if { "%0" == "{true|1}" } {
         #return 1;
@@ -27,6 +45,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+///=== {
+// #@ allTrue <值1> [<值2> ...]
+//    判断多个值，是否全部为真，如果是则返回真，否则反之。
+// };
 #func {allTrue} {
     #local value {};
     #foreach {%0} {value} {
@@ -38,6 +60,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return 1;
 };
 
+///=== {
+// #@ allFalse <值1> [<值2> ...]
+//    判断多个值，是否全部为假，如果是则返回真，否则反之。
+// };
 #func {allFalse} {
     #local value {};
     #foreach {%0} {value} {
@@ -49,6 +75,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return 1;
 };
 
+///=== {
+// #@ anyTrue <值1> [<值2> ...]
+//    判断多个值，是否有任意一个为真，如果是则返回真，否则反之。
+// };
 #func {anyTrue} {
     #if @allFalse{%0} {
         #return 0;
@@ -58,6 +88,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+///=== {
+// #@ anyFalse <值1> [<值2> ...]
+//    判断多个值，是否有任意一个为假，如果是则返回真，否则反之。
+// };
 #func {anyFalse} {
     #if @allTrue{%0} {
         #return 0;
@@ -67,6 +101,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+///=== {
+// #@ if <条件> <值1> [<值2>]
+//    三元运算符。判断条件，如果条件成立则给出值1，否则给出值2，如果值2未提供则视同为空字符串。
+// };
 #func {if} {
     #local cond {%1};
     #local then {%2};
