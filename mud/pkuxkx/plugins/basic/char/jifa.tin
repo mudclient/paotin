@@ -74,7 +74,7 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
         };
         #local skillName    {%%4};
         #local jifaLevel    {%%8};
-        #if { &char[Skills][$baseName][] > 0 } {
+        #if { &char[Skills][$baseName][] > 0 && "$skillName" != "无" } {
             #var char[Skills][$baseName][jifa-to]       {$skillName};
             #var char[Skills][$baseName][jifa-level]    {$jifaLevel};
             #var char[Skills][$baseName][jifa-type]     {$char-jifa-type};

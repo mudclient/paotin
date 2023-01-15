@@ -50,6 +50,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 #func {basic_char_skills.Init} {
     #class data/basic/char open;
     #var char[Skills] {};
+    #var char-skill-limit {1};
     #class data/basic/char close;
     #delay char.skills.init {skills;jifa} 1;
     #return true;
@@ -98,7 +99,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
         #replace {level}  {\x1b[2;37;0m} {};
         #replace {limit}  {\x1b[2;37;0m} {};
 
-		#replace level {+} {};
+        #replace level {+} {};
 
         #if { "$limit" == "%s%d%s" } {
             #math limit {$limit + 0};
@@ -151,6 +152,10 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
             {rank}{$rank}
             {level}{$level}
             {limit}{$limit}
+        };
+
+        #if { $char-skill-limit < $limit } {
+            #var char-skill-limit $limit;
         };
 
         #line gag;
@@ -250,4 +255,131 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
     };
 
     #send {#response R:skbrief-begin;skbrief $id;response R:skbrief-end#};
+};
+
+///=== {
+// #@ char.SkillLimit [<技能名称>]
+//    如果指定了技能名称，则返回该技能所能达到的技能上限。如果没有指定或者技能不存在，
+//    则返回本人的武功技能上限。
+//    如果技能上限获取失败，默认值为基本内功的上限，如果基本内功上限也没有获取到，则默认为 1。
+// };
+#func {char.SkillLimit} {
+    #local skill {%1};
+    #local limit {@defaultNum{$char-skill-limit;@defaultNum{$char[Skills][基本内功][limit];1}}};
+    #local limit {@defaultNum{$char[Skills][$skill][limit];$limit}};
+    #return $limit;
+};
+
+///=== {
+// #@ char.SkillType <技能名称>
+//    返回该技能的技能类别。
+//    常见的技能类别有：
+//        - 基本功夫
+//        - 特殊功夫
+//        - 基本知识
+//        - 职业技能
+// };
+#func {char.SkillType} {
+    #local skill {%1};
+    #return {$char[Skills][$skill][type]};
+};
+
+///=== {
+// #@ char.SkillLevel <技能中文名称>
+//    返回该技能的当前等级。没学会的技能等级为 0。
+// };
+#func {char.SkillLevel} {
+    #local skill {%1};
+
+    #if { "$char[Skills][$skill]" == "" } {
+        #return 0;
+    };
+
+    #return $char[Skills][$skill][level];
+};
+
+///=== {
+// #@ char.IsSkillEnabled <技能中文名称>
+//    判断该技能是否被激发。这里的技能名称既可以是基本功夫，也可以是特殊功夫。
+// };
+#func {char.IsSkillEnabled} {
+    #local skill {%1};
+
+    #if { "$char[Skills][$skill]" == "" } {
+        #return 0;
+    };
+
+    #if { "$char[Skills][$skill][jifa-to]" == "" } {
+        #return 0;
+    };
+
+    #return 1;
+};
+
+///=== {
+// #@ char.GetJifaSkill 提供技能激发情况查询
+//    共分为三种情况：
+//    1，输入参数为基本技能，输出对应的特殊技能名称。如果未激发则为空
+//    2，输入参数为特殊技能，输出对应的基本技能名称。结果可能为多个。如果未激发则为空
+//    3，输入参数为激发类型，则输出对应的基本技能名称。又分为以下两种情形：
+//      (1)，输入参数为常用拳脚或者常用兵器，则输出相应的基本技能名称。
+//           由于存在互备的情形，因此结果是一个字符串列表，可能包含多个技能名称
+//      (2)，其它内功、躲闪、招架及武功种类，则输出对应的特殊技能名称
+// };
+#func {char.GetJifaSkill} {
+    #local arg {%1};
+
+    #local skills {};
+    #if { "$arg" == "常用{拳脚|兵器}" } {
+        #local skill {};
+        #foreach {*char[Skills][]} {skill} {
+            #local elem {$char[Skills][$skill]};
+            #if { "$elem[type]" != "基本功夫" } {
+                #continue;
+            };
+            #if { "$elem[jifa-type]" == "$arg" } {
+                #list skills add {$skill};
+            };
+        };
+        #return {@slist.FromList{$skills}};
+    };
+
+    #if { "$arg" == "躲闪" } {
+        #local arg {基本轻功};
+    };
+
+    #if { "$char[Skills][$arg][jifa-to]" != "" } {
+        #return {$char[Skills][$arg][jifa-to]};
+    };
+
+    #local arg {基本$arg};
+    #if {"$char[Skills][$arg][jifa-to]" != "" } {
+        #return {$char[Skills][$arg][jifa-to]};
+    };
+    #else {
+        #return;
+    };
+};
+
+///=== {
+// #@ char.SkillJifaLevel <技能中文名称>
+//    返回技能激发等级，数据来自 jifa/enable 命令。
+//    如果技能未被激发，那么分两种情况：
+//       1. 如果输入的技能名称为基本功夫，则取 jifa 数据。
+            如果 jifa 数据取不到，则取技能当前等级的一半。
+//       2. 如果输入的技能名称为特殊功夫，则取技能的当前等级。
+// };
+#func {char.SkillJifaLevel} {
+    #local skill {%1};
+
+    #if { "$char[Skills][$skill]" == "" } {
+        #return 0;
+    };
+
+    #local level {$char[Skills][$skill][level]};
+    #if { "$skill" == "基本%*" } {
+        #math level {$char[Skills][$skill][level] / 2};
+    };
+
+    #return {@defaultNum{$char[Skills][$skill][jifa-level];$level}};
 };
