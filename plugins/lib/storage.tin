@@ -18,6 +18,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 /////
 ///// 各模块可以通过 API storage.Save 按需创建自己的存储文件，在其中存储一个或多个
 ///// 变量，并在需要时通过 API storage.Load 提取这些变量。
+/////
+///// 另外，storage 模块自行维护了一个全局存储文件。再简单使用场景下，其它模块
+///// 可以通过 API storage.SetGlobal 和 storage.GetGlobal 来读写这个全局存储文件。
+///// 这对读写少量的数据显得更加方便。
 ///// };
 
 #var lib_storage[META] {
@@ -83,4 +87,38 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #var {$var} {${dump-$var}};
     };
     #class comm-store-tmp kill;
+};
+
+///=== {
+// ## storage.SetGlobal <KEY> [<值>]
+//    将值关联到 KEY 上，并存储到全局存储文件中。
+//    参见 storage.GetGlobal
+// };
+#alias {storage.SetGlobal} {
+    #local key      {%1};
+    #local value    {%2};
+
+    #if { "$key" == "" } {
+        xtt.Usage storage.SetGlobal;
+        #return;
+    };
+
+    #var storage-globals[$key] {$value};
+    storage.Save {storage} {storage-globals};
+};
+
+///=== {
+// #@ storage.GetGlobal <KEY>
+//    从全局存储文件中根据 KEY 提取值。
+//    参见 storage.SetGlobal
+// };
+#func {storage.GetGlobal} {
+    #local key  {%1};
+
+    #if { "$key" == "" } {
+        xtt.Usage storage.SetGlobal;
+        #return {};
+    };
+
+    #return {$storage-globals[$key]};
 };
