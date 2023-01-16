@@ -55,6 +55,7 @@ COPY mud                /paotin/mud/
 
 COPY ids/EXAMPLE        /paotin/ids/
 COPY ids/DEFAULT        /paotin/ids/
+COPY ids/LOCAL          /paotin/ids/
 
 COPY init.vim           /paotin/.config/nvim/
 
