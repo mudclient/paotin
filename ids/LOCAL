@@ -1,0 +1,34 @@
+#!/usr/bin/env tt++
+#nop vim: filetype=tt
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#read framework/main.tin;
+
+#var user[id]       LOCAL;
+#var user[name]     本地测试;
+
+#alias {auto-login} {
+    setup;
+    greeting;
+};
+
+#alias {setup} {
+    #line quiet #port init null 0;
+    #untick {KeepAlive};
+    #alias {^%*$} {log.sendLog %%0} {9.999};
+};
+
+#alias {greeting} {
+    okLog 欢迎使用 PaoTin++！;
+};
+
+#alias {test} {
+    load-module foo;
+};
+
+#alias {%*} {#showme 你奋笔疾书，挥毫落纸：「<060>%0<070>」} {9.999};

@@ -98,14 +98,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #config {LOG LEVEL} {HIGH};
     #log timestamp {%Y-%m-%d %H:%M:%S };
     #log append {$gLog[PATH]/$gLog[buffer]};
-    #event {RECEIVED LINE} {mudLog %%0};
-    #event {SEND OUTPUT} {
-        #local text {%%0};
-        #replace text {<} {\<};
-        #format text {<020>SEND: <420>%p<070>} {$text};
-        mudLog $text;
-        #if @option.IsEnable{EchoCommand} {
-            #echo {<020>%t %s} {%Y-%m-%d %H:%M:%S} {$text};
-        };
+    #event {RECEIVED LINE}  {mudLog %%0};
+    #event {SEND OUTPUT}    {log.sendLog %%0};
+};
+
+#alias {log.sendLog} {
+    #local text {%0};
+    #replace text {<} {\<};
+    #format text {<020>SEND: <420>%p<070>} {$text};
+    mudLog $text;
+    #if @option.IsEnable{EchoCommand} {
+        #echo {<020>%t %s} {%Y-%m-%d %H:%M:%S} {$text};
     };
 };
