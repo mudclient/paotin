@@ -1,3 +1,15 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+///=== {
+///// chat 模块用来分类聊天记录，分别存放到单独的日志文件里。
+// };
+
 #var lib_ui_chat[META] {
     {NAME}      {聊天日志}
     {DESC}      {抓取聊天信息，分置到不同的日志文件里去}
@@ -15,6 +27,8 @@
     {{pattern}{私聊}                        {action}{tellLog}       {gag}{false}}
     {{pattern}{%*}                          {action}{groupLog}      {gag}{true}}
 };
+
+load-lib storage;
 
 #func {lib_ui_chat.Init} {
     load-file {etc/ui-chat.tin};
@@ -149,35 +163,110 @@
 #action {~^%c你告诉%c%u%c：%*$}     {chat.log 私聊 {%0}} {9.997};
 #action {~^%c你回答%c%u%c：%*$}     {chat.log 私聊 {%0}} {9.997};
 
-#action {^关闭所有频道。$} {
-    #class chat-turn-on open;
-    #gag {^你现在并没有打开任何频道。$};
-    #gag {^打开 %*频道。$};
-    #gag {^你现在打开的频道：%*。$};
-    #action {^目前你的频道使用情况如下：$} {
-        #class chat-turn-on kill;
+#var chat-open-channels {UNKNOWN};
+#var chat-todo-channels {};
+
+///=== {
+// ## chat.TuneOff <频道ID> [...]
+//    关闭聊天频道。参数为一个或多个频道 ID。
+//    可用的频道 ID 有：
+//      - 常用：    chat rumor qq rw jh helpme
+//      - 不常用：  bd fb tt group nation qy jy mp
+// };
+#alias {chat.TuneOff} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local chans {@sset.Create{$info[ARGUMENTS][]}};
+
+    #local chan {};
+    #if { "$chat-open-channels" == "UNKNOWN" } {
+        #foreach {$chans} {chan} {
+            #var chat-todo-channels[$chan] {off};
+        };
     };
-    #class chat-turn-on close;
-    #line gag;
+    #else {
+        #local todo {@sset.Intersection{{$chans};{$chat-open-channels}}};
+        #foreach {$todo} {chan} {
+            tune $chan;
+        };
+    };
+    #return;
+};
+
+///=== {
+// ## chat.TuneOn <频道ID> [...]
+//    打开聊天频道。参数为一个或多个频道 ID。
+//    可用的频道 ID 有：
+//      - 常用：    chat rumor qq rw jh helpme
+//      - 不常用：  bd fb tt group nation qy jy mp
+// };
+#alias {chat.TuneOn} {
+    #info arguments save;
+    #unvar info[ARGUMENTS][0];
+    #local chans {@sset.Create{$info[ARGUMENTS][]}};
+
+    #local chan {};
+    #if { "$chat-open-channels" == "UNKNOWN" } {
+        #foreach {$chans} {chan} {
+            #var chat-todo-channels[$chan] {on};
+        };
+    };
+    #else {
+        #local todo {@sset.Diff{{$chans};{$chat-open-channels}}};
+        #foreach {$todo} {chan} {
+            tune $chan;
+        };
+    };
+    #return;
+};
+
+///=== {
+// ## chat.OpenAll
+//    打开所有聊天频道。
+// };
+#alias {chat.OpenAll} {
+    tune;
+    chat.TuneOn bd chat fb group helpme jh jy mp nation qq qy rumor rw tt;
+};
+
+///=== {
+// ## chat.CloseAll
+//    关闭所有聊天频道。
+// };
+#alias {chat.CloseAll} {
+    tune;
+    chat.TuneOff bd chat fb group helpme jh jy mp nation qq qy rumor rw tt;
+};
+
+#nop 你现在打开的频道：bd, fb, group, helpme, jh, jy, mp, nation, qq, qy, rumor, rw, tt。;
+#action {^你现在打开的频道：%*。{|ID=paotin/chat}$} {
+    #local channels {%1};
+    #replace channels {, } {;};
+    #var chat-open-channels {@sset.Create{$channels}};
+    chat.tune;
+};
+
+#action {^你现在并没有打开任何频道。{|ID=paotin/chat}$} {
+    #var chat-open-channels {};
+    chat.tune;
+};
+
+#alias {chat.tune} {
+    #local chan {};
+    #foreach {*chat-todo-channels[]} {chan} {
+        #local todo {$chat-todo-channels[$chan]};
+        #local set {$chat-open-channels};
+        #if { "$todo" == "on" && !@sset.Contains{{$set};$chan} } {
+            tune $chan;
+        };
+        #elseif { "$todo" == "off" && @sset.Contains{{$set};$chan} } {
+            tune $chan;
+        };
+        #unvar chat-todo-channels[$chan];
+    };
 };
 
 event.HandleOnce {user-online} {chat/init} {ui/chat} {
-    tune all;
-    tune bd;
-    tune chat;
-    tune fb;
-    tune group;
-    tune helpme;
-    tune jh;
-    tune jy;
-    tune mp;
-    tune nation;
-    tune qq;
-    tune qy;
-    tune rumor;
-    tune rw;
-    tune tt;
     tune;
-
     set learn_emote 1;
 };
