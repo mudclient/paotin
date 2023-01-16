@@ -26,34 +26,37 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {CONFIG}    {}
 };
 
-#nop sync.UUID 可以用来生成一个唯一的同步符号。;
+///=== {
+// #@ sync.UUID
+//    用来生成一个唯一的同步符号。
+// };
 #func {sync.UUID} {
     #return {@uuid{}};
 };
 
-/*
-sync.Wait 可以用来和服务器进行同步，该方法有两个参数：
-  1. 回调代码
-     回调代码会在与服务器同步之后执行。
-  2. 同步符号（可选）
-     同步符号参数用来对本次同步进行唯一标识，只能由字母、数字、汉字、减号构成。
-     不能包含空格、分号等在 TinTin++ 中有特殊含义的字符。
-     也不能包含在正则表达式中有特殊含义的字符。
-     本参数为可选值，如果省略，则无法通过 sync.Ignore 取消回调
-*/
+///=== {
+// ## sync.Wait <回调代码> [<同步符号>]
+//    用来和服务器进行同步，参数说明如下：
+//    1. 回调代码
+//       回调代码会在与服务器同步之后执行。
+//    2. 同步符号（可选）
+//       同步符号参数用来对本次同步进行唯一标识，只能由大小写字母、数字、连字符、
+//       下划线、小数点、斜线构成。
+//       本参数为可选值，如果省略，则无法通过 sync.Ignore 取消回调
+// };
 #alias {sync.Wait} {
     #local callback {%1};
     #local uuid     {%2};
 
     #if { {$callback} == {} } {
-        errLog 回调代码不能为空;
+        xtt.Usage sync.Wait 回调代码不能为空;
         #return;
     };
 
-	#if { {$uuid} == {%*{[^a-zA-Z0-9_./-]}%*} } {
-		errLog 同步符号不能这么写;
-		#return;
-	};
+    #if { {$uuid} == {%*{[^a-zA-Z0-9_./-]}%*} } {
+        xtt.Usage sync.Wait 同步符号不能这么写;
+        #return;
+    };
 
     #if { "$uuid" == "" } {
         #format uuid {%U};
@@ -64,15 +67,16 @@ sync.Wait 可以用来和服务器进行同步，该方法有两个参数：
     #send response R:sync-$uuid;
 };
 
-/*
-   函数版的 sync.Wait 相比别名版的 sync.Wait，省略了同步符号参数要求，
-   改由 sync 模块自行生成，并作为返回值返回给用户。
-*/
+///=== {
+// #@ sync.Wait <回调代码>
+//    函数版的 sync.Wait 相比别名版的 sync.Wait，省略了同步符号参数要求，
+//    改由 sync 模块自行生成，并作为返回值返回给用户。
+// };
 #func {sync.Wait} {
     #local callback {%1};
 
     #if { {$callback} == {} } {
-        errLog 回调代码不能为空;
+        xtt.Usage sync.Wait 回调代码不能为空;
         #return;
     };
 
@@ -93,7 +97,10 @@ sync.Wait 可以用来和服务器进行同步，该方法有两个参数：
     #var {gSyncHandlers[$uuid]} {$callback};
 };
 
-#nop sync.Ignore 可以忽略指定的同步信息，将不会再触发回调代码。;
+///=== {
+// ## sync.Ignore <同步符号>
+//    忽略指定的同步信息，将不会再触发回调代码。
+// };
 #alias {sync.Ignore} {
     #local uuid {%1};
     #unvar {gSyncHandlers[$uuid]};

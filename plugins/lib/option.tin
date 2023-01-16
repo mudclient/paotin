@@ -19,11 +19,27 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {true};
 };
 
+///=== {
+///// 全局选项管理。
+/////
+///// 全局选项本质上就是一些变量，这个模块主要是为了提供一些公共 API，和一个统
+///// 一的管理方式，能够把散落在各处的选项集中管理。
+/////
+// ## option.Define <名称> <数据类型> <中文含义> [<默认值>]
+//    定义一个全局选项。选项被定义之后有一些公共 API 可供使用。
+//    选项必须经过定义之后才能使用。选项的名称按照大骆驼风格命名。
+//    目前仅支持 Bool 型选项。
+// };
 #alias {option.Define} {
     #local option   {%1};
     #local type     {%2};
     #local meaning  {%3};
     #local default  {%4};
+
+    #if { "$option" == "" || "$type" == "" || "$meaning" == "" } {
+        xtt.Usage option.Define;
+        #return;
+    };
 
     #if { "$gOptions[$option]" != "" } {
         errLog 选项「$option」已存在，请检查代码。;
@@ -49,22 +65,30 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+///=== {
+// ## option.List
+//    列出所有的选项。
+// };
 #alias {option.List} {
     #echo {};
-	#echo {<128>%+20s %+10s %+30s %+20s} {选项名称} {选项类型} {选项含义} {选项当前值};
-	#draw Yellow scroll line 1 1 1 83;
+    #echo {<128>%+20s %+10s %+30s %+20s} {选项名称} {选项类型} {选项含义} {选项当前值};
+    #draw Yellow scroll line 1 1 1 83;
 
     #local option {};
-	#foreach {*gOptions[]} {option} {
-		#echo {%+20s %+10s %+30s %+20s}
+    #foreach {*gOptions[]} {option} {
+        #echo {%+20s %+10s %+30s %+20s}
             {$gOptions[$option][name]}
             {$gOptions[$option][type]}
             {$gOptions[$option][meaning]}
             {$gOptions[$option][value]};
-	};
+    };
     #echo {};
 };
 
+///=== {
+// #@ option.Get <选项名称>
+//    获取选项的当前值。
+// };
 #func {option.Get} {
     #local {option} {%1};
 
@@ -76,6 +100,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$gOptions[$option][value]};
 };
 
+///=== {
+// #@ option.Set <选项名称> <选项新值>
+//    设置选项的当前值，返回之前的旧值。
+// };
 #func {option.Set} {
     #local {option} {%1};
     #local {value}  {%2};
@@ -91,18 +119,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$old};
 };
 
-#func {option.IsEnable} {
-    #local option {%1};
-    #local value {@option.Get{$option}};
-    #return @isTrue{$value};
-};
-
-#func {option.IsDisable} {
-    #local option {%1};
-    #local value {@option.Get{$option}};
-    #return @isFalse{$value};
-};
-
+///=== {
+// ## option.Set <选项名称> <选项值>
+//    设置选项的当前值。
+// };
 #alias {option.Set} {
     #local {option} {%1};
     #local {value}  {%2};
@@ -110,6 +130,31 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local _ {@option.Set{$option;{$value}}};
 };
 
+///=== {
+// #@ option.IsEnable <选项名称>
+//    检查选项是否已被开启。
+// };
+#func {option.IsEnable} {
+    #local option {%1};
+    #local value {@option.Get{$option}};
+    #return @isTrue{$value};
+};
+
+///=== {
+// #@ option.IsDisable <选项名称>
+//    检查选项是否已被禁用。
+// };
+#func {option.IsDisable} {
+    #local option {%1};
+    #local value {@option.Get{$option}};
+    #return @isFalse{$value};
+};
+
+///=== {
+// #@ option.Toggle <选项名称>
+//    翻转选项的当前值。如果是启用则改为禁用；如果是禁用则改为启用。
+//    本函数将返回之前的值。
+// };
 #func {option.Toggle} {
     #local {option} {%1};
 
@@ -126,18 +171,30 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return {$value};
 };
 
+///=== {
+// ## option.Toggle <选项名称>
+//    翻转选项的当前值。如果是启用则改为禁用；如果是禁用则改为启用。
+// };
 #alias {option.Toggle} {
     #local {option} {%1};
 
     #local _ {@option.Toggle{$option}};
 };
 
+///=== {
+// ## option.Enable <选项名称>
+//    启用该选项。
+// };
 #alias {option.Enable} {
     #local {option} {%1};
 
     option.Set $option {true};
 };
 
+///=== {
+// ## option.Disable <选项名称>
+//    禁用该选项。
+// };
 #alias {option.Disable} {
     #local {option} {%1};
 
