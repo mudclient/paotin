@@ -7,7 +7,7 @@
 
 #nop {Top} {TopSepBar} {MidSepBar} {Bot} {BotSepBar};
 #list prompt-fields create {
-    { {place}{BotSepBar}        {label}{美化 / Ctrl+B 切换}  {name}{beautify} {cooldown}{600} {visibility}{HideCool} }
+    { {place}{BotSepBar}        {label}{屏幕美化}   {name}{beautify} {cooldown}{600} {visibility}{HideCool} }
     { {place}{BotSepBar}        {label}{状态栏更新} {name}{disable}  {visibility}{HideLabel} }
 };
 
@@ -34,9 +34,9 @@
 
 #nop 热键绑定;
 #list global-key-bindings create {
-    {{key}{\cs}     {action}{prompt.ToggleSwitch}}
-    {{key}{\cb}     {action}{beautify.ToggleSwitch}}
     {{key}{\cd}     {action}{xtt.ToggleDebug}}
-    {{key}{\ce}     {action}{option.Toggle EchoCommand}}
     {{key}{\col}    {action}{option.List}}
+    {{key}{\cos}    {action}{prompt.ToggleSwitch}}
+    {{key}{\cob}    {action}{beautify.ToggleSwitch}}
+    {{key}{\coe}    {action}{option.Toggle EchoCommand}}
 };
