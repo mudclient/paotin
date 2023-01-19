@@ -321,6 +321,52 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+///=== {
+// ## xtt.Stop <命令>
+//    暂时阻断某个命令的执行。
+//    某些基于触发的机器会周而复始地执行动作。本命令可以用来终止它的运行，并保留状态。
+//    例如新手机器人会循环执行 ask job/do/finish 流程，那么只需要输入 xtt.Stop ask，
+//    就可以在下一次 ask NPC 时，暂停机器执行，但并不影响机器状态。此时玩家可以手动
+//    操作角色，临时去做点别的，比如收个包袱之类的，然后回到房间，手动执行一次 ask 命令，
+//    就可以继续机器运行了。
+// };
+#alias {xtt.Stop} {
+    #line oneshot #alias {%1} {halt; #echo {<110>任务已暂停，请输入 <130>%1 %s <110>继续运行。<070>} {%%0}}
+};
+
+///=== {
+// ## xtt.DisableAllCommand
+//    禁止发送任何命令。
+//    某些游戏模式下，玩家必须小心地输入，否则一旦输错会造成损失。此时可以用本
+//    命令来禁止所有的触发、定时器、快捷键，等等，防止误发命令。
+//    此时玩家只能用 #send {.....} 命令来发送命令。
+// };
+#alias {xtt.DisableAllCommand} {
+    #class disable-all-command open;
+
+    #alias {xtt.UndoDisableAllCommand} {
+        #class disable-all-command kill;
+        #line quiet #ignore actions off;
+        #line quiet #ignore tickers off;
+        #line quiet #ignore delays off;
+        #line quiet #ignore events off;
+        #line quiet #ignore macros off;
+        okLog 命令已恢复正常。;
+    } {1.000};
+
+    #alias {^%*{|ID=paotin/disable-all-command}$} {
+        #echo {<110>命令已被抑制，可用 <120>#send<110> 强制发送。撤销请用 <120>xtt.UndoDisableAllCommand<110> : <130>%s<070>} {%%0}
+    } {1.001};
+
+    #line quiet #ignore actions on;
+    #line quiet #ignore tickers on;
+    #line quiet #ignore delays on;
+    #line quiet #ignore events on;
+    #line quiet #ignore macros on;
+
+    #class disable-all-command close;
+};
+
 #func {linkToHelp} {
     #local module   {%1};
     #local keyword  {%2};
