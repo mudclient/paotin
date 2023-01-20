@@ -5,24 +5,10 @@
 模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
 版权声明：本文件属于 PaoTin++ 的一部分
 ===========
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 ===========
 */
-
-#nop 一些中文 MUD 服务器在接收到 quit 命令时会让角色从服务器上下线，;
-#nop 这往往会导致玩家丢失背包里的物品。;
-#nop 为了避免悲剧发生，这里特别映射一下，改成仅断开连接，而不退出服务器角色。;
-#nop 如果玩家真的需要向服务器发送 quit 指令，请输入 #send quit。exit 同理;
-#alias {exit} {#end};
-#alias {quit} {#end};
-
-#nop 类似于 DOS/Unix，设置 clear/cls 命令为清除屏幕上的内容。;
-#alias {cls} {clear};
-#alias {clear} {
-    #system {tput clear};
-    prompt.refresh;
-};
 
 #ticker {save-data}     {xtt.Send save}     {600};
 #ticker {backup-data}   {xtt.Send backup}   {1800};
