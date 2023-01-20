@@ -415,3 +415,77 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #return {<140>@mslp.Exec{{$cmd};{$text}}<270>};
 };
+
+///=== {
+// ## cli.SmartToggle
+//    命令行智能切换。
+//    出于方便起见，该命令实际上集成了三个作用，并推荐使用快捷键来调用本命令。
+//      - 作用1: 当命令行尚未输入内容时，用来切换 PaoTin++ 的调试开关。
+//               调试开关开启时，玩家可以看到触发的执行细节，方便调试代码。
+//      - 作用2: 当命令行输入了 #alias/#action 等 TinTin++ 可被取消的触发时，会
+//               自动修改成对应的 #unalias/#unaction 命令，利用这一点可以方便取
+//               消已有触发。可被取消的触发列表见下方完整清单。
+//      - 作用3: 当命令行输入了其它命令时，会自动开启或关闭以调试方式执行该命令。
+//               该切换并不会影响全局调试开关。因此不会受到来自其它触发的干扰，
+//               内容更精准，方便查看。
+//
+//    作用2中可被取消的命令清单：
+//      - 常用 TinTin++ 命令:   action alias tick variable delay gag
+//      - 不常用 TinTin++ 命令: button event function highlight macro pathdir
+//                              prompt substitute tab
+//        以上命令的 3 字母以上简写，无论大小写，都会被自动添加或者删除 un，
+//        以达到切换的目的。
+//      - 常用的 PaoTin++ 命令: event.Handle/event.HandleOnce VS event.UnHandle
+// };
+#alias {cli.SmartToggle} {
+    #local input {};
+    #cursor get input;
+
+    #line quiet #ignore function on;
+
+    #if { {$input} == {} } {
+        #line quiet #ignore function off;
+        xtt.ToggleDebug;
+        #return;
+    };
+
+    #if { {$input} == {#line debug %*} } {
+        #replace input {^#line debug } {};
+    };
+    #else {
+        #local cmds {act(|i(|o(|n)))|ali(|a(|s))|tic(|k(|e(|r)))
+                    |var(|i(|a(|b(|l(|e)))))
+                    |del(|a(|y))|gag|tab
+                    |but(|t(|o(|n)))|eve(|n(|t))
+                    |fun(|c(|t(|i(|o(|n)))))
+                    |hig(|h(|l(|i(|g(|h(|t))))))
+                    |mac(|r(|o))|pat(|h(|d(|i(|r))))
+                    |pro(|m(|p(|t)))
+                    |sub(|s(|t(|i(|t(|u(|t(|e)))))))};
+        #replace cmds { } {};
+        #if { {$input} == {{?i}#un{$cmds} %*} } {
+            #replace input {{?i}#un} {#};
+        };
+        #elseif { {$input} == {{?i}#{$cmds} %*} } {
+            #replace input {^#} {#un};
+        };
+        #elseif { {$input} == {event.Handle{|Once} %*} } {
+            #replace input {^event.Handle{Once|}} {event.UnHandle};
+        };
+        #elseif { {$input} == {event.UnHandle %*} } {
+            #replace input {^event.UnHandle} {event.Handle};
+        };
+        #else {
+            #local input {#line debug $input};
+        };
+    };
+
+    #cursor clear;
+    #local cmd {
+        #line quiet #ignore variable on;
+        #cursor set {$input};
+        #line quiet #ignore variable off;
+    };
+    $cmd;
+    #line quiet #ignore function off;
+};

@@ -34,7 +34,7 @@
 
 #nop 热键绑定;
 #list global-key-bindings create {
-    {{key}{\cd}     {action}{xtt.ToggleDebug}}
+    {{key}{\cd}     {action}{cli.SmartToggle}}
     {{key}{\col}    {action}{option.List}}
     {{key}{\cos}    {action}{prompt.ToggleSwitch}}
     {{key}{\cob}    {action}{beautify.ToggleSwitch}}

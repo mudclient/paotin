@@ -18,9 +18,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///// 并在调试开启期间，临时禁用 beautify 和 prompt 插件。
 //
 // ## xtt.ToggleDebug
-//    切换调试状态。有一个短别名叫做 D，优先级非常低。方便玩家随时征用这个名字。
+//    切换调试状态。
 // };
-#alias {D} {xtt.ToggleDebug} {9.999};
 #alias {xtt.ToggleDebug} {
     #if { "$XTinTin[debug]" == "false" } {
         xtt.DebugOn;
