@@ -30,6 +30,10 @@ mudlib.Set {pkuxkx};
 #var session[reconnect_slow]    600;    #nop 维护模式下的间隔;
 #var session[remote_maint]      false;  #nop 维护模式开关;
 
+#nop 日志相对路径，留空则使用 user[id] 的值;
+#nop 如果有同一个 ID 连接不同站点的需求，就应当在 ID 配置文件里定制它;
+#var session[log_path]          {};
+
 #nop 可以通过触发来开启维护模式;
 #action {^%*(%*)告诉你：开启远程维护$} {#var session[remote_maint] {true}};
 

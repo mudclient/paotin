@@ -24,6 +24,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #var user[passwd]   bar;
 
 #nop XXX: 所有 ids/DEFAULT 里的内容都可以在这里定制;
+#nop 这里为了简单起见没有全部列出，如有更多需求请参考 ids/DEFAULT 定制;
 
 #nop 用户上线之后想要自动执行的代码写这里;
 #alias {user-online} {
