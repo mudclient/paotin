@@ -87,6 +87,9 @@ jobquery 本来就有两个别名：
 
     #line oneshot #action {^╭───北侠任务查询助理─{(─|┬)+}─╮$} {
         jobquery.parse.output {%1};
+        #if { "%1" == "gag" } {
+            #line gag;
+        };
     };
 
     #line oneshot #action {^╰─{(─|┴)+}──北大侠客行────╯{|ID=cmds/jobquery}$} {
