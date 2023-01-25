@@ -15,27 +15,35 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {NOTE}      {本文件属于 PaoTin++ 的一部分}
 };
 
-#nop 青锋剑(Qingfeng sword)
-#nop 北侠战袍(Pkuxkx zhanpao)
-#nop 北侠战甲(Pkuxkx zhanjia)
-#nop 北侠战衣(Pkuxkx zhanyi)
-#nop 北侠战盔(Pkuxkx zhankui)
-#nop 北侠战靴(Pkuxkx zhanxue)
-#nop 锦囊(Jin nang)
-#nop
-#nop -------------------------------------------
-#nop 你左手拿着：大砍刀(Dakan dao)
-#nop 你右手拿着：青锋剑(Qingfeng sword)
-#nop
-#nop -------------------------------------------
-#nop 你身上穿着：
-#nop 北侠战袍(Pkuxkx zhanpao)
-#nop 北侠战甲(Pkuxkx zhanjia)
-#nop 北侠战衣(Pkuxkx zhanyi)
-#nop 北侠战盔(Pkuxkx zhankui)
-#nop 北侠战靴(Pkuxkx zhanxue)
-#nop 锦囊(Jin nang)
-#nop;
+/*
+i2 格式：
+你身上带著下列这些东西(负重 27%)：
+九十一两白银(Silver)
+一粒牛黃血竭丹(Xuejie dan)
+二个竹壶(Zhuhu)
+三块干粮(Gan liang)
+大砍刀(Dakan dao)
+青锋剑(Qingfeng sword)
+北侠战袍(Pkuxkx zhanpao)
+北侠战甲(Pkuxkx zhanjia)
+北侠战衣(Pkuxkx zhanyi)
+北侠战盔(Pkuxkx zhankui)
+北侠战靴(Pkuxkx zhanxue)
+锦囊(Jin nang)
+
+-------------------------------------------
+你左手拿着：大砍刀(Dakan dao)
+你右手拿着：青锋剑(Qingfeng sword)
+
+-------------------------------------------
+你身上穿着：
+北侠战袍(Pkuxkx zhanpao)
+北侠战甲(Pkuxkx zhanjia)
+北侠战衣(Pkuxkx zhanyi)
+北侠战盔(Pkuxkx zhankui)
+北侠战靴(Pkuxkx zhanxue)
+锦囊(Jin nang)
+*/
 
 #func {basic_char_i2.Init} {
     char.reset.i2;
@@ -74,8 +82,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #action {^你身上带著下列这些东西(负重 %1%)：$} {
     #class {ParseItems} open;
 
-    #var char-Item[currentType] {随身};
     char.reset.i2;
+    #var char-Item[currentType] {随身};
 
     #nop 你左手拿着：大砍刀(Dakan dao);
     #nop 你右手拿着：青锋剑(Qingfeng sword);
@@ -119,21 +127,21 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local 职业部位 {盔|护腕|披风|护手|袍|腰带|盾|靴|项链|戒指|(板|布|鳞|皮)甲|面具|护心|护肩|腿甲};
 
     #local 汉字数词 {(?:零|一|二|三|四|五|六|七|八|九|十|百|千|万|亿)+};
-    #local 汉字量词 {(?:本|块|碗|件|册|柄|把|根|枚|个)+};
+    #local 汉字量词 {(?:本|块|碗|件|册|柄|把|根|枚|个|粒|0)};
     #local 词缀修饰 {(?:[^ ][^ ])+};
 
-    #nop 火锅装;
-    #nop 八件百战手套(Hands);
-    #action {^{?:(${汉字数词})件|}{?:(${词缀修饰})的|}{?:(${装备等级})(${武器种类}|${装备种类}|${饰品种类})}(%S)$} {
+    #nop 物品;
+    #action {^{?:(${汉字数词})(${汉字量词})|}%*(%S)$} {
         #local amount   {@math.ParseCN{%%1}};
-        #local modifier {%%2};
-        #local level    {%%3};
-        #local kind     {%%4};
-        #local id       {@str.ToLower{%%5}};
+        #local item     {%3};
+        #local id       {@str.ToLower{%%4}};
         #if { $amount == 0 } {
             #local amount {1};
         };
-        #echo {amount [$amount] modifier [$modifier] level [$level] kind [$kind] id [$id]};
+        #var {char-Item[$item]} {
+            {id}{$id}
+            {amount}{$amount}
+        };
     } {4};
 
     #nop 职业装和随机装;
