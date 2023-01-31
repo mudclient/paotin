@@ -167,10 +167,10 @@ jobquery 本来就有两个别名：
     #local doingStr {};
     #foreach {*gJobState[]} {name} {
         #if { $gJobState[$name][CD] > 0 } {
-            #local cdStr {$cdStr <130>$name<070>(<110>$gJobState[$name][CD]s<070>)};
+            #local cdStr {$cdStr <139>$name<299>(<119>$gJobState[$name][CD]s<299>)};
         };
         #elseif { $gJobState[$name][CD] == -1 } {
-            #local doingStr {$doingStr <120>$name<070>(<130>$gJobState[$name][附加信息]<070>)};
+            #local doingStr {$doingStr <129>$name<299>(<139>$gJobState[$name][附加信息]<299>)};
         };
     };
 

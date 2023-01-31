@@ -76,7 +76,7 @@
     warnLog 出于美化需要，接下来你在屏幕上看到的内容可能和服务器实际传送的内容不一致。;
     warnLog 这可能会给编写触发带来困扰，此时你可以通过快捷键或者 beautify.Off 暂时禁用美化。;
 
-    prompt.Set {{beautify}{<120>已启用}};
+    prompt.Set {{beautify}{<129>已启用}};
     prompt.refresh;
 };
 
@@ -86,7 +86,7 @@
     #var beautify-switch {OFF};
     warnLog 宽字符美化已禁用。你可以通过快捷键或者 beautify.On 重新启用。;
 
-    prompt.Set {{beautify}{<110>已禁用}};
+    prompt.Set {{beautify}{<119>已禁用}};
     prompt.refresh;
 };
 

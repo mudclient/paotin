@@ -47,9 +47,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #alias {mudLog}     {log.write {$gLog[socket]} {%0}};
 
-#alias {okLog}      {log.write {$gLog[ok]}     {<120>%0}   {ECHO}};
-#alias {warnLog}    {log.write {$gLog[warn]}   {<130>%0}   {ECHO}};
-#alias {errLog}     {log.write {$gLog[error]}  {<110>%0}   {ECHO}};
+#alias {okLog}      {log.write {$gLog[ok]}     {<129>%0}   {ECHO}};
+#alias {warnLog}    {log.write {$gLog[warn]}   {<139>%0}   {ECHO}};
+#alias {errLog}     {log.write {$gLog[error]}  {<119>%0}   {ECHO}};
 #alias {infoLog}    {log.write {$gLog[info]}   {%0}        {ECHO}};
 #alias {dbgLog}     {log.write {$gLog[debug]}  {%0}};
 
@@ -66,10 +66,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local text {%2};
     #local echo {%3};
 
-    #line logmode stamp #line log {$gLog[PATH]/$file} {$text<070>};
+    #line logmode stamp #line log {$gLog[PATH]/$file} {$text<099>};
 
     #if { "$echo" == "ECHO" } {
-        #echo {%s} {$text<070>};
+        #echo {%s} {$text<099>};
     };
 };
 
@@ -91,7 +91,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #if { "$needEcho" == "true" } {
         #local input {%0};
         #replace input {<} {\<};
-        #echo {<020>%t INPUT: <420>%s<070>} {%Y-%m-%d %H:%M:%S} {$input};
+        #echo {<029>%t INPUT: <429>%s<099>} {%Y-%m-%d %H:%M:%S} {$input};
     };
 };
 
@@ -107,9 +107,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {log.sendLog} {
     #local text {%0};
     #replace text {<} {\<};
-    #format text {<020>SEND: <420>%p<070>} {$text};
+    #format text {<029>SEND: <429>%p<099>} {$text};
     mudLog $text;
     #if @option.IsEnable{EchoCommand} {
-        #echo {<020>%t %s} {%Y-%m-%d %H:%M:%S} {$text};
+        #echo {<029>%t %s} {%Y-%m-%d %H:%M:%S} {$text};
     };
 };

@@ -28,10 +28,10 @@ load-lib speedo;
 };
 
 #var tang-job-level-color {
-    {简单} {<120>}
-    {普通} {<030>}
-    {困难} {<110>}
-    {挑战} {<050>}
+    {简单} {<129>}
+    {普通} {<239>}
+    {困难} {<119>}
+    {挑战} {<259>}
 };
 
 #var tang-job-log {};
@@ -306,7 +306,7 @@ load-lib speedo;
         #case {"50"} { #local ageText {中|老}   };
         #case {"60"} { #local ageText {老}      };
         #case {"70"} { #local ageText {老}      };
-        #default {#echo {<110>这是什么年龄？「%2」<070>} };
+        #default {#echo {<119>这是什么年龄？「%2」<299>} };
     };
     #var {tang.data[行人特征][$tang[name]][年龄]} {$ageText};
     #class tang.data close;
@@ -353,17 +353,17 @@ load-lib speedo;
         #local value {${tang.data[行人特征][$tang[name]][$key]}};
         #format feat {%s %s} {$feat} {$key($value)};
     };
-    #echo {%s} {<160>此人特征为：$feat<070>};
+    #echo {%s} {<169>此人特征为：$feat<299>};
 
     #list {tang.data[好人名单]}   {find} {$tang[name]} {idx};
     #if { $idx > 0 } {
-        #echo {%s} {<120>之前已经搞清楚了，这是一个好人。<070>};
+        #echo {%s} {<129>之前已经搞清楚了，这是一个好人。<299>};
         #return;
     };
 
     #list {tang.data[嫌疑人名单]} {find} {$tang[name]} {idx};
     #if { $idx > 0 } {
-        #echo {%s} {<130>之前已经看过了，这是一个嫌疑人。<070>};
+        #echo {%s} {<139>之前已经看过了，这是一个嫌疑人。<299>};
         #return;
     };
 
@@ -392,11 +392,11 @@ load-lib speedo;
     };
 
     #if { "$clean" == "true" } {
-        #echo {%s} {<120>由于${reason}，因此这是一个好人。<070>};
+        #echo {%s} {<129>由于${reason}，因此这是一个好人。<299>};
         #list {tang.data[好人名单]} {sort} {$tang[name]};
     };
     #else {
-        #echo {%s} {<130>由于缺乏必要的证据，无法判定此人清白，因此这是一个嫌疑人。<070>};
+        #echo {%s} {<139>由于缺乏必要的证据，无法判定此人清白，因此这是一个嫌疑人。<299>};
         #list {tang.data[嫌疑人名单]} {sort} {$tang[name]};
     };
 
@@ -421,7 +421,7 @@ load-lib speedo;
     #var {tang.data[证人证词][${证人}][特征点]} {${特征点}};
     #var {tang.data[证人证词][${证人}][特征值]} {${特征值}};
 
-    #echo {证人指认的是个<130>%s是%s<070>的人} {${特征点}} {${特征值}};
+    #echo {证人指认的是个<139>%s是%s<299>的人} {${特征点}} {${特征值}};
 
     #local {新增好人} {};
 
@@ -435,13 +435,13 @@ load-lib speedo;
 
         #if { "${嫌疑人}" == "${证人}" } {
             #if { "${特征值}" == "{${证人特征}}" } {
-                #echo {由于证人指认的特点与自身相符，因此判断他是一个<120>好人<070>};
+                #echo {由于证人指认的特点与自身相符，因此判断他是一个<129>好人<299>};
                 #list {新增好人} sort {${证人}};
             };
         };
         #else {
             #if { "${特征值}" != "{${嫌疑人特征}}" } {
-                #echo {根据证人所说，<120>%s<070>应该是一个好人} {${嫌疑人}};
+                #echo {根据证人所说，<129>%s<299>应该是一个好人} {${嫌疑人}};
                 #list {新增好人} sort {${嫌疑人}};
             };
         };
@@ -449,7 +449,7 @@ load-lib speedo;
 
     #list {新增好人} {simplify};
 
-    #echo {由于证人作证，本次新增好人名单: <120>${新增好人}<070>};
+    #echo {由于证人作证，本次新增好人名单: <129>${新增好人}<299>};
 
     tang.确认好人 {${新增好人}};
 
@@ -505,7 +505,7 @@ load-lib speedo;
         };
 
         #if { &newCleanManList[] > 0 } {
-            #echo {由于前面一批好人被确认，推出本次新增好人名单: <120>$newCleanManList<070>};
+            #echo {由于前面一批好人被确认，推出本次新增好人名单: <129>$newCleanManList<299>};
             #local cleanManList {$newCleanManList};
         };
         #else {
@@ -519,10 +519,10 @@ load-lib speedo;
 
     #local list {@slist.FromList{${tang.data[好人名单]}}};
     #replace list {;} { };
-    #echo {目前发现的好人  : <120>$list<070>};
+    #echo {目前发现的好人  : <129>$list<299>};
     #local list {@slist.FromList{${tang.data[嫌疑人名单]}}};
     #replace list {;} { };
-    #echo {目前发现的嫌疑人: <130>$list<070>};
+    #echo {目前发现的嫌疑人: <139>$list<299>};
 };
 
 #alias {tang.认错人} {
@@ -569,13 +569,13 @@ load-lib speedo;
         #local point {@math.ParseCN{%%2}};
         speedo.Add {爵位积分} {$point} {true} {600};
         #format point {%+2s} {$point};
-        questLog 【<130>爵位任务<070>】【$tang-job-level-color[$level]$level<070>】【<120>任务成功<070>】奖励爵位积分【$point】【${tang-job-log[地点]}】;
+        questLog 【<139>爵位任务<299>】【$tang-job-level-color[$level]$level<299>】【<129>任务成功<299>】奖励爵位积分【$point】【${tang-job-log[地点]}】;
     };
 
     #action {^你未领取任务，也不能领取奖励。$} {
         #class tang.back kill;
         #local level {${tang-job-log[任务难度]}};
-        questLog 【<130>爵位任务<070>】【$tang-job-level-color[$level]$level<070>】【<110>任务失败<070>】奖励爵位积分【 0】【${tang-job-log[地点]}】;
+        questLog 【<139>爵位任务<299>】【$tang-job-level-color[$level]$level<299>】【<119>任务失败<299>】奖励爵位积分【 0】【${tang-job-log[地点]}】;
     };
 
     #class tang.back close;

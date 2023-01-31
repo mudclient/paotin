@@ -34,7 +34,7 @@ class.open module-loader;
     #if { "${${prefix}-loaded}" == "true" } {
         infoLog 模块 $moduleName 已载入。;
         #if { "${xtt-modConfig[$moduleName][ENABLE]}" == "false" } {
-            infoLog 但是该模块已经被禁用，如果你想要重新启用，请使用「<120>enable-module %1<070>」。;
+            infoLog 但是该模块已经被禁用，如果你想要重新启用，请使用「<129>enable-module %1<299>」。;
         };
         #return;
     };
@@ -225,7 +225,7 @@ class.open module-loader;
     #var {xtt-modConfig[$moduleName][ENABLE]} {false};
 
     class.disable {$moduleName};
-    infoLog <120>模块 $moduleName 已经禁用。<070>;
+    infoLog <129>模块 $moduleName 已经禁用。<299>;
 };
 
 #alias {EM} {enable-module};
@@ -256,7 +256,7 @@ class.open module-loader;
     #var {xtt-modConfig[$moduleName][ENABLE]} {true};
 
     class.enable {$moduleName};
-    infoLog <120>模块 $moduleName 已经启用。<070>;
+    infoLog <129>模块 $moduleName 已经启用。<299>;
 };
 
 #nop 列出所有已加载模块以及它们的开关状态、配置参数;
@@ -277,7 +277,7 @@ class.open module-loader;
         #local type     {$metaInfo[TYPE]};
         #local desc     {$metaInfo[DESC]};
         #local config   {$metaInfo[CONFIG]};
-        #local enable   {<120>开启<070>};
+        #local enable   {<129>开启<299>};
         #local hasConfig {有};
         #local hasEvents {无};
 
@@ -287,18 +287,18 @@ class.open module-loader;
 
         #local event {@fp.Filter{{$gValidEvent};{"VALUE[module]"=="$name"}}};
         #if { &event[] > 0 } {
-            #local hasEvents {<160>&event[]个<070>};
+            #local hasEvents {<169>&event[]个<299>};
         };
 
         #if { "$type" == "纯模块" } {
-            #local type {<120>纯模块<070>};
+            #local type {<129>纯模块<299>};
         };
         #elseif { "$type" == "混合模块" } {
-            #local type {<130>混合模块<070>};
+            #local type {<139>混合模块<299>};
         };
 
         #if { "${xtt-modConfig[$moduleName][ENABLE]}" == "false" } {
-            #local enable {<110>禁用<070>};
+            #local enable {<119>禁用<299>};
         };
 
         #echo {$format} {white} {@genModuleLink{$name;MOD}} {$author} {$type} {$enable} {$hasEvents} {$hasConfig} {$desc};
@@ -331,27 +331,27 @@ class.open module-loader;
     };
 
     #if { "$enable" == "false" } {
-        #local enable {<110>禁用<070>};
+        #local enable {<119>禁用<299>};
     };
     #else {
-        #local enable {<120>开启<070>};
+        #local enable {<129>开启<299>};
     };
 
     #local moduleLink {@genModuleLink{$moduleName;HELP}};
-    #echo {%c%h}    {cyan} { $moduleLink<060> };
-    #echo {%s}      {    <060>名称:<070> $moduleLink <060>类型:<070> $type <060>状态:<070> $enable <060>作者:<070> $author};
-    #echo {%s}      {    <060>脚本路径:<070> $path};
+    #echo {%c%h}    {cyan} { $moduleLink<269> };
+    #echo {%s}      {    <269>名称:<299> $moduleLink <269>类型:<299> $type <269>状态:<299> $enable <269>作者:<299> $author};
+    #echo {%s}      {    <269>脚本路径:<299> $path};
 
     #if { "$type" == "弱模块" } {
         #echo {%c%h} {cyan} { 更多信息仅纯模块可见 };
         #return;
     };
 
-    #echo {%s}      {    <060>说明:<070> $desc};
-    #echo {%s}      {    <060>备注:<070> $note};
+    #echo {%s}      {    <269>说明:<299> $desc};
+    #echo {%s}      {    <269>备注:<299> $note};
 
     #if { "$type" == "纯模块" } {
-        #echo {%s}      {    <060>接口:<070> 你可以通过 $moduleName\.Start/Stop 命令来启动/停止模块。};
+        #echo {%s}      {    <269>接口:<299> 你可以通过 $moduleName\.Start/Stop 命令来启动/停止模块。};
     };
 
     #local format {    %c%-20s %-20s %s};
@@ -359,7 +359,7 @@ class.open module-loader;
     #local event {@fp.Filter{{$gValidEvent};{"VALUE[module]"=="$moduleName"}}};
     #if { &event[] > 0 } {
         #local name {};
-        #echo {%s}      {    <060>提供事件列表:<070>};
+        #echo {%s}      {    <269>提供事件列表:<299>};
         #echo {$format} {cyan} {事件名称} {事件类型} {说明};
         #echo {$format} {cyan} {--------------------} {--------------------} {------------------------------};
         #foreach {*event[]} {name} {
@@ -375,7 +375,7 @@ class.open module-loader;
     };
 
     #local count {0};
-    #echo {%s}      {    <060>配置参数表:<070>};
+    #echo {%s}      {    <269>配置参数表:<299>};
     #echo {$format} {cyan} {配置项} {当前值} {作用};
     #echo {$format} {cyan} {--------------------} {--------------------} {------------------------------};
     #local key {};
@@ -425,7 +425,7 @@ class.open module-loader;
             #format reason {人为操作};
         };
 
-        infoLog <160>由于<130>$reason<160>，%1 模块停止运行。<070>;
+        infoLog <169>由于<139>$reason<169>，%1 模块停止运行。<299>;
 
         #if @existsAlias{%1.Pause} {
             %1.Pause;
@@ -464,7 +464,7 @@ class.open module-loader;
     #local cnName {$xtt-modules[$name][NAME]};
 
     #if { "$cnName" != "" } {
-        #local cnName { (<160>$cnName<070>)};
+        #local cnName { (<169>$cnName<299>)};
     };
 
     #if { "$cmd" != "{MOD|HELP}" } {
@@ -473,11 +473,11 @@ class.open module-loader;
 
     #if { "$cmd" == "HELP" && &xtt.module-doc[$name][] > 0 } {
         #local name {@mslp.Help{$name;$name}};
-        #local name {<140>$name<270>$cnName};
+        #local name {<140>$name<299>$cnName};
     };
     #else {
         #local name {@mslp.Module{$name;$name}};
-        #local name {<140>$name<270>$cnName};
+        #local name {<149>$name<299>$cnName};
     };
 
     #return {$name};

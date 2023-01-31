@@ -114,15 +114,15 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
 #nop 配色主题，注意这里不要直接嵌入 SGR（ansi codes），否则计算宽度时会有问题。;
 #var prompt-theme {
     {Disable}{<bbc>}
-    {BusyColor}{<030>}
-    {BattleColor}{<110>}
-    {BattleBusyColor}{<500><110>}
-    {TopSepBar}{<020>}
-    {MidSepBar}{<020>}
-    {BotSepBar}{<020>}
-    {HotLabel}{<100><F399>}
-    {CoolLabel}{<100>}
-    {Value}{<070>}
+    {BusyColor}{<239>}
+    {BattleColor}{<119>}
+    {BattleBusyColor}{<599><119>}
+    {TopSepBar}{<229>}
+    {MidSepBar}{<229>}
+    {BotSepBar}{<229>}
+    {HotLabel}{<199><F399>}
+    {CoolLabel}{<109>}
+    {Value}{<299>}
 };
 
 #nop 自定义图标;
@@ -475,7 +475,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
                 };
             };
 
-            #local label {$label<070> };
+            #local label {$label<299> };
         };
 
         #if { "$field[visibility]" == "HideLabel" } {
@@ -486,7 +486,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
             #local color {${prompt-theme[Value]}};
         };
 
-        #format value {$color%-${width}s<070>} {$value[value]};
+        #format value {$color%-${width}s<299>} {$value[value]};
         #math lineWidth {$lineWidth + @width{$label} + @width{$value}};
         #if { "$text" == "" } {
             #local text {$label$value};
@@ -577,10 +577,10 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         #return {$newText};
     };
     #elseif { "$newText" == "" } {
-        #return {$color$left──$right<070>};
+        #return {$color$left──$right<099>};
     };
     #else {
-        #return {$color$left<070> $newText $color$right<070>};
+        #return {$color$left<299> $newText $color$right<099>};
     };
 };
 
@@ -643,7 +643,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
 };
 
 #alias {prompt.test} {
-    #local fullme {<010>很久没有进行机器人检查(fullme)了，任务奖励将受到影响。<070>};
+    #local fullme {<219>很久没有进行机器人检查(fullme)了，任务奖励将受到影响。<299>};
     #local fullme {http://pkuxkx.com/antirobot/robot.php?filename=1576762922984895};
     prompt.Set { {URL}{$fullme} };
     prompt.Set {

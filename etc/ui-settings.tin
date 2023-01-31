@@ -1,6 +1,6 @@
 #var tmux-update-events[DEFAULT] {char/score};
 #var tmux-pane-border-format[DEFAULT] {
-    {left}      {ID: [<g23><188>\$char[档案][账号]<099>]}
+    {left}      {ID: [<g23><188>\$char[档案][账号]<299>]}
     {centre}    {大名: [\$char[档案][大名]]}
     {right}     {头衔: [\$char[档案][头衔]]}
 };
@@ -14,15 +14,15 @@
 #nop 配色主题，注意这里不要直接嵌入 SGR（ansi codes），否则计算宽度时会有问题。;
 #var prompt-theme {
     {Disable}{<bbc>}
-    {BusyColor}{<030>}
-    {BattleColor}{<110>}
-    {BattleBusyColor}{<500><110>}
-    {TopSepBar}{<020>}
-    {MidSepBar}{<020>}
-    {BotSepBar}{<020>}
-    {HotLabel}{<100><F399>}
-    {CoolLabel}{<100>}
-    {Value}{<070>}
+    {BusyColor}{<239>}
+    {BattleColor}{<119>}
+    {BattleBusyColor}{<599><119>}
+    {TopSepBar}{<229>}
+    {MidSepBar}{<229>}
+    {BotSepBar}{<229>}
+    {HotLabel}{<199><F399>}
+    {CoolLabel}{<109>}
+    {Value}{<299>}
 };
 
 #nop 自定义图标;

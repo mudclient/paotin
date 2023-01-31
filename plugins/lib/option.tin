@@ -161,11 +161,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local value {@option.Get{$option}};
     #if { "$value" == "true" } {
         option.Disable $option;
-        infoLog <160>选项「<130>$option<160>」 <110>已禁用。<070>;
+        infoLog <169>选项「<139>$option<169>」 <119>已禁用。<299>;
     };
     #elseif { "$value" == "false" } {
         option.Enable $option;
-        infoLog <160>选项「<130>$option<160>」 <120>已启用。<070>;
+        infoLog <169>选项「<139>$option<169>」 <129>已启用。<299>;
     };
 
     #return {$value};

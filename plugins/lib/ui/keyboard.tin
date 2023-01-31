@@ -35,21 +35,21 @@
 
     #local mode {};
     #if { {$keyboard-search-pattern} == {} } {
-        #local mode {<130>【翻页模式】<070>};
+        #local mode {<139>【翻页模式】<299>};
     };
     #elseif { "$keyboard-search-dir" == "down" } {
-        #local mode {<150>【向下搜索】<070>};
+        #local mode {<159>【向下搜索】<299>};
     };
     #else {
-        #local mode {<120>【向上搜索】<070>};
+        #local mode {<129>【向上搜索】<299>};
     };
 
-    prompt.Change {$mode<160>Ctrl+b<070>/<160>Ctrl+f<070> 前后翻页
-        <160>j<070>/<160>k<070> 上下滚动
-        <160>g<070>/<160>G<070> 到开头/结尾
-        <160>Ctrl+C<070> 回到正常模式
-        <160>?<070>/<160>/<070> 输入搜索条件
-        <160>n<070>/<160>N<070> 前后搜索};
+    prompt.Change {$mode<169>Ctrl+b<299>/<169>Ctrl+f<299> 前后翻页
+        <169>j<299>/<169>k<299> 上下滚动
+        <169>g<299>/<169>G<299> 到开头/结尾
+        <169>Ctrl+C<299> 回到正常模式
+        <169>?<299>/<169>/<299> 输入搜索条件
+        <169>n<299>/<169>N<299> 前后搜索};
 
     #class mouse-less-mode close;
 };
@@ -173,10 +173,10 @@
         keyboard.Search next;
 
         #if { "$keyboard-search-dir" == "down" } {
-            prompt.Set {{search}{<150>$keyboard-search-pattern}};
+            prompt.Set {{search}{<159>$keyboard-search-pattern}};
         };
         #else {
-            prompt.Set {{search}{<120>$keyboard-search-pattern}};
+            prompt.Set {{search}{<129>$keyboard-search-pattern}};
         };
     };
 
@@ -185,14 +185,14 @@
             #var keyboard-search-skip {0};
             #var keyboard-search-last-find {0};
         };
-        prompt.Change {<120>向上搜索<070>: };
+        prompt.Change {<129>向上搜索<299>: };
     };
     #else {
         #if { $keyboard-search-skip < 0 } {
             #var keyboard-search-last-find {0};
             #var keyboard-search-skip {0};
         };
-        prompt.Change {<150>向下搜索<070>: };
+        prompt.Change {<159>向下搜索<299>: };
     };
 
     #class keyboard-search-mode close;

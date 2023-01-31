@@ -16,7 +16,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #event {PROGRAM START} {
     #if { "$user[id]" != "{[A-Za-z0-9]+}" } {
-        #echo {<110>请参考使用文档指定用户正确的 user id。<070>};
+        #echo {<119>请参考使用文档指定用户正确的 user id。<299>};
         #return;
     };
 
@@ -26,8 +26,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { !@InitLog{$path} } {
-        #echo {<110>创建日志目录 $gLog[PATH]/$path 时遇到错误。<070>};
-        #echo {<130>请检查你的安装环境，或者参考使用手册重新安装本软件。<070>};
+        #echo {<119>创建日志目录 $gLog[PATH]/$path 时遇到错误。<299>};
+        #echo {<139>请检查你的安装环境，或者参考使用手册重新安装本软件。<299>};
         #return;
     };
 
@@ -56,7 +56,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 #event {SESSION TIMED OUT} {
-    #echo {%s} {<110>连接服务器超时，稍后自动重试。<070>};
+    #echo {%s} {<119>连接服务器超时，稍后自动重试。<299>};
     #gts #delay 3 auto-login;
 };
 
@@ -73,9 +73,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         };
 
         #nop 断开连接后再次重连不要太频繁，以免服务器不高兴。;
-        #echo {%s} {<110>连接已被服务器断开，$reconnect 秒后自动重连。<070>};
+        #echo {%s} {<119>连接已被服务器断开，$reconnect 秒后自动重连。<299>};
         #gts #delay {$reconnect} {
-            #echo {%s} {<120>自动重连。<070>};
+            #echo {%s} {<129>自动重连。<299>};
             auto-login;
         };
     };
