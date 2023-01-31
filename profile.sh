@@ -5,7 +5,7 @@ export TERM=xterm-256color
 
 export LESS="-r -f"
 export PATH=$HOME/bin:$PATH
-export PS1='\[\033[01;40;32m\]MUD\[\033[00m\]:\[\033[33m\]\w\[\033[00m\]\$ '
+export PS1='\[\033[1;49;32m\]MUD\[\033[0m\]:\[\033[33m\]\w\[\033[0m\]\$ '
 
 set -o vi
 

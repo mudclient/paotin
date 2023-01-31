@@ -228,7 +228,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #foreach {$parts[%*]} {elem} {
         #local elemLen {@math.Eval{($elem[weight] + $leftWeight) * $len / $sum - $leftLen}};
         #local text {@str.Sub{{$str};$leftLen;$elemLen}};
-        #cat colorStr {$elem[color]$text<099>};
+        #cat colorStr {$elem[color]$text<299>};
         #math leftLen {$leftLen + $elemLen};
         #math leftWeight {$leftWeight + $elem[weight]};
     };

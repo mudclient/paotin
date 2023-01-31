@@ -210,7 +210,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
     #local limit    {%3};
 
     #local p {@math.Int{@math.Eval{$level * 100 / $limit}}};
-    #local color {@util.Grade{$p;<071>;15;<171>;30;<003>;60;<074>;90;<134>;100;<132>;101;<506>}};
+    #local color {@util.Grade{$p;<271>;15;<171>;30;<203>;60;<274>;90;<134>;100;<132>;101;<506>}};
 
     #local spaceLen {@str.Len{$code}};
     #local code     {@str.Trim{$code}};

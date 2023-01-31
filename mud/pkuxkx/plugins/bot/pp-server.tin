@@ -246,43 +246,43 @@ load-lib storage;
     #format elapse {%T};
     #math elapse {$elapse - $pp-current-order[time]};
 
-    #local prefix {<160>普通订单<070>};
+    #local prefix {<169>普通订单<299>};
     #if { "$source" == "VIP" } {
-        #local prefix {<130>VIP 订单<070>};
+        #local prefix {<139>VIP 订单<299>};
     };
     #elseif { "$source" == "SVIP" } {
-        #local prefix {<150>SVIP订单<070>};
+        #local prefix {<159>SVIP订单<299>};
     };
 
     #if { "$answer" == "成功" } {
-        #local prefix {【$prefix】【<120>成功<070>】【<120>$uid<070>】【<160>$uname<070>】【<170>$qid<070>】};
+        #local prefix {【$prefix】【<129>成功<299>】【<129>$uid<299>】【<169>$uname<299>】【<179>$qid<299>】};
     };
     #else {
-        #local prefix {【$prefix】【<110>失败<070>】【<120>$uid<070>】【<160>$uname<070>】【<170>$qid<070>】};
+        #local prefix {【$prefix】【<119>失败<299>】【<129>$uid<299>】【<169>$uname<299>】【<179>$qid<299>】};
     };
 
     pp.add-history-id;
 
     #if { "$answer" == "成功" } {
         #if { "$qid" == "$pp-current-order[qid]" } {
-            ppLog $prefix【<140>$qname<070>】【<120>$place<070>】【<160>$elapse 秒<070>】;
+            ppLog $prefix【<149>$qname<299>】【<129>$place<299>】【<169>$elapse 秒<299>】;
             tell $uid 【$qname($qid)】目前在【$place】,快去摁死它吧!;
         };
     };
     #else {
         #switch {"$source/$qname"} {
             #case {"PUBLIC/"} {
-                ppLog $prefix【<110>未知<070>】【<110>查无此人<070>】【<160>$elapse 秒<070>】;
+                ppLog $prefix【<119>未知<299>】【<119>查无此人<299>】【<169>$elapse 秒<299>】;
             };
             #case {"PUBLIC/%+"} {
-                ppLog $prefix【<140>$qname<070>】【<130>感应不到<070>】【<160>$elapse 秒<070>】;
+                ppLog $prefix【<149>$qname<299>】【<139>感应不到<299>】【<169>$elapse 秒<299>】;
             };
             #case {"{VIP|SVIP}/" } {
-                ppLog $prefix【<110>未知<070>】【<110>查无此人<070>】【<160>$elapse 秒<070>】;
+                ppLog $prefix【<119>未知<299>】【<119>查无此人<299>】【<169>$elapse 秒<299>】;
                 tell $uid 据我所查，【$qid】已不在人世了;
             };
             #case {"{VIP|SVIP}/%+" } {
-                ppLog $prefix【<140>$qname<070>】【<130>感应不到<070>】【<160>$elapse 秒<070>】;
+                ppLog $prefix【<149>$qname<299>】【<139>感应不到<299>】【<169>$elapse 秒<299>】;
                 tell $uid 恕贫僧道行尚浅，无法查到【$qid】的具体下落，只知其人名曰【$qname】;
             };
         };
@@ -360,7 +360,7 @@ load-lib storage;
         {uid}   {$uid}
     };
 
-    ppLog 【<170>@str.AlignLeft{$list-name;4}维护<070>】【<120>$uid<070>】【共 &{${list-var}[]} 位 VIP】【*{${list-var}[]}】;
+    ppLog 【<179>@str.AlignLeft{$list-name;4}维护<299>】【<129>$uid<299>】【共 &{${list-var}[]} 位 VIP】【*{${list-var}[]}】;
 
     pp.store-vip;
 };

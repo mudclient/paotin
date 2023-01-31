@@ -269,7 +269,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             okLog 以下是模块 $doc[module] 的文档。;
         };
         #elseif { $doc[likely] < 100 } {
-            warnLog 找到 &maybe[] 个关键字，我猜你想看的是 <110>$doc[keyword]<120>@$doc[module]<099>;
+            warnLog 找到 &maybe[] 个关键字，我猜你想看的是 <119>$doc[keyword]<129>@$doc[module]<299>;
         };
         #else {
             okLog 以下是关键字 $doc[keyword] 的文档。;
@@ -284,13 +284,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local line {$xtt.module-doc[$module][$keyword][$idx]};
         #regex {$line} {{##|#@} %S %*} {
             #if { "&1" == "##" } {
-                #echo {<099>%s} {<B407><128> ## 别名 <138>&2 <868>&3<099>};
+                #echo {<299>%s} {<B407><128> ## 别名 <138>&2 <868>&3<299>};
             };
             #else {
-                #echo {<099>%s} {<B04a><128> ## 函数 <138>&2 <868>&3<099>};
+                #echo {<299>%s} {<B04a><128> ## 函数 <138>&2 <868>&3<299>};
             };
         } {
-            #echo {<099>%s} {$line};
+            #echo {<299>%s} {$line};
         };
     };
 
@@ -299,10 +299,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local idx {};
         #loop {&maybe[]-1} {1} {idx} {
             #if { "$maybe[$idx][keyword]" == "__MODULE__" } {
-                #echo {%s} {@mslp.Exec{xtt.Help $maybe[$idx][module];<120>$maybe[$idx][module] 模块<099>}};
+                #echo {%s} {@mslp.Exec{xtt.Help $maybe[$idx][module];<129>$maybe[$idx][module] 模块<299>}};
             };
             #else {
-                #echo {%s} {@mslp.Exec{xtt.Help $maybe[$idx][keyword];<120>$maybe[$idx][module] 模块的 <110>$maybe[$idx][keyword]<099>}};
+                #echo {%s} {@mslp.Exec{xtt.Help $maybe[$idx][keyword];<129>$maybe[$idx][module] 模块的 <119>$maybe[$idx][keyword]<299>}};
             };
         };
     };
@@ -328,7 +328,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local doc {%%1};
 
         #regex {$doc} {== %*} {
-            #list {xtt.module-doc[$MODULE][__MODULE__]} add {<060>&1<099>};
+            #list {xtt.module-doc[$MODULE][__MODULE__]} add {<269>&1<299>};
         };
     };
 
@@ -337,10 +337,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #regex {$doc} {={([ ]{3,})- (\d\.\s*)?(\S+?)(: |：)| }%*} {
             #local text {};
             #if { "&1" != " " } {
-                #local text {<099>&2- <168>&3&4<278>&5&6};
+                #local text {<299>&2- <168>&3&4<278>&5&6};
             };
             #else {
-                #local text {<099> &6};
+                #local text {<299> &6};
             };
             #list {xtt.module-doc[$MODULE][__MODULE__]} add {$text};
             #if { "$xtt-doc-keyword" != "" } {
@@ -388,7 +388,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///// 有关 xtintin 的文档化注释，请查看 HELP xtt.Doc。
 /////
 // ## DataType
-//    打印 TinTin++ 和 xtintin 的<130>数据类型<299>说明文档。
+//    打印 TinTin++ 和 xtintin 的<139>数据类型<299>说明文档。
 //
 //    TinTin++ 中存在几种不同的数据类型，xtintin 基于这些数据类型扩展了一些函数，
 //    以增强对它们的处理能力。下面简单予以介绍：

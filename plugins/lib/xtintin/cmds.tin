@@ -71,7 +71,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
         #echo {   %-30s %+20s %+10s %+20m}
             {@genModuleLink{$info[TICKERS][+$index][class];MOD}}
-            {$name @mslp.Exec{{xtt.delTrigger tick $name};<110>✗<060>;false}}
+            {$name @mslp.Exec{{xtt.delTrigger tick $name};<119>✗<269>;false}}
             {$info[TICKERS][+$index][arg3]}
             {($uval - ($utime - $info[TICKERS][+$index][arg4]) % $uval) / 1000000.00};
     };
@@ -125,31 +125,31 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #foreach {$classList} {class} {
         #local name {};
         #foreach {${aliasTable[$class][]}} {name} {
-            #local type {<130>自定义<070>};
+            #local type {<139>自定义<299>};
 
             #if { "$name" == "%*.{[A-Z][a-zA-Z0-9]+}" } {
-                #local type {<120>开放API<070>};
+                #local type {<129>开放API<299>};
             };
 
             #if { "$class" == "module-loader" } {
                 #if { "$name" == "{[A-Z]+}" } {
-                    #local type {<160>快捷方式<070>};
+                    #local type {<169>快捷方式<299>};
                 };
                 #else {
-                    #local type {<020>语法增强<070>};
+                    #local type {<229>语法增强<299>};
                 }
             };
 
             #if { "${class}.$name" == "main.class.%*" } {
-                #local type {<020>语法增强<070>};
+                #local type {<229>语法增强<299>};
             };
 
             #if { "${class}.$name" == "main.load-file" } {
-                #local type {<020>语法增强<070>};
+                #local type {<229>语法增强<299>};
             };
 
             #if { "${class}.$name" == "main.%*Log" } {
-                #local type {<120>日志接口<070>};
+                #local type {<129>日志接口<299>};
             };
 
             #if { "$pattern" == "" && "$type" == "%*自定义%*" } {
@@ -158,7 +158,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
             #echo {<060>$format}
                 {@genModuleLink{$class;MOD}<060>}
-                {@mslp.Exec{{xtt.delTrigger alias $name};<110>✗<060>;false} @linkToHelp{$class;$name}}
+                {@mslp.Exec{{xtt.delTrigger alias $name};<119>✗<269>;false} @linkToHelp{$class;$name}}
                 {$type};
         };
     };
@@ -214,18 +214,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local name {};
         #local nameList {@slist.Sort{*varTable[$class][]}};
         #foreach {$nameList} {name} {
-            #local type {<020>字符串<070>};
-            #local value {<160>$varTable[$class][$name][value]<070>};
+            #local type {<229>字符串<299>};
+            #local value {<169>$varTable[$class][$name][value]<299>};
             #local nest  {$varTable[$class][$name][nest]};
 
             #if { $nest > 0 } {
-                #local type {<050>表格<070>};
-                #local value {@mslp.Var{$name;<130>[... 共 $nest 项数据]<070>}};
+                #local type {<259>表格<299>};
+                #local value {@mslp.Var{$name;<139>[... 共 $nest 项数据]<299>}};
             };
 
             #echo {<060>$format}
                 {@genModuleLink{$class;MOD}<060>}
-                {@mslp.Exec{{xtt.delTrigger var $name};<110>✗<060>;false} @linkToHelp{$class;$name}}
+                {@mslp.Exec{{xtt.delTrigger var $name};<119>✗<269>;false} @linkToHelp{$class;$name}}
                 {$type}
                 {$value};
         };
@@ -287,18 +287,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #foreach {$classList} {class} {
         #local name {};
         #foreach {${funcsTable[$class][]}} {name} {
-            #local type {<130>自定义<070>};
+            #local type {<139>自定义<299>};
 
             #if { "$name" == "%*.{[A-Z][a-zA-Z0-9]+}" } {
-                #local type {<120>开放API<070>};
+                #local type {<129>开放API<299>};
             };
 
             #if { "$class" == "{lib/xtintin|main}" } {
-                #local type {<020>语法增强<070>};
+                #local type {<229>语法增强<299>};
             };
 
             #if { "${class}.$name" == "main.%*Log" } {
-                #local type {<120>日志接口<070>};
+                #local type {<129>日志接口<299>};
             };
 
             #if { "$pattern" == "" && "$type" == "%*自定义%*" } {
@@ -307,7 +307,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
             #echo {<060>$format}
                 {@genModuleLink{$class;MOD}<060>}
-                {@mslp.Exec{{xtt.delTrigger func $name};<110>✗<060>;false} @linkToHelp{$class;$name}}
+                {@mslp.Exec{{xtt.delTrigger func $name};<119>✗<269>;false} @linkToHelp{$class;$name}}
                 {$type};
         };
     };
@@ -319,7 +319,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // };
 #alias {xtt.Send} {
     #if { "$xttOptions[DisableOutput]" == "true" } {
-        #echo {<160>命令已被抑制: <420>%p<070>} {%0};
+        #echo {<169>命令已被抑制: <429>%p<299>} {%0};
         #return;
     };
 
@@ -361,7 +361,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    就可以继续机器运行了。
 // };
 #alias {xtt.Stop} {
-    #line oneshot #alias {%1} {halt; #echo {<110>任务已暂停，请输入 <130>%1 %s <110>继续运行。<070>} {%%0}}
+    #line oneshot #alias {%1} {halt; #echo {<119>任务已暂停，请输入 <139>%1 %s <119>继续运行。<299>} {%%0}}
 };
 
 ///=== {
@@ -385,7 +385,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     } {1.000};
 
     #alias {^%*{|ID=paotin/disable-all-command}$} {
-        #echo {<110>命令已被抑制，可用 <120>#send<110> 强制发送。撤销请用 <120>xtt.UndoDisableAllCommand<110> : <130>%s<070>} {%%0}
+        #echo {<119>命令已被抑制，可用 <129>#send<119> 强制发送。撤销请用 <129>xtt.UndoDisableAllCommand<119> : <139>%s<299>} {%%0}
     } {1.001};
 
     #line quiet #ignore actions on;
@@ -421,7 +421,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return {$text};
     };
 
-    #return {<140>@mslp.Exec{{$cmd};{$text}}<270>};
+    #return {<149>@mslp.Exec{{$cmd};{$text}}<299>};
 };
 
 ///=== {

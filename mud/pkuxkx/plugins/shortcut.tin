@@ -9,13 +9,13 @@
 
 #alias {beep} {#echo {\a\}};
 
-#event {TIME 08:55} {#echo <120>准备保卫！！！<070>};
-#event {TIME 15:55} {#echo <120>准备保卫！！！<070>};
-#event {TIME 20:25} {#echo <120>准备保卫！！！<070>};
-#event {TIME 20:55} {#echo <120>准备保卫！！！<070>};
+#event {TIME 08:55} {#echo <129>准备保卫！！！<299>};
+#event {TIME 15:55} {#echo <129>准备保卫！！！<299>};
+#event {TIME 20:25} {#echo <129>准备保卫！！！<299>};
+#event {TIME 20:55} {#echo <129>准备保卫！！！<299>};
 
-#event {TIME 07:55} {#echo <120>准备答题！！！<070>};
-#event {TIME 19:55} {#echo <120>准备答题！！！<070>};
+#event {TIME 07:55} {#echo <129>准备答题！！！<299>};
+#event {TIME 19:55} {#echo <129>准备答题！！！<299>};
 
 #alias {bwcx} {
     #local keyword {%1};
