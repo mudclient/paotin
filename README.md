@@ -25,6 +25,10 @@ PaoTin++ 不是一个成熟的机器人套件，并不计划提供一整套开�
 
 # 软件结构及亮点功能
 
+PaoTin++ 技术架构图：
+
+![PaoTin++ schema](https://user-images.githubusercontent.com/15100900/203256221-3bebce64-7376-4f30-8940-e3e149ba6720.jpg)
+
 PaoTin++ 主要由以下四部分组成：
 
 * 一个 [TinTin++ 衍生品](https://github.com/mudclient/tintin/tree/beta-develop)，它在 TinTin++ beta 版的基础上，
