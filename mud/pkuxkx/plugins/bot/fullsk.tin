@@ -302,6 +302,7 @@ load-lib event;
         #local code {$fullsk-lingwu-skill[code]};
         yun regenerate; do $multiple lingwu $code $times;
         skbrief $code;
+        fullsk.gap 练习;
     };
 
     #var fullsk-lingwu-checked {false};
@@ -404,6 +405,7 @@ load-lib event;
 
     #class fullsk.lingwu close;
 
+    unwield right;
     fullsk.lingwu.do;
 };
 
@@ -444,6 +446,12 @@ load-lib event;
         yun $fullsk-lianxi-yun-what;
         do $multiple lian $code $times;
         skbrief $fullsk-lianxi-skill[code];
+        #if { "$fullsk-lianxi-yun-what" == "recover" } {
+            fullsk.gap 领悟;
+        };
+        #else {
+            fullsk.gap 练习;
+        };
     };
 
     #var fullsk-lianxi-checked {false};
@@ -492,10 +500,10 @@ load-lib event;
 
         #local percent {0};
         #if { "$fullsk-lianxi-yun-what" == "recover" } {
-            #local percent {$char[HP][气血百分比]};
+            #local percent {@eval{$char[HP][当前气血] * 100 / $char[HP][有效气血]}};
         };
         #else {
-            #local percent {$char[HP][精神百分比]};
+            #local percent {@eval{$char[HP][当前精神] * 100 / $char[HP][有效精神]}};
         };
 
         #if { $char[HP][内力百分比] < 20 } {
@@ -686,6 +694,30 @@ load-lib event;
     };
 };
 
+#nop 在领悟发呆的时候顺便练习，在练习发呆的时候顺便领悟;
+#alias {fullsk.gap} {
+    #local what  {%1};
+    #local skill {};
+    #foreach {$bot_fullsk[config][skills][]} {skill} {
+        #if { "$char[Skills][$skill][type]" == "基本功夫" } {
+            #continue;
+        };
+
+        #local base {};
+        #local bases {@char.GetJifaSkill{$skill}};
+        #foreach {$bases} {base} {
+            #local baseLevel    {@floor{@char.SkillLevel{$base}}};
+            #local skillLevel   {@floor{@char.SkillLevel{$skill}}};
+            #if { "$what" == "领悟" && $char[HP][精神百分比] > 50 && $baseLevel < $skillLevel + 1 } {
+                lingwu $char[Skills][$base][code] 10;
+            };
+            #elseif { "$what" == "练习" && $char[HP][气血百分比] > 50 && $baseLevel > $skillLevel } {
+                lian $char[Skills][$base][code] 10;
+            };
+        };
+    };
+};
+
 #var fullsk-current-room {lw};
 
 #alias {fullsk.goto} {
@@ -723,3 +755,5 @@ load-lib event;
         {skills}            {太极拳;太极剑}
     };
 };
+
+#action {^你的基本功夫比你的高级功夫还高！$} {skills};
