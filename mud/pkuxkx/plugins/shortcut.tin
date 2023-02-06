@@ -176,3 +176,65 @@
 } {9.999};
 
 #subst {~\e[34m} {\e[94m};
+
+#alias {list-armors} {
+    #class rbz-list-armors open;
+
+    #action {^┏所有防具列表┓$} {
+        #class rbz-list-armors open;
+
+        #gag {^│%d%s│%*│1%s│$};
+
+        #action {^│%d%s│%*(%*)%*│2%s│$} {
+            #if { "%%%4" != "{ring|necklace}" } {
+                #line gag;
+            };
+        };
+
+        #high {^%*({ring|necklace})%*$} {light magenta};
+
+        #action {^└─────┴────────────────────┴──┴──┴───┘$} {
+            #class rbz-list-armors kill;
+            #buffer end;
+        };
+
+        #class rbz-list-armors close;
+    };
+
+    #action {^你不是刚看过么？$} {
+        #class rbz-list-armors kill;
+    };
+
+    #class rbz-list-armors close;
+
+    list armors;
+};
+
+#action {^你向当铺买下一件%*之%*。$} {
+    #switch {"%2"} {
+        #case {"盔"}    {jianding head};
+        #case {"护腕"}  {jianding wrists};
+        #case {"披风"}  {jianding surcoat};
+        #case {"手套"}  {jianding hands};
+        #case {"铠甲"}  {jianding armor};
+        #case {"袍"}    {jianding cloth};
+        #case {"腰带"}  {jianding waist};
+        #case {"盾"}    {jianding shield};
+        #case {"靴"}    {jianding boots};
+        #case {"项链"}  {jianding necklace};
+        #case {"戒指"}  {jianding ring};
+        #case {"剑"}    {jianding sword};
+        #case {"刀"}    {jianding blade};
+        #case {"杖"}    {jianding staff};
+        #case {"鞭"}    {jianding whip};
+        #case {"斧"}    {jianding axe};
+        #case {"枪"}    {jianding spear};
+        #case {"锤"}    {jianding hammer};
+        #case {"戟"}    {jianding halberd};
+        #case {"匕"}    {jianding dagger};
+        #case {"针"}    {jianding needle};
+        #case {"钩"}    {jianding hook};
+        #case {"箫"}    {jianding flute};
+        #default {#0};
+    };
+};
