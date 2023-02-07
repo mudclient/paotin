@@ -65,6 +65,13 @@
 发呆收益: ( $char[STATUS][内力恢复] + $char[STATUS][精神恢复] / $scale ) * 20
 睡觉收益: ( $char[HP][最大内力] / 2 + ($char[HP][最大精神] - $char[HP][当前精神]) / $scale )
 打坐收益: ( $char[Skills][基本内功][jifa-level] / 10 + 1 ) * 20
+
+一些细节：
+* 有的武功 lian 的时候会消耗精神而不是气血。已知的有马屁神功 flatter，慕容弹腿
+* 许多武功 lian 的时候会消耗内力，导致低内力时练习失败，气血不降，内力不降，技能不加点
+  - 极端情况下导致不会触发睡觉，因为气血始终维持在高水准，而内力时刻被耗尽
+  - 六阳掌，折梅手
+* 武功升级时可能导致后续的练功次数失败，从而影响练习测速
 */
 
 load-lib event;
@@ -305,7 +312,8 @@ load-lib event;
         fullsk.gap 练习;
     };
 
-    #var fullsk-lingwu-checked {false};
+    #var fullsk-lingwu-checked  {false};
+    #var fullsk-lingwu-retry    {0};
 
     #nop skbrief 回调;
     #alias {fullsk.lingwu.check} {
@@ -325,6 +333,10 @@ load-lib event;
             &&  $point  == $fullsk-lingwu-skill[point]
         } {
             #if { $char[HP][当前内力] > 100 } {
+                #if { $fullsk-lingwu-retry < 3 } {
+                    #math fullsk-lingwu-retry {$fullsk-lingwu-retry + 1};
+                    #return;
+                };
                 okLog 功力已经无法进步。;
                 fullsk.lingwu.done;
                 #return;
@@ -342,8 +354,16 @@ load-lib event;
         #local checked {$fullsk-lingwu-checked};
         #var fullsk-lingwu-checked {false};
 
+        #nop 睡着了就什么都不做。;
+        #if { $fullsk-sleep } {
+            #return;
+        };
+
         #if { $char[HP][内力百分比] < 20 } {
             #if { $char[HP][内力百分比] > 2 || $char[HP][精神百分比] > 80 } {
+                #if { $char[HP][精神百分比] > 20 } {
+                    #math fullsk-lingwu-times {$fullsk-lingwu-times * 11 / 10};
+                };
                 fullsk.lingwu.do;
             };
             #else {
@@ -353,8 +373,8 @@ load-lib event;
             #return;
         };
 
-        #nop 如果剩余精神过少，则不再调整次数。;
-        #if { $char[HP][精神百分比] < 10 } {
+        #nop 如果剩余精神过少，或者内力过少，则不再调整次数。;
+        #if { $char[HP][精神百分比] < 10 || $char[HP][内力百分比] < 2 } {
             fullsk.lingwu.do;
             #return;
         };
@@ -454,7 +474,8 @@ load-lib event;
         };
     };
 
-    #var fullsk-lianxi-checked {false};
+    #var fullsk-lianxi-checked  {false};
+    #var fullsk-lianxi-retry    {0};
 
     #alias {fullsk.lianxi.check} {
         #local name     {$fullsk-lianxi-skill[name]};
@@ -473,6 +494,10 @@ load-lib event;
             &&  $point  == $fullsk-lianxi-skill[point]
         } {
             #if { $char[HP][当前内力] > 100 } {
+                #if { $fullsk-lianxi-retry < 3 } {
+                    #math fullsk-lianxi-retry {$fullsk-lianxi-retry + 1};
+                    #return;
+                };
                 okLog 功力已经无法进步。;
                 fullsk.lianxi.done;
                 #return;
@@ -488,6 +513,11 @@ load-lib event;
     #alias {fullsk.lianxi.calc} {
         #local checked {$fullsk-lianxi-checked};
         #var fullsk-lianxi-checked {false};
+
+        #nop 睡着了就什么也不做。;
+        #if { $fullsk-sleep } {
+            #return;
+        };
 
         #nop 个别武功练习时不消耗气血，而是消耗精神。;
         #if {  "$fullsk-lianxi-yun-what" == "recover"
@@ -508,6 +538,9 @@ load-lib event;
 
         #if { $char[HP][内力百分比] < 20 } {
             #if { $char[HP][内力百分比] > 2 || ( $percent > 80 && $percent < 100 ) } {
+                #if { $percent > 20 } {
+                    #math fullsk-lianxi-times {$fullsk-lianxi-times * 11 / 10};
+                };
                 fullsk.lianxi.do;
             };
             #else {
@@ -517,8 +550,8 @@ load-lib event;
             #return;
         };
 
-        #nop 如果剩余气血/精神过少，则不再调整次数。;
-        #if { $percent < 10 } {
+        #nop 如果剩余气血/精神过少，或者内力过少，则不再调整次数。;
+        #if { $percent < 10 || $char[HP][内力百分比] < 2 } {
             fullsk.lianxi.do;
             #return;
         };
@@ -685,6 +718,7 @@ load-lib event;
     #echo {打坐收益: ${打坐收益} 睡觉收益: ${睡觉收益} 发呆收益: ${发呆收益}};
     #if { ${睡觉收益} > ${发呆收益} && ${睡觉收益} > ${打坐收益} } {
         okLog 该睡觉了。;
+        fullsk.sleep;
     };
     #elseif { ${发呆收益} >= ${睡觉收益} && ${发呆收益} >= ${打坐收益} } {
         okLog 呆会儿继续。;
@@ -692,6 +726,33 @@ load-lib event;
     #else {
         okLog 要不先去打个坐？;
     };
+};
+
+#var fullsk-sleep {0};
+
+#alias {fullsk.sleep} {
+    #class fullsk.sleep open;
+
+    #action {^不一会儿，你就进入了梦乡。{|ID=fullsk.sleep}$} {
+        #untick fullsk.sleep;
+        #delay fullsk-sleep {
+            #var fullsk-sleep {0};
+        } 60;
+    };
+
+    #action {^你一觉醒来，精神抖擞地活动了几下手脚。{|ID=fullsk.sleep}$} {
+        n;e;
+        dazuo 10;
+        sync.Wait {#var fullsk-sleep {0}};
+        #undelay fullsk-sleep;
+        #class fullsk.sleep kill;
+    };
+
+    #var fullsk-sleep {1};
+    w;s;
+    xtt.Tick fullsk.sleep {fullsk.gap 练习; sleep} 3;
+
+    #class fullsk.sleep close;
 };
 
 #nop 在领悟发呆的时候顺便练习，在练习发呆的时候顺便领悟;
@@ -708,10 +769,10 @@ load-lib event;
         #foreach {$bases} {base} {
             #local baseLevel    {@floor{@char.SkillLevel{$base}}};
             #local skillLevel   {@floor{@char.SkillLevel{$skill}}};
-            #if { "$what" == "领悟" && $char[HP][精神百分比] > 50 && $baseLevel < $skillLevel + 1 } {
+            #if { "$what" == "领悟" && $char[HP][精神百分比] > 20 && $baseLevel < $skillLevel + 1 } {
                 lingwu $char[Skills][$base][code] 10;
             };
-            #elseif { "$what" == "练习" && $char[HP][气血百分比] > 50 && $baseLevel > $skillLevel } {
+            #elseif { "$what" == "练习" && $char[HP][气血百分比] > 20 && $baseLevel > $skillLevel } {
                 lian $char[Skills][$base][code] 10;
             };
         };
