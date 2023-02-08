@@ -361,8 +361,8 @@ load-lib event;
 
         #if { $char[HP][内力百分比] < 20 } {
             #if { $char[HP][内力百分比] > 2 || $char[HP][精神百分比] > 80 } {
-                #if { $char[HP][精神百分比] > 20 } {
-                    #math fullsk-lingwu-times {$fullsk-lingwu-times * 11 / 10};
+                #if { $char[HP][内力百分比] > 2 && $char[HP][精神百分比] > 20 } {
+                    #var fullsk-lingwu-times {@min{@eval{$fullsk-lingwu-times * 11 / 10};1000}};
                 };
                 fullsk.lingwu.do;
             };
@@ -538,8 +538,8 @@ load-lib event;
 
         #if { $char[HP][内力百分比] < 20 } {
             #if { $char[HP][内力百分比] > 2 || ( $percent > 80 && $percent < 100 ) } {
-                #if { $percent > 20 } {
-                    #math fullsk-lianxi-times {$fullsk-lianxi-times * 11 / 10};
+                #if { $char[HP][内力百分比] > 2 && $percent > 20 } {
+                    #var fullsk-lianxi-times {@min{@eval{$fullsk-lianxi-times * 11 / 10};500}};
                 };
                 fullsk.lianxi.do;
             };
@@ -741,15 +741,17 @@ load-lib event;
     };
 
     #action {^你一觉醒来，精神抖擞地活动了几下手脚。{|ID=fullsk.sleep}$} {
-        n;e;
-        dazuo 10;
-        sync.Wait {#var fullsk-sleep {0}};
+        fullsk.goto lw;
+        sync.Wait {
+            #var fullsk-sleep {0};
+            event.Emit {char/hpbrief};
+        };
         #undelay fullsk-sleep;
         #class fullsk.sleep kill;
     };
 
     #var fullsk-sleep {1};
-    w;s;
+    fullsk.goto sleep;
     xtt.Tick fullsk.sleep {fullsk.gap 练习; sleep} 3;
 
     #class fullsk.sleep close;
