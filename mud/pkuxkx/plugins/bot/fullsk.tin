@@ -373,8 +373,8 @@ load-lib event;
             #return;
         };
 
-        #nop 如果剩余精神过少，或者内力过少，则不再调整次数。;
-        #if { $char[HP][精神百分比] < 10 || $char[HP][内力百分比] < 2 } {
+        #nop 如果剩余精神过少，则不再调整次数。;
+        #if { $char[HP][精神百分比] < 10 } {
             fullsk.lingwu.do;
             #return;
         };
@@ -542,9 +542,9 @@ load-lib event;
         };
 
         #if { $char[HP][内力百分比] < 20 } {
-            #if { $char[HP][内力百分比] > 2 || ( $percent > 80 && $percent < 100 ) } {
-                #if { $char[HP][内力百分比] > 2 && $percent > 20 } {
-                    #var fullsk-lianxi-times {@min{@eval{$fullsk-lianxi-times * 11 / 10};500}};
+            #if { $char[HP][内力百分比] > 2 } {
+                #if { $percent > 20 } {
+                        #var fullsk-lianxi-times {@min{@eval{$fullsk-lianxi-times * 11 / 10};500}};
                 };
                 fullsk.lianxi.do;
             };
@@ -555,8 +555,8 @@ load-lib event;
             #return;
         };
 
-        #nop 如果剩余气血/精神过少，或者内力过少，则不再调整次数。;
-        #if { $percent < 10 || $char[HP][内力百分比] < 2 } {
+        #nop 如果剩余气血/精神过少，则不再调整次数。;
+        #if { $percent < 10 } {
             fullsk.lianxi.do;
             #return;
         };
@@ -738,14 +738,27 @@ load-lib event;
 #alias {fullsk.sleep} {
     #class fullsk.sleep open;
 
+    #var fullsk-sleep-time {0};
+
     #action {^不一会儿，你就进入了梦乡。{|ID=fullsk.sleep}$} {
         #untick fullsk.sleep;
+        #var fullsk-sleep-time {@now{}};
         #delay fullsk-sleep {
             #var fullsk-sleep {0};
         } 60;
     };
 
     #action {^你一觉醒来，精神抖擞地活动了几下手脚。{|ID=fullsk.sleep}$} {
+        #local now {@now{}};
+        #local force {@char.SkillJifaLevel{基本内功}};
+        #local scale {@eval{$force / 100}};
+        #local profit {@eval{
+            (   ( $char[HP][最大内力] - $char[HP][当前内力] ) / 2
+              + ( $char[HP][最大精神] - $char[HP][当前精神] ) / $scale / 2
+              + ( $char[HP][最大气血] - $char[HP][当前气血] ) / $scale
+            ) / ($now - $fullsk-sleep-time)
+        }};
+        okLog 本次睡眠质量: $profit;
         fullsk.goto lw;
         sync.Wait {
             #var fullsk-sleep {0};
@@ -755,9 +768,19 @@ load-lib event;
         #class fullsk.sleep kill;
     };
 
+    #action {^你刚刚睡过一觉, 多睡对身体有害无益! {|ID=fullsk.sleep}$} {
+        #if { $char[HP][精神百分比] < 70 } {
+            yun regenerate;
+        };
+        #if { $char[HP][气血百分比] < 10 } {
+            yun recover;
+        };
+        dazuo max;
+    };
+
     #var fullsk-sleep {1};
     fullsk.goto sleep;
-    xtt.Tick fullsk.sleep {fullsk.gap 练习; sleep} 3;
+    xtt.Tick fullsk.sleep {halt; fullsk.gap 练习; sleep} 3;
 
     #class fullsk.sleep close;
 };
