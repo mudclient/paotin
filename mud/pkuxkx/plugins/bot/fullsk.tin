@@ -442,6 +442,11 @@ load-lib event;
         #return;
     };
 
+    #if { "$skill[jifa-to]" == "基本内功" } {
+        fullsk.xiulian;
+        #return;
+    };
+
     #class fullsk.lianxi open;
 
     #var fullsk-lianxi-skill        {$skill};
@@ -808,6 +813,29 @@ load-lib event;
 };
 
 #action {~^%c你的「%*」进步了！$CE} {fullskLog %0};
+#action {^你的基本功夫比你的高级功夫还高！$} {skills};
+
+#alias {char.WaitBusy} {
+    #class char.WaitBusy open;
+
+    #var char-wait-busy-callback {%1};
+
+    #action {^你不忙{|ID=char.WaitBusy}$} {
+        #line gag;
+        #local callback {$char-wait-busy-callback};
+        #class char.WaitBusy kill;
+        #line sub var #delay 0 {$callback};
+    };
+
+    #action {^你正忙{|ID=char.WaitBusy}$} {
+        #line gag;
+        #nop;
+    };
+
+    xtt.Tick char.WaitBusy {checkbusy} 1;
+
+    #class char.WaitBusy close;
+};
 
 #alias {fullsk.test} {
     load-module wd;
@@ -818,5 +846,3 @@ load-lib event;
         {skills}            {太极拳;太极剑}
     };
 };
-
-#action {^你的基本功夫比你的高级功夫还高！$} {skills};
