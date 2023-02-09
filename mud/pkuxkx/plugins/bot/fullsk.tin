@@ -544,7 +544,7 @@ load-lib event;
         #if { $char[HP][内力百分比] < 20 } {
             #if { $char[HP][内力百分比] > 2 } {
                 #if { $percent > 20 } {
-                        #var fullsk-lianxi-times {@min{@eval{$fullsk-lianxi-times * 11 / 10};500}};
+                    #var fullsk-lianxi-times {@min{@eval{$fullsk-lianxi-times * 11 / 10};500}};
                 };
                 fullsk.lianxi.do;
             };
@@ -574,7 +574,7 @@ load-lib event;
             };
 
             #nop 无论如何，次数上限为 500，因为这是 do 10 lian xxx 50 的上限。;
-            #var fullsk-lianxi-times   {@min{$fullsk-lianxi-times;500}};
+            #var fullsk-lianxi-times {@min{$fullsk-lianxi-times;500}};
 
             #if { $old != $fullsk-lianxi-times } {
                 okLog 练习加速中，因为气血（也可能是精神）剩余 $percent%，所以次数从 $old 调整到 $fullsk-lianxi-times。;
@@ -623,9 +623,11 @@ load-lib event;
     #nop 基本功夫 force dodge parry;
     #nop 拳脚 claw unarmed cuff finger hand strike throwing iron-cloth leg;
     #nop 兵器 sword staff dagger blade club hammer axe spear whip halberd;
-    #if { "$code" == "{sword|staff|dagger|blade|club|hammer|axe|spear|whip|halberd}" } {
-        wield $code at right;
-        #local others {$fullsk-weapons[$char[档案][门派]][$code]};
+    #local allBases {@transform{{$char[Skills][$skillName][jifa-to]};\$char[Skills][VALUE][code]}};
+    #local weapon {@sset.Intersection{{$allBases};{sword;staff;dagger;blade;club;hammer;axe;spear;whip;halberd}}};
+    #if { @sset.Size{$weapon} == 1 } {
+        wield $weapon at right;
+        #local others {$fullsk-weapons[$char[档案][门派]][$weapon]};
         #if { "$others" != "" } {
             #foreach {$others} {code} {
                 wield $code at right;
