@@ -532,3 +532,49 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     $cmd;
     #line quiet #ignore function off;
 };
+
+///=== {
+// ## xtt.Ping [<次数>]
+//    计算服务器延迟，输出以毫秒为单位的统计数据;
+// };
+#alias {PING} {xtt.Ping};
+#alias {xtt.Ping} {
+    #class xtt.Ping open;
+
+    #list xtt-ping-samples  create {};
+    #var xtt-ping-send-time {};
+    #var xtt-ping-times     {10};
+
+    #alias {xtt.Ping.ping} {
+        #if { $xtt-ping-times <= 0 } {
+            xtt.Ping.done;
+            #return;
+        };
+
+        #var xtt-ping-send-time {@str.Format{%U}};
+        sync.Wait xtt.Ping.pong;
+    };
+
+    #alias {xtt.Ping.pong} {
+        #math xtt-ping-times {$xtt-ping-times - 1};
+        #list xtt-ping-samples add {@math.Eval{ @str.Format{%U} - $xtt-ping-send-time }};
+        xtt.Ping.ping;
+    };
+
+    #alias {xtt.Ping.done} {
+        #list xtt-ping-samples order;
+        #list xtt-ping-samples delete -1;
+        #list xtt-ping-samples delete 1;
+        #local min {@math.Eval{ $xtt-ping-samples[1] / 1000 }};
+        #local max {@math.Eval{ $xtt-ping-samples[-1] / 1000 }};
+        #local avg {@math.Eval{ @math.Sum{$xtt-ping-samples[]} / &xtt-ping-samples[] / 1000 }};
+
+        #class xtt.Ping kill;
+
+        okLog 网络测速结果如右，最大值 $max 毫秒，最小值: $min 毫秒，平均值 $avg 毫秒;
+    };
+
+    #class xtt.Ping close;
+
+    sync.Wait {xtt.Ping.ping};
+};
