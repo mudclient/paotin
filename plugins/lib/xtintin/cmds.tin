@@ -314,6 +314,36 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 ///=== {
+// ## xtt.Var <变量中文含义> <变量名> <值>
+//    声明并初始化变量。和 #var 不同，如果该变量已存在，则不会修改它的值。
+//    另外，如果在模块中使用本方法，则声明的变量会自动存放在 #class data/$MODULE 中。
+//    这意味着即使你重新载入模块代码，也不会破坏该变量的值。
+//    因此建议将通过触发抓取到的任务进度信息用本方法存储，可以有效避免机器代码迭代
+//    开发过程中，丢失任务信息从而导致任务失败。
+//
+//    也可以通过短名称 VAR 来使用本命令，效果相同。
+// };
+#alias {VAR} {xtt.Var};
+#alias {xtt.Var} {
+    #local cnName   {%1};
+    #local name     {%2};
+    #local value    {%3};
+
+    #if { @existsVar{$name} } {
+        #return;
+    };
+
+    #if { @existsVar{MODULE} } {
+        #class data/$MODULE open;
+        #var {$name} {$value};
+        #class data/$MODULE close;
+    };
+    #else {
+        #var {$name} {$value};
+    };
+};
+
+///=== {
 // ## xtt.Send <命令> [<参数> ...]
 //    向服务器发送命令。如果命令拦截总开关被打开，则不会真的向服务器发送。
 // };
