@@ -102,3 +102,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #return {${now}.$random};
 };
+
+#alias {load-config} {
+    #local config {%1};
+
+    #if { @isEmpty{$config} } {
+        xtt.Usage load-config;
+        #return;
+    };
+
+    load-file etc/${config}.tin;
+};
