@@ -343,12 +343,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+load-lib option;
+option.Define {DisableOutput} {Bool} {是否禁止向服务器发送命令} {false};
+
 ///=== {
 // ## xtt.Send <命令> [<参数> ...]
 //    向服务器发送命令。如果命令拦截总开关被打开，则不会真的向服务器发送。
 // };
 #alias {xtt.Send} {
-    #if { "$xttOptions[DisableOutput]" == "true" } {
+    #if { @option.IsEnable{DisableOutput} } {
         #echo {<169>命令已被抑制: <429>%p<299>} {%0};
         #return;
     };
