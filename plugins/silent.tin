@@ -25,25 +25,68 @@
 
 #alias {^%*{|ID=paotin/silent}$} {
     #local cmd {%0};
-    #replace {cmd} {%S %*} {&1};
 
-    #if {  {$silent-WhiteList[$cmd]} == {true}
-        || {$cmd} == {{[a-z]{1,10}}} && {%0} == {{[a-z0-9 -]*}} } {
+    #if { {$cmd} === {} } {
+        #return;
+    };
+
+    #local ok {@silent.Check{$cmd}};
+    #if { $ok } {
         #var silent-LastCmd {};
-        #send {%0};
+        #send {$cmd};
         #return;
     };
 
     #echo {<169>命令「<139>$cmd<169>」不是一个合法的 MUD 命令，如果确认是，请更新白名单。<099>};
-    #if { {%0} != {$silent-LastCmd} } {
+
+    #if { {$cmd} != {$silent-LastCmd} } {
         #echo {<169>本次命令<119>已被抑制<169>。如果你着急输入，可以重复一次本命令，将临时通过一次。<099>};
-        #var silent-LastCmd {%0};
+        #var silent-LastCmd {$cmd};
     };
     #else {
         #var silent-LastCmd {};
         #send {%0};
     };
 } {9.999};
+
+#func {silent.Check} {
+    #local cmd {%0};
+
+    #replace {cmd} {^%S{| (.*)}$} {
+        {cmd}{&1}
+        {args}{&3}
+    };
+
+    #local cmd {$cmd};
+
+    #nop 这个是 chat;
+    #if { {$cmd[cmd]} == {'%*} } {
+        #return 1;
+    };
+
+    #nop 白名单通行;
+    #if { {$silent-WhiteList[$cmd[cmd]]} == {true} } {
+        #return 1;
+    };
+
+    #nop 否则只接受指定格式的命令;
+    #if { {$cmd[cmd]} != {{[a-z0-9_]{1,10}}} } {
+        #return 0;
+    };
+
+    #nop 参数不允许有特殊字符;
+    #var silent-check-retcode {};
+    #regex {$cmd[args]} {{*UTF8}{^([a-z0-9. -]|\p{Han})*$}} {
+        #var silent-check-retcode {1};
+    } {
+        #var silent-check-retcode {0};
+    };
+
+    #local retcode {$silent-check-retcode};
+    #unvar silent-check-retcode;
+
+    #return $retcode;
+};
 
 #alias {silent.Init} {
     #local list {$silent-WhiteList};
