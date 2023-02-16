@@ -9,7 +9,8 @@
     rumor;          rumor*;         tell;           say;
     bd;             bd*;            group;          group*;
     nation;         nation*;        ask;            i2;
-    buy;            list;           node; 			fullme;
+    buy;            list;           node;           fullme;
+    shu;            dang;           verify;         perform;
 
     amber_alert;    status_me;      set;            unset;
 };
