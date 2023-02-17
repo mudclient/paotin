@@ -54,6 +54,8 @@
     { {place}{Bot} {line}{3}    {label}{状态}       {name}{status}   {cooldown}{600} }
     { {place}{Bot} {line}{3}    {label}{持续效果}   {name}{persist}  {countdown}{Seconds} }
 
+    { {place}{Bot} {line}{99}   {label}{<119>警报}  {name}{alert}   }
+
     { {place}{BotSepBar}        {label}{搜索条件}   {name}{search}  }
     { {place}{BotSepBar}        {label}{屏幕美化}   {name}{beautify} {cooldown}{600} {visibility}{HideCool} }
     { {place}{BotSepBar}        {label}{状态栏更新} {name}{disable}  {visibility}{HideLabel} }

@@ -7,6 +7,7 @@
 
 #nop {Top} {TopSepBar} {MidSepBar} {Bot} {BotSepBar};
 #list prompt-fields create {
+    { {place}{BotSepBar}        {label}{<119>警报}  {name}{alert} }
     { {place}{BotSepBar}        {label}{屏幕美化}   {name}{beautify} {cooldown}{600} {visibility}{HideCool} }
     { {place}{BotSepBar}        {label}{状态栏更新} {name}{disable}  {visibility}{HideLabel} }
 };

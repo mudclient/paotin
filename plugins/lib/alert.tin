@@ -1,0 +1,162 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+///=== {
+///// 全局警报器是一个公共模块，负责统一管理客户端各模块发出的警报信息，
+///// 并提供统一的操作界面。
+///// };
+
+#var lib_alert[META] {
+    {NAME}      {全局警报器}
+    {DESC}      {统一管理全局警报信息}
+    {AUTHOR}    {担子炮}
+};
+
+#nop 如果警报已经被看到，则短时间内不会重复报警。;
+VAR {上次看到警报的时间，时间戳}    alert-focus     {0};
+VAR {目前正在进行的警报，列表表格}  alert-items     {};
+
+load-lib storage;
+
+#func {lib_alert.Init} {
+    storage.Load {alert} {alert-items};
+    #return {true};
+};
+
+///=== {
+// ## alert.Add <警报原因> [<间隔时间>] [<持续时间>]
+//    发出一个警报。每隔一段时间，就用蜂鸣器发出提醒声音。
+//    警报必须要有个原因，该原因连同解除该警报的按钮一起，会通过 prompt 显示在信息栏上。
+//    玩家可以用不同长短的间隔时间来表达不同的急促程度或其它含义，默认 60 秒。
+//    玩家也可以提供一个可选的持续时间，一旦超过持续时间，则警报将自动解除。默认持续时间为 3600 秒。
+//    间隔时间和持续时间均以秒为单位。
+//    进入警报状态后，某些终端可能会弹出桌面提醒。
+//    如果开启了蜂鸣器或者声音播放，你可能会听到声音。
+//    警报声会在玩家敲击任意键后暂时抑制，但除非手动关闭了所有信息栏的提示，否则一分钟后警报仍会继续。
+// };
+#alias {alert.Add} {
+    #local reason   {%1};
+    #local interval {@defaultNum{%2;60}};
+    #local duration {@defaultNum{%3;3600}};
+
+    #if { @str.Width{reason} == 0 } {
+        xtt.Usage alert.Add;
+        #return;
+    };
+
+    alert.Remove {$reason};
+
+    #list alert-items add {{
+        {id}        {@str.Plain{$reason}}
+        {reason}    {$reason}
+        {begin}     {@time.Now{}}
+        {duration}  {$duration}
+        {interval}  {$interval}
+    }};
+
+    storage.Save {alert} {alert-items};
+
+    alert.perform;
+};
+
+///=== {
+// ## alert.Remove <警报原因>
+//    解除警报。
+// };
+#alias {alert.Remove} {
+    #local id   {@str.Plain{%1}};
+    #local idx  {};
+
+    #if { &alert-items[] == 0 } {
+        #return;
+    };
+
+    #list alert-items indexate {id};
+    #list alert-items find {$id} idx;
+
+    #if { $idx > 0 } {
+        #list alert-items delete {$idx};
+        storage.Save {alert} {alert-items};
+        alert.perform;
+    };
+};
+
+#nop 警报持续期间，用本命令来检查并及时删除过期的警报。;
+#alias {alert.check} {
+    #local duration {};
+
+    #local changed {false};
+
+    #while { &alert-items[] > 0 } {
+        #local begin {$alert-items[1][begin]};
+        #local duration {$alert-items[1][duration]};
+
+        #local duration {@math.Eval{ $begin + $duration - @time.Now{} }};
+        #if { $duration <= 0 } {
+            #list alert-items delete 1;
+            #local changed {true};
+        };
+        #else {
+            #break;
+        };
+    };
+
+    #if { @isTrue{$changed} } {
+        storage.Save {alert} {alert-items};
+    };
+
+    #if { &alert-items[] > 0 } {
+        #delay alert.check {alert.check} $duration;
+    };
+};
+
+#alias {alert.beep} {
+    #if { @time.Now{} - $alert-focus > 60 } {
+        #bell;
+    };
+};
+
+#alias {alert.perform} {
+    #untick alert.beep;
+
+    #if { &alert-items[] == 0 } {
+        #var alert-focus {0};
+        #undelay alert.check;
+        #unevent {RECEIVED KEYPRESS};
+        prompt.Set {{alert}{}};
+        #return;
+    };
+
+    #list alert-items indexate {interval};
+    #list alert-items order;
+
+    #local interval {$alert-items[1][interval]};
+    xtt.Tick alert.beep {alert.beep} $interval;
+
+    #event {RECEIVED KEYPRESS} {#var alert-focus {@time.Now{}}};
+
+    #list alert-items indexate {begin};
+    #list alert-items order;
+
+    alert.check;
+
+    #local alerts {@fp.Map{{$alert-items}; VALUE[reason]<299>【<129>\@mslp.Exec{alert.Remove VALUE[id];了然}<299>】}};
+    #list alerts {collapse} { };
+    prompt.Set {{alert}{$alerts}};
+};
+
+#alias {alert.test} {
+    #nop 奇怪的线索会有奖励;
+    alert.Add {<129>奇怪的线索};
+    #nop 推车密信需要及时处理;
+    alert.Add {<139>推车密信} 30;
+    #nop 推车乱入提醒手动处理;
+    alert.Add <119>推车乱入 10;
+    #nop 比武大会十五分钟内有效;
+    alert.Add {<139>比武大会} {120} {900};
+};
