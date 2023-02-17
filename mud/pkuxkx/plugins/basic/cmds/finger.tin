@@ -25,5 +25,5 @@
 
     #class finger-parse close;
 
-    #send finger;
+    xtt.Send finger;
 };

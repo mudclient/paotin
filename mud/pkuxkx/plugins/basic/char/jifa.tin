@@ -38,7 +38,7 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
 #alias {char.Jifa} {
     #local args {%0};
     #if { "$args" != "" } {
-        #send {jifa $args};
+        xtt.Send {jifa $args};
         #return;
     };
 
@@ -55,7 +55,7 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
 
     #class char.Jifa close;
 
-    #send jifa;
+    xtt.Send jifa;
 };
 
 #alias {char.jifa.parse.output} {
