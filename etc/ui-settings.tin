@@ -10,6 +10,7 @@
     { {place}{BotSepBar}        {label}{<119>警报}  {name}{alert} }
     { {place}{BotSepBar}        {label}{屏幕美化}   {name}{beautify} {cooldown}{600} {visibility}{HideCool} }
     { {place}{BotSepBar}        {label}{状态栏更新} {name}{disable}  {visibility}{HideLabel} }
+    { {place}{BotSepBar}        {label}{随手记}     {name}{note}     {color}{<134>}}
 };
 
 #nop 配色主题，注意这里不要直接嵌入 SGR（ansi codes），否则计算宽度时会有问题。;

@@ -642,6 +642,18 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     };
 };
 
+#alias {NOTE} {prompt.Note};
+#alias {prompt.Note} {
+    prompt.Set {{note}{%0}};
+
+    #if { @isEmpty{%0} } {
+        okLog 你轻轻地从笔记本上撕下一页，捏成一个纸团丢到了垃圾桶里。;
+    };
+    #else {
+        okLog 你抬头看着远方，若有所思，接着又奋笔疾书，在笔记本上记下一些东西。;
+    };
+};
+
 #alias {prompt.test} {
     #local fullme {<219>很久没有进行机器人检查(fullme)了，任务奖励将受到影响。<299>};
     #local fullme {http://pkuxkx.com/antirobot/robot.php?filename=1576762922984895};
