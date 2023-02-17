@@ -254,7 +254,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
         #return;
     };
 
-    #send {#response R:skbrief-begin;skbrief $id;response R:skbrief-end#};
+    xtt.Send {#response R:skbrief-begin;skbrief $id;response R:skbrief-end#};
 };
 
 ///=== {

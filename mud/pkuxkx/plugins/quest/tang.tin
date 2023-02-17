@@ -86,7 +86,7 @@ load-lib speedo;
         #foreach {困难;挑战;普通;简单} {level} {
             #if { "${tang-job-list[$level]}" != "" } {
                 #var {tang-job-log[任务难度]} {$level};
-                #send record ${tang-job-list[$level][1][ID]};
+                xtt.Send record ${tang-job-list[$level][1][ID]};
                 #list {tang-job-list[$level]} delete {1};
                 #return;
             };
@@ -123,7 +123,7 @@ load-lib speedo;
         ask jingzhao shaoyin about 任务信息;
     };
     #else {
-        #send record $id;
+        xtt.Send record $id;
     };
 };
 
@@ -157,7 +157,7 @@ load-lib speedo;
         #if { ${tang-inquiry-exit-index} != 0 } {
             #local back {@dir.Reverse{${tang-inquiry-exits[${tang-inquiry-exit-index}]}}};
             #echo 回去吧。;
-            #send $back;
+            xtt.Send $back;
         };
         #math tang-inquiry-exit-index {${tang-inquiry-exit-index} + 1};
         #local exit {${tang-inquiry-exits[${tang-inquiry-exit-index}]}};
@@ -168,7 +168,7 @@ load-lib speedo;
         };
         #else {
             #echo 下一个出口;
-            #send $exit;
+            xtt.Send $exit;
             #delay 1 {tang.look 1; tang.ask 1};
         };
     };
@@ -234,7 +234,7 @@ load-lib speedo;
     #class tang.look close;
 
     look luren $id;
-    #send response R:look-end;
+    xtt.Send response R:look-end;
 };
 
 #alias {tang.ask} {

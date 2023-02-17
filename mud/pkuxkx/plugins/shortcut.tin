@@ -31,7 +31,7 @@
     #alias {bwcx.return}    {#class bwcx kill};
     #class bwcx close;
 
-    #send bwcx;
+    xtt.Send bwcx;
 };
 
 #alias chat-ren-song {
@@ -123,9 +123,9 @@
 
 #alias tichun {
     #class tichun open;
-    #action {^你目前的修为还可以再转换%%1点内力变为真气。$E} {#delay 0 {#send tichun %%1}} {9.500};
+    #action {^你目前的修为还可以再转换%%1点内力变为真气。$E} {#delay 0 {xtt.Send tichun %%1}} {9.500};
     #class tichun close;
-    #delay 1 {#send tichun $char[HP][当前内力]};
+    #delay 1 {xtt.Send tichun $char[HP][当前内力]};
 };
 
 #gag {向红豆打听有关『%*』的消息。$E};
@@ -160,7 +160,7 @@
 #action {^你从%*搜出一把玉石子。$E}     {put shi zi in lupi dai} {9.500};
 
 #action {^没有经过通传，任何人等不得擅闯都统治府。$E} {ask shiwei about 通传} {9.999};
-#action {^你因为种种原因停了下来，可以用walk继续进行。$E} {#delay 1 #send walk} {9.500};
+#action {^你因为种种原因停了下来，可以用walk继续进行。$E} {#delay 1 xtt.Send walk} {9.500};
 #action {^艄公说“到啦，上岸吧”，随即把一块踏脚板搭上堤岸。$E} {out} {9.500};
 #action {^大车停稳了下来，你可以下车(xia)了。$} {xia} {9.500};
 

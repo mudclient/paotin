@@ -55,7 +55,7 @@ jobquery 本来就有两个别名：
 
     #nop 如果命令不是预期的格式，则直接透传给服务器，不予处理。;
     #if { "$args" != "{|-m|-x|-z|-t|-zn|-cur|-avail|[0-9]+}" } {
-        #send {jobquery $args};
+        xtt.Send {jobquery $args};
         #return;
     };
 
@@ -103,7 +103,7 @@ jobquery 本来就有两个别名：
 
     #class job.Query close;
 
-    #send {jobquery $args};
+    xtt.Send {jobquery $args};
 };
 
 #alias {jobquery.parse.output} {

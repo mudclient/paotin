@@ -73,7 +73,7 @@ load-lib ui/keyboard;
 };
 
 #event {SHORT-CLICKED LINK SEND MOUSE BUTTON ONE} {
-    #send {%4};
+    xtt.Send {%4};
 };
 
 #event {SHORT-CLICKED LINK EXEC MOUSE BUTTON ONE} {

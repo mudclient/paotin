@@ -367,7 +367,7 @@ option.Define {DisableOutput} {Bool} {是否禁止向服务器发送命令} {fal
 // };
 #alias {xtt.SendAtOnce} {
     #local cmds {%1};
-    #send {#$cmds#};
+    xtt.Send {#$cmds#};
 };
 
 ///=== {
@@ -380,7 +380,7 @@ option.Define {DisableOutput} {Bool} {是否禁止向服务器发送命令} {fal
     #delay 0 {
         #echo {};
         #buffer end;
-        #send {%1};
+        xtt.Send {%1};
     };
 };
 

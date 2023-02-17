@@ -451,7 +451,7 @@ hp -neili 格式：
 
     #class char.GetHP close;
 
-    #send {hp %0};
+    xtt.Send {hp %0};
 };
 
 #alias {char.GetHP2} {
@@ -465,6 +465,6 @@ hp -neili 格式：
         char.GetHP %0;
     };
     #else {
-        #send hp %0;
+        xtt.Send hp %0;
     };
 };

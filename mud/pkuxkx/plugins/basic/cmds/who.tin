@@ -20,7 +20,7 @@
 
     #class who-parse close;
 
-    #send {who -l};
+    xtt.Send {who -l};
 };
 
 #alias {who-pro-l} {
@@ -45,7 +45,7 @@
 
     #class who-parse close;
 
-    #send {who -pro -l};
+    xtt.Send {who -pro -l};
 };
 
 #alias {who-all} {
@@ -63,7 +63,7 @@
 
     #class who-parse close;
 
-    #send {who};
+    xtt.Send {who};
 };
 
 #alias {who-handle-end} {

@@ -33,7 +33,7 @@
     #local ok {@silent.Check{$cmd}};
     #if { $ok } {
         #var silent-LastCmd {};
-        #send {$cmd};
+        xtt.Send {$cmd};
         #return;
     };
 
@@ -45,7 +45,7 @@
     };
     #else {
         #var silent-LastCmd {};
-        #send {%0};
+        xtt.Send {%0};
     };
 } {9.999};
 
