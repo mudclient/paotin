@@ -402,38 +402,67 @@ option.Define {DisableOutput} {Bool} {是否禁止向服务器发送命令} {fal
     #line oneshot #alias {%1} {halt; #echo {<119>任务已暂停，请输入 <139>%1 %s <119>继续运行。<299>} {%%0}}
 };
 
+option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定时器} {false};
+
 ///=== {
-// ## xtt.DisableAllCommand
+// ## xtt.DisableAllCommands
 //    禁止发送任何命令。
 //    某些游戏模式下，玩家必须小心地输入，否则一旦输错会造成损失。此时可以用本
-//    命令来禁止所有的触发、定时器、快捷键，等等，防止误发命令。
+//    命令来禁止所有的触发、定时器、事件，防止误发命令。
 //    此时玩家只能用 #send {.....} 命令来发送命令。
+//    注意快捷键并不会被禁止，所以玩家可以通过快捷键来切换状态。
 // };
-#alias {xtt.DisableAllCommand} {
-    #class disable-all-command open;
+#alias {xtt.DisableAllCommands} {
+    #class disable-all-commands open;
 
-    #alias {xtt.UndoDisableAllCommand} {
-        #class disable-all-command kill;
-        #line quiet #ignore actions off;
-        #line quiet #ignore tickers off;
-        #line quiet #ignore delays off;
-        #line quiet #ignore events off;
-        #line quiet #ignore macros off;
-        okLog 命令已恢复正常。;
-    } {1.000};
+    option.Enable DisableAllCommands;
 
-    #alias {^%*{|ID=paotin/disable-all-command}$} {
-        #echo {<119>命令已被抑制，可用 <129>#send<119> 强制发送。撤销请用 <129>xtt.UndoDisableAllCommand<119> : <139>%s<299>} {%%0}
+    warnLog 所有定时器、触发器和事件句柄已被禁用。;
+    warnLog 600 秒后自动解除该状态。;
+
+    #alias {^%*{|ID=paotin/disable-all-commands}$} {
+        #echo {<119>命令已被抑制，可用 <129>#send<119> 强制发送。撤销请用 <129>xtt.UndoDisableAllCommands<119> : <139>%s<299>} {%%0}
     } {1.001};
+
+    #gts {#delay 600 {#ats xtt.UndoDisableAllCommands}};
 
     #line quiet #ignore actions on;
     #line quiet #ignore tickers on;
-    #line quiet #ignore delays on;
     #line quiet #ignore events on;
-    #line quiet #ignore macros on;
 
-    #class disable-all-command close;
+    #class disable-all-commands close;
 };
+
+///=== {
+// ## xtt.DisableAllCommands
+//    禁止发送任何命令。
+//    某些游戏模式下，玩家必须小心地输入，否则一旦输错会造成损失。此时可以用本
+//    命令来禁止所有的触发、定时器、事件，防止误发命令。
+//    此时玩家只能用 #send {.....} 命令来发送命令。
+//    注意快捷键并不会被禁止，所以玩家可以通过快捷键来切换状态。
+// };
+#alias {xtt.UndoDisableAllCommands} {
+    #class disable-all-commands kill;
+    #line quiet #ignore actions off;
+    #line quiet #ignore tickers off;
+    #line quiet #ignore events off;
+    okLog 命令已恢复正常。;
+    option.Disable DisableAllCommands;
+} {1.000};
+
+///=== {
+// ## xtt.ToggleDisableCommands
+//    在禁止和打开所有的定时器、触发器和事件句柄之间来回切换。
+//    本命令可用作绑定快捷键使用。
+// };
+#alias {xtt.ToggleDisableCommands} {
+    #if { @option.IsEnable{DisableAllCommands} } {
+        xtt.UndoDisableAllCommands;
+    };
+    #else {
+        xtt.DisableAllCommands;
+    };
+} {1.000};
 
 #func {linkToHelp} {
     #local module   {%1};

@@ -98,4 +98,5 @@
     {{key}{\coe}    {action}{option.Toggle EchoCommand}}
     {{key}{\com}    {action}{option.Toggle GagMove}}
     {{key}{\cog}    {action}{gmcp.ToggleDebug}}
+    {{key}{\cod}    {action}{xtt.ToggleDisableCommands}}
 };
