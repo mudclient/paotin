@@ -383,6 +383,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         #var prompt-top-max-line {$topMaxLine};
         #var prompt-bot-max-line {$botMaxLine};
         #split {$topMaxLine} {$botMaxLine};
+        #buffer end;
     };
 
     #local idx {};
