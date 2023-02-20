@@ -41,4 +41,5 @@
     {{key}{\cos}    {action}{prompt.ToggleSwitch}}
     {{key}{\cob}    {action}{beautify.ToggleSwitch}}
     {{key}{\coe}    {action}{option.Toggle EchoCommand}}
+    {{key}{\cod}    {action}{xtt.ToggleDisableCommands}}
 };
