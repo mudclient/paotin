@@ -3,7 +3,7 @@ FROM alpine:latest
 
 # 安装编译器和依赖包
 RUN    apk update \
-    && apk add --no-cache git gcc libc-dev zlib-dev zlib-static pcre-dev make curl
+    && apk add --no-cache git gcc libc-dev zlib-dev zlib-static pcre-dev lua-dev make curl luarocks
 
 RUN git clone --depth 1 https://github.com/junegunn/vim-plug.git /vim-plug
 RUN git clone --depth 1 https://github.com/dzpao/vim-mbs.git /vim-mbs
@@ -14,6 +14,9 @@ RUN git clone --depth 1 https://github.com/mhinz/vim-startify.git /vim-startify
 
 RUN git clone --depth 1 https://github.com/mudclient/tintin.git --branch beta-develop
 WORKDIR /tintin/src/
+
+# 安装 rex_pcre for lua5.1
+RUN luarocks-5.1 install lrexlib-pcre
 
 # 这里 hack 了一下 gcc，强制静态编译。
 ENV PATH=.:/sbin:/bin:/usr/sbin:/usr/bin
@@ -34,7 +37,7 @@ ENV LANG=zh_CN.UTF8     \
 WORKDIR /paotin/
 
 RUN    apk update \
-    && apk add --no-cache tmux bash ncurses less neovim nano
+    && apk add --no-cache tmux bash ncurses less neovim nano lua5.1 pcre
 
 # 设置时区为上海
 RUN apk add --no-cache tzdata \
@@ -64,6 +67,9 @@ COPY --from=0 /vim-mbs      /paotin/.local/share/nvim/plugged/vim-mbs/
 COPY --from=0 /mru          /paotin/.local/share/nvim/plugged/mru/
 COPY --from=0 /BufExplorer  /paotin/.local/share/nvim/plugged/BufExplorer/
 COPY --from=0 /vim-startify /paotin/.local/share/nvim/plugged/BufExplorer/
+
+RUN mkdir -p /usr/local/lib/lua/5.1
+COPY --from=0 /usr/local/lib/lua/5.1/rex_pcre.so /usr/local/lib/lua/5.1/
 
 COPY --from=0 /tintin/src/tt++ /paotin/bin/
 

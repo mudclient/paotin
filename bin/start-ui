@@ -38,6 +38,12 @@ $TMUXCMD last-pane
 $TMUXCMD send-keys      -t $SESSION "sleep 0.1; tmux resize-pane -y $HEIGHT; clear; doc HOW-TO-PLAY.md"
 $TMUXCMD send-keys      -t $SESSION Enter
 
+# 针对单 ID 挂机用户，可以通过提供 auto 参数在启动 UI 后继续完成 tt 的拉起与角色的登录动作
+if [ "x$MODE" == "xauto" ]; then
+    $TMUXCMD send-keys      -t $SESSION "start $HOSTNAME"
+    $TMUXCMD send-keys      -t $SESSION Enter
+fi
+
 echo UI 已创建。
 
 exec $TMUXCMD attach-session -t $SESSION
