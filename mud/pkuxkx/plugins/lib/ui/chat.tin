@@ -42,7 +42,7 @@ load-lib alert;
 } {4.994};
 
 #nop 单行的 emote 表情;
-#action {~{*UTF8}{?:^}%c【{\p{Han}{2,5}}】%*(%+1..S%s%S || %+1..S%s%S)%c{|◆\[?\p{Han}+\]?◆}%c$E} {
+#action {~{*UTF8}{?:^}%c【{\p{Han}{2,5}}】%*(%+1..S{| \S+}%s||%s{\S+ |}%+1..S)%c{|◆\p{Han}+◆}%c$E} {
     chat.log {%2} {%0};
 } {4.994};
 
@@ -142,7 +142,7 @@ load-lib alert;
         chat.log {%1} {%%0};
     } {4.993};
 
-    #action {~^%*(%+1..S%s%S || %+1..S%s%S)%c{|ID=chat.log}$} {
+    #action {~^%*(%w%s||%s{\S+ |}%+1..S)%c{|ID=chat.log}$} {
         chat.log {%1} {%%0};
         #class chat.log kill;
     } {4.992};
