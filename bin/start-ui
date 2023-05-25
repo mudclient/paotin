@@ -13,31 +13,35 @@ fi
 
 SESSION=MUD
 
-# 等待终端状态同步
+function create-ui() {
+    echo 正在生成 UI...
+
+    HEIGHT=$(tput lines || ( [[ "x$LINES" != "x" ]] && echo $LINES ) || echo 30)
+    HEIGHT=$(expr $HEIGHT - 1 - 1 - 1 - 6)
+
+    # 创建一个标准会话
+    $TMUXCMD new-session -d -s $SESSION
+    $TMUXCMD new-window     -t $SESSION
+    $TMUXCMD select-window  -t $SESSION:0
+    $TMUXCMD split-window   -t $SESSION -vb
+    $TMUXCMD send-keys      -t $SESSION 'clear; echo "You could input \"mtail id\" to watch your game log."; mtail'
+    $TMUXCMD send-keys      -t $SESSION Enter
+    $TMUXCMD last-pane
+    $TMUXCMD send-keys      -t $SESSION "sleep 0.1; tmux resize-pane -y $HEIGHT; clear; doc HOW-TO-PLAY.md"
+    $TMUXCMD send-keys      -t $SESSION Enter
+
+    echo UI 已创建。
+}
+
+# 停顿一下，等待终端状态同步。
 echo 正在打开终端...
 sleep 0.5;
 
+# 如果是首次启动，则先创建 UI。否则优先连接到已有的会话，继续之前的状态。
+if ! $TMUXCMD has-session 2>/dev/null; then
+    create-ui;
+fi
+
 echo 正在连接 UI...
 
-# 优先连接到已有的会话，继续之前的状态
-$TMUXCMD attach-session -t $SESSION && exit
-
-echo 正在生成 UI...
-
-HEIGHT=$(tput lines || ( [[ "x$LINES" != "x" ]] && echo $LINES ) || echo 30)
-HEIGHT=$(expr $HEIGHT - 1 - 1 - 1 - 6)
-
-# 如果尚未创建会话，则创建一个标准会话
-$TMUXCMD new-session -d -s $SESSION
-$TMUXCMD new-window     -t $SESSION
-$TMUXCMD select-window  -t $SESSION:0
-$TMUXCMD split-window   -t $SESSION -vb
-$TMUXCMD send-keys      -t $SESSION 'clear; echo "You could input \"mtail id\" to watch your game log."; mtail'
-$TMUXCMD send-keys      -t $SESSION Enter
-$TMUXCMD last-pane
-$TMUXCMD send-keys      -t $SESSION "sleep 0.1; tmux resize-pane -y $HEIGHT; clear; doc HOW-TO-PLAY.md"
-$TMUXCMD send-keys      -t $SESSION Enter
-
-echo UI 已创建。
-
-exec $TMUXCMD attach-session -t $SESSION
+exec $TMUXCMD attach-session -d -t $SESSION
