@@ -177,6 +177,11 @@
 
 #subst {~\e[34m} {\e[94m};
 
+#action {^北大侠客行再过%*将重新启动 ...$} {
+    #local time {@time.ParseDoC{%1}};
+    prompt.Set {{reboot}{$time}};
+};
+
 #alias {list-armors} {
     #class rbz-list-armors open;
 
