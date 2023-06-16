@@ -455,9 +455,9 @@ hp -neili 格式：
 };
 
 #alias {char.GetHP2} {
-    gmcp status off;
+    tune gmcp status off;
     hpbrief;
-    gmcp status on;
+    tune gmcp status on;
 };
 
 #alias {hp} {

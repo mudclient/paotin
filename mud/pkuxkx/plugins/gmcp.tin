@@ -23,10 +23,10 @@ event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已�
     #event {IAC SB GMCP GMCP.Combat IAC SE} {gmcp.pkuxkx.OnCombat {%%1} {%%2}};
     #event {IAC SB GMCP GMCP.Buff IAC SE}   {gmcp.pkuxkx.OnBuff {%%1} {%%2}};
 
-    gmcp status on;
-    gmcp move on;
-    gmcp buff on;
-    gmcp combat on;
+    tune gmcp status on;
+    tune gmcp move on;
+    tune gmcp buff on;
+    tune gmcp combat on;
 };
 
 #alias {gmcp.pkuxkx.OnStatus} {
