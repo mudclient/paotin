@@ -188,7 +188,7 @@ load-lib alert;
     #else {
         #local todo {@sset.Intersection{{$chans};{$chat-open-channels}}};
         #foreach {$todo} {chan} {
-            tune $chan;
+            tune channel $chan;
         };
     };
     #return;
@@ -215,7 +215,7 @@ load-lib alert;
     #else {
         #local todo {@sset.Diff{{$chans};{$chat-open-channels}}};
         #foreach {$todo} {chan} {
-            tune $chan;
+            tune channel $chan;
         };
     };
     #return;
@@ -226,7 +226,7 @@ load-lib alert;
 //    打开所有聊天频道。
 // };
 #alias {chat.OpenAll} {
-    tune;
+    tune channel;
     chat.TuneOn bd chat fb group helpme jh jy mp nation qq qy rumor rw tt;
 };
 
@@ -235,7 +235,7 @@ load-lib alert;
 //    关闭所有聊天频道。
 // };
 #alias {chat.CloseAll} {
-    tune;
+    tune channel;
     chat.TuneOff bd chat fb group helpme jh jy mp nation qq qy rumor rw tt;
 };
 
@@ -258,16 +258,16 @@ load-lib alert;
         #local todo {$chat-todo-channels[$chan]};
         #local set {$chat-open-channels};
         #if { "$todo" == "on" && !@sset.Contains{{$set};$chan} } {
-            tune $chan;
+            tune channel $chan;
         };
         #elseif { "$todo" == "off" && @sset.Contains{{$set};$chan} } {
-            tune $chan;
+            tune channel $chan;
         };
         #unvar chat-todo-channels[$chan];
     };
 };
 
 event.HandleOnce {user-online} {chat/init} {ui/chat} {
-    tune;
+    tune channel;
     set learn_emote 1;
 };
