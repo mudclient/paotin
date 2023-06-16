@@ -17,7 +17,7 @@
 
     #var keyboard-mode {less};
 
-    #class mouse-less-mode open;
+    #class keyboard-less-mode open;
 
     #macro {g}      {#buffer home};
     #macro {G}      {#buffer end};
@@ -51,7 +51,7 @@
         <169>?<299>/<169>/<299> 输入搜索条件
         <169>n<299>/<169>N<299> 前后搜索};
 
-    #class mouse-less-mode close;
+    #class keyboard-less-mode close;
 };
 
 #alias {keyboard.NormalMode} {
@@ -72,7 +72,7 @@
     prompt.Set {{search}{}};
     prompt.Change {};
 
-    #macro {\cb}    {keyboard.LessMode; #buffer up 20};
+    #class {keyboard-nromal-mode} assign {#macro {\cb} {keyboard.LessMode; #buffer up 20}};
 };
 
 #alias {keyboard.backup-macro} {
@@ -85,7 +85,11 @@
             #line sub var #var key      {$info[MACROS][+$id][arg1]};
             #replace key {\\} {\\};
             #var action   {$info[MACROS][+$id][arg2]};
-            #line sub var #var {macro-backup[$key]} {$action};
+            #var class    {$info[MACROS][+$id][class]};
+            #line sub var #var {macro-backup[$key]} {
+                {class}{$class}
+                {action}{$action}
+            };
         };
     };
 
@@ -100,8 +104,9 @@
         #local idx {};
         #loop {1} {$count} {idx} {
             #local key      {*macro-backup[+$idx]};
-            #local action   {$macro-backup[+$idx]};
-            #line sub var #macro {$key} {$action};
+            #local class    {$macro-backup[+$idx][class]};
+            #local action   {$macro-backup[+$idx][action]};
+            #line sub var #class {$class} {assign} {#macro {$key} {$action}};
         };
     };
 };
