@@ -596,7 +596,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///// 本文档采用 xtintin 的文档化注释系统生成。
 ///// 有关 xtintin 的文档化注释，请查看 HELP xtt.Doc。
 /////
-// ## DataType
+// #= DataType
 //    打印 TinTin++ 和 xtintin 的<139>数据类型<299>说明文档。
 //
 //    TinTin++ 中存在几种不同的数据类型，xtintin 基于这些数据类型扩展了一些函数，
@@ -678,5 +678,3 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     errLog $message。正确用法如下：;
     xtt.Help $name;
 };
-
-#alias {DataType} {HELP DataType};
