@@ -361,7 +361,7 @@ load-lib event;
 
         #if { $char[HP][内力百分比] < 20 } {
             #if { $char[HP][内力百分比] > 2 || $char[HP][精神百分比] > 80 } {
-                #if { $char[HP][内力百分比] > 2 && $char[HP][精神百分比] > 20 } {
+                #if { $char[HP][内力百分比] > 2 && $char[HP][精神百分比] > 20 && "$checked" == "true" } {
                     #var fullsk-lingwu-times {@min{@eval{$fullsk-lingwu-times * 11 / 10};1000}};
                 };
                 fullsk.lingwu.do;
@@ -543,7 +543,7 @@ load-lib event;
 
         #if { $char[HP][内力百分比] < 20 } {
             #if { $char[HP][内力百分比] > 2 } {
-                #if { $percent > 20 } {
+                #if { $percent > 20 && "$checked" == "true" } {
                     #var fullsk-lianxi-times {@min{@eval{$fullsk-lianxi-times * 11 / 10};500}};
                 };
                 fullsk.lianxi.do;
@@ -762,8 +762,8 @@ load-lib event;
         }};
         okLog 本次睡眠质量: $profit;
         fullsk.goto lw;
-        sync.Wait {
-            #var fullsk-sleep {0};
+        #var fullsk-sleep {0};
+        #delay 0 sync.Wait {
             event.Emit {char/hpbrief};
         };
         #undelay fullsk-sleep;
@@ -812,6 +812,8 @@ load-lib event;
 };
 
 #var fullsk-current-room {lw};
+#var fullsk-jianxinju    {false};
+#action {^你进入了剑心居。$} {#var fullsk-jianxinju {true}};
 
 #alias {fullsk.goto} {
     #local target {%1};
@@ -827,7 +829,10 @@ load-lib event;
 
     #local path {${fullsk-current-room}2$target};
     #local cmds {$bot_fullsk[config][path-$path]};
-    #if { "$cmds" != "" } {
+    #if { @isTrue{$fullsk-jianxinju} } {
+        #nop 什么也不做。;
+    };
+    #elseif { "$cmds" != "" } {
         $cmds;
     };
     #elseif { "$fullsk-path[$char[档案][门派]][$path]" != "" } {
