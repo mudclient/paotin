@@ -99,3 +99,5 @@ load-file plugins/lib/xtintin/mslp.tin;
 // ## xtt.Usage <关键字> [<错误提示>]
 //    给出关键字对应的帮助信息，以提示用户了解如何正确使用该别名（或函数）。
 // };
+
+load-file framework/doc.tin;

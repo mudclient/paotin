@@ -88,6 +88,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {load-file} {
     #local file {%1};
 
+    #if { @isEmpty{$file} } {
+        xtt.Usage load-file;
+        #return;
+    };
+
     #local output {};
     #script output {test -f var/$file && echo true || echo false};
     #if { "$output[1]" == "true" } {
