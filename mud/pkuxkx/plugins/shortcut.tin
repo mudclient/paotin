@@ -243,3 +243,32 @@
         #default {#0};
     };
 };
+
+#alias {%S_%S} {node walk %0} 9;
+
+load-lib sync;
+
+#alias {yz_zj} {
+    walk zhenjiang;
+    sync.Wait {map.GuoJiang zhenjiang};
+};
+
+#alias {zj_yz} {
+    walk yangzhou;
+    sync.Wait {map.GuoJiang yangzhou};
+};
+
+#alias {map.GuoJiang} {
+    #local target {%1};
+
+    #line sub var #line oneshot #action {^一叶扁舟缓缓地驶了过来，艄公将一块踏脚板搭上堤岸，以便乘客上下。$} {
+        #untick map.yell;
+        #line oneshot #action {^艄公说“到啦，上岸吧”，随即把一块踏脚板搭上堤岸。$} {
+            out;
+            walk $target;
+        } {4};
+        enter;
+    } {4};
+
+    xtt.Tick map.yell {yell boat} 1;
+};
