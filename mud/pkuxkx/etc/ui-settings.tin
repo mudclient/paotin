@@ -1,6 +1,6 @@
 #var tmux-update-events[DEFAULT] {char/score};
 #var tmux-pane-border-format[DEFAULT] {
-    {left}      {ID: [<g23><188>\$char[档案][账号]<299>]}
+    {left}      {ID: [<g23><188>\$char[档案][账号]<099>]}
     {centre}    {大名: [\$char[档案][彩色大名]]}
     {right}     {头衔: [\$char[档案][彩色头衔]]}
 };

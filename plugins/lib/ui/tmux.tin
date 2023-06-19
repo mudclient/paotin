@@ -103,10 +103,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {tmux.ConvertFromANSI} {
     #local text {%1};
 
+    #if { {$text} == {%*{\e\[22(|;[0-9;]+)m}%*} } {
+        #local esc {\e};
+        #line sub {var;escapes} #format esc {%s} {$esc};
+        #replace {text} {{\e\[22(|;([0-9;]+))m}}            {#[none]@if{@str.Len{&2} > 0;{${esc}[&3m}}};
+    };
+
     #replace {text} {{\e\[(3|4)8;5;(\d+)m}}                 {@tmux.ansi2tmux{&2;5;&3}};
-    #replace {text} {{\e\[22;(3|4)8;5;(\d+)m}}              {#[none]@tmux.ansi2tmux{&2;5;&3}};
     #replace {text} {{\e\[(3|4)8;2;(\d+);(\d+);(\d+)m}}     {@tmux.ansi2tmux{&2;2;&3;&4;&5}};
-    #replace {text} {{\e\[22;(3|4)8;2;(\d+);(\d+);(\d+)m}}  {#[none]@tmux.ansi2tmux{&2;2;&3;&4;&5}};
 
     #local {mode} {TEXT};
     #local output {};
@@ -207,7 +211,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {tmux.Width} {
     #local arg {%1};
     #replace {arg} {{#\[[^\]]*\]}} {};
-    #return {@len{$arg}};
+    #return {@str.Len{$arg}};
 };
 
 #nop 默认每分钟更新一次。;
