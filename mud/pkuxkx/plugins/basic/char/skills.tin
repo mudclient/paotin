@@ -116,6 +116,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
         #local newCode {@__char_skills_colorit__{{$code};$level;$limit}};
         #replace code { } {};
         #replace line {$code\x1b[2;37;0m%s} {$newCode\e[0m};
+        #replace line {\x1b[34m} {\x1b[94m};
         #echo {%s} {@Beautify{{$line}}};
         #local line {Skill/%%1/%%2/%%3/%%4/$limit};
         #replace line { } {};
