@@ -3,7 +3,7 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
@@ -16,17 +16,20 @@ event.Define {GMCP.Move}    {无参} {$MODULE} {接收到 GMCP 移动信息，�
 event.Define {GMCP.Status}  {无参} {$MODULE} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
 event.Define {GMCP.Combat}  {无参} {$MODULE} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
 event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
+event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，已更新 gGMCP[Message]};
 
 #alias {gmcp.pkuxkx.Enable} {
-    #event {IAC SB GMCP GMCP.Status IAC SE} {gmcp.pkuxkx.OnStatus {%%1} {%%2}};
-    #event {IAC SB GMCP GMCP.Move IAC SE}   {gmcp.pkuxkx.OnMove {%%1} {%%2}};
-    #event {IAC SB GMCP GMCP.Combat IAC SE} {gmcp.pkuxkx.OnCombat {%%1} {%%2}};
-    #event {IAC SB GMCP GMCP.Buff IAC SE}   {gmcp.pkuxkx.OnBuff {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Status IAC SE}     {gmcp.pkuxkx.OnStatus {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Move IAC SE}       {gmcp.pkuxkx.OnMove {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Combat IAC SE}     {gmcp.pkuxkx.OnCombat {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Buff IAC SE}       {gmcp.pkuxkx.OnBuff {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Message IAC SE}    {gmcp.pkuxkx.OnMessage {%%1} {%%2}};
 
     tune gmcp status on;
     tune gmcp move on;
     tune gmcp buff on;
     tune gmcp combat on;
+    tune gmcp message on;
 };
 
 #alias {gmcp.pkuxkx.OnStatus} {
@@ -76,4 +79,16 @@ event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已�
     };
 
     event.Emit GMCP.Buff {};
+};
+
+#alias {gmcp.pkuxkx.OnMessage} {
+    mudLog GMCP.Message: {%2};
+
+    #line sub escapes #var gGMCP[Message] {%1};
+
+    #if { @option.IsEnable{GMCPDebug} } {
+        #var gGMCP[Message];
+    };
+
+    event.Emit GMCP.Message {};
 };
