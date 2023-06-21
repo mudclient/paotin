@@ -46,6 +46,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 #event {SESSION CREATED} {
+    #nop #gts 中残留的 #tick 会在 mud 会话被创建时继承并错误地激活，从而影响游戏过程，特别是登录。;
+    #kill ticker;
+
     #%0 {
         log.Open;
         load-module lib/event;
