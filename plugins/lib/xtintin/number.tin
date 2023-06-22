@@ -1,0 +1,178 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#func {eval}    {#math result {%0}};
+
+#func {random} {
+    #local min {%1};
+    #local max {%2};
+    #local range {@eval{$max - $min + 1}};
+
+    #math result { ( 1 d $range ) + $min - 1 };
+};
+
+#func {int}     {#return @floor{@eval{%0 + 0.5}}};
+#func {floor}   {#format result {%d} {%0}};
+#func {ceil}    {#return @eval{@floor{%0} + 1}};
+
+#func {power}   {#return @eval{%1 ** %2}};
+#func {root}    {#return @eval{%1 // %2}};
+
+#func {abs}     {#if {%0 >= 0} {#return %0} {#math result {- %0}}};
+#func {sign}    {#if {%0 >= 0} {#return 1}  {#return -1}};
+
+#func {max} {
+    #var result {%1};
+    #local elem {};
+    #foreach {%0} {elem} {
+        #if { "$elem" == "" } {
+            #continue;
+        };
+        #if { $elem > $result } {
+            #var result {$elem};
+        };
+    };
+};
+
+#func {min} {
+    #var result {%1};
+    #local elem {};
+    #foreach {%0} {elem} {
+        #if { "$elem" == "" } {
+            #continue;
+        };
+        #if { $elem < $result } {
+            #var result {$elem};
+        };
+    };
+};
+
+#func {sum} {
+    #local sum {0};
+    #local tmp {};
+    #foreach {%0} {tmp} {
+        #math sum {$sum + $tmp};
+    };
+    #return {$sum};
+};
+
+#func {avg} {
+    #var sum {0};
+    #local tmp {};
+    #local count {0};
+    #foreach {%0} {tmp} {
+        #math sum {$sum + $tmp};
+        #math count {$count + 1};
+    };
+
+    #if { $count == 0 } {
+        #return 0;
+    };
+    #else {
+        #return @eval{$sum / $count};
+    };
+};
+
+#func {c2d} {
+    #local string {%0};
+
+    #local number1  {0};    #nop 个位（覆盖）;
+    #local number2  {0};    #nop 十百千位（加法）;
+    #local number3  {0};    #nop 万位（乘法）;
+    #local number4  {0};    #nop 亿位（乘法）;
+
+    #local ch {};
+	#parse {$string} {ch} {
+        #if { "$ch" == "{1|2|3|4|5|6|7|8|9|0|\.}" } {
+            #format number1 {%d} {$number1$ch};
+            #continue;
+        };
+
+        #switch {"$ch"} {
+            #case {"零"}    { #local number1 {0}   };
+            #case {"一"}    { #local number1 {1}   };
+            #case {"二"}    { #local number1 {2}   };
+            #case {"三"}    { #local number1 {3}   };
+            #case {"四"}    { #local number1 {4}   };
+            #case {"五"}    { #local number1 {5}   };
+            #case {"六"}    { #local number1 {6}   };
+            #case {"七"}    { #local number1 {7}   };
+            #case {"八"}    { #local number1 {8}   };
+            #case {"九"}    { #local number1 {9}   };
+            #case {"十"}    {
+                #if { $number1 == 0 } {
+                    #format number1 {1};
+                };
+                #math number2 {$number2 + $number1 * 10};
+                #format number1 {0};
+            };
+            #case {"百"}    {
+                #math number2 {$number2 + $number1 * 100};
+                #format number1 {0};
+            };
+            #case {"千"}    {
+                #math number2 {$number2 + $number1 * 1000};
+                #format number1 {0};
+            };
+            #case {"万"}    {
+                #math number3 {($number2 + $number1) * 10000};
+                #format number1 {0};
+                #format number2 {0};
+            };
+            #case {"亿"}    {
+                #math number4 {($number3 + $number2 + $number1) * 100000000};
+                #format number1 {0};
+                #format number2 {0};
+                #format number3 {0};
+            };
+        };
+    };
+
+    #local number {};
+    #math number {$number1 + $number2 + $number3 + $number4};
+    #return $number;
+};
+
+#func {grade} {
+    #local current {@defaultNum{%1;0}};
+    #local default {%2};
+
+    #local args {};
+    #local grade {};
+
+    #list args create {%0};
+    #list args delete {1} {2};
+
+    #list grade create {};
+    #local count {0};
+    #while { $count < &args[] } {
+        #local threshold    {$args[@eval{$count + 1}]};
+        #local value        {$args[@eval{$count + 2}]};
+        #list grade {add} {{
+            {threshold}{$threshold}
+            {value}{$value}
+        }};
+        #math count {$count + 2};
+    };
+
+    #list grade {indexate} {threshold};
+    #list grade {order};
+
+    #local elem {};
+    #local value {$default};
+    #foreach {$grade[%*]} {elem} {
+        #if { $current >= $elem[threshold] } {
+            #local value {$elem[value]};
+        };
+        #else {
+            #break;
+        };
+    };
+
+    #return {$value};
+};

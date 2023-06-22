@@ -2,7 +2,7 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
@@ -19,9 +19,9 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #alias {speedo.Add} {
     #local key          {%1};
-    #local value        {@defaultInt{%2;0}};
+    #local value        {@defaultNum{%2;0}};
     #local monotone     {@default{%3;false}};
-    #local keepalive    {@defaultInt{%4;60}};
+    #local keepalive    {@defaultNum{%4;60}};
 
     #if { @isEmpty{$key} } {
         #return;
@@ -33,9 +33,9 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #alias {speedo.Set} {
     #local key          {%1};
-    #local value        {@defaultInt{%2;0}};
+    #local value        {@defaultNum{%2;0}};
     #local monotone     {@default{%3;false}};
-    #local keepalive    {@defaultInt{%4;60}};
+    #local keepalive    {@defaultNum{%4;60}};
 
     #if { @isEmpty{$key} } {
         #return;
@@ -107,7 +107,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #func {speedo.GetSpeedInfo} {
     #local key      {%1};
-    #local interval {@defaultInt{%2;1}};
+    #local interval {@defaultNum{%2;1}};
 
     #if { @isEmpty{$key} } {
         #return {};
@@ -171,7 +171,7 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 #alias {speedo.List} {
-    #local interval {@defaultInt{%1;1}};
+    #local interval {@defaultNum{%1;1}};
     #local pattern  {@default{%2;{%*}}};
 
 	#echo {<128>     %-14s %+10s %+10s %+14s %-20s %-20s %+10s} {统计对象} {统计结果} {平均值} {测算周期(秒)} {样本开始时间} {样本截止时间} {发呆时间};
