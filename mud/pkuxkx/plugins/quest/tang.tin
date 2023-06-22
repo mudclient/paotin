@@ -155,7 +155,7 @@ load-lib speedo;
     #action {^你要看什么？{|ID=quest/tang}$} {
         #var tang-inquiry-luren-index {1};
         #if { ${tang-inquiry-exit-index} != 0 } {
-            #local back {@reverseDir{${tang-inquiry-exits[${tang-inquiry-exit-index}]}}};
+            #local back {@dir.Reverse{${tang-inquiry-exits[${tang-inquiry-exit-index}]}}};
             #echo 回去吧。;
             #send $back;
         };
@@ -265,7 +265,7 @@ load-lib speedo;
 
     #action {^%%1说道：「我啥消息也不了解啊。」$}       { tang.证词 {%%1} 啥也没说   };
     #action {^%%1说道：「你找错人了吧？}                { tang.认错人 {%%1} };
-    #action {^%%1说道：「你找错人了。」$}               { say 找错人了 }; 
+    #action {^%%1说道：「你找错人了。」$}               { say 找错人了 };
     #action {^%%1说道：「你已经问过了}                  { tang.案件进展     };
 
     #action {引起了盗贼的怀疑，盗贼逃离了长安城。$}     { tang.失败         };
@@ -297,7 +297,7 @@ load-lib speedo;
 #alias {tang.行人特征.年龄} {
     #class tang.data open;
     #var {tang.data[行人特征][$tang[name]][称呼]} {%1};
-    #local age {@c2d{%2}};
+    #local age {@math.ParseCN{%2}};
     #local ageText {};
     #switch {"$age"} {
         #case {"20"} { #local ageText {青}      };
@@ -517,13 +517,12 @@ load-lib speedo;
 #alias {tang.案件进展} {
     #class tang.ask kill;
 
-    #local list {@list2string{${tang.data[好人名单]}}};
+    #local list {@slist.FromList{${tang.data[好人名单]}}};
     #replace list {;} { };
     #echo {目前发现的好人  : <120>$list<070>};
-    #local list {@list2string{${tang.data[嫌疑人名单]}}};
+    #local list {@slist.FromList{${tang.data[嫌疑人名单]}}};
     #replace list {;} { };
     #echo {目前发现的嫌疑人: <130>$list<070>};
-
 };
 
 #alias {tang.认错人} {
@@ -555,11 +554,11 @@ load-lib speedo;
         testify luren $id;
     };
     #else {
-        $exit; testify luren $id; @reverseDir{$exit};
+        $exit; testify luren $id; @dir.Reverse{$exit};
     };
-        
+
     #local place {${tang-all-location[${tang-task-location}]}};
-    #local path {@reverseCmds{$place[path]}};
+    #local path {@path.Reverse{$place[path]}};
     $path;
 
     #class tang.back open;
@@ -567,7 +566,7 @@ load-lib speedo;
     #action {^由于你的突出贡献，特奖励{爵位贡献|任务积分}%*点，用于{提升爵位|兑换本爵位相关的任务奖励}。$} {
         #class tang.back kill;
         #local level {${tang-job-log[任务难度]}};
-        #local point {@c2d{%%2}};
+        #local point {@math.ParseCN{%%2}};
         speedo.Add {爵位积分} {$point} {true} {600};
         #format point {%+2s} {$point};
         questLog 【<130>爵位任务<070>】【$tang-job-level-color[$level]$level<070>】【<120>任务成功<070>】奖励爵位积分【$point】【${tang-job-log[地点]}】;

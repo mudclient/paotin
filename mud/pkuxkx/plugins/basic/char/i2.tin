@@ -1,9 +1,20 @@
-#nop i2 格式：
-#nop 你身上带著下列这些东西(负重 27%)：
-#nop 九十一两白银(Silver)
-#nop 二个竹壶(Zhuhu)
-#nop 三块干粮(Gan liang)
-#nop 大砍刀(Dakan dao)
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var basic_char_i2[META] {
+    {NAME}      {背包信息}
+    {DESC}      {解析背包内容，识别随身物品、穿戴、装备信息，并储存到变量}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
 #nop 青锋剑(Qingfeng sword)
 #nop 北侠战袍(Pkuxkx zhanpao)
 #nop 北侠战甲(Pkuxkx zhanjia)
@@ -71,7 +82,7 @@
     #action {^你{左手|右手}拿着：%%2(%%3)$} {
         #local hand     {%%1};
         #local item     {%%2};
-        #local id       {@toLower{%%3}};
+        #local id       {@str.ToLower{%%3}};
         #var char-Wield[$hand] {
             {item}{$item}
             {id}{$id}
@@ -84,14 +95,14 @@
 
     #nop 九十一两白银(Silver);
     #action {^{(零|一|二|三|四|五|六|七|八|九|十|百|千|万|亿)+}{两|文|张}{黄金|白银|铜板|一千两银票}(%*)$} {
-        #local amount   {@c2d{%%1}};
+        #local amount   {@math.ParseCN{%%1}};
         #local unit     {%%3};
         #local item     {%%4};
-        #local id       {@toLower{%%5}};
+        #local id       {@str.ToLower{%%5}};
 
         #var {char-Item[$item]} {
-            {id}{@toLower{$id}}
-            {amount}{@c2d{$amount}}
+            {id}{@str.ToLower{$id}}
+            {amount}{@math.ParseCN{$amount}}
         };
     } {4};
 
@@ -114,11 +125,11 @@
     #nop 火锅装;
     #nop 八件百战手套(Hands);
     #action {^{?:(${汉字数词})件|}{?:(${词缀修饰})的|}{?:(${装备等级})(${武器种类}|${装备种类}|${饰品种类})}(%S)$} {
-        #local amount   {@c2d{%%1}};
+        #local amount   {@math.ParseCN{%%1}};
         #local modifier {%%2};
         #local level    {%%3};
         #local kind     {%%4};
-        #local id       {@toLower{%%5}};
+        #local id       {@str.ToLower{%%5}};
         #if { $amount == 0 } {
             #local amount {1};
         };
@@ -134,14 +145,14 @@
         #local title    {%%6};
         #local rank     {%%7};
         #local item     {%%8};
-        #local id       {@toLower{%%9}};
+        #local id       {@str.ToLower{%%9}};
 
         #if { "${char-Item[currentType]}" == "装备" } {
             #return;
         };
 
         #if { "$amount" == "" } { #format amount {%s} {一} };
-        #format amount {%s} {@c2d{$amount}};
+        #format amount {%s} {@math.ParseCN{$amount}};
 
         #if { "${char-Equip[$id]}" != "" } {
             #math amount { ${char-Equip[$id]} + $amount };
@@ -152,10 +163,10 @@
 
     #nop 二把竹剑(Zhujian);
     #action {^{(零|一|二|三|四|五|六|七|八|九|十|百|千|万|亿)+}{本|块|碗|件|册|柄|把|根|枚|个}%S(%*)$} {
-        #local amount   {@c2d{%%1}};
+        #local amount   {@math.ParseCN{%%1}};
         #local unit     {%%3};
         #local item     {%%4};
-        #local id       {@toLower{%%5}};
+        #local id       {@str.ToLower{%%5}};
         #var {char-Item[$item]} {
             {id}{$id}
             {amount}{$amount}
@@ -166,7 +177,7 @@
     #nop 青锋剑(Qingfeng sword);
     #action {^%%1(%%2)$} {
         #local item {%%1};
-        #local id   {@toLower{%%2}};
+        #local id   {@str.ToLower{%%2}};
         #if { "${char-Item[currentType]}" == "装备" } {
             #var {char-Wear[$item]} {{id}{$id}};
         };

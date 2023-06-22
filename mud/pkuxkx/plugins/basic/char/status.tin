@@ -1,4 +1,19 @@
-#nop 角色生命值信息解析模块;
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var basic_char_status[META] {
+    {NAME}      {状态面板}
+    {DESC}      {解析 status_me 命令，并储存到变量 char[STATUS]}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
 
 load-lib event;
 
@@ -50,17 +65,17 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
 
 #nop │气血恢复│6.42    │气血治疗│0.11    │精神恢复│3.16    │精神治疗│0.11    │;
     #action {^│气血恢复│%S%!s│气血治疗│%S%!s│精神恢复│%S%!s│精神治疗│%S%!s│$} {
-        #var char[STATUS][气血恢复] {@trim{%%1}};
-        #var char[STATUS][气血治疗] {@trim{%%2}};
-        #var char[STATUS][精神恢复] {@trim{%%3}};
-        #var char[STATUS][精神治疗] {@trim{%%4}};
+        #var char[STATUS][气血恢复] {@str.Trim{%%1}};
+        #var char[STATUS][气血治疗] {@str.Trim{%%2}};
+        #var char[STATUS][精神恢复] {@str.Trim{%%3}};
+        #var char[STATUS][精神治疗] {@str.Trim{%%4}};
     };
 
 #nop │内力恢复│4.11    │精力恢复│12.63   │内力精纯│97.69%  │加力减耗│0%      │;
     #action {^│内力恢复│%S%!s│精力恢复│%S%!s│内力精纯│%S\%%!s│加力减耗│%*│$} {
-        #var char[STATUS][内力恢复] {@trim{%%1}};
-        #var char[STATUS][精力恢复] {@trim{%%2}};
-        #var char[STATUS][内力精纯] {@trim{%%3}};
+        #var char[STATUS][内力恢复] {@str.Trim{%%1}};
+        #var char[STATUS][精力恢复] {@str.Trim{%%2}};
+        #var char[STATUS][内力精纯] {@str.Trim{%%3}};
     };
 
 #nop 兜底儿的触发，捕获其它所有数值类型字段;
@@ -74,8 +89,8 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
 
         #local key {};
         #foreach {*data[]} {key} {
-            #local value {@trim{$data[$key]}};
-            #local key   {@trim{$key}};
+            #local value {@str.Trim{$data[$key]}};
+            #local key   {@str.Trim{$key}};
             #if { "$key" != "" } {
                 #replace value {{[^0-9.-]+}} {};
                 #var char[STATUS][$key] {$value};
@@ -94,14 +109,14 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
 
 #nop 　持续效果提示    　梯云纵(87秒)、太极剑· 随(37秒)                                      　;
     #action {^　持续效果提示    　%*　$} {
-        #local status {@trim{%%1}};
+        #local status {@str.Trim{%%1}};
     };
 
 #nop │幸运值      │2           │奖励系数    │100%        │识图检查    │需要    │;
     #action {^│幸运值%!s│%d%!s│奖励系数%!s│%d%!.%!s│识图检查%!s│%*│$} {
-        #var char[STATUS][幸运值]   {@trim{%%1}};
-        #var char[STATUS][奖励系数] {@trim{%%2}};
-        #var char[STATUS][识图检查] {@trim{%%3}};
+        #var char[STATUS][幸运值]   {@str.Trim{%%1}};
+        #var char[STATUS][奖励系数] {@str.Trim{%%2}};
+        #var char[STATUS][识图检查] {@str.Trim{%%3}};
     };
 
 #nop ╰────┴──────┴────┴──────┴────┴──────┴──北大侠客行────╯;

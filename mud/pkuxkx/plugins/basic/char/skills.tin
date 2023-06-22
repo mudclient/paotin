@@ -1,5 +1,13 @@
 #nop vim: set filetype=tt:;
 
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
 #var basic_char_skills[META] {
     {NAME}      {技能列表}
     {DESC}      {解析 skills 命令的输出结果，并写入到 char[Skills]}
@@ -57,7 +65,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 
     #if { "$args" == "" } {
         #line oneshot #action {^╭───技能列表(共%*项){(─|┬)*}──╮$} {
-            #var char[Skills][count] {@c2d{%%1}};
+            #var char[Skills][count] {@math.ParseCN{%%1}};
             char.skills.parse.output;
         };
     };
@@ -196,56 +204,17 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
     #local level    {%2};
     #local limit    {%3};
 
-    #local p {};
-    #math p {$level * 100 / $limit};
-    #format p {%d} {$p};
+    #local p {@math.Int{@math.Eval{$level * 100 / $limit}}};
+    #local color {@util.Grade{$p;<071>;15;<171>;30;<003>;60;<074>;90;<134>;100;<132>;101;<506>}};
 
-    #local color {};
+    #local spaceLen {@str.Len{$code}};
+    #local code     {@str.Trim{$code}};
+    #local textLen  {@str.Len{$code}};
+    #math spaceLen {$spaceLen - $textLen};
+    #cat code {@str.AlignRight{{$p%}; $spaceLen}};
 
-    #if { $p < 15 } {
-        #format color {%s} {<071>};
-    };
-    #elseif { $p < 30 } {
-        #format color {%s} {<171>};
-    };
-    #elseif { $p < 60 } {
-        #format color {%s} {<003>};
-    };
-    #elseif { $p < 90 } {
-        #format color {%s} {<074>};
-    };
-    #elseif { $p < 100 } {
-        #format color {%s} {<134>};
-    };
-    #elseif { $p == 100 } {
-        #format color {%s} {<132>};
-    };
-    #elseif { $p > 100 } {
-        #format color {%s} {<506>};
-    };
-
-    #local len {};
-    #local len2 {};
-    #local len3 {};
-    #format {len} {%L} {$code};
-    #format {code} {%p} {$code};
-    #format {len2} {%L} {$code};
-    #math len3 {$len - $len2};
-    #format {code} {%s%${len3}s} {$code} {$p%};
-    #local leftLen {};
-    #math leftLen {$len * $level / $limit};
-    #format leftLen {%d} {$leftLen};
-    #local left {};
-    #format {left} {${color}%.${leftLen}s<070>} {$code};
-
-    #local right {};
-    #local rightLen {};
-    #math rightLen {$len - $leftLen};
-    #format {right} {%r} {$code};
-    #format {right} {%.${rightLen}s} {$right};
-    #format {right} {<g08>%r} {$right};
-
-    #return {$left$right};
+    #local {rest} {@math.Eval{100 - $p}};
+    #return {@util.ColorBar{{$code};$color;$p;<g08>;$rest}};
 };
 
 #alias {char.Skbrief} {
