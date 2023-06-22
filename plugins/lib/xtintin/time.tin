@@ -1,0 +1,40 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#func {now} {#format result {%T}};
+
+#func {parseCDuration} {
+    #local {timeStr} {%0};
+
+    #nop 兼容不同的写法;
+    #replace {timeStr} {个} {};
+    #replace {timeStr} {星期} {周};
+    #replace {timeStr} {小时} {时};
+    #replace {timeStr} {分钟} {分};
+
+    #nop 注意这里用了个小技巧，末尾的空格不要去掉;
+    #replace timeStr {%S年}     {@c2d{&1}*31104000+ };
+    #replace timeStr {%S月}     {@c2d{&1}*2592000+ };
+    #replace timeStr {%S周}     {@c2d{&1}*604800+ };
+    #replace timeStr {%S天}     {@c2d{&1}*86400+ };
+    #replace timeStr {%S时}     {@c2d{&1}*3600+ };
+    #replace timeStr {%S分}     {@c2d{&1}*60+ };
+    #replace timeStr {%S秒}     {@c2d{&1}};
+
+    #local time {};
+    #math time {$timeStr + 0};
+
+    #return {$time};
+};
+
+#func {formatTime} {
+    #local time   {@defaultNum{%1;@now{}}};
+    #local format {@default{%2;{%Y-%m-%d %H:%M:%S}}};
+    #format result {%t} {{$format}{$time}};
+    #return {$result};
+};

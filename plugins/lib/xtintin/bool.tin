@@ -1,0 +1,81 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#func {true}    {#return 1};
+#func {false}   {#return 0};
+
+#func {isTrue} {
+    #if { "%0" == "{true|1}" } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#func {isFalse} {
+    #if { "%0" == "{false|0}" } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#func {allTrue} {
+    #local value {};
+    #foreach {%0} {value} {
+        #if @isFalse{$value} {
+            #return 0;
+        };
+    };
+
+    #return 1;
+};
+
+#func {allFalse} {
+    #local value {};
+    #foreach {%0} {value} {
+        #if @isTrue{$value} {
+            #return 0;
+        };
+    };
+
+    #return 1;
+};
+
+#func {anyTrue} {
+    #if @allFalse{%0} {
+        #return 0;
+    };
+    #else {
+        #return 1;
+    };
+};
+
+#func {anyFalse} {
+    #if @allTrue{%0} {
+        #return 0;
+    };
+    #else {
+        #return 1;
+    };
+};
+
+#func {if} {
+    #local cond {%1};
+    #local then {%2};
+    #local else {%3};
+
+    #if { $cond } {
+        #return {$then};
+    };
+    #else {
+        #return {$else};
+    };
+};

@@ -1,5 +1,11 @@
 #nop vim: set filetype=tt:;
 
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
 #var quest_tang[META] {
     {NAME}      {大唐爵位任务}
     {DESC}      {只实现了举报盗贼，满足条件后会自动提升爵位到男爵}
@@ -511,10 +517,10 @@ load-lib speedo;
 #alias {tang.案件进展} {
     #class tang.ask kill;
 
-    #local list {@list2string{{${tang.data[好人名单]}}}};
+    #local list {@list2string{${tang.data[好人名单]}}};
     #replace list {;} { };
     #echo {目前发现的好人  : <120>$list<070>};
-    #local list {@list2string{{${tang.data[嫌疑人名单]}}}};
+    #local list {@list2string{${tang.data[嫌疑人名单]}}};
     #replace list {;} { };
     #echo {目前发现的嫌疑人: <130>$list<070>};
 
@@ -553,7 +559,7 @@ load-lib speedo;
     };
         
     #local place {${tang-all-location[${tang-task-location}]}};
-    #local path {@reverseCmds{{$place[path]}}};
+    #local path {@reverseCmds{$place[path]}};
     $path;
 
     #class tang.back open;

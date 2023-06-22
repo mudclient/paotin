@@ -2,54 +2,31 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#func {filter} {
+#nop 本文件是 xtintin 的一部分，实现了一些 FP 风格函数;
+
+#func {map} {
     #local table {%1};
-    #local cond {%2};
+    #local body {%2};
 
     #local key      {};
     #local value    {};
-    #replace {cond} {KEY} {$$key};
-    #replace {cond} {VALUE} {$$value};
+
+    #replace {body} {KEY}   {\$key};
+    #replace {body} {VALUE} {\$value};
 
     #local newTable {};
     #local key {};
     #foreach {*table[]} {key} {
         #local value {$table[$key]};
-        #line sub var #if { $cond } {
-            #cat newTable {{$key}{$value}};
-        };
+        #line sub {var;functions;escapes} #format value {%s} {$body};
+        #cat newTable {{$key}{$value}};
     };
 
-    #return {$newTable}
-};
-
-#func {filterMap} {
-    #local table {%1};
-    #local cond {%2};
-    #local body {%3};
-
-    #local key      {};
-    #local value    {};
-
-    #replace {cond} {KEY} {$$key};
-    #replace {cond} {VALUE} {$$value};
-    #replace {body} {KEY} {$$key};
-    #replace {body} {VALUE} {$$value};
-
-    #local newTable {};
-    #local key {};
-    #foreach {*table[]} {key} {
-        #local value {$table[$key]};
-        #line sub var #if { $cond } {
-            #cat newTable {{$key}{$body}};
-        };
-    };
-
-    #return {$newTable}
+    #return {$newTable};
 };
 
 #func {mapIf} {
@@ -60,44 +37,157 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local key      {};
     #local value    {};
 
-    #replace {cond} {KEY} {$$key};
-    #replace {cond} {VALUE} {$$value};
-    #replace {body} {KEY} {$$key};
-    #replace {body} {VALUE} {$$value};
+    #replace {cond} {KEY}   {\$key};
+    #replace {cond} {VALUE} {\$value};
+    #replace {body} {KEY}   {\$key};
+    #replace {body} {VALUE} {\$value};
 
     #local newTable {};
     #local key {};
     #foreach {*table[]} {key} {
         #local value {$table[$key]};
-        #line sub var {
-            #if { $cond } {
-                #cat newTable {{$key}{$body}};
-            };
-            #else {
-                #cat newTable {{$key}{$value}};
-            };
+        #local c {};
+        #line sub {var;functions;escapes} #format c {%s} {$cond};
+        #if { $c } {
+            #line sub {var;functions;escapes} #format value {%s} {$body};
+        };
+        #cat newTable {{$key}{$value}};
+    };
+
+    #return {$newTable};
+};
+
+#func {filter} {
+    #local table {%1};
+    #local cond  {%2};
+
+    #local key      {};
+    #local value    {};
+    #replace {cond} {KEY}   {\$key};
+    #replace {cond} {VALUE} {\$value};
+
+    #local newTable {};
+    #local key {};
+    #foreach {*table[]} {key} {
+        #local value {$table[$key]};
+        #local c {};
+        #line sub {var;functions;escapes} #format c {%s} {$cond};
+        #if { $c } {
+            #cat newTable {{$key}{$value}};
         };
     };
 
-    #return {$newTable}
+    #return {$newTable};
 };
 
-#func {map} {
+#func {filterMap} {
     #local table {%1};
-    #local body {%2};
+    #local cond {%2};
+    #local body {%3};
 
     #local key      {};
     #local value    {};
 
-    #replace {body} {KEY} {$$key};
-    #replace {body} {VALUE} {$$value};
+    #replace {cond} {KEY}   {\$key};
+    #replace {cond} {VALUE} {\$value};
+    #replace {body} {KEY}   {\$key};
+    #replace {body} {VALUE} {\$value};
 
     #local newTable {};
     #local key {};
     #foreach {*table[]} {key} {
         #local value {$table[$key]};
-        #cat newTable {{$key}{$body}};
+        #local c {};
+        #line sub {var;functions;escapes} #format c {%s} {$cond};
+        #if { $c } {
+            #line sub {var;functions;escapes} #format value {%s} {$body};
+            #cat newTable {{$key}{$value}};
+        };
     };
 
-    #return {$newTable}
+    #return {$newTable};
+};
+
+#func {transform} {
+    #local strList {%1};
+    #local body {%2};
+
+    #local value    {};
+    #replace {body} {VALUE} {\$value};
+
+    #local newStrList {};
+    #foreach {$strList} {value} {
+        #line sub {var;functions;escapes} #format value {%s} {$body};
+        #cat newStrList {$value;};
+    };
+
+    #replace newStrList {;$} {};
+    #return {$newStrList};
+};
+
+#func {transformIf} {
+    #local strList {%1};
+    #local cond {%2};
+    #local body {%3};
+
+    #replace {cond} {VALUE} {\$value};
+    #replace {body} {VALUE} {\$value};
+
+    #local value    {};
+    #local newStrList {};
+    #foreach {$strList} {value} {
+        #local c {};
+        #line sub {var;functions;escapes} #format c {%s} {$cond};
+        #if { $c } {
+            #line sub {var;functions;escapes} #format value {%s} {$body};
+        };
+        #cat newStrList {$value;};
+    };
+
+    #replace newStrList {;$} {};
+    #return {$newStrList};
+};
+
+#func {select} {
+    #local strList {%1};
+    #local cond {%2};
+
+    #local value    {};
+    #replace {cond} {VALUE} {\$value};
+
+    #local newStrList {};
+    #local value {};
+    #foreach {$strList} {value} {
+        #local c {};
+        #line sub {var;functions;escapes} #format c {%s} {$cond};
+        #if { $c } {
+            #cat newStrList {$value;};
+        };
+    };
+
+    #replace newStrList {;$} {};
+    #return {$newStrList};
+};
+
+#func {selectTransform} {
+    #local strList {%1};
+    #local cond {%2};
+    #local body {%3};
+
+    #replace {cond} {VALUE} {\$value};
+    #replace {body} {VALUE} {\$value};
+
+    #local value    {};
+    #local newStrList {};
+    #foreach {$strList} {value} {
+        #local c {};
+        #line sub {var;functions;escapes} #format c {%s} {$cond};
+        #if { $c } {
+            #line sub {var;functions;escapes} #format value {%s} {$body};
+            #cat newStrList  {$value;};
+        };
+    };
+
+    #replace newStrList {;$} {};
+    #return {$newStrList};
 };

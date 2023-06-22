@@ -1,0 +1,91 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#func {len}         {#format result {%L} {%0}};
+#func {width}       {#format result {%W} {%0}};
+
+#func {space}       {#var result {@repeat{%0;{ }}}};
+#func {repeat}      {#var result {}; #loop 1 %1 tmp {#cat result {%2}}};
+#func {reverseStr}  {#var result {}; #parse {%1} {tmp} {#var result {$tmp$result}}};
+
+#func {trim}        {#format result {%p} {%0}};
+#func {trimAll}     {#var result {%0}; #replace {result} {%+1..s} {}};
+#func {plain}       {#format result {%P} {%0}};
+
+#func {replace}     {#var result %1; #replace result {%2} {%3}};
+#func {toLower}     {#format result {%l} {%0}};
+#func {toUpper}     {#format result {%u} {%0}};
+#func {capital}     {#format result {%n} {%0}};
+
+#func {char}        {#format result {%X} {%0}; #format result {%x} {$result}};
+#func {codepoint}   {#format result {%A} {%0}};
+#func {hex2char}    {#format result {%x} {%0}};
+#func {char2hex}    {#format result {%A} {%0}; #format result {%X} {$result}};
+
+#func {format}      {#format result {%1} {%2}};
+
+#func {left}        {#local width {%2}; #if {$width<=0} {#return {}} {#format result {%.${width}s} {%1}}};
+#func {right}       {#local width {%2}; #if {$width<=0} {#return {}} {#format result {%.-${width}s} {%1}}};
+#func {substr}      {#return {@left{{@right{{%1}; @eval{@width{%1} - %2}}}; %3}}};
+
+#func {alignLeft}   {#format result {%-%2s} {%1}};
+#func {alignRight}  {#format result {%+%2s} {%1}};
+
+#func {alignCenter}  {
+    #local str  {%1};
+    #local max  {@default{%2;80}};
+
+    #local width {@width{$str}};
+
+    #local left {};
+    #local right {};
+
+    #math left {($max - $width) / 2 + $width};
+    #math right {$max - $left};
+
+    #format result {%+${left}s%${right}s} {%1} {};
+    #return {$result};
+};
+
+#func {colorBar} {
+    #local str {%1};
+
+    #local args {};
+    #list args create {%0};
+    #list args delete {1} {1};
+
+    #local parts {};
+    #list parts create {};
+    #local count {0};
+    #local sum {0};
+    #while { $count < &args[] } {
+        #local color    {$args[@eval{$count + 1}]};
+        #local weight   {@defaultNum{$args[@eval{$count + 2}];0}};
+        #list parts {add} {{
+            {color}{$color}
+            {weight}{$weight}
+        }};
+        #math count {$count + 2};
+        #math sum {$sum + $weight};
+    };
+
+    #local elem {};
+    #local len {@len{$str}};
+    #local leftLen {0};
+    #local leftWeight {0};
+    #local colorStr {};
+    #foreach {$parts[%*]} {elem} {
+        #local elemLen {@eval{($elem[weight] + $leftWeight) * $len / $sum - $leftLen}};
+        #local text {@substr{{$str};$leftLen;$elemLen}};
+        #cat colorStr {$elem[color]$text<099>};
+        #math leftLen {$leftLen + $elemLen};
+        #math leftWeight {$leftWeight + $elem[weight]};
+    };
+
+    #return {$colorStr};
+};

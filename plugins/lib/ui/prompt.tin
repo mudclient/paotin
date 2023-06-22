@@ -1,3 +1,11 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
 #var lib_ui_prompt[META] {
     {NAME}      {提示栏插件}
     {DESC}      {支持丰富的自定义选项，用户可用此模块定制自己的 UI。}
@@ -479,7 +487,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         };
 
         #format value {$color%-${width}s<070>} {$value[value]};
-        #math lineWidth {$lineWidth + @strWidth{$label} + @strWidth{$value}};
+        #math lineWidth {$lineWidth + @width{$label} + @width{$value}};
         #if { "$text" == "" } {
             #local text {$label$value};
         };
@@ -546,7 +554,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     #local color    {%3};
 
     #local newText {@trim{$text}};
-    #math width {$width + @strWidth{$newText} - @strWidth{$text}};
+    #math width {$width + @width{$newText} - @width{$text}};
 
     #local screenWidth {0};
     #screen get COLS screenWidth;

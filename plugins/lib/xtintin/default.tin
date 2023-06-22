@@ -1,3 +1,11 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
 #nop 字符串默认值;
 #func {default} {
     #local value    {%1};
@@ -10,12 +18,16 @@
     #return {$value};
 };
 
-#nop 整数默认值;
-#func {defaultInt} {
+#nop 数值默认值;
+#func {defaultNum} {
     #local value    {%1};
     #local default  {%2};
 
     #if { @isEmpty{$value} } {
+        #return {$default};
+    };
+
+    #if { "$value" != "{-|}%+1..d{|\.\d+}" } {
         #return {$default};
     };
 
@@ -41,11 +53,15 @@
 
 #nop 变量展开的时候，如果变量不存在会直接展开成 $var 形式的变量名自身，;
 #nop 这种情况下也允许用 default 值代替;
-#func {defaultIntVar} {
+#func {defaultNumVar} {
     #local value    {%1};
     #local default  {%2};
 
     #if { @isEmptyVar{$value} } {
+        #return {$default};
+    };
+
+    #if { "$value" != "{-|}%+1..d{|\.\d+}" } {
         #return {$default};
     };
 

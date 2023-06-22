@@ -2,17 +2,21 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
 #nop xtintin 是为了方便 TinTin++ 使用而增加的一些语法扩展。;
 
-load-file plugins/lib/xtintin/funcs.tin;
+load-file plugins/lib/xtintin/number.tin;
+load-file plugins/lib/xtintin/bool.tin;
+load-file plugins/lib/xtintin/string.tin;
+load-file plugins/lib/xtintin/list.tin;
+load-file plugins/lib/xtintin/time.tin;
+load-file plugins/lib/xtintin/path.tin;
 load-file plugins/lib/xtintin/cmds.tin;
 load-file plugins/lib/xtintin/debug.tin;
 load-file plugins/lib/xtintin/fp.tin;
-load-file plugins/lib/xtintin/answer.tin;
 load-file plugins/lib/xtintin/default.tin;
 load-file plugins/lib/xtintin/diff.tin;
 load-file plugins/lib/xtintin/mslp.tin;
