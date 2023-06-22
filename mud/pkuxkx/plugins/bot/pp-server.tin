@@ -349,7 +349,7 @@ load-lib storage;
 #alias {pp.add-list} {
     #local list-name {%1};
     #local list-var  {%2};
-    #local uid       {@trim{@toLower{%3}}};
+    #local uid       {@str.Trim{@str.ToLower{%3}}};
 
     #if { "$uid" != "{[a-z]{3,}}" } {
         ppLog 添加 $list-name 失败，ID【$uid】格式有误。;
@@ -360,7 +360,7 @@ load-lib storage;
         {uid}   {$uid}
     };
 
-    ppLog 【<170>@alignLeft{$list-name;4}维护<070>】【<120>$uid<070>】【共 &{${list-var}[]} 位 VIP】【*{${list-var}[]}】;
+    ppLog 【<170>@str.AlignLeft{$list-name;4}维护<070>】【<120>$uid<070>】【共 &{${list-var}[]} 位 VIP】【*{${list-var}[]}】;
 
     pp.store-vip;
 };

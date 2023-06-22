@@ -2,7 +2,7 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
@@ -138,7 +138,7 @@ jobquery 本来就有两个别名：
     };
 
     #action {^$jobHeader│仍需%S才能接到下个任务。$jobEnd$} {
-        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {@parseTime{%%8}} {等待CD中};
+        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {@time.ParseDoC{%%8}} {等待CD中};
     };
 
     #action {^$jobHeader│现在即可接到下个任务。$jobEnd$} {

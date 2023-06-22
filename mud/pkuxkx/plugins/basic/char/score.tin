@@ -1,4 +1,24 @@
-#nop 人物档案解析模块;
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var basic_char_score[META] {
+    {NAME}      {角色档案}
+    {DESC}      {解析 score 命令，并储存到变量 char[档案]}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+load-module {basic/title};
+load-lib event;
+
+event.Define {char/score} {无参} {$MODULE} {score 命令的数据解析成功时，发送本事件}
 
 /*
 ╭───人物详情────────────────────────┬───────╮
@@ -31,13 +51,13 @@
         #math char-score-parser-lineNo {${char-score-parser-lineNo} + 1};
         #switch {"${char-score-parser-lineNo}"} {
             #case {"1"} {
-                #local obj {@ParseTitle{@trim{%%1}}};
+                #local obj {@ParseTitle{@str.Trim{%%1}}};
                 #var char[档案][头衔] {$obj[title]};
                 #var char[档案][大名] {$obj[name]};
                 #var char[档案][账号] {$obj[id]};
             };
             #case {"2"} {
-                #local level {@trim{%%2}};
+                #local level {@str.Trim{%%2}};
                 #replace level {%d/%d} {{cur}{&1}{max}{&2}};
                 #local level {$level};
                 #var char[档案][人物等级] {$level[cur]};
@@ -69,25 +89,25 @@
         #replace con {{\x1b\[[0-9;\\]+m}} {};
         #replace dex {{\x1b\[[0-9;\\]+m}} {};
 
-        #var char[档案][$key][膂力] {@trim{$str}};
-        #var char[档案][$key][悟性] {@trim{$int}};
-        #var char[档案][$key][根骨] {@trim{$con}};
-        #var char[档案][$key][身法] {@trim{$dex}};
+        #var char[档案][$key][膂力] {@str.Trim{$str}};
+        #var char[档案][$key][悟性] {@str.Trim{$int}};
+        #var char[档案][$key][根骨] {@str.Trim{$con}};
+        #var char[档案][$key][身法] {@str.Trim{$dex}};
     };
 #nop │ 福缘：[  23]  容貌：[  39]  灵性：[  39]  胆识：[   ?]       │   ▂  ▂     │;
     #action {^│ 福缘：[%+]  容貌：[%+]  灵性：[%+]  胆识：[%+]%*│%*│$} {
-        #var char[档案][天赋][福缘] {@trim{%%1}};
-        #var char[档案][天赋][容貌] {@trim{%%2}};
-        #var char[档案][天赋][灵性] {@trim{%%3}};
+        #var char[档案][天赋][福缘] {@str.Trim{%%1}};
+        #var char[档案][天赋][容貌] {@str.Trim{%%2}};
+        #var char[档案][天赋][灵性] {@str.Trim{%%3}};
     };
 
 #nop │国籍：大理        性别：男性          │门派：神龙教                          │;
 #nop │身高：七尺六寸    体重：约一百一十斤  │师承：洪安通                          │;
 #nop │体型：匀称        姻缘：未遇良人      │门忠：2940                            │;
     #action {^│%+：%* %+：%+│%+：%*│$} {
-        #var char[档案][%%1] {@trim{%%2}};
-        #var char[档案][@trim{%%3}] {@trim{%%4}};
-        #var char[档案][%%5] {@trim{%%6}};
+        #var char[档案][%%1] {@str.Trim{%%2}};
+        #var char[档案][@str.Trim{%%3}] {@str.Trim{%%4}};
+        #var char[档案][%%5] {@str.Trim{%%6}};
     } {5.1};
 
 #nop │年龄：十八岁二个月                    │出师：无                              │;
@@ -104,9 +124,9 @@
 #nop ├───休闲任务─────┼────────────┼─────────────┤;
 #nop │高级任务：0次           │低级任务：6次           │劫匪掉宝：0次             │;
     #action {^│%+：%*│%+：%*│%+：%*│$} {
-        #var char[档案][%%1] {@trim{%%2}};
-        #var char[档案][%%3] {@trim{%%4}};
-        #var char[档案][%%5] {@trim{%%6}};
+        #var char[档案][%%1] {@str.Trim{%%2}};
+        #var char[档案][%%3] {@str.Trim{%%4}};
+        #var char[档案][%%5] {@str.Trim{%%6}};
     };
 
     #nop 白驼山    你是白驼山第二代弟子，师承欧阳锋。;
@@ -134,7 +154,7 @@
         #var char[档案][辈分] {@c2d{%%2}};
         #var char[档案][师父] {%%3};
     };
-    
+
     #nop 朝廷      你是朝廷四品官员，师承孟珙。;
     #action {^ 你是朝廷%*品官员，师承%*。$} {
         #var char[档案][门派] {朝廷};
@@ -152,12 +172,6 @@
 
     #class char-score-parser close;
 };
-    
-load-module {basic/title};
-
-load-lib event;
-
-event.Define {char/score} {无参} {$MODULE} {score 命令的数据解析成功时，发送本事件}
 
 event.HandleOnce {user-online} {score/init} {basic/char} {
     score;

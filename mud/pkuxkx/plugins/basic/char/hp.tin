@@ -3,7 +3,7 @@
 /*
 本文件属于 PaoTin++ 的一部分
 ===========
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 ===========
 */
@@ -184,11 +184,11 @@ hp -neili 格式：
     #class char-hp-parse-hp-neili open;
 
     #action {^│{□|  }%S (%S)%s　 - %s%d/%s%d(%d)%s│$} {
-        #local name     {@trim{%%2}};
-        #local id       {@trim{%%3}};
-        #local current  {@trim{%%6}};
-        #local max      {@trim{%%8}};
-        #local limit    {@trim{%%9}};
+        #local name     {@str.Trim{%%2}};
+        #local id       {@str.Trim{%%3}};
+        #local current  {@str.Trim{%%6}};
+        #local max      {@str.Trim{%%8}};
+        #local limit    {@str.Trim{%%9}};
 
         #if { "%%1" == "□" } {
             #local name {$char[Skills][基本内功][jifa-to]};
@@ -205,7 +205,7 @@ hp -neili 格式：
     };
 
     #action {^│【走火入魔】 %*% %s│【极限内力】 %d%s │$} {
-        #var char[HP][走火入魔] {@trim{%%1}};
+        #var char[HP][走火入魔] {@str.Trim{%%1}};
     };
 
 	#action {^└─────────────{(─)*}%S─{(─)*}─┘{|ID=char.hp-neili}$} {
@@ -366,19 +366,14 @@ hp -neili 格式：
         #local 每秒精力变化 {};
     };
 
-    #local {气血健康度} {};
-    #math {气血健康度} { $char[HP][有效气血] * 100 / $char[HP][最大气血] };
-
-    #local {精神健康度} {};
-    #math {精神健康度} { $char[HP][有效精神] * 100 / $char[HP][最大精神] };
+    #local {气血健康度} {@math.Int{@math.Eval{$char[HP][有效气血] * 100 / $char[HP][最大气血]}}};
+    #local {精神健康度} {@math.Int{@math.Eval{$char[HP][有效精神] * 100 / $char[HP][最大精神]}}};
 
     #nop 气血恢复的数值展示为每分钟可以恢复的最大血量的倍数（以百分比形式）;
-    #local {气血恢复} {};
-    #math {气血恢复} { $char[STATUS][气血恢复] * 100 * 60 / $char[HP][最大气血] };
+    #local {气血恢复} {@math.Int{@math.Eval{$char[STATUS][气血恢复] * 100 * 60 / $char[HP][最大气血]}}};
 
     #nop 气血治疗的数值展示为每分钟可以治疗的最大血量的倍数（以百分比形式）;
-    #local {气血治疗} {};
-    #math {气血治疗} { $char[STATUS][气血治疗] * 100 * 60 / $char[HP][最大气血] };
+    #local {气血治疗} {@math.Int{@math.Eval{$char[STATUS][气血治疗] * 100 * 60 / $char[HP][最大气血]}}};
 
     #local summarize {};
     #if { "$char[HP][战斗中]" == "true" } {
@@ -412,25 +407,8 @@ hp -neili 格式：
 };
 
 #func {__char_hp_colorit__} {
-    #local p {%1};
-    #if { $p < 15 } {
-        #return {<010>$p%<070>};
-    };
-    #elseif { $p < 30 } {
-        #return {<110>$p%<070>};
-    };
-    #elseif { $p < 60 } {
-        #return {<030>$p%<070>};
-    };
-    #elseif { $p < 90 } {
-        #return {<130>$p%<070>};
-    };
-    #elseif { $p <= 100 } {
-        #return {<120>$p%<070>};
-    };
-    #else {
-        #return {<160>$p%<070>};
-    };
+    #local percent {@math.Int{@defaultNum{%1;0}}};
+    #return {@util.Grade{$percent;<010>;15;<110>;30;<030>;60;<130>;90;<120>;101;<160>}$percent%<070>};
 };
 
 #alias {char.GetHP} {
