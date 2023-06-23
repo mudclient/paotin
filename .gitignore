@@ -6,6 +6,7 @@
 .tintin/*
 .local
 .cache
+.lesshst
 
 bin/tt++
 bin/tt-*
