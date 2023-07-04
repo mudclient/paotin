@@ -558,7 +558,7 @@ option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定�
     #cursor clear;
     #local cmd {
         #line quiet #ignore variable on;
-        #cursor set {$input};
+        #line quiet #line sub escapes #cursor set {$input};
         #line quiet #ignore variable off;
     };
     $cmd;
