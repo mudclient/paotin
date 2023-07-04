@@ -20,6 +20,8 @@
 #alias {login.auto-login} {
     #class login.auto-login open;
 
+    #config {IAC GA} {OFF};
+
     #nop 如果角色设置了 GMCP 支持，则积极回应服务器的 GMCP 协商请求。;
     #if { "$user[GMCP]" == "true" } {
         load-lib gmcp;
