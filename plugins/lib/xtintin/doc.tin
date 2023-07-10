@@ -212,7 +212,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return $ok;
 };
 
-#var xtt.module-doc {};
+#var xtt.module-doc   {};
+#var xtt.module-test  {};
 
 #alias {HELP} {xtt.Help %0; #buffer end};
 #alias {xtt.Help} {
@@ -294,6 +295,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         };
     };
 
+    #if { &xtt.module-test[$module][$keyword][] > 0 } {
+        #echo {    用法举例:\n};
+        #local case {};
+        #foreach {*xtt.module-test[$module][$keyword][]} {case} {
+            #local {test} {test/$module/$keyword/case/$case};
+            #if { @xtt.genTestCase{$test;$module;$keyword;$case} } {
+                #alias $test;
+                #unalias $test;
+            };
+        };
+    };
+
     #if { &maybe[] > 1 } {
         warnLog 也许你还想看看：;
         #local idx {};
@@ -364,20 +377,209 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             xtt.doc.add.keyword-doc {= &1 &2 &3};
         };
     };
+
+    #alias {xtt.doc.new.example} {
+        #list xtt.module-test[$MODULE][$xtt-doc-keyword] add {{}};
+    };
+
+    #alias {xtt.doc.add.example} {
+        #local part {%%1};
+        #local line {%%2};
+
+        #replace line {^=%s} {};
+        #replace line {%+1..s$} {};
+        #local idx {&xtt.module-test[$MODULE][$xtt-doc-keyword][]};
+        #if { {$line} != {} } {
+            #list xtt.module-test[$MODULE][$xtt-doc-keyword][$idx][$part] add {{$line}};
+        };
+    };
+
     #class xtt.doc.parse close;
 
+    #local state {doc};
     #local line {};
     #foreach {$doc} {line} {
-        #switch {{$xtt-doc-keyword/$line}} {
-            #case {{/}}             {#0};
-            #case {{%*/= #@ %S %*}} {xtt.doc.found.keyword {$line}};
-            #case {{%*/= ## %S %*}} {xtt.doc.found.keyword {$line}};
-            #case {{%*/= %*}}       {xtt.doc.add.keyword-doc {$line}};
-            #default                {xtt.doc.add.module-doc {$line}; #var xtt-doc-keyword {}};
+        #switch {{$state/$xtt-doc-keyword/$line}} {
+            #case {{%*/%*/= #@ %S %*}} {
+                #local state {doc};
+                xtt.doc.found.keyword {$line};
+            };
+            #case {{%*/%*/= ## %S %*}} {
+                #local state {doc};
+                xtt.doc.found.keyword {$line};
+            };
+            #case {{%*/%*/= %sEXAMPLE:%*}} {
+                #local state {test};
+                #replace line {%sEXAMPLE:} {};
+                xtt.doc.new.example;
+                xtt.doc.add.example CODE {$line};
+            };
+            #case {{test/%*/= %sRESULT:%*}} {
+                #local state {result};
+                #replace line {%sRESULT:} {};
+                xtt.doc.add.example RESULT {$line};
+            };
+            #case {{test/%*/= %sASSERT:%*}} {
+                #local state {assert};
+                #replace line {%sASSERT:} {};
+                xtt.doc.add.example ASSERT {$line};
+            };
+            #case {{test/%*/= %sOUTPUT:%*}} {
+                #local state {output};
+                #replace line {%sOUTPUT:} {};
+                xtt.doc.add.example OUTPUT {$line};
+            };
+            #case {{doc//}}            {#0};
+            #case {{doc/%*/= %*}}      {xtt.doc.add.keyword-doc {$line}};
+            #case {{test/%*/= %*}}     {xtt.doc.add.example CODE {$line}};
+            #case {{result/%*/= %*}}   {xtt.doc.add.example RESULT {$line}};
+            #case {{assert/%*/= %*}}   {xtt.doc.add.example ASSERT {$line}};
+            #case {{output/%*/= %*}}   {xtt.doc.add.example OUTPUT {$line}};
+            #default {xtt.doc.add.module-doc {$line}; #var xtt-doc-keyword {}};
         };
     };
 
     #class xtt.doc.parse kill;
+};
+
+#alias {OK} {
+    #local module   {%1};
+    #local keyword  {%2};
+    #local case     {%4};
+    #local msg      {$module $keyword test case $case};
+    #echo {%s} {$msg @str.Repeat{@math.Eval{70 - @str.Width{$msg}};.} <129>OK<299>};
+};
+
+#alias {BAD} {
+    #local module   {%1};
+    #local keyword  {%2};
+    #local case     {%4};
+    #local msg      {$module $keyword test case $case};
+    #echo {%s} {$msg @str.Repeat{@math.Eval{70 - @str.Width{$msg}};.} <119>BAD<299>};
+};
+
+#func {xtt.genTestCase} {
+    #local name     {%1};
+    #local module   {%2};
+    #local keyword  {%3};
+    #local case     {@defaultNum{%4;1}};
+
+    #unalias {$name};
+
+    #if { &xtt.module-test[$module][$keyword][] <= 0 } {
+        #return 0;
+    };
+
+    #local call {@slist.Join{{@slist.FromList{$xtt.module-test[$module][$keyword][$case][CODE]}}}};
+    #replace call {^%*\\x3b$} {&1};
+    #local rslt {$xtt.module-test[$module][$keyword][$case][RESULT][1]};
+    #local assert {$xtt.module-test[$module][$keyword][$case][ASSERT][1]};
+    #local output {$xtt.module-test[$module][$keyword][$case][OUTPUT]};
+
+    #if { {$output} !== {} } {
+        #local width {@math.Eval{&output[] / 10 + 1}};
+        #local lines {@slist.JoinAs{{@slist.FromList{@fp.Map{{$output};{第\@str.AlignRight{KEY;$width}行: VALUE}}}};{#nop %s\x3b}}};
+        #line sub {var;escapes} #alias {$name} {$call; #nop 预期得到多行文本：;$lines};
+        #unalias {$name/wrapper};
+        #line sub {var;escapes} #alias {$name/wrapper} {
+            #local got {};
+            #line quiet #line capture got $name;
+            #local got {@str.Plain{$got}};
+            xtt.Test.Assert {$module} {$keyword} {$case} 预期得到 {$output} 实际得到 {\$got};
+        };
+
+        #return 2;
+    };
+
+    #if { {$assert} !== {} } {
+        #local expect {};
+        #local got {};
+        #regex {$assert} {%* === %*} {
+            #format got     {%s} {&1};
+            #format expect  {%s} {&2};
+        };
+
+        #line sub {var;escapes} #alias {$name} {
+            $call;
+
+            xtt.Test.Assert {$module} {$keyword} {$case} 预期得到 $expect 实际得到 $got;
+        };
+
+        #return 1;
+    };
+
+    #if { {$rslt} !== {} } {
+        #line sub {var;escapes} #alias {$name} {
+            #local result {
+                $call
+            };
+
+            xtt.Test.Assert {$module} {$keyword} {$case} 预期得到 $rslt 实际得到 {\$result};
+        };
+
+        #return 1;
+    };
+
+    #if { {$call} !== {} } {
+        #line sub {var;escapes} #alias {$name} {
+            $call
+        };
+
+        #return 3;
+    };
+};
+
+#alias {xtt.Test.Assert} {
+    #local module   {%1};
+    #local keyword  {%2};
+    #local case     {%3};
+    #local expect   {%5};
+    #local got      {%7};
+
+    #if { {$got} === {$expect} } {
+        OK $module $keyword case $case;
+    };
+    #else {
+        BAD $module $keyword case $case;
+        errLog 断言失败：预期得到 {$expect} 实际得到 {$got};
+    };
+};
+
+///=== {
+// ## xtt.Test [<模块名称> [<关键字名称>]]
+//    测试指定模块中的指定关键字所对应的全部测试用例。
+//    如果省略关键字名称，则测试该模块中所有的关键字。
+//    如果省略模块名称，则测试所有的模块。
+//    你也可以通过 TEST 别名来使用本别名。
+// };
+#alias {TEST} {xtt.Test};
+#alias {xtt.Test} {
+    #local module   {%1};
+    #local keyword  {%2};
+
+    #if { "$module" == "" } {
+        #foreach {*xtt.module-test[]} {module} {
+            xtt.Test {$module};
+        };
+        #return;
+    };
+
+    #if { "$keyword" == "" } {
+        #foreach {*xtt.module-test[$module][]} {keyword} {
+            xtt.Test {$module} {$keyword};
+        };
+        #return;
+    };
+
+    #local case {};
+    #foreach {*xtt.module-test[$module][$keyword][]} {case} {
+        #local {test} {test/$module/$keyword/case/$case};
+        #local code {@xtt.genTestCase{$test;$module;$keyword;$case}};
+        #switch {$code} {
+            #case {1} {$test; #unalias $test};
+            #case {2} {$test/wrapper; #unalias $test; #unalias $test/wrapper};
+        };
+    };
 };
 
 ///=== {
