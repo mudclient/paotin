@@ -18,6 +18,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 // #@ set.Create <元素> [...]
 //    利用提供的多个元素创建新集合。
+//
+//    EXAMPLE: \@set.Create{a;b;c}
+//    RESULT:  {{1}{a}{2}{b}{3}{c}}
+//
+//    EXAMPLE: \@set.Create{h;e;l;l;o}
+//    RESULT:  {{1}{h}{2}{e}{3}{l}{4}{o}}
 // };
 #func {set.Create} {
     #return {@set.Add{{};%0}};
@@ -26,6 +32,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ set.FromList <列表>
 //    将列表转换成集合。
+//
+//    EXAMPLE:
+//      #local list {};
+//      #list list {create} {h;e;l;l;o};
+//      #local set {\@set.FromList{$list}};
+//
+//    ASSERT: {$set} === {{1}{h}{2}{e}{3}{l}{4}{o}}
 // };
 #func {set.FromList} {
     #local list {%0};
@@ -35,6 +48,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ set.Size <集合>
 //    计算集合的元素数量。
+//
+//    EXAMPLE:
+//      #local set {\@set.Create{h;e;l;l;o}};
+//      #local size {\@set.Size{$set}};
+//
+//    ASSERT: {$size} === {4}
 // };
 #func {set.Size} {
     #local set {%0};
@@ -44,6 +63,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ set.Contains <集合> <元素>
 //    判断元素是否在集合中。
+//
+//    EXAMPLE:
+//      #if {   \@set.Contains{{\@set.Create{a;b;c}};{b}}   } {#echo OK1};
+//      #if { ! \@set.Contains{{\@set.Create{a;b;c}};{x}}   } {#echo OK2};
+//      #if { ! \@set.Contains{{};{x}}                      } {#echo OK3};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
 // };
 #func {set.Contains} {
     #info arguments save;
@@ -61,6 +90,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ set.Add <集合> <元素> [...]
 //    将一个或者多个元素添加到集合当中。
+//
+//    EXAMPLE:
+//      #local set {};
+//      #local set {\@set.Add{{$set}; a}};
+//      #local set {\@set.Add{{$set}; b; c}};
+//      #nop 注意：因为是集合，所以重复元素不再添加;
+//      #local set {\@set.Add{{$set}; a; b; c}};
+//      #local set {\@set.Add{{$set}; x; y; z}};
+//      #nop 注意：这里也有个重复的 l，只会被添加一次;
+//      #local set {\@set.Add{{$set}; h; e; l; l; o}};
+//
+//    ASSERT: {$set} === {{1}{a}{2}{b}{3}{c}{4}{x}{5}{y}{6}{z}{7}{h}{8}{e}{9}{l}{10}{o}}
 // };
 #func {set.Add} {
     #info arguments save;
@@ -86,6 +127,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ set.Remove <集合> <元素> [...]
 //    从集合中删除一个或者多个元素。
+//
+//    EXAMPLE:
+//      #local set {\@set.Create{a;b;c;d;e}};
+//      #local set {\@set.Remove{{$set};b;c;x;y;x}};
+//
+//    ASSERT: {$set} === {{1}{a}{2}{d}{3}{e}}
 // };
 #func {set.Remove} {
     #info arguments save;
@@ -113,6 +160,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ set.Equal <集合1> <集合2>
 //    判断集合1和集合2是否相等。
 //    📖  如果两个集合中包含的元素是相同的，那么就判定为相等。相等判定并不要求元素顺序相同。
+//
+//    EXAMPLE:
+//      #local set1 {\@set.Create{a;b;c}};
+//      #local set2 {};
+//      #local set2 {\@set.Add{{$set2};a}};
+//      #local set2 {\@set.Add{{$set2};b}};
+//      #local set2 {\@set.Add{{$set2};c}};
+//      #local ok {\@set.Equal{{$set1};{$set2}}};
+//
+//    ASSERT: {$ok} === {1}
 // };
 #func {set.Equal} {
     #local set1  {%1};
@@ -130,6 +187,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ set.IsSubset <集合1> <集合2>
 //    判断集合2是否为集合1的子集。
 //    📖  如果集合1包含了集合2中的每个元素，那么集合2就是集合1的子集。
+//
+//    EXAMPLE:
+//      #if {   \@set.IsSubset{{\@set.Create{a;b;c;d;e}};{\@set.Create{a;c;e}}} } {#echo OK1};
+//      #if { ! \@set.IsSubset{{\@set.Create{a;b;c;d;e}};{\@set.Create{a;b;X}}} } {#echo OK2};
+//      #if {   \@set.IsSubset{{\@set.Create{a;b;c}};{\@set.Create{a;b;c}}}     } {#echo OK3};
+//      #if {   \@set.IsSubset{{\@set.Create{a;b;c}};{}}                        } {#echo OK4};
+//      #if {   \@set.IsSubset{{};{}}                                           } {#echo OK5};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
+//      OK4
+//      OK5
 // };
 #func {set.IsSubset} {
     #local set1  {%1};
@@ -150,6 +221,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    判断集合2是否为集合1的真子集。
 //    📖  如果集合1包含了集合中2的每个元素，而且集合1比集合2的元素还要多，
 //       那么集合2就是集合1的真子集。
+//
+//    EXAMPLE:
+//      #if {   \@set.IsProperSubset{{\@set.Create{a;b;c;d;e}};{\@set.Create{a;c;e}}}   } {#echo OK1};
+//      #if { ! \@set.IsProperSubset{{\@set.Create{a;b;c;d;e}};{\@set.Create{a;b;X}}}   } {#echo OK2};
+//      #if { ! \@set.IsProperSubset{{\@set.Create{a;b;c}};{\@set.Create{a;b;c}}}       } {#echo OK3};
+//      #if {   \@set.IsProperSubset{{\@set.Create{a;b;c}};{}}                          } {#echo OK4};
+//      #if { ! \@set.IsProperSubset{{};{}}                                             } {#echo OK5};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
+//      OK4
+//      OK5
 // };
 #func {set.IsProperSubset} {
     #local set1  {%1};
@@ -167,6 +252,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ set.IsSuperset <集合1> <集合2>
 //    判断集合2是否为集合1的超集。
 //    📖  如果集合2包含了集合1中的每个元素，那么集合2就是集合1的超集。
+//
+//    EXAMPLE:
+//      #if {   \@set.IsSuperset{{\@set.Create{a;c;e}};{\@set.Create{a;b;c;d;e}}}   } {#echo OK1};
+//      #if { ! \@set.IsSuperset{{\@set.Create{a;b;X}};{\@set.Create{a;b;c;d;e}}}   } {#echo OK2};
+//      #if {   \@set.IsSuperset{{\@set.Create{a;b;c}};{\@set.Create{a;b;c}}}       } {#echo OK3};
+//      #if {   \@set.IsSuperset{{};{\@set.Create{a;b;c}}}                          } {#echo OK4};
+//      #if {   \@set.IsSuperset{{};{}}                                             } {#echo OK5};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
+//      OK4
+//      OK5
 // };
 #func {set.IsSuperset} {
     #return {@set.IsSubset{{%2};{%1}}};
@@ -177,6 +276,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    判断集合2是否为集合1的真超集。
 //    📖  如果集合2包含了集合中1的每个元素，而且集合2比集合1的元素还要多，
 //       那么集合2就是集合1的真超集。
+//
+//    EXAMPLE:
+//      #if {   \@set.IsProperSuperset{{\@set.Create{a;c;e}};{\@set.Create{a;b;c;d;e}}} } {#echo OK1};
+//      #if { ! \@set.IsProperSuperset{{\@set.Create{a;b;X}};{\@set.Create{a;b;c;d;e}}} } {#echo OK2};
+//      #if { ! \@set.IsProperSuperset{{\@set.Create{a;b;c}};{\@set.Create{a;b;c}}}     } {#echo OK3};
+//      #if {   \@set.IsProperSuperset{{};{\@set.Create{a;b;c}}}                        } {#echo OK4};
+//      #if { ! \@set.IsProperSuperset{{};{}}                                           } {#echo OK5};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
+//      OK4
+//      OK5
 // };
 #func {set.IsProperSuperset} {
     #return {@set.IsProperSubset{{%2};{%1}}};
@@ -186,6 +299,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ set.Union <集合1> <集合2> [...]
 //    求两个或者多个集合的并集。
 //    📖  并集是指把所有集合元素放在一块儿之后得到的新集合。
+//
+//    EXAMPLE: \@set.Union{{\@set.Create{a;b;c}};{\@set.Create{b;c;d}};{\@set.Create{c;d;e}}}
+//    RESULT: {{1}{a}{2}{b}{3}{c}{4}{d}{5}{e}}
 // };
 #func {set.Union} {
     #info arguments save;
@@ -210,6 +326,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ set.Intersection <集合1> <集合2> [...]
 //    求两个或者多个集合的交集。
 //    📖  交集是指由同时出现在所有集合中的元素组成的新集合。
+//
+//    EXAMPLE: \@set.Intersection{{\@set.Create{a;b;c}};{\@set.Create{b;c;d}};{\@set.Create{c;d;e}}}
+//    RESULT: {{1}{c}}
 // };
 #func {set.Intersection} {
     #info arguments save;
@@ -243,6 +362,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ set.IsDisjoint <集合1> <集合2> [...]
 //    判断两个或者多个集合是否为不交集。
 //    📖  不交集是交集为空的意思。
+//
+//    EXAMPLE:
+//      #if {   \@set.IsDisjoint{{\@set.Create{a;b;c}};{\@set.Create{b;c;d}};{\@set.Create{X;d;e}}} } {#echo OK1};
+//      #if { ! \@set.IsDisjoint{{\@set.Create{a;b;c}};{\@set.Create{b;c;d}};{\@set.Create{c;d;e}}} } {#echo OK2};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
 // };
 #func {set.IsDisjoint} {
     #local set {@set.Intersection{%0}};
@@ -260,6 +387,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    其值分别来自各个参数集合的元素。
 //    📖  两个集合的笛卡尔积是指由两个集合的元素组成的所有可能的有序对的集合。
 //       多个集合的积也可由此扩展。
+//
+//    EXAMPLE: \@set.Product{{\@set.Create{扬州;苏州}};{\@set.Create{钱庄;当铺}}}
+//    RESULT: {{1}{扬州;钱庄}{2}{扬州;当铺}{3}{苏州;钱庄}{4}{苏州;当铺}}
 // };
 #func {set.Product} {
     #info arguments save;
@@ -303,6 +433,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ set.Diff <集合1> <集合2> [...]
 //    计算集合1与其它集合的相对差。
 //    📖  相对差是指从集合1中去掉所有在其它集合中出现过的元素之后剩下的集合。
+//
+//    EXAMPLE:  \@set.Diff{{\@set.Create{a;b;c;d;e}};{\@set.Create{c;d;e;f;g}}}
+//    RESULT:   {{1}{a}{2}{b}}
+//
+//    EXAMPLE:  \@set.Diff{{\@set.Create{a;b;c;d;e;f}};{\@set.Create{a;c}};{\@set.Create{d;g}};{\@set.Create{f;x}}}
+//    RESULT:   {{1}{b}{2}{e}}
 // };
 #func {set.Diff} {
     #info arguments save;
@@ -331,6 +467,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ set.SymmDiff <集合1> <集合2>
 //    计算集合1与集合2的对称差。
 //    📖  对称差是指并集与交集的相对差。
+//
+//    EXAMPLE:  \@set.SymmDiff{{\@set.Create{a;b;c;d;e}};{\@set.Create{c;d;e;f;g}}}
+//    RESULT:   {{1}{a}{2}{b}{3}{f}{4}{g}}
 // };
 #func {set.SymmDiff} {
     #return {@set.Diff{{@set.Union{{%1};{%2}}};{@set.Intersection{{%1};{%2}}}}};
@@ -342,6 +481,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 // #@ sset.Create <字符串列表>
 //    从字符串列表创建集合。
+//
+//    EXAMPLE: \@sset.Create{a;b;c}
+//    RESULT:  {a;b;c}
+//
+//    EXAMPLE: \@sset.Create{h;e;l;l;o}
+//    RESULT:  {h;e;l;o}
 // };
 #func {sset.Create} {
     #return {@sset.Add{{};%0}};
@@ -350,6 +495,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ sset.Size <集合>
 //    计算集合的元素数量。
+//
+//    EXAMPLE: \@sset.Size{a;b;c}
+//    RESULT:  3
+//
+//    EXAMPLE: \@sset.Size{@sset.Create{h;e;l;l;o}}
+//    RESULT:  4
 // };
 #func {sset.Size} {
     #return {@slist.Size{%0}};
@@ -358,6 +509,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ sset.Contains <集合> <元素>
 //    判断元素是否在集合中。
+//
+//    EXAMPLE:
+//      #if {   \@sset.Contains{{a;b;c};{b}}    } {#echo OK1};
+//      #if { ! \@sset.Contains{{a;b;c};{x}}    } {#echo OK2};
+//      #if { ! \@sset.Contains{{};{x}}         } {#echo OK3};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
 // };
 #func {sset.Contains} {
     #info arguments save;
@@ -375,6 +536,19 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ sset.Add <集合> <元素> [...]
 //    将一个或者多个元素添加到集合当中。
+//
+//    EXAMPLE:
+//      #local set {};
+//      #local set {\@sset.Add{{$set}; a}};
+//      #local set {\@sset.Add{{$set}; b; c}};
+//      #nop 注意：因为是集合，所以重复元素不再添加;
+//      #local set {\@sset.Add{{$set}; a; b; c}};
+//      #local set {\@sset.Add{{$set}; x; y; z}};
+//      #nop 注意：这里也有个重复的 l，只会被添加一次;
+//      #local set {\@sset.Add{{$set}; h; e; l; l; o}};
+//
+//    ASSERT: {$set} === {a;b;c;x;y;z;h;e;l;o}
+//
 // } ;
 #func {sset.Add} {
     #info arguments save;
@@ -392,6 +566,17 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ sset.Remove <集合> <元素> [...]
 //    从集合中删除一个或者多个元素。
+//
+//    EXAMPLE:
+//      #local set {\@sset.Create{h;e;l;l;o;a;b;c;d}};
+//      #local set {\@sset.Remove{{$set};a;b}};
+//      #local set {\@sset.Remove{{$set};h;l;o}};
+//      #local set {\@sset.Remove{{$set};x;y}};
+//      #if { \@sset.Equal{{$set};{c;d;e}} } {
+//          #echo OK;
+//      };
+//
+//    OUTPUT: OK
 // };
 #func {sset.Remove} {
     #info arguments save;
@@ -410,6 +595,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ sset.Equal <集合1> <集合2>
 //    判断集合1和集合2是否相等。
 //    📖  如果两个集合中包含的元素是相同的，那么就判定为相等。相等判定并不要求元素顺序相同。
+//
+//    EXAMPLE:
+//      #if { \@sset.Equal{{a;b;c};{a;b;c}} } {#echo OK1};
+//      #if { \@sset.Equal{{x;y;z};{z;y;x}} } {#echo OK2};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
 // };
 #func {sset.Equal} {
     #local set1  {%1};
@@ -427,6 +620,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ sset.IsSubset <集合1> <集合2>
 //    判断集合2是否为集合1的子集。
 //    📖  如果集合1包含了集合2中的每个元素，那么集合2就是集合1的子集。
+//
+//    EXAMPLE:
+//      #if {   \@sset.IsSubset{{a;b;c;d;e};{a;c;e}}    } {#echo OK1};
+//      #if { ! \@sset.IsSubset{{a;b;c;d;e};{a;b;X}}    } {#echo OK2};
+//      #if {   \@sset.IsSubset{{a;b;c};{a;b;c}}        } {#echo OK3};
+//      #if {   \@sset.IsSubset{{a;b;c};{}}             } {#echo OK4};
+//      #if {   \@sset.IsSubset{{};{}}                  } {#echo OK5};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
+//      OK4
+//      OK5
 // };
 #func {sset.IsSubset} {
     #local set1  {%1};
@@ -447,6 +654,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    判断集合2是否为集合1的真子集。
 //    📖  如果集合1包含了集合中2的每个元素，而且集合1比集合2的元素还要多，
 //       那么集合2就是集合1的真子集。
+//
+//    EXAMPLE:
+//      #if {   \@sset.IsProperSubset{{a;b;c;d;e};{a;c;e}}  } {#echo OK1};
+//      #if { ! \@sset.IsProperSubset{{a;b;c;d;e};{a;b;X}}  } {#echo OK2};
+//      #if { ! \@sset.IsProperSubset{{a;b;c};{a;b;c}}      } {#echo OK3};
+//      #if {   \@sset.IsProperSubset{{a;b;c};{}}           } {#echo OK4};
+//      #if { ! \@sset.IsProperSubset{{};{}}                } {#echo OK5};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
+//      OK4
+//      OK5
 // };
 #func {sset.IsProperSubset} {
     #local set1  {%1};
@@ -464,6 +685,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ sset.IsSuperset <集合1> <集合2>
 //    判断集合2是否为集合1的超集。
 //    📖  如果集合2包含了集合1中的每个元素，那么集合2就是集合1的超集。
+//
+//    EXAMPLE:
+//      #if {   \@sset.IsSuperset{{a;c;e};{a;b;c;d;e}}  } {#echo OK1};
+//      #if { ! \@sset.IsSuperset{{a;b;X};{a;b;c;d;e}}  } {#echo OK2};
+//      #if {   \@sset.IsSuperset{{a;b;c};{a;b;c}}      } {#echo OK3};
+//      #if {   \@sset.IsSuperset{{};{a;b;c}}           } {#echo OK4};
+//      #if {   \@sset.IsSuperset{{};{}}                } {#echo OK5};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
+//      OK4
+//      OK5
 // };
 #func {sset.IsSuperset} {
     #return {@sset.IsSubset{{%2};{%1}}};
@@ -474,6 +709,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    判断集合2是否为集合1的真超集。
 //    📖  如果集合2包含了集合中1的每个元素，而且集合2比集合1的元素还要多，
 //       那么集合2就是集合1的真超集。
+//
+//    EXAMPLE:
+//      #if {   \@sset.IsProperSuperset{{a;c;e};{a;b;c;d;e}}    } {#echo OK1};
+//      #if { ! \@sset.IsProperSuperset{{a;b;X};{a;b;c;d;e}}    } {#echo OK2};
+//      #if { ! \@sset.IsProperSuperset{{a;b;c};{a;b;c}}        } {#echo OK3};
+//      #if {   \@sset.IsProperSuperset{{};{a;b;c}}             } {#echo OK4};
+//      #if { ! \@sset.IsProperSuperset{{};{}}                  } {#echo OK5};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
+//      OK3
+//      OK4
+//      OK5
 // };
 #func {sset.IsProperSuperset} {
     #return {@sset.IsProperSubset{{%2};{%1}}};
@@ -483,6 +732,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ sset.Union <集合1> <集合2> [...]
 //    求两个或者多个集合的并集。
 //    📖  并集是指把所有集合放在一块儿之后得到的新集合。
+//
+//    EXAMPLE: \@sset.Union{{a;b;c};{b;c;d};{c;d;e}}
+//    RESULT: {a;b;c;d;e}
 // };
 #func {sset.Union} {
     #info arguments save;
@@ -507,6 +759,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ sset.Intersection <集合1> <集合2> [...]
 //    求两个或者多个集合的交集。
 //    📖  交集是指由同时出现在所有集合中的元素组成的新集合。
+//
+//    EXAMPLE: \@sset.Intersection{{a;b;c};{b;c;d};{c;d;e}}
+//    RESULT:  {c}
 // };
 #func {sset.Intersection} {
     #info arguments save;
@@ -540,6 +795,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ sset.IsDisjoint <集合1> <集合2> [...]
 //    判断两个或者多个集合是否为不交集。
 //    📖  不交集是交集为空的意思。
+//
+//    EXAMPLE:
+//      #if {   \@sset.IsDisjoint{{a;b;c};{b;c;d};{X;d;e}}  } {#echo OK1};
+//      #if { ! \@sset.IsDisjoint{{a;b;c};{b;c;d};{c;d;e}}  } {#echo OK2};
+//
+//    OUTPUT:
+//      OK1
+//      OK2
 // };
 #func {sset.IsDisjoint} {
     #local set {@sset.Intersection{%0}};
@@ -559,6 +822,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    <171>注意<299>，sset-product-divider 不能被设置为分号，这会导致灾难性的后果。
 //    📖  两个集合的笛卡尔积是指由两个集合的元素组成的所有可能的有序对的集合。
 //       多个集合的积也可由此扩展。
+//
+//    EXAMPLE:  \@sset.Product{{扬州;苏州};{当铺;钱庄}}
+//    RESULT:   {扬州当铺;扬州钱庄;苏州当铺;苏州钱庄}
+//
+//    EXAMPLE:  \@sset.Product{{天;雷};{★ ;☆ };{凤凰;玄武}}
+//    RESULT:   {天★ 凤凰;天★ 玄武;天☆ 凤凰;天☆ 玄武;雷★ 凤凰;雷★ 玄武;雷☆ 凤凰;雷☆ 玄武}
 // };
 #func {sset.Product} {
     #info arguments save;
@@ -603,6 +872,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ sset.Diff <集合1> <集合2> [...]
 //    计算集合1与其它集合的相对差。
 //    📖  相对差是指从集合1中去掉所有在其它集合中出现过的元素之后剩下的集合。
+//
+//    EXAMPLE:  \@sset.Diff{{a;b;c;d;e};{c;d;e;f;g}}
+//    RESULT:   {a;b}
+//
+//    EXAMPLE:  \@sset.Diff{{a;b;c;d;e;f};{a;c};{d;g};{f;x}}
+//    RESULT:   {b;e}
 // };
 #func {sset.Diff} {
     #info arguments save;
@@ -631,6 +906,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ sset.SymmDiff <集合1> <集合2>
 //    计算集合1与集合2的对称差。
 //    📖  对称差是指并集与交集的相对差。
+//
+//    EXAMPLE:  \@sset.SymmDiff{{a;b;c;d;e};{c;d;e;f;g}}
+//    RESULT:   {a;b;f;g}
 // };
 #func {sset.SymmDiff} {
     #return {@sset.Diff{{@sset.Union{{%1};{%2}}};{@sset.Intersection{{%1};{%2}}}}};
