@@ -5,7 +5,7 @@
 模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
 版权声明：本文件属于 PaoTin++ 的一部分
 ===========
-PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 ===========
 */
@@ -29,6 +29,18 @@ PaoTin++ © 2020~2022 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #nop 开启 wordwrap 常常导致折行的文本显示为乱码，因此要关掉它;
 #config {wordwrap} {off};
+
+#nop 两处 oneshot 处理都是故意为之，目的是为了不影响 TinTin++ 内部状态。;
+#line oneshot #event {IAC SB TTYPE} {
+    #if { {@gts{$ttype}} !== {SET} } {
+        #gts #var ttype {SET};
+        #send {\xFF\xFA\x18\x00\x50\x61\x6f\x54\x69\x6e\x2b\x2b\xFF\xF0\};
+        #line oneshot #event {CATCH SEND OUTPUT} {#0};
+    };
+    #else {
+        #gts #var ttype {DONE};
+    };
+};
 
 #nop 切分出专门的文字输入区。;
 #split;
