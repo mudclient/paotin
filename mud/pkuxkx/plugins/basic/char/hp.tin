@@ -207,6 +207,11 @@ hp -neili 格式：
         };
     };
 
+    #action {~^%*【恢复效率】%*%+1..c{[0-9.]+}\%%*$} {
+        #echo {%s} {@Beautify{%%1【恢复效率】%%2%%3@str.Left{{@str.Format{{%.2f};@math.Eval{%%4 / 100}}     };@math.Eval{@str.Width{%%4}}} %%5}};
+        #line gag;
+    };
+
     #action {^│【走火入魔】 %*% %s│【极限内力】 %d%s │$} {
         #var char[HP][走火入魔] {@str.Trim{%%1}};
     };
