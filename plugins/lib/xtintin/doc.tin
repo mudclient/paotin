@@ -283,12 +283,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local idx {};
     #loop 1 {&xtt.module-doc[$module][$keyword][]} {idx} {
         #local line {$xtt.module-doc[$module][$keyword][$idx]};
-        #regex {$line} {{##|#@} %S %*} {
+        #regex {$line} {{##|#@|#=} %S %*} {
             #if { "&1" == "##" } {
                 #echo {<299>%s} {<B407><128> ## 别名 <138>&2 <868>&3<299>};
             };
-            #else {
+            #elseif { "&1" == "#@" } {
                 #echo {<299>%s} {<B04a><128> ## 函数 <138>&2 <868>&3<299>};
+            };
+            #elseif { "&1" == "#=" } {
+                #echo {<299>%s} {<B00d><128> ## 文档 <138>&2 <868>&3<299>};
             };
         } {
             #echo {<299>%s} {$line};
@@ -372,7 +375,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
                 };
             };
         };
-        #regex {$doc} {= {##|#@} %S %*} {
+        #regex {$doc} {= {##|#@|#=} %S %*} {
             #var xtt-doc-keyword {&2};
             xtt.doc.add.keyword-doc {= &1 &2 &3};
         };
@@ -405,6 +408,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
                 xtt.doc.found.keyword {$line};
             };
             #case {{%*/%*/= ## %S %*}} {
+                #local state {doc};
+                xtt.doc.found.keyword {$line};
+            };
+            #case {{%*/%*/= #= %S %*}} {
                 #local state {doc};
                 xtt.doc.found.keyword {$line};
             };
