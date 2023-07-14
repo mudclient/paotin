@@ -82,7 +82,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #func {existsPlugin} {
     #local plugin {%1};
-    #return {@existsFile{plugins/$plugin.tin}};
+
+    #if { @existsFile{plugins/${plugin}.tin} } {
+        #return 1;
+    };
+
+    #if { @existsFile{plugins/$plugin/__init__.tin} } {
+        #return 1;
+    };
+
+    #if { @existsFile{plugins/$plugin/__main__.tin} } {
+        #return 1;
+    };
+
+    #return 0;
 };
 
 #func {mkdir} {
