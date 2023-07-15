@@ -231,7 +231,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
                     #local topLines[$topMaxLine] {};
                 };
                 #if { "$field[order]" == "" } {
-                    #local field[order] {@eval{ @max{0;*topLines[$field[line]][]} + 1 }};
+                    #local field[order] {@math.Eval{ @math.Max{0;*topLines[$field[line]][]} + 1 }};
                 };
                 #local topLines[$field[line]][$field[order]] {$field};
             };
@@ -244,25 +244,25 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
                     #local botLines[$botMaxLine] {};
                 };
                 #if { "$field[order]" == "" } {
-                    #local field[order] {@eval{ @max{0;*botLines[$field[line]][]} + 1 }};
+                    #local field[order] {@math.Eval{ @math.Max{0;*botLines[$field[line]][]} + 1 }};
                 };
                 #local botLines[$field[line]][$field[order]] {$field};
             };
             #case {"TopSepBar"} {
                 #if { "$field[order]" == "" } {
-                    #local field[order] {@eval{ @max{0;*topSepBar[]} + 1 }};
+                    #local field[order] {@math.Eval{ @math.Max{0;*topSepBar[]} + 1 }};
                 };
                 #local topSepBar[$field[order]] {$field};
             };
             #case {"MidSepBar"} {
                 #if { "$field[order]" == "" } {
-                    #local field[order] {@eval{ @max{0;*midSepBar[]} + 1 }};
+                    #local field[order] {@math.Eval{ @math.Max{0;*midSepBar[]} + 1 }};
                 };
                 #local midSepBar[$field[order]] {$field};
             };
             #case {"BotSepBar"} {
                 #if { "$field[order]" == "" } {
-                    #local field[order] {@eval{ @max{0;*botSepBar[]} + 1 }};
+                    #local field[order] {@math.Eval{ @math.Max{0;*botSepBar[]} + 1 }};
                 };
                 #local botSepBar[$field[order]] {$field};
             };
@@ -488,7 +488,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
         };
 
         #format value {$color%-${width}s<299>} {$value[value]};
-        #math lineWidth {$lineWidth + @width{$label} + @width{$value}};
+        #math lineWidth {$lineWidth + @str.Width{$label} + @str.Width{$value}};
         #if { "$text" == "" } {
             #local text {$label$value};
         };
@@ -554,8 +554,8 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     #local width    {%2};
     #local color    {%3};
 
-    #local newText {@trim{$text}};
-    #math width {$width + @width{$newText} - @width{$text}};
+    #local newText {@str.Trim{$text}};
+    #math width {$width + @str.Width{$newText} - @str.Width{$text}};
 
     #local screenWidth {0};
     #screen get COLS screenWidth;
