@@ -1,0 +1,69 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+///=== {
+///// busy 模块向其它模块提供 busy 检查机制。
+///// };
+
+#var basic_busy[META] {
+    {NAME}      {busy检查}
+    {DESC}      {检查角色是否处于 busy 状态，并在 busy 结束时回调代码}
+    {AUTHOR}    {担子炮}
+};
+
+#func {basic_busy.Init} {
+    event.Handle {char/nobusy} {busy.on-idle} {basic/busy} {busy.on-idle};
+    #return {true};
+};
+
+VAR {正在等待的回调列表}    busy.wait-list {};
+
+///=== {
+// ## busy.Wait <回调代码>
+//    检查角色当前是否处于 busy 状态，当不在 busy 状态，或 busy 状态解除时，执行回调代码。
+// };
+#alias {busy.Wait} {
+    #local code {%1};
+
+    #local len {&busy.wait-list[]};
+    #list busy.wait-list add {{$code}};
+
+    #if { $len == 0 } {
+        #if { @isTrue{$char[HP][忙]} } {
+            #delay busy.checkbusy {checkbusy} 10;
+        };
+        #else {
+            #delay busy.checkbusy {checkbusy} 0;
+        };
+    };
+};
+
+#alias {busy.on-idle} {
+    #while { &busy.wait-list[] > 0 } {
+        #local code {$busy.wait-list[1]};
+        #list busy.wait-list delete 1;
+        $code
+    };
+
+    #undelay busy.checkbusy;
+};
+
+#action {^你正忙{|ID=basic/busy}$} {
+    #if { &busy.wait-list[] == 0 } {
+        #return;
+    };
+
+    #if { @isTrue{$gGMCP[Channels][Status]} } {
+        #delay busy.checkbusy {checkbusy} 10;
+    };
+    #else {
+        #delay busy.checkbusy {checkbusy} 1;
+    };
+};
+
+#action {^你不忙{|ID=basic/busy}$} {#delay {busy.on-idle} {busy.on-idle} 0};
