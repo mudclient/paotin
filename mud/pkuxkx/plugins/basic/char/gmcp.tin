@@ -171,3 +171,27 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
     #if     { "$fight" == "true" }  {event.Emit char/fight};
     #elseif { "$fight" == "false" } {event.Emit char/nofight};
 };
+
+#action {^GMCP 频道收听汇总：$E} {
+    #class gmcp-channel-status open;
+
+    #action {^%*(%*) %s {🔔|🔕}$} {
+        #local channel {%%2};
+        #local status  {true};
+        #if { "%%4" == "🔕" } {
+            #local status  {false};
+        };
+        #var {gGMCP[Channels][$channel]} {$status};
+    };
+
+    #action {^你接收GMCP信息的格式为%*，你可以用tune gmcp <channel> on/off开关GMCP频道。$} {
+        #class gmcp-channel-status kill;
+    };
+
+    #class gmcp-channel-status close;
+};
+
+#action {^你打开了GMCP:%*频道。$}           {#var gGMCP[Channels][%1] {true}};
+#action {^你关闭了GMCP:%*频道。$}           {#var gGMCP[Channels][%1] {false}};
+#action {^你的GMCP:%*频道已经是打开的。$}   {#var gGMCP[Channels][%1] {true}};
+#action {^你的GMCP:%*频道已经是关闭的。$}   {#var gGMCP[Channels][%1] {false}};
