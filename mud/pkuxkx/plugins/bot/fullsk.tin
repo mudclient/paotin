@@ -75,6 +75,7 @@
 */
 
 load-lib event;
+load-module basic/busy;
 
 #function {bot_fullsk.Init} {
     score;
@@ -678,7 +679,7 @@ load-lib event;
     #alias {fullsk.xiulian.do} {
         #local skill {$fullsk-xiulian-skill[code]};
         xiulian $skill;
-        char.WaitBusy {
+        busy.Wait {
             event.Handle {char/skbrief} {fullsk.xiulian} {bot/fullsk} {fullsk.xiulian.check};
             skbrief $skill;
         };
@@ -844,28 +845,6 @@ load-lib event;
 
 #action {~^%c你的「%*」进步了！$CE} {fullskLog %0};
 #action {^你的基本功夫比你的高级功夫还高！$} {skills};
-
-#alias {char.WaitBusy} {
-    #class char.WaitBusy open;
-
-    #var char-wait-busy-callback {%1};
-
-    #action {^你不忙{|ID=char.WaitBusy}$} {
-        #line gag;
-        #local callback {$char-wait-busy-callback};
-        #class char.WaitBusy kill;
-        #line sub var #delay 0 {$callback};
-    };
-
-    #action {^你正忙{|ID=char.WaitBusy}$} {
-        #line gag;
-        #nop;
-    };
-
-    xtt.Tick char.WaitBusy {checkbusy} 1;
-
-    #class char.WaitBusy close;
-};
 
 #alias {fullsk.test} {
     load-module wd;
