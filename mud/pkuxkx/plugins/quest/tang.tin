@@ -175,7 +175,7 @@ load-lib speedo;
 
     #class tang.inquiry close;
 
-    $path;
+    xtt.SendAtOnce {$path};
     tang.look 1; tang.ask 1;
 };
 
@@ -212,9 +212,9 @@ load-lib speedo;
     #action {~□%*身穿一件\e[{1;|}3%.m{灰马褂|百褶裙|蓝马褂}}       { tang.行人特征.衣服 {%%3} 布衣 };
     #action {~□%*身穿一件\e[{1;|}3%.m{短打劲装|天蓝锦袍}}          { tang.行人特征.衣服 {%%3} 布衣 };
 
-    #action {^  □ 手持一根绣花针(Xiuhua zhen)$}                    { tang.行人特征.性别 {男|女}    };
-    #action {^  □ 戴着一串金项链(Golden necklace)$}                { tang.行人特征.性别 {男|女}    };
-    #action {^  □ 戴着一个金戒指(Golden ring)$}                    { tang.行人特征.性别 {男|女}    };
+    #action {^  □手持一根绣花针(Xiuhua zhen)$}                     { tang.行人特征.性别 {男|女}    };
+    #action {^  □戴着一串金项链(Golden necklace)$}                 { tang.行人特征.性别 {男|女}    };
+    #action {^  □戴着一个金戒指(Golden ring)$}                     { tang.行人特征.性别 {男|女}    };
 
     #action {~□%*脚蹬一双\e[{1;|}3%.m{绣花鞋|锦鞋|凤鞋}}           { tang.行人特征.鞋子 {%%3} 布鞋 };
     #action {~□%*脚蹬一双\e[{1;|}3%.m{布鞋|麻鞋|千层底布鞋}}       { tang.行人特征.鞋子 {%%3} 布鞋 };
@@ -245,6 +245,21 @@ load-lib speedo;
 
     #class tang.ask open;
 
+    #action {^你向%*问道：这位%*，} {
+        #local name {%%1};
+        #local sex {};
+        #switch {"%%2"} {
+            #case {"公公"}                      {#local sex {男|女}};
+            #case {"{壮士|大哥|老爷子|阁下}"}   {#local sex {男}};
+            #case {"{姑娘|神仙姐姐|老婆婆}"}    {#local sex {女}};
+            #default {
+                #return;
+            };
+        };
+
+        #var {tang.data[行人特征][$name][性别]} {$sex};
+    };
+
     #action {^%%1说道：「%*{男|女}%*」$}                { tang.证词 {%%1} 性别 {%%3} };
     #action {^%%1说道：「%*流浪汉%*」$}                 { tang.证词 {%%1} 性别 {男}  };
 
@@ -252,7 +267,7 @@ load-lib speedo;
     #action {^%%1说道：「%*个子不太高%*」$}             { tang.证词 {%%1} 身高 {矮}  };
 
     #action {^%%1说道：「%*{发胖|有点胖|微微发福}%*」$} { tang.证词 {%%1} 胖瘦 {胖}  };
-    #action {^%%1说道：「%*{竹竿|猴子|偏瘦}%*」$}       { tang.证词 {%%1} 胖瘦 {瘦}  };
+    #action {^%%1说道：「%*{竹竿|猴子|偏瘦|偏廋}%*」$}  { tang.证词 {%%1} 胖瘦 {瘦}  };
 
     #action {^%%1说道：「%*{花白|白发苍苍|棺材}%*」$}   { tang.证词 {%%1} 年龄 {老}  };
     #action {^%%1说道：「%*{老大不小|中年}%*」$}        { tang.证词 {%%1} 年龄 {中}  };
@@ -268,7 +283,7 @@ load-lib speedo;
     #action {^%%1说道：「你找错人了。」$}               { say 找错人了 };
     #action {^%%1说道：「你已经问过了}                  { tang.案件进展     };
 
-    #action {引起了盗贼的怀疑，盗贼逃离了长安城。$}     { tang.失败         };
+    #action {^%%1说道：「%*」$}                         { errLog 未能提取到证词。请联系开发者。} {5.1};
 
     #class tang.ask close;
 
@@ -534,10 +549,6 @@ load-lib speedo;
     tang.案件进展;
 };
 
-#alias {tang.失败} {
-    #class tang.ask kill;
-};
-
 #alias {tang.back} {
     #local name {};
     #if { &{tang.data[嫌疑人名单][]} > 0 } {
@@ -559,12 +570,13 @@ load-lib speedo;
 
     #local place {${tang-all-location[${tang-task-location}]}};
     #local path {@path.Reverse{$place[path]}};
-    $path;
+    xtt.SendAtOnce {$path};
 
     #class tang.back open;
 
     #action {^由于你的突出贡献，特奖励{爵位贡献|任务积分}%*点，用于{提升爵位|兑换本爵位相关的任务奖励}。$} {
         #class tang.back kill;
+        #delay tang.query {tang.upgrade} 10;
         #local level {${tang-job-log[任务难度]}};
         #local point {@math.ParseCN{%%2}};
         speedo.Add {爵位积分} {$point} {true} {600};
@@ -584,6 +596,44 @@ load-lib speedo;
     #delay tang.job {tang.job} 3;
 };
 
+#alias {tang.upgrade} {
+    #class tang.upgrade open;
+
+    #action {^你向郭隆打听有关『积分』的消息。$} {#0};
+
+    #action {^你拥有爵位升级积分%*点，还差%*才能升级为开国县男。$} {
+        #class tang.upgrade kill;
+    };
+
+    #action {^你在当前爵位积累了爵位升级积分零点，积累了任务奖励积分%*点。$} {
+        #class tang.upgrade kill;
+    };
+
+    #action {^你拥有爵位升级积分%*点，已经足够升级到开国县男，请尽快到吏部升级爵位。$} {
+        #delay tang.upgrade {xtt.Send {ask jingzhao shaoyin about 通行令}} 3;
+    };
+
+    #action {^你缴纳了一两黄金后，郭隆递给你一面皇城通行令，凭令可以在一天内在皇城内通行无阻。$} {
+        xtt.SendAtOnce {e;n;e;n;n;n;n;e};
+        #delay 10 {xtt.Send {ask jiangjun about 通行令}};
+    };
+
+    #action {^你缴纳了二两黄金后，左金吾卫大将军递给你一面皇宫通行令，凭令可以在一天内在太极宫内通行无阻。$} {
+        xtt.SendAtOnce {w;s;e;e;nu;n};
+        #delay tang.upgrade {xtt.Send {ask libu shangshu about 提升爵位}} 3;
+    };
+
+    #action {^你将被提升到爵位：〖唐朝爵位〗开国县男，爵位贡献将被清零。$} {
+        #class tang.upgrade kill;
+        xtt.SendAtOnce {s;sd;w;w;s;s;s;w;s;w};
+        #delay tang.upgrade {tang.job} 3;
+    };
+
+    #class tang.upgrade close;
+
+    ask jingzhao shaoyin about 积分;
+};
+
 /*
     五十多岁 算 花白
     五十多岁 算 中年
@@ -596,12 +646,8 @@ load-lib speedo;
 
     他的笑容蕴藏着一种很怪的魅力，让你觉得他似乎是你的兄弟那样令人放心，又像你的姐妹那般容易亲近。
     他现在粉面朱唇，身姿俊俏，举止风流无限。
-  □ 手持一根绣花针(Xiuhua zhen)
-  □ 戴着一串金项链(Golden necklace)
-  □ 戴着一个金戒指(Golden ring)
 
 你发现了正准备潜逃的罪犯，向附近巡街的金吾卫举报了，可以去衙门领奖了。
 你向附近的金吾卫错误地指证上铺的盗劫犯，惊动了真正的盗贼，使得他立即逃离长安城。
-你未领取任务，也不能领取奖励。
 由于你的突出贡献，特奖励爵位贡献二十四点，用于提升爵位。
 */
