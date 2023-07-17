@@ -18,7 +18,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 load-module {basic/title};
 load-lib event;
 
-event.Define {char/score} {无参} {$MODULE} {score 命令的数据解析成功时，发送本事件}
+event.Define {char/score}   {无参} {$MODULE} {score 命令的数据解析成功时，发送本事件}
+event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新}
 
 /*
 ╭───人物详情────────────────────────┬───────╮
@@ -153,7 +154,15 @@ event.Define {char/score} {无参} {$MODULE} {score 命令的数据解析成功�
     #action {^│%+：%*│%+：%*│%+：%*│$} {
         #var char[档案][%%1] {@str.Trim{%%2}};
         #var char[档案][%%3] {@str.Trim{%%4}};
-        #var char[档案][%%5] {@str.Trim{%%6}};
+        #if { "%%5" == "存款"} {
+            #regex {@str.Trim{%%6}} {{(\d+)金条 |}%d黄金} {
+                #var char[档案][存款][金条] {&2};
+                #var char[档案][存款][黄金] {&3};
+            };
+        };
+        #else {
+            #var char[档案][%%5] {@str.Trim{%%6}};
+        };
     };
 
     #nop 白驼山    你是白驼山第二代弟子，师承欧阳锋。;
@@ -193,10 +202,38 @@ event.Define {char/score} {无参} {$MODULE} {score 命令的数据解析成功�
 
     #action {^╰────────────┴────────────┴────%S────╯{|ID=char.score}$} {
         #class char-score-parser kill;
-        event.Emit {char/score};
+        event.DelayEmit {char/score};
+        event.DelayEmit {char/saving};
     };
 
     #class char-score-parser close;
+};
+
+#nop 取钱提示;
+#action {^%+1..4u记完帐，告诉你：「您在敝商号现还有%*。」$} {
+    score.update-balance {%2};
+};
+
+#nop 存钱提示;
+#action {^%+1..4u记完帐，点了点头：“您在敝商号现有%*。”$} {
+    score.update-balance {%2};
+};
+
+#nop 存款上限;
+#action {^%+1..4u翻了翻帐簿，告诉你：“您在敝商号共存有%*，以阁下的信用，在敝商号的存款上限是：%*锭黄金%*。”$} {
+    score.update-balance {%2};
+    #var char[档案][存款][上限] {@math.ParseCN{%3}};
+};
+
+#alias {score.update-balance} {
+    #local balance {%1};
+
+    #nop 四万二千七百六十三锭黄金十八两白银二十二枚铜板;
+    #regex {$balance} {^{.*锭黄金|}%*$} {
+        #local balance {@math.ParseCN{&1}};
+        #var char[档案][存款][黄金] {$balance};
+        event.DelayEmit {char/saving};
+    };
 };
 
 event.HandleOnce {user-online} {score/init} {basic/char} {
