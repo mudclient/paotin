@@ -6,7 +6,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#var pp-server[META] {
+#var bot_pp-server[META] {
     {NAME}      {PP服务器}
     {DESC}      {PP 大米专用，为其他人提供 PP 服务}
     {AUTHOR}    {担子炮}
@@ -28,7 +28,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 load-lib storage;
 
-#function {pp-server.Init} {
+#func {bot_pp-server.Init} {
     storage.Load {pp-server} {pp-vip-list;pp-svip-list;pp-black-list};
 
     #return {true};
