@@ -1,4 +1,14 @@
-cat $1 \
+#!/bin/sh
+
+DOC_FILE=$1
+
+if [ "x$DOC_FILE" = "x" ]; then
+    DOC_FILE=HOW-TO-PLAY
+fi
+
+DOC_FILE=${DOC_FILE%%.md}.md
+
+cat $DOC_FILE \
 | sed '/^```/,/^```/s/^/[32m/'            \
 | sed '/^\[32m```$/d'                     \
 | sed 's/^\(##* .*\)$/[1;36m\1[0m/'     \

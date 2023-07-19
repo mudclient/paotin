@@ -1,0 +1,6 @@
+#read framework/settings.tin;
+#config {command echo} {on};
+#echo {<131>请注意：这不是 PaoTin++！这只是担子炮魔改版的 TinTin++。<099>};
+#echo {<129>退出请输入 <134>#end<129> 帮助请输入 <134>#help<129> 小乖乖中文手册最新版: <099>https://github.com/zixijian/tt/blob/master/Wiki.md};
+#echo {<129>连接北大侠客行请输入 <134>#session mud mud.pkuxkx.net 8080<099>};
+#echo {<129>连接清华西游记请输入 <134>#session mud xyj.thu.cn 8666<099>};

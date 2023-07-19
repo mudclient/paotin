@@ -22,12 +22,10 @@ function create-ui() {
     # 创建一个标准会话
     $TMUXCMD new-session -d -s $SESSION
     $TMUXCMD new-window     -t $SESSION
-    $TMUXCMD select-window  -t $SESSION:0
-    $TMUXCMD split-window   -t $SESSION -vb
-    $TMUXCMD send-keys      -t $SESSION 'clear; echo "You could input \"mtail id\" to watch your game log."; mtail'
+    $TMUXCMD send-keys      -t $SESSION "sleep 1; clear; doc docs/tmux.md"
     $TMUXCMD send-keys      -t $SESSION Enter
-    $TMUXCMD last-pane
-    $TMUXCMD send-keys      -t $SESSION "sleep 0.1; tmux resize-pane -y $HEIGHT; clear; doc HOW-TO-PLAY.md"
+    $TMUXCMD select-window  -t $SESSION:0
+    $TMUXCMD send-keys      -t $SESSION "sleep 0.5; clear; doc HOW-TO-PLAY.md"
     $TMUXCMD send-keys      -t $SESSION Enter
 
     echo UI 已创建。

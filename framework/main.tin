@@ -15,20 +15,28 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #kill all;
 
 #event {PROGRAM START} {
-    #if { "$user[id]" != "{[A-Za-z0-9]+}" } {
-        #echo {<119>请参考使用文档指定用户正确的 user id。<299>};
-        #return;
+    #if { "$user[manual]" == "true" } {
+        #var user[id]       {};
+        #var user[name]     {};
+        #var user[passwd]   {};
+        #screen set title {};
     };
+    #else {
+        #if { "$user[id]" != "{[A-Za-z0-9]+}" } {
+            #echo {<119>请参考使用文档指定用户正确的 user id。<299>};
+            #return;
+        };
 
-    #local path {$user[id]};
-    #if { "$session[log_path]" != "" } {
-        #local path {$session[log_path]};
-    };
+        #local path {$user[id]};
+        #if { "$session[log_path]" != "" } {
+            #local path {$session[log_path]};
+        };
 
-    #if { !@InitLog{$path} } {
-        #echo {<119>创建日志目录 $gLog[PATH]/$path 时遇到错误。<299>};
-        #echo {<139>请检查你的安装环境，或者参考使用手册重新安装本软件。<299>};
-        #return;
+        #if { !@InitLog{$path} } {
+            #echo {<119>创建日志目录 $gLog[PATH]/$path 时遇到错误。<299>};
+            #echo {<139>请检查你的安装环境，或者参考使用手册重新安装本软件。<299>};
+            #return;
+        };
     };
 
     load-module basic/login;
@@ -54,7 +62,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         load-module lib/event;
         event.Define {user-online} {无参} {framework} {已经登录到服务器，所有命令都可以正常使用了。};
         load-module lib/ui;
-        #delay KeepAlive {#zap} {$session[reconnect]};
+        #if { "$user[manual]" != "true" } {
+            #delay KeepAlive {#zap} {$session[reconnect]};
+        };
     };
 };
 

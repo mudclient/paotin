@@ -21,6 +21,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #var gLog[PATH]     {log};
 
+#var gLog[initialled]   {false};
+
 #func {InitLog} {
     #local path {%1};
 
@@ -37,7 +39,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return 0;
     };
 
-    #var gLog[PATH] {$gLog[PATH]/$path};
+    #var gLog[PATH]         {$gLog[PATH]/$path};
+    #var gLog[initialled]   {true};
 
     load-lib option;
     option.Define {EchoCommand} {Bool} {是否回显发送的命令} {false};
@@ -66,6 +69,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local text {%2};
     #local echo {%3};
 
+    #if { "$gLog[initialled]" != "true" } {#return};
+
     #line logmode stamp #line log {$gLog[PATH]/$file} {$text<099>};
 
     #if { "$echo" == "ECHO" } {
@@ -74,6 +79,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 #event {RECEIVED INPUT} {
+    #if { "$gLog[initialled]" != "true" } {#return};
+
     #local needEcho {false};
 
     #if @option.IsDisable{EchoCommand} {
@@ -96,6 +103,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 #alias {log.Open} {
+    #if { "$gLog[initialled]" != "true" } {#return};
     #config {LOG} {RAW};
     #config {LOG LEVEL} {HIGH};
     #log timestamp {%Y-%m-%d %H:%M:%S };
