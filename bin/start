@@ -15,6 +15,17 @@ if [ "x$START_FILE" = "x" ]; then
     exit
 fi
 
+if [ "x$START_FILE" = "xtintin" ]; then
+    tt++ -G -r init.tin
+    clear; doc
+    exit
+fi
+
+NEWBIE=false
+if [ "x$START_FILE" = "xpkuxkx" -o "x$START_FILE" = "xthuxyj" ]; then
+    NEWBIE=true
+fi
+
 if [ ! -z $(which tt-beta 2>/dev/null) ]; then
     TT=tt-beta
 elif [ ! -z $(which tt++ 2>/dev/null) ]; then
@@ -65,3 +76,7 @@ while [ "$CODE" -ne "0" ]; do
 done
 
 log "TinTin++ 正常退出，exit code = $CODE"
+
+if [ "$NEWBIE" = "true" ]; then
+    clear; doc
+fi

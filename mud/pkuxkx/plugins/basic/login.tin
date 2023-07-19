@@ -50,12 +50,38 @@
 
         #config {charset} {UTF-8};
 
-        xtt.Answer {$login[user][id]};
+        #if { "$login[user][id]" != "" } {
+            xtt.Answer {$login[user][id]};
+        };
+        #else {
+            #line oneshot #macro {\n} {
+                #cursor get {login[user][id]};
+                #cursor clear;
+                #if { "$login[user][id]" == "#%*" } {
+                    #var login[user][id] {};
+                };
+                #if { "$login[user][id]" != "" } {
+                    xtt.Answer {$login[user][id]};
+                };
+            };
+        };
     };
 
     #line oneshot #action {^此ID档案已存在，请输入密码：$} {
-        xtt.Answer {$login[user][passwd]};
-        #delay {login.check} {look} 1;
+        #if { "$login[user][passwd]" != "" } {
+            xtt.Answer {$login[user][passwd]};
+            #delay {login.check} {look} 1;
+        };
+        #else {
+            #cursor flag echo on;
+            #line oneshot #macro {\n} {
+                #cursor get {login[user][passwd]};
+                #cursor clear;
+                #if { "$login[user][passwd]" != "" } {
+                    xtt.Answer {$login[user][passwd]};
+                };
+            };
+        };
     };
 
     #line oneshot #action {^您要将另一个连线中的相同人物赶出去，取而代之吗？(y/n)$} {
@@ -94,6 +120,12 @@
         #local type {%%1};
 
         #showme 登录成功。;
+
+        #if { @isTrue{$login[user][manual]} } {
+            login.write-id-file;
+            login.init-game;
+        };
+
         #local handler $login[autoexec];
         #class login.auto-login kill;
         #undelay login.auto-login.success;
@@ -108,4 +140,57 @@
     };
 
     #class login.auto-login close;
+};
+
+#alias {login.init-game} {
+    #if { "$login[user][id]" == "" || "$user[id]" != "" } {
+        #return;
+    };
+
+    #var user[id]           {$login[user][id]};
+    #var user[passwd]       {$login[user][passwd]};
+    #gts #var user[id]      {$login[user][id]};
+    #gts #var user[passwd]  {$login[user][passwd]};
+
+    #local path {$user[id]};
+    #if { "$session[log_path]" != "" } {
+        #local path {$session[log_path]};
+    };
+
+    #if { !@InitLog{$path} } {
+        #echo {<119>创建日志目录 $gLog[PATH]/$path 时遇到错误。<299>};
+        #echo {<139>请检查你的安装环境，或者参考使用手册重新安装本软件。<299>};
+        #return;
+    };
+
+    log.Open;
+    #screen set title GAME-$user[id];
+
+    NOTE 启动配置文件已生成，下次你可以直接 start $login[user][id] 进入游戏。;
+};
+
+#alias {login.write-id-file} {
+    #if { "$login[user][id]" == "" || "$user[id]" != "" } {
+        #return;
+    };
+
+    #local id-file {ids/$login[user][id]};
+
+    #local output {};
+    #script output {test -d var/ids && echo true || echo false};
+    #if { "$output[1]" == "true" } {
+        #local id-file {var/$id-file};
+    };
+
+    #if { @existsFile{$id-file} } {
+        #return;
+    };
+
+    #script output {cp ids/pkuxkx $id-file};
+    #script output {sed -i.bak 's/^#var user\[id\]       {.*};$/#var user[id]       {$login[user][id]};/' $id-file};
+    #script output {sed -i.bak 's/^#var user\[name\]     {.*};$/#var user[name]     {};/' $id-file};
+    #script output {sed -i.bak 's/^#var user\[passwd\]   {.*};$/#var user[passwd]   {$login[user][passwd]};/' $id-file};
+    #script output {sed -i.bak '/^#nop 上面三处修改完毕之后，请删除下面这行文字：;$/d' $id-file};
+    #script output {sed -i.bak '/^#var user\[manual\]   {true};$/d' $id-file};
+    #script output {rm ${id-file}.bak};
 };

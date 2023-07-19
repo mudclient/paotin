@@ -11,18 +11,24 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ===========
 */
 
-#nop 载入 PaoTin++ 环境;
+#nop 载入担子炮的 TinTin 脚本框架;
 #read {framework/main.tin};
 
-#nop 游戏入口，服务器和端口需要分别设置。;
-#var session[host]  mud.pkuxkx.net;
-#var session[port]  8081;
+mudlib.Set thuxyj;
+
+#nop 你要连哪个接入;
+#var session[name]  thuxyj;
+#var session[host]  xyj.thu.cn;
+#var session[port]  6666;
+#var session[UTF8]  false;
 #nop 你的账号英文 ID;
-#var user[id]       foo;
+#var user[id]       {花括号里写你的游戏账号，例如 thuxyj};
 #nop 你的大名;
-#var user[name]     小虾米;
+#var user[name]     {花括号里写你的游戏中文名，例如 清华西游记};
 #nop 你的账号密码;
-#var user[passwd]   bar;
+#var user[passwd]   {花括号里写你的游戏密码，例如 123456};
+#nop 上面三处修改完毕之后，请删除下面这行文字：;
+#var user[manual]   {true};
 
 #nop XXX: 所有 ids/DEFAULT 里的内容都可以在这里定制;
 #nop 这里为了简单起见没有全部列出，如有更多需求请参考 ids/DEFAULT 定制;
