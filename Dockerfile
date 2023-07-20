@@ -44,6 +44,7 @@ RUN apk add --no-cache tzdata \
 
 COPY profile.sh         /paotin/.bash_profile
 COPY tmux.conf          /paotin/.tmux.conf
+COPY init.tin           /paotin/init.tin
 
 COPY HOW-TO-PLAY.md     /paotin/
 COPY bin                /paotin/bin/
@@ -55,7 +56,9 @@ COPY mud                /paotin/mud/
 
 COPY ids/EXAMPLE        /paotin/ids/
 COPY ids/DEFAULT        /paotin/ids/
-COPY ids/LOCAL          /paotin/ids/
+COPY ids/pkuxkx         /paotin/ids/
+COPY ids/thuxyj         /paotin/ids/
+COPY ids/paotin         /paotin/ids/
 
 COPY init.vim           /paotin/.config/nvim/
 
