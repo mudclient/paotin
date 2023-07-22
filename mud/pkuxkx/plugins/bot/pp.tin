@@ -1,0 +1,169 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var bot_pp[META] {
+    {NAME}      {PP机器}
+    {DESC}      {传音搜魂，PP 查人}
+    {AUTHOR}    {担子炮}
+};
+
+VAR {PP 结果，NPC 位置}         gPPResponse   {};
+
+load-lib event;
+load-lib option;
+
+option.Define {PPBotListPrivate} {String} {私有PP大米列表}          {};
+option.Define {PPBotListPublic}  {String} {可信的公共PP大米列表}    {%*};
+
+event.Define {pp/Response}  {无参} {$MODULE} {已经获取到 PP 结果，并更新到 gPPResponse 全局变量。};
+
+#func {bot_pp.Init} {
+    #return true;
+};
+
+///=== {
+// ## pp.Find <角色 ID>
+//    利用公共 PP 服务查询某个 ID。
+// };
+#alias {pp.Find} {
+    #local id       {%0};
+
+    chat.TuneOn helpme;
+    helpme;
+    helpme find $id;
+};
+
+///=== {
+// ## pp.FindQuietly <角色 ID>
+//    利用私有 PP 服务查询某个 ID。
+// };
+#alias {pp.FindQuietly} {
+    #local id   {%0};
+    #local bot  {};
+
+    #local ppList {@option.Get{PPBotListPrivate}};
+    #foreach {$ppList} {bot} {
+        tell $bot find $id;
+    };
+};
+
+///=== {
+// ## pp.FindByMyself <角色 ID>
+//    利用自己的 PP 特技查询某个 ID。
+// };
+#alias {pp.FindByMyself} {
+    #local id {%0};
+
+    #class pp.FindByMyself open;
+
+    #local ID {|ID=bot/pp};
+
+    #action {^不要频繁的查询，谢谢！{$ID}$} {
+        #class pp.FindByMyself kill;
+        #delay pp.FindByMyself.retry {pp.FindByMyself %0} 1;
+    };
+
+    #action {^你默运玄功，将功力聚集于耳目，顿时觉得灵台一片空明。{$ID}$} {
+        #class pp.FindByMyself kill;
+        pp.FindByMyself.parse;
+        #nop;
+    };
+
+    #nop PP 对象不存在;
+    #action {^现在没这个人。{$ID}$} {
+        #class pp.FindByMyself kill;
+        #showme {$char[档案][大名]($user[id])告诉你：据我所查，【%0】已不在人世了};
+    };
+
+    #action {^你的精力不够，无法感应别人的位置。{$ID}$} {
+        #class pp.FindByMyself kill;
+        errLog 精力不足，无法查询。;
+    };
+
+    #alias {pp.FindByMyself.parse} {
+        #class pp.FindByMyself open;
+
+        #action {^你掐指一算，感觉%*(%*)现在好象在%*的%*一带活动。$} {
+            #class pp.FindByMyself kill;
+            #local name {%%%1};
+            #local qid   {%%%2};
+            #local area {%%%3};
+            #local room {%%%4};
+            #format qid {%l} {$qid};
+
+            #showme {$char[档案][大名]($user[id])告诉你：【$name($qid)】目前在【$area的$room】,快去摁死它吧!};
+        };
+
+        #action {^你费了半天的力气，就是感应不出%*的位置。$} {
+            #class pp.FindByMyself kill;
+        };
+
+        #action {^你费了半天的力气，完全无法感应出%*的位置。$} {
+            #class pp.FindByMyself kill;
+        };
+
+        #action {^你费了半天的力气，完全感应不出任何状况。$} {
+            #class pp.FindByMyself kill;
+        };
+
+        #action {^此人已经隐姓埋名，你费了半天的力气，就是感应不出其位置。$} {
+            #class pp.FindByMyself kill;
+        };
+
+        #class pp.FindByMyself close;
+    };
+
+    #class pp.FindByMyself close;
+
+    perceive $id;
+};
+
+#alias {pp} {
+    #local id {%0};
+
+    #if { &char.Special[传音搜魂][] > 0 } {
+        pp.FindByMyself $id;
+    };
+
+    #local ppList {@option.Get{PPBotListPrivate}};
+    #if { "$ppList" != "" } {
+        pp.FindQuietly $id;
+    };
+    #else {
+        pp.Find $id;
+    };
+};
+
+#action {^你告诉%S：find $user[id]$E} {#line gag};
+
+#action {^%S(%S)告诉你：【%S(%S)】目前在【%S的%S】,快去摁死它吧!$E} {
+    #local tell {%2};
+    #local name {%3};
+    #local id   {%4};
+    #local area {%5};
+    #local room {%6};
+
+    #local ppList {@option.Get{PPBotListPrivate};@option.Get{PPBotListPublic}};
+    #local pp {};
+    #foreach {$ppList} {pp} {
+        #if { "$tell" == "$pp" } {
+            #var gPPResponse[$id] {
+                {id}{$id}
+                {name}{$name}
+                {area}{$area}
+                {room}{$room}
+            };
+            event.DelayEmit pp/Response;
+            #return;
+        };
+    };
+
+    warnLog 不可信的 PP 应答，简单忽略。;
+};
