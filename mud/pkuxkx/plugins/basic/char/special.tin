@@ -1,0 +1,99 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var basic_char_special[META] {
+    {NAME}      {特技数据管理}
+    {DESC}      {全生命周期维护 special/sp 命令结果。}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+VAR {角色特技列表，表格} {char.Special} {};
+
+#func {basic_char_special.Init} {
+    #delay {char.special.Init} {sp} 1;
+
+    #return true;
+};
+
+#alias {char.Special} {
+    #local gag  {%1};
+    #local args {%2};
+
+    #if { "$args" != "" } {
+        xtt.Send {special $args};
+        #return;
+    };
+
+    #class char.Special open;
+
+    #action {^你现在会以下这些特技：{|ID=special/check}$} {
+        #class char.Special open;
+        #var char.Special {};
+        #action {^{\*| }%S(%S)  %S{|ID=special/check}$} {
+            #local enable   {%%%1};
+            #local name     {%%%2};
+            #local id       {%%%3};
+            #local level    {@str.Len{%%%4}};
+
+            #if { "$enable" == "*" } {
+                #local enable {true};
+            };
+            #else {
+                #local enable {false};
+            };
+
+            #var char.Special[$name] {
+                {id}{$id}
+                {name}{$name}
+                {enable}{$enable}
+                {level}{$level}
+            };
+        };
+        #action {^你共拥有特技积分%d点，最多可以同时激发%d个特技。{|ID=special/check}$} {
+            #delay 0 {okLog 角色特技数据已记录。};
+            #if { "%1" == "gag" } {
+                #line gag;
+            };
+            #class char.Special kill;
+        };
+        #class char.Special close;
+    };
+
+    #if { "$gag" == "gag" } {
+        #gag {^%*{|ID=char/special}$} 1;
+    };
+
+    #class char.Special close;
+
+    xtt.Send special;
+};
+
+#alias {special}    {char.Special gag {%0}};
+#alias {sp}         {char.Special nogag {%0}};
+
+#action {^你把%*加入了你的激发特技列表。$E} {
+    #local name {%1};
+    #if { "$char.Special[$name]" == "" } {
+        char.Special gag;
+    };
+    #else {
+        #var char.Special[$name][enable] {true};
+    };
+};
+
+#action {^你把%*从你的激发特技列表中移除。$E} {
+    #if { "$char.Special[%1]" == "" } {
+        char.Special gag;
+    };
+    #else {
+        #var char.Special[$name][enable] {false};
+    };
+};
