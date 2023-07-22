@@ -26,6 +26,7 @@ VAR {正在等待的回调列表}    busy.wait-list {};
 ///=== {
 // ## busy.Wait <回调代码>
 //    检查角色当前是否处于 busy 状态，当不在 busy 状态，或 busy 状态解除时，执行回调代码。
+//    否则直接执行回调代码。
 // };
 #alias {busy.Wait} {
     #local code {%1};
@@ -41,6 +42,33 @@ VAR {正在等待的回调列表}    busy.wait-list {};
             #delay busy.checkbusy {checkbusy} 0;
         };
     };
+};
+
+///=== {
+// ## busy.Halt <回调代码>
+//    检查角色当前是否处于 busy 状态，如果在 busy 状态，则用 halt 解除 busy，解除成功后，执行回调代码。
+//    否则直接执行回调代码。
+// };
+#alias {busy.Halt} {
+    #local code {%1};
+
+    #if { "$code" == "" } {
+        #local code {#untick busy.Halt};
+    };
+    #else {
+        #local code {
+            #untick busy.Halt;
+            $code;
+        };
+    };
+
+    busy.Wait {$code};
+
+    #if { @isTrue{$char[HP][忙]} } {
+        halt;
+    };
+
+    #tick busy.Halt {halt; checkbusy} 1;
 };
 
 #alias {busy.on-idle} {
