@@ -1,0 +1,107 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#nop 本文件是 xtintin 的一部分，实现了一些 buffer 工具函数。;
+
+///=== {
+///// buffer 操作函数
+/////
+// ## buffer.RawLine
+//    打印当前触发行的原始文本，而不论当前触发器是否为颜色触发。
+// };
+#alias {buffer.RawLine} {
+    #line quiet #info output save;
+    #echo {%s} {$info[OUTPUT][LINE]};
+};
+
+///=== {
+// ## buffer.PlainLine
+//    打印当前触发行的无色文本，而不论当前触发器是否为颜色触发。
+// };
+#alias {buffer.PlainLine} {
+    #line quiet #info output save;
+    #echo {%s} {@str.Plain{$info[OUTPUT][LINE]}};
+};
+
+///=== {
+// #@ buffer.RawLine
+//    获得当前触发行的原始文本，而不论当前触发器是否为颜色触发。
+// };
+#func {buffer.RawLine} {
+    #line quiet #info output save;
+    #return {$info[OUTPUT][LINE]};
+};
+
+///=== {
+// #@ buffer.PlainLine
+//    获得当前触发行的无色文本，而不论当前触发器是否为颜色触发。
+// };
+#func {buffer.PlainLine} {
+    #line quiet #info output save;
+    #local line {$info[OUTPUT][LINE]};
+    #return {@str.Plain{$line}};
+};
+
+///=== {
+// #@ buffer.GetRawLine <行号> [<截止行号>]
+//    获得缓冲区中的文本，以原始格式返回。行号从 -1 开始往上数，最后一行为 -1。
+//    如果只提供一个行号，则返回字符串，否则返回列表。
+// };
+#func {buffer.GetRawLine} {
+    #local lineNo   {%1};
+    #local endNo    {%2};
+
+    #if { "$endNo" != "" } {
+        #if { $endNo < $lineNo } {
+            #local tmp $endNo;
+            #local endNo $lineNo;
+            #local lineNo $tmp;
+        };
+    };
+
+    #local line {};
+    #line quiet #buffer {get} {line} {$lineNo} {$endNo};
+
+    #if { "$endNo" == "" } {
+        #return {$line[1]};
+    };
+    #else {
+        #return {$line};
+    };
+};
+
+///=== {
+// #@ buffer.GetPlainLine <行号> [<截止行号>]
+//    获得缓冲区中的文本，以无色格式返回。行号从 -1 开始往上数，最后一行为 -1。
+//    如果只提供一个行号，则返回字符串，否则返回列表。
+// };
+#func {buffer.GetPlainLine} {
+    #local lineNo   {%1};
+    #local endNo    {%2};
+
+    #if { "$endNo" != "" } {
+        #if { $endNo < $lineNo } {
+            #local tmp $endNo;
+            #local endNo $lineNo;
+            #local lineNo $tmp;
+        };
+    };
+
+    #local line {};
+    #line quiet #buffer {get} {line} {$lineNo} {$endNo};
+
+    #if { "$endNo" == "" } {
+        #return {@str.Plain{$line[1]}};
+    };
+    #else {
+        #foreach {*line[]} {lineNo} {
+            #local line[$lineNo] {@str.Plain{$line[$lineNo]}};
+        };
+        #return {$line};
+    };
+};
