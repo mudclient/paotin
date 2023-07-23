@@ -12,10 +12,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {AUTHOR}    {担子炮}
 };
 
+VAR {全局选项字典}  gOptions    {};
+
+load-lib storage;
+
 #func {lib_option.Init} {
-    #class lib/option open;
-    #var gOptions {};
-    #class lib/option close;
+    #var gOptions {@storage.GetGlobal{global-options}};
     #return {true};
 };
 
@@ -42,18 +44,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { "$gOptions[$option]" != "" } {
-        errLog 选项「$option」已存在，请检查代码。;
+        #if {  "$gOptions[$option][name]" != "$option"
+            || "$gOptions[$option][type]" != "$type"
+            || "$gOptions[$option][meaning]" != "$meaning"
+        } {
+            errLog 选项「$option」已存在，请检查代码。;
+        };
         #return;
     };
 
-    #local types {Bool};
-    #if { "$type" != "{$types}" } {
-        errLog 不能识别的选项类型: 「$type」，目前仅支持选项类型：{$types};
-        #return;
-    };
-
-    #if { "$type" == "Bool" && "$default" != "{true|false}" } {
-        errLog Bool 型的选项值只能是 true 或者 false。;
+    #if { ! @option.isValidValue{$type;{$default}} } {
         #return;
     };
 
@@ -63,6 +63,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         {meaning}   {$meaning}
         {value}     {$default}
     };
+
+    storage.SetGlobal {global-options} {$gOptions};
 };
 
 ///=== {
@@ -71,16 +73,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // };
 #alias {option.List} {
     #echo {};
-    #echo {<128>%+20s %+10s %+30s %+20s} {选项名称} {选项类型} {选项含义} {选项当前值};
-    #draw Yellow scroll line 1 1 1 83;
+    #echo {   <128>%-20s%-10s  %-30s %+20s} {选项名称} {选项类型} {选项含义} {选项当前值};
+    #draw Yellow scroll line 1 1 1 90;
 
     #local option {};
     #foreach {*gOptions[]} {option} {
-        #echo {%+20s %+10s %+30s %+20s}
+        #echo {   %-20s %-10s %-30s %+20s}
             {$gOptions[$option][name]}
             {$gOptions[$option][type]}
             {$gOptions[$option][meaning]}
-            {$gOptions[$option][value]};
+            {{$gOptions[$option][value]}};
     };
     #echo {};
 };
@@ -91,6 +93,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // };
 #func {option.Get} {
     #local {option} {%1};
+
+    #if { "$option" == "" } {
+        xtt.Usage option.Get;
+        #return {};
+    };
 
     #if { "$gOptions[$option]" == "" } {
         errLog 不存在选项「$option」，请先定义后再使用。;
@@ -108,15 +115,25 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local {option} {%1};
     #local {value}  {%2};
 
-    #local old {$gOptions[$option][value]};
+    #if { "$option" == "" } {
+        xtt.Usage option.Set;
+        #return {};
+    };
+
+    #local old {$gOptions[$option]};
     #if { "$old" == "" } {
         errLog 不存在选项「$option」，请先定义后再使用。;
         #return {};
     };
 
-    #var {gOptions[$option][value]} {$value};
+    #if { ! @option.isValidValue{$gOptions[$option][type];{$value}} } {
+        #return {};
+    };
 
-    #return {$old};
+    #var {gOptions[$option][value]} {$value};
+    storage.SetGlobal {global-options} {$gOptions};
+
+    #return {$old[value]};
 };
 
 ///=== {
@@ -136,6 +153,22 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // };
 #func {option.IsEnable} {
     #local option {%1};
+
+    #if { "$option" == "" } {
+        xtt.Usage option.IsEnable;
+        #return {};
+    };
+
+    #if { "$gOptions[$option]" == "" } {
+        errLog 不存在选项「$option」，请先定义后再使用。;
+        #return {};
+    };
+
+    #if { "$gOptions[$option][type]" != "Bool" } {
+        errLog 只有 Bool 型变量才支持这个 API。;
+        #return {};
+    };
+
     #local value {@option.Get{$option}};
     #return @isTrue{$value};
 };
@@ -146,6 +179,22 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // };
 #func {option.IsDisable} {
     #local option {%1};
+
+    #if { "$option" == "" } {
+        xtt.Usage option.IsDisable;
+        #return {};
+    };
+
+    #if { "$gOptions[$option]" == "" } {
+        errLog 不存在选项「$option」，请先定义后再使用。;
+        #return {};
+    };
+
+    #if { "$gOptions[$option][type]" != "Bool" } {
+        errLog 只有 Bool 型变量才支持这个 API。;
+        #return {};
+    };
+
     #local value {@option.Get{$option}};
     #return @isFalse{$value};
 };
@@ -158,14 +207,29 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {option.Toggle} {
     #local {option} {%1};
 
+    #if { "$option" == "" } {
+        xtt.Usage option.Toggle;
+        #return {};
+    };
+
+    #if { "$gOptions[$option]" == "" } {
+        errLog 不存在选项「$option」，请先定义后再使用。;
+        #return {};
+    };
+
+    #if { "$gOptions[$option][type]" != "Bool" } {
+        errLog 只有 Bool 型变量才支持这个 API。;
+        #return {};
+    };
+
     #local value {@option.Get{$option}};
     #if { "$value" == "true" } {
         option.Disable $option;
-        infoLog <169>选项「<139>$option<169>」 <119>已禁用。<299>;
+        infoLog <169>选项「<139>$gOptions[$option][meaning]($option)<169>」 <119>已禁用。<299>;
     };
     #elseif { "$value" == "false" } {
         option.Enable $option;
-        infoLog <169>选项「<139>$option<169>」 <129>已启用。<299>;
+        infoLog <169>选项「<139>$gOptions[$option][meaning]($option)<169>」 <129>已启用。<299>;
     };
 
     #return {$value};
@@ -199,4 +263,23 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local {option} {%1};
 
     option.Set $option {false};
+};
+
+#func {@option.isValidValue} {
+    #local type     {%2};
+    #local value    {%3};
+
+    #local types {Bool|String|Number};
+    #if { "$type" != "{$types}" } {
+        errLog 不能识别的选项类型: 「$type」，目前仅支持选项类型：{$types};
+        #return;
+    };
+
+    #if { "$type" == "Bool" && "$value" != "{true|false}" } {
+        errLog Bool 型的选项值只能是 true 或者 false。;
+        #return 0;
+    };
+    #else {
+        #return 1;
+    };
 };
