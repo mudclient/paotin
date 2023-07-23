@@ -18,6 +18,76 @@ event.Define {GMCP.Combat}  {无参} {$MODULE} {接收到 GMCP 战斗信息，�
 event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
 event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，已更新 gGMCP[Message]};
 
+#var {gmcp.key-e2c} {
+    {Move} {
+        {result}                {成功}
+        {dir}                   {出口信息}
+        {short}                 {房间名}
+    }
+
+    {Status} {
+        {max_qi}                {最大气血}
+        {qi}                    {气血}
+        {jingli}                {精力}
+        {food}                  {食物}
+        {eff_jing}              {有效精神}
+        {jing}                  {精神}
+        {title}                 {头衔}
+        {family/family_name}    {门派}
+        {combat_exp}            {经验}
+        {vigour/qi}             {真气}
+        {max_jing}              {最大精神}
+        {level}                 {级别}
+        {vigour/yuan}           {真元}
+        {max_jingli}            {最大精力}
+        {neili}                 {内力}
+        {water}                 {饮水}
+        {eff_qi}                {有效气血}
+        {max_neili}             {最大内力}
+        {is_busy}               {忙}
+        {per}                   {容貌}
+        {int}                   {悟性}
+        {fighter_spirit}        {战意}
+        {is_fighting}           {战斗中}
+        {dex}                   {身法}
+        {con}                   {根骨}
+        {potential}             {潜能}
+        {str}                   {膂力}
+    }
+
+    {Combat} {
+        {enemy_in}              {敌人加入}
+        {qi_damage}             {气血伤害}
+        {jing_wound}            {精血受损}
+        {qi_wound}              {气血受损}
+        {eff_jing_pct}          {有效精血百分比}
+        {enemy_out}             {敌人退出}
+        {eff_qi_pct}            {有效气血百分比}
+        {jing_pct}              {精血百分比}
+        {jing_damage}           {精血伤害}
+        {qi_pct}                {气血比率}
+    }
+
+    {Buff} {
+        {type}                  {效果类型}
+        {is_end}                {效果结束}
+        {last_inc}              {效果延时}
+        {name}                  {效果名称}
+        {effects}               {具体效果}
+        {last_time}             {持续时间}
+        {terminated}            {将中止的效果}
+    }
+
+    {Message} {
+        {channel}               {频道}
+        {type}                  {信息类型}
+        {seq}                   {图片编号}
+        {no}                    {QQ号码}
+        {name}                  {姓名}
+        {url}                   {下载地址}
+    }
+};
+
 #alias {gmcp.pkuxkx.Enable} {
     #event {IAC SB GMCP GMCP.Status IAC SE}     {gmcp.pkuxkx.OnStatus {%%1} {%%2}};
     #event {IAC SB GMCP GMCP.Move IAC SE}       {gmcp.pkuxkx.OnMove {%%1} {%%2}};
@@ -36,6 +106,7 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
     mudLog GMCP.Status: {%2};
 
     #line sub escapes #var gGMCP[Status] {%1};
+    gmcp.translate-key Status;
 
     #if { @option.IsEnable{GMCPDebug} } {
         #var gGMCP[Status];
@@ -49,6 +120,9 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
 
     #line sub escapes #var gGMCP[Move] {%1};
     #var gGMCP[Move] {$gGMCP[Move][1]};
+    gmcp.translate-key Move;
+
+    #list gGMCP[Move][出口信息] sort;
 
     #if { @option.IsEnable{GMCPDebug} } {
         #var gGMCP[Move];
@@ -61,6 +135,7 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
     mudLog GMCP.Combat: {%2};
 
     #line sub escapes #var gGMCP[Combat] {%1};
+    gmcp.translate-key Combat;
 
     #if { @option.IsEnable{GMCPDebug} } {
         #var gGMCP[Combat];
@@ -73,6 +148,7 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
     mudLog GMCP.Buff: {%2};
 
     #line sub escapes #var gGMCP[Buff] {%1};
+    gmcp.translate-key Buff;
 
     #if { @option.IsEnable{GMCPDebug} } {
         #var gGMCP[Buff];
@@ -85,10 +161,29 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
     mudLog GMCP.Message: {%2};
 
     #line sub escapes #var gGMCP[Message] {%1};
+    gmcp.translate-key Message;
 
     #if { @option.IsEnable{GMCPDebug} } {
         #var gGMCP[Message];
     };
 
     event.Emit GMCP.Message {};
+};
+
+#alias {gmcp.translate-key} {
+    #local class {%1};
+
+    #if { "$class" != "{Move|Status|Combat|Buff|Message}" } {
+        #return;
+    };
+
+    #local key {};
+    #foreach {*gGMCP[$class][]} {key} {
+        #local new {$gmcp.key-e2c[$class][$key]};
+        #if { "$new" == "" } {
+            #continue;
+        };
+        #var gGMCP[$class][$new] {$gGMCP[$class][$key]};
+        #unvar gGMCP[$class][$key];
+    };
 };
