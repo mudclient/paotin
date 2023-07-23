@@ -589,6 +589,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+#alias {test/{.*}/{[^/]*}/case/%d} {xtt.Test %1 %2} {9.000};
+
 ///=== {
 ///// xtintin 是一个 TinTin++ 功能扩展集合，主要包含一些 MUD 无关的函数和别名，用于对 TinTin++ 的语法进行增强。
 ///// 类似于其它语言的标准库。
