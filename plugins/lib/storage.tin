@@ -30,9 +30,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {AUTHOR}    {担子炮}
 };
 
+VAR {存储路径} storage-path {data};
+
 #func {lib_storage.Init} {
     #local _ {@mkdir{data}};
+
+    #line quiet #scan dir {var/data/} files;
+    #if { &files[] > 0 } {
+        #var storage-path {var/data};
+    };
+
     storage.Load {storage} {storage-globals};
+
     #return {true};
 };
 
@@ -56,15 +65,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
     #class comm-store-tmp close;
 
-    #local files {};
-    #line quiet #scan dir {var/data/} files;
+    #class comm-store-tmp write {$storage-path/${file}.tin};
 
-    #if { &files[] > 0 } {
-        #class comm-store-tmp write {var/data/${file}.tin};
-    };
-    #else {
-        #class comm-store-tmp write {data/${file}.tin};
-    };
+    #class comm-store-tmp kill;
 };
 
 ///=== {
