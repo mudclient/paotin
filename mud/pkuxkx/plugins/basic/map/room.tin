@@ -1,0 +1,446 @@
+#nop 房间信息解析模块;
+
+load-module basic/title;
+
+VAR {当前房间ID}    gMapHereID  {0};
+VAR {当前房间信息}  gMapRoom    {};
+
+option.Define {ShowRoomView}    {Bool} {是否显示房间风景}       {false};
+option.Define {MapDebug}        {Bool} {房间信息解析调试开关}   {false};
+
+event.Define {map/GotRoomInfo}      {无参} {$MODULE} {已经获取到房间信息，并储存到 gMapRoom 全局变量。};
+event.Define {map/ArriveDock}       {无参} {$MODULE} {已经抵达码头};
+event.Define {map/ArriveCoachPark}  {无参} {$MODULE} {已经抵达马车行};
+
+event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
+
+#alias {map.Room.Watch} {
+    #local nation   {?:[ ]+\[(大宋|大元|大理|大夏)国\]|};
+    #local terrain  {?:[ ]+\[(都城|城市|城内|村镇|野外|门派|帮派|阴间|(\S+)势力范围)\]|};
+    #local save     {?:[ ]+\[(存盘点)\]|};
+    #local store    {?:[ ]+\[(玩家储物柜)\]|};
+    #local group    {?:[ ]+\[(\S+)\]|};
+    #local mark     {?:[ ]+((?:㊣|★|☆|\s)*)|};
+    #local undef    {?:[ ]+\[未定义\]|};
+
+    #class map.Room.Watch open;
+
+    #action {^%* -{$nation}{$terrain}{$save}{$store}{$group}{$mark}{$undef}%s{?:房间名颜色代码: ([0-9;]+)|}$} {
+        #local ret {@map.GMCP.Confirm{}};
+
+        #local keep {};
+        #if { &ret[gmcp][] > 0 } {
+            #local keep[direction] {here};
+        };
+        #elseif { "$ret[cmd]" == "look" } {
+            #if { "$ret[exit]" != "" } {
+                #local keep {
+                    {direction} {$ret[exit]}
+                };
+            };
+            #else {
+                #local keep {
+                    {area}      {$gMapRoom[area]}
+                    {node}      {$gMapRoom[node]}
+                    {nodeLinks} {$gMapRoom[nodeLinks]}
+                    {coach}     {$gMapRoom[coach]}
+                    {coachLinks}{$gMapRoom[coachLinks]}
+                    {direction} {here}
+                };
+            };
+        };
+
+        #local room {
+            {name}{%%1}
+            {nation}{%%2}
+            {terrain}{%%3}
+            {save}{@if{{"%%5" == "存盘点"};true;false}}
+            {store}{@if{{"%%6" == "玩家储物柜"};true;false}}
+            {group}{%%7}
+            {mark}{@str.Split{{%%8};{{ +}};{;}}}
+            {cmd}{$ret[cmd]}
+            {look}{$ret[exit]}
+            {gmcp}{$ret[gmcp]}
+            $keep
+        };
+
+        map.Room.getInfo {$room};
+    };
+
+    #class map.Room.Watch close;
+};
+
+#alias {map.StopWatchRoom} {
+    #class map.Room.Watch kill;
+};
+
+#alias {map.Room.getInfo} {
+    #local args {%1};
+
+    #var gMapRoom               {};
+    #var gMapRoom[id]           {};                 #nop 房间ID;
+    #var gMapRoom[name]         {$args[name]};      #nop 房间名称;
+    #var gMapRoom[colorName]    {};                 #nop 带颜色的房间名称;
+    #var gMapRoom[nation]       {$args[nation]};    #nop 房间国家，大宋/大理/大元/大夏;
+    #var gMapRoom[terrain]      {$args[terrain]};   #nop 房间地段，包含村落和城墙;
+    #var gMapRoom[save]         {$args[save]};      #nop 是否为存盘点;
+    #var gMapRoom[store]        {$args[store]};     #nop 是否为玩家储物柜;
+    #var gMapRoom[group]        {$args[group]};     #nop 帮派名称，非帮派驻地留空;
+    #var gMapRoom[village]      {};                 #nop 村落名称（仅村落有效）;
+    #var gMapRoom[mark]         {$args[mark]};      #nop 帮派名称，非帮派驻地留空;
+    #var gMapRoom[prev]         {$args[prev]};      #nop 上一个房间 ID;
+    #var gMapRoom[entry]        {$args[entry]};     #nop 房间入口，是用哪个方向指令进入本房间的;
+    #var gMapRoom[cmd]          {$args[cmd]};       #nop 本条房间信息是用何种命令获得;
+    #var gMapRoom[look]         {$args[look]};      #nop 如果是 look 命令，那么 look 的是哪个方向;
+    #var gMapRoom[gmcp]         {$args[gmcp]};      #nop GMCP.Move 信息;
+    #var gMapRoom[area]         {$args[area]};      #nop 房间所在区域;
+    #var gMapRoom[map]          {};                 #nop 房间小地图;
+    #var gMapRoom[maphere]      {};                 #nop 周围地形图;
+    #var gMapRoom[desc]         {};                 #nop 房间文字描述;
+    #var gMapRoom[descEnd]      {false};            #nop 房间文字描述已结束（目前以空行标识）;
+    #var gMapRoom[view]         {};                 #nop 房间的风景（非文字描述）;
+    #var gMapRoom[fog]          {false};            #nop 是否有雾;
+    #var gMapRoom[exits]        {};                 #nop 出口列表;
+    #var gMapRoom[exitHint]     {};                 #nop 出口所连接的房间;
+    #var gMapRoom[existShown]   {false};            #nop 出口信息已出现;
+    #var gMapRoom[lookable]     {};                 #nop 你可以看看(look)的东西;
+    #var gMapRoom[objs]         {};                 #nop 房间物品，不包含生物;
+    #var gMapRoom[items]        {};                 #nop 房间特殊物品;
+    #var gMapRoom[dynItems]     {};                 #nop 房间动态物品;
+    #var gMapRoom[npcs]         {};                 #nop 房间NPC， 不包含非生物和玩家;
+    #var gMapRoom[players]      {};                 #nop 房间玩家，不包含非生物和NPC;
+    #var gMapRoom[dock]         {};                 #nop 是否为渡口;
+    #var gMapRoom[funcs]        {};                 #nop 房间功能，领悟，睡觉，吃喝，买卖，等等;
+    #var gMapRoom[node]         {$args[node]};      #nop 节点名称，非节点留空;
+    #var gMapRoom[nodeLinks]    {$args[nodeLinks]}; #nop 通过本节点可以抵达的节点列表，非节点留空;
+    #var gMapRoom[coach]        {$args[coach]};     #nop 马车行名称，非马车行留空;
+    #var gMapRoom[coachLinks]   {$args[coachLinks]};#nop 通过本车行可以抵达的车行列表，非节点留空;
+    #var gMapRoom[direction]    {$args[direction]}; #nop 该房间所在的方位，如果是当前位置则为 here;
+
+    #local color {@buffer.RawLine{}};
+    #replace color {%S - %*$} {&1};
+    #replace color {\e[2;37;0m} {};
+    #var gMapRoom[colorName] {$color};
+
+    #if { @option.IsEnable{MapDebug} } {
+        #local optional {};
+        #if { "$gMapRoom[mark]" != "" }    {#cat optional { <175>标记<299> $gMapRoom[mark] }};
+        #if { @isTrue{$gMapRoom[save]} }   {#cat optional { <129><存盘点><299>}};
+        #if { @isTrue{$gMapRoom[store]} }  {#cat optional { <139><储物柜><299>}};
+        #if { "$gMapRoom[group]" != "" }   {#cat optional { <175>帮派驻地<299> $gMapRoom[group]}};
+
+        #echo {<175>房间名称<299> %s <175>国家<299> %s <175>地段<299> %s%s}
+            {$gMapRoom[name]} {$gMapRoom[nation]} {$gMapRoom[terrain]} $optional;
+
+        #line gag;
+    };
+
+    #class map.Room.getInfo open;
+
+    event.HandleOnce {GA} {map/room} {map} {map.Room.getInfo.done};
+
+    #action {{*UTF8}{^\s{4}((.*)(\p{Han}+).*\([A-Z][a-z A-Z']*\).*)}{|ID=map/Room/getInfo/objs}$} {
+        #local obj {@ParseTitle{%%2}};
+        #local name {$obj[name]};
+        #local type {房间物品};
+
+        #if { "$obj[title]" == "船老大" } {
+            #list gMapRoom[npcs] add {{$obj}};
+            #var gMapRoom[dock] {dock};
+            #local type {房间 NPC};
+        };
+        #else {
+            #list gMapRoom[objs] add {{$obj}};
+        };
+
+        #if { @option.IsEnable{MapDebug} } {
+            #if { @isFalse{$gMapRoom[existShown]} } {
+                #var gMapRoom[existShown] {true};
+                #echo {%s} {<134>房间出口<299> @slist.JoinAs{{@slist.FromList{$gMapRoom[gmcp][出口信息]}};{<179>%s<299>};{ }}};
+            };
+
+            #if { "$obj[emoji]" != "" } {
+                #local name {$name<299>{<139>$obj[emoji]<299>}};
+            };
+
+            #echo {<164>$type<299> %-18s<299> <169>%-16s<299> %s [%s] %s}
+                {$name} {$obj[id]} {{$obj[title]}} {$obj[nick]}
+                {@slist.Join{{$obj[status1];$obj[status2]}}};
+
+            #line gag;
+        };
+    } {9.9};
+
+    #action {^%s你可以看看(look):%*。$} {
+        #local items {@str.Split{{%%2};{{，|,}}}};
+        #var gMapRoom[items] {$items};
+
+        #class map.Room.getInfo.map kill;
+        #class map.Room.getInfo.desc kill;
+
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<171>特殊物品<299> {$items}};
+            #line gag;
+        };
+    };
+
+    #action {^%s你可以获取(get):%*。$} {
+        #local items {@str.Split{{%%2};{{，|,}}}};
+        #var gMapRoom[dynItems] {$items};
+
+        #class map.Room.getInfo.map kill;
+        #class map.Room.getInfo.desc kill;
+
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<171>动态物品<299> {$items}};
+            #line gag;
+        };
+    };
+
+    #action {^%s这里正是{举世闻名|声威赫赫|名震天下}的%*的产业，你可以进店(shop)逛逛。$} {
+        #var gMapRoom[group] {%%3};
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<171>帮派驻地<299> $gMapRoom[group]，有商店};
+            #line gag;
+        };
+    } {3};
+
+    #action {^%s这里正是%*的产业$} {
+        #var gMapRoom[group] {%%2};
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<171>帮派驻地<299> $gMapRoom[group]，无商店};
+            #line gag;
+        };
+    } {4};
+
+    #action {^%s这里建起了一大片宅子，气势恢宏，不知道主人是谁。$} {
+        #var gMapRoom[group] {UNKNOWN};
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<171>帮派驻地<299> $gMapRoom[group]};
+            #line gag;
+        };
+    } {4};
+
+    #action {^%s这里是%*通往外界的唯一道路。$} {
+        #var gMapRoom[terrain] {村落};
+        #var gMapRoom[village] {%%2};
+    };
+
+    #action {^%s这里是%*的一段城墙。$} {
+        #var gMapRoom[terrain] {城墙};
+    };
+
+    #action {^%*这里是一处%*，人迹罕至，也不知道你怎么会来到这里的。$} {
+        #var gMapRoom[terrain] {随机地图};
+    };
+
+    #action {^%s{这里(?:明显|所有|唯一)的(?:出口|方向)有|浓雾中你觉得似乎有出口通往} %*$} {
+        #local desc {%%2};
+        #if { "$desc" == "%*浓雾%*" } {
+            #var gMapRoom[fog] {true};
+            #var gMapRoom[exitStr] {};
+        };
+        #else {
+            #var gMapRoom[exitStr] {%%3};
+        };
+
+        #var gMapRoom[existShown] {true};
+
+        #class map.Room.getInfo.map kill;
+        #class map.Room.getInfo.desc kill;
+
+        #if { @option.IsEnable{MapDebug} } {#line gag};
+
+        #if { "$gMapRoom[exitStr]" == "%*。" } {
+            map.parseExit;
+            #return;
+        };
+
+        #class map.Room.getInfo.exit open;
+        #local exitCharsets {和|、|[a-z A-Z]};
+        #action {^{($exitCharsets)+}$} {
+            #var gMapRoom[exitStr] {$gMapRoom[exitStr]%%%1};
+            #if { @option.IsEnable{MapDebug} } {#line gag};
+        };
+
+        #action {^{($exitCharsets)*}。$} {
+            #class map.Room.getInfo.exit kill;
+            #var gMapRoom[exitStr] {$gMapRoom[exitStr]%%%1};
+            map.parseExit;
+        } {4};
+        #class map.Room.getInfo.exit close;
+    };
+
+    #action {^%s这里没有任何明显的出口。$} {
+        #class map.Room.getInfo.map kill;
+        #class map.Room.getInfo.desc kill;
+        #var gMapRoom[existShown] {true};
+        #var {gMapRoom[exits]} {};
+        #if { @option.IsEnable{MapDebug} } {
+            #line gag;
+            #echo {%s} {<134>房间出口<299> %%0};
+        };
+    };
+
+    #action {^%s「%*」: %*{|ID=map/Room/getInfo/weather}$} {
+        #var gMapRoom[season] {%%2};
+        #var gMapRoom[weather] {%%3};
+
+        #class map.Room.getInfo.map kill;
+        #class map.Room.getInfo.desc kill;
+
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<174>时令季节<299> %%2 <174>天气信息<299> %%3};
+            #line gag;
+        };
+    };
+
+    #action {{*UTF8}{^    (\p{Han}+)等(.*)人\(users\)也在此处。$}} {
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {<164>房间玩家<299> 仍有%s等 %d 人。} {%%2} {@math.ParseCN{%%3}};
+            #line gag;
+        };
+    };
+
+    #alias {map.parseExit} {
+        #local exitList {$gMapRoom[exitStr]};
+        #unvar gMapRoom[exitStr];
+
+        #replace exitList {、} {;};
+        #replace exitList { 和 } {;};
+        #replace exitList {。} {};
+        #replace exitList { } {};
+
+        #local exitList {@slist.Sort{$exitList}};
+        #var gMapRoom[exits] {$exitList};
+
+        #if { @option.IsEnable{MapDebug} } {
+            #local exitStr {$gMapRoom[exits]};
+            #if { &gMapRoom[exitHint][] > 0 } {
+                #local template {VALUE<299>(<129>\@if{{"\$gMapRoom[exitHint][VALUE]" == ""};{N/A};{\$gMapRoom[exitHint][VALUE]}}<299>)};
+                #local exitStr {@fp.Transform{{$exitStr};{$template}}};
+            };
+            #local exitStr {@slist.JoinAs{{$exitStr};{<179>%s<299>};{ }}};
+            #echo {%s} {<134>房间出口<299> $exitStr};
+        };
+    };
+
+    #alias {map.Room.getInfo.done} {
+        #local __unused {%%0};
+        #class map.Room.getInfo kill;
+        #class map.Room.getInfo.map kill;
+        #class map.Room.getInfo.desc kill;
+        #unvar gMapRoom[descEnd];
+        #unvar gMapRoom[existShown];
+
+        #if { @slist.Contains{{$gMapRoom[items]};{<ferry>}} } {
+            #var gMapRoom[dock] {ride};
+        };
+
+        #nop 同步事件以允许插件修改房间信息。;
+        event.Emit {map/GotRoomInfo};
+    };
+
+    #class map.Room.getInfo close;
+
+    #class map.Room.getInfo.map open;
+
+    #action {^{?:\s{8}}%*{|ID=map/Room/getInfo/minimap}$} {
+        #local line {%%1};
+        #replace line {%+1..u%+1..s$} {&1};
+        #cat gMapRoom[map] {|$line|};
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<174>地图信息<299> %%1};
+            #line gag;
+        };
+    };
+
+    #class map.Room.getInfo.map close;
+
+    #class map.Room.getInfo.desc open;
+
+    #action {^%*{|ID=map/Room/getInfo/others}$} {
+        #class map.Room.getInfo.map kill;
+
+        #if { @isTrue{$gMapRoom[descEnd]} } {
+            #if { "%%0" == "%s" && "$gMapRoom[view]" == "" } {
+                #return;
+            };
+
+            #cat gMapRoom[view] {%%0};
+            map.Room.ShowView {%%0};
+            #return;
+        };
+
+        #if { "%%0" == "%s" } {
+            #var gMapRoom[descEnd] {true};
+            #return;
+        };
+
+        #local obj {@ParseTitle{%%0}};
+        #if { &obj[] > 0 } {
+            #class map.Room.getInfo.desc kill;
+            #var gMapRoom[descEnd] {true};
+            #showme @buffer.RawLine{};
+            #line gag;
+            #return;
+        };
+
+        #local text {%%0};
+        #replace {text} {{*UTF8}{\p{Han}}} {};
+
+        #local origLen {@str.Len{%%0}};
+        #local nonHans {@str.Len{$text}};
+        #if { $origLen > 5 && $nonHans * 2 > $origLen } {
+            #var gMapRoom[descEnd] {true};
+            #cat gMapRoom[view] {%%0};
+            map.Room.ShowView {%%0};
+        };
+        #else {
+            #cat gMapRoom[desc] {@str.Trim{%%0}};
+            #if { @option.IsEnable{MapDebug} } {
+                #echo {%s} {<172>房间描述<299> %%0};
+                #line gag;
+            };
+        };
+    } {9};
+
+    #class map.Room.getInfo.desc close;
+};
+
+#alias {map.Room.ShowView} {
+    #if { @option.IsDisable{ShowRoomView} } {
+        #line gag;
+    };
+    #elseif { @option.IsEnable{MapDebug} } {
+        #echo {%s} {<174>房间风景<299> @Beautify{{%1}}};
+        #line gag;
+    };
+};
+
+#func {map.Room.GetObjByName} {
+    #local name  {%1};
+    #local title {%2};
+
+    #local idx {};
+    #foreach {*gMapRoom[objs][]} {idx} {
+        #if { "$gMapRoom[objs][$idx][title]" == "$title" && "$gMapRoom[objs][$idx][name]" == "$name" } {
+            #return {$gMapRoom[objs][$idx]};
+        };
+    };
+
+    #return {};
+};
+
+#func {map.Room.GetObjByID} {
+    #local id  {%1};
+
+    #local idx {};
+    #foreach {*gMapRoom[objs][]} {idx} {
+        #if { "$gMapRoom[objs][$idx][id]" == "$id" } {
+            #return {$gMapRoom[objs][$idx]};
+        };
+    };
+
+    #return {};
+};

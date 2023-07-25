@@ -1,0 +1,196 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+load-module bot/pp;
+
+VAR {全局区域对照表} {map.area.dict} {};
+
+#nop Careless(随便查查)、Careful（仔细查查）、CarefulOnce（仔细查一次）三选一;
+VAR {定位模式} map.Locate.mode {Careless};
+
+event.Define {map/GotArea}      {无参} {$MODULE} {已经获取到区域信息，并更新到 gMapRoom 全局变量。};
+event.Define {map/GotLocalmaps} {无参} {$MODULE} {已经解析 localmaps 命令。};
+
+event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
+
+#alias {map.area.Init} {
+    storage.Load {map-area} {map.area.dict};
+    event.Handle {map/GotRoomInfo} {map/area} {map} {map.GetArea};
+};
+
+#alias {map.GetArea} {
+    #if { "$gMapRoom[area][RESOLVED]" != "" }   {#return};
+    #if { "$map.Locate.mode" == "Careless" }    {#return};
+    #if { "$gMapRoom[direction]" != "here" }    {#return};
+    #if { @ga.IsUnderway{} }                    {#return};
+
+    #if { "$map.Locate.mode" == "CarefulOnce" } {
+        #var map.Locate.mode {Careless};
+    };
+
+    event.HandleOnce {map/GotNodeInfo} {map/area} {map} {map.area.check walk-done};
+    map.GetNodeInfo;
+};
+
+#alias {map.area.check} {
+    #local stage {%1};
+
+    #local area {@map.resolveArea{$gMapRoom[area]}};
+    #if { "$area" == "" } {
+        #switch {"$stage"} {
+            #case {"walk-done"} {
+                event.HandleOnce {map/GotLocalmaps} {map/area} {map} {map.area.check localmaps-done};
+                localmaps;
+            };
+            #case {"localmaps-done"} {
+                event.HandleOnce {pp/Response} {map/area} {map} {map.GetArea.pp.done};
+                pp $user[id];
+                #delay map.GetArea.pp {map.area.check pp-timeout} {30};
+            };
+            #case {"pp-timeoout"} {
+                errLog 竭尽全力也无法获得区域信息。我这是到了什么地方？;
+                event.UnHandle {pp/Response} {map/area} {map};
+            };
+        };
+        #return;
+    };
+
+    #var gMapRoom[area][RESOLVED] {$area};
+    okLog 调查完毕，这里是 $gMapRoom[area][RESOLVED]的$gMapRoom[name];
+    event.DelayEmit map/GotArea;
+};
+
+#alias {map.GetArea.pp.done} {
+    #undelay map.GetArea.pp;
+    #local ppInfo {$gPPResponse[$user[id]]};
+    #if { "$ppInfo" == "" } {
+        errLog PP 机器人应答出错，请检查设置。;
+        #return;
+    };
+
+    #if { "$ppInfo[room]" != "$gMapRoom[name]" } {
+        warnLog PP 期间角色发生了移动。定位失效。;
+        #return;
+    };
+
+    #var gMapRoom[area][PP] {$ppInfo[area]};
+    map.area.check;
+};
+
+#alias {map.Localmaps} {
+    #local gag  {%1};
+    #local args {%2};
+
+    #if { "$args" != "" } {
+        xtt.Send localmaps $args;
+        #return;
+    };
+
+    #var gMapRoom[area][LMAP] {};
+
+    #class map.Localmaps open;
+
+    #line oneshot #action {~^{\e\[0m|}%c◆%*地图%*◆%c$} {
+        #local color {%%2};
+        #replace color {\e[} {};
+        #replace color {m$} {};
+        #replace color {m} {;};
+        #var gMapRoom[area][LMAP]   {%%3};
+        #var gMapRoom[area][COLOR]  {$color};
+    } {2};
+
+    #line oneshot #action {^%s%S略图%s$} {
+        #var gMapRoom[terrain] {随机地图};
+        #var gMapRoom[village] {%%2};
+    };
+
+    #line oneshot #action {┌─{(─)*}─%*附近详图─{(─)*}─┐$} {
+        #var gMapRoom[terrain] {随机地图};
+    };
+
+    #if { "$gag" == "gag" } {
+        #action {^%*{|ID=map/localmaps}$} {#line gag} {6};
+        #gag {^%*{|ID=map/localmaps}$} {1};
+    };
+
+    #class map.Localmaps close;
+
+    xtt.Send localmaps;
+
+    sync.Wait {
+        #class map.Localmaps kill;
+        event.DelayEmit map/GotLocalmaps;
+    };
+};
+
+#alias {lm}         {map.Localmaps nogag {%0}};
+#alias {localmaps}  {map.Localmaps gag   {%0}};
+
+#nop 根据数据源确定区域信息。数据源有三种：walk、localmaps、pp;
+#func {map.resolveArea} {
+    #local source   {%0};
+
+    #if { "$source[RESOLVED]" != "" } {
+        #return {$source[RESOLVED]};
+    };
+
+    #if { "$source[PP]$source[WALK]$source[LMAP]" == "" } {
+        #return {};
+    };
+
+    #local pp   {@default{$source[PP];%*}};
+    #local walk {@default{$source[WALK];%*}};
+    #local lmap {@default{$source[LMAP];%*}};
+    #local pattern {$pp/$walk/$lmap};
+
+    #if { "$source[PP]" != "" } {
+        #local key {};
+        #local value {{PP}{$source[PP]}};
+        #foreach {*map.area.dict[$source[PP]/%*/%*][]} {key} {
+            #local value {$map.area.dict[$key]};
+            #unvar map.area.dict[$key];
+        };
+        #local value[WALK]  {@default{$value[WALK];$source[WALK]}};
+        #local value[LMAP]  {@default{$value[LMAP];$source[LMAP]}};
+        #local value[COLOR] {@default{$value[COLOR];{$source[COLOR]}}};
+        #local key {$source[PP]/@default{$source[WALK];UNKNOWN}/@default{$source[LMAP];UNKNOWN}};
+        #var map.area.dict[$key] {$value};
+        storage.Save {map-area} {map.area.dict};
+        #return {$pp};
+    };
+
+    #if { &map.area.dict[$pattern][] != 1 } {
+        #return {};
+    };
+
+    #foreach {*map.area.dict[$pattern]} {pattern} {
+        #return {$map.area.dict[$pattern][PP]};
+    };
+};
+
+#func {map.AreaColor} {
+    #local area {%1};
+    #local pattern {$area/%*/%*};
+
+    #if { &map.area.dict[$pattern][] != 1 } {
+        #return {};
+    };
+
+    #foreach {*map.area.dict[$pattern]} {pattern} {
+        #return {$map.area.dict[$pattern][COLOR]};
+    };
+};
+
+#alias {map.Here} {
+    #var map.Locate.mode {CarefulOnce};
+    look;
+};
+
+#alias {ll} {map.Here} {9.0};

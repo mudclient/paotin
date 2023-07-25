@@ -1,0 +1,59 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+VAR {未核销的 GMCP.Move 信息队列}   {map.gmcp-move.tbc}     {};
+
+event.HandleOnce {map/init} {map/gmcp} {map} {map.GMCP.TraceMove};
+
+#alias {map.GMCP.TraceMove} {
+    event.Handle GMCP.Move {map/gmcp} {map} {map.GMCP.OnMove};
+};
+
+#alias {map.GMCP.StopTrace} {
+    event.Handle GMCP.Move {map/gmcp} {map};
+};
+
+#alias {map.GMCP.OnMove} {
+    #list map.gmcp-move.tbc add {{$gGMCP[Move]}};
+};
+
+#func {map.GMCP.Confirm} {
+    #local move-success {@default{%1;true}};
+
+    #local cmd {@ga.ThisCmd{}};
+    #if { {$cmd} == {%s{l|look}{|\s+(.*)}%s} } {
+        #replace cmd {^%s{l|look}{|\s+(.*)}%s$} {
+            {cmd}   {look}
+            {exit}  {@dir.Long{&4}}
+        };
+        #return {$cmd};
+    };
+
+    #if { @isTrue{$move-success} } {
+        #while { &map.gmcp-move.tbc[] > 0 && @isFalse{$map.gmcp-move.tbc[1][成功]} } {
+            #list map.gmcp-move.tbc delete 1;
+        };
+    };
+
+    #if { &map.gmcp-move.tbc[] == 0 } {
+        errLog 发现 BUG，遇到了遗失先导 GMCP.Move 事件的行走反馈。;
+        #return {
+            {cmd} {$cmd}
+        };
+    };
+
+    #local gmcp {$map.gmcp-move.tbc[1]};
+    #list map.gmcp-move.tbc delete 1;
+
+    #return {
+        {cmd}   {$cmd}
+        {gmcp}  {$gmcp}
+    };
+};
