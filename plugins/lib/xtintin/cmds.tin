@@ -33,8 +33,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {quit} {#end};
 
 ///=== {
-// ## xtt.Tick <ID> <代码> <间隔时间>
+// ## xtt.Tick <ID> <代码> <间隔时间> [<触发次数>]
 //    跟 #tick 功能类似，但是会立即执行一次代码。对于间隔时间比较长的定时器来说尤其有用。
+//    可选的触发次数会导致定时器在次数达到限制后自动销毁。省略此参数时将不限制触发次数。
 //    你也可以通过 Tick 别名来使用本别名。
 // };
 #alias {Tick} {xtt.Tick};
@@ -42,10 +43,19 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local id       {%1};
     #local code     {%2};
     #local interval {%3};
+    #local times    {@defaultNum{%4;0}};
+
+    #math times {$times - 1};
 
     #line sub var #untick {$id};
-    #line sub var #tick {$id} {$code} $interval;
-    $code;
+
+    #if { $times > 0 } {
+        #line sub {var;escapes;functions} #line multishot {$times} #tick {$id} {$code} $interval;
+    };
+    #elseif { $times < 0 } {
+        #line sub var #tick {$id} {$code} $interval;
+    };
+    #line sub {var;escapes;functions} $code;
 };
 
 ///=== {
