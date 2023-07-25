@@ -1,0 +1,38 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+///=== {
+///// 地图系统
+///// };
+
+#var basic_map[META] {
+    {NAME}      {地图系统}
+    {DESC}      {地图系统}
+    {AUTHOR}    {担子炮}
+};
+
+load-lib event;
+load-lib sync;
+
+event.Define {map/walk/continue} {无参} {$MODULE} {走路机器人结束运行时，可以发射本事件以驱动后续动作继续运行。};
+event.Define {map/walk/failed}   {无参} {$MODULE} {走路机器人运行失败时，可以发射本事件以通知调用方。};
+event.Define {map/init}          {无参} {$MODULE} {map 模块开始初始化。};
+
+load-file mud/pkuxkx/plugins/basic/map/room.tin;
+load-file mud/pkuxkx/plugins/basic/map/gmcp.tin;
+load-file mud/pkuxkx/plugins/basic/map/area.tin;
+load-file mud/pkuxkx/plugins/basic/map/node.tin;
+load-file mud/pkuxkx/plugins/basic/map/xiaoyao.tin;
+load-file mud/pkuxkx/plugins/basic/map/helper.tin;
+
+#func {basic_map.Init} {
+    event.Emit map/init;
+    set localmap;
+    set area_detail;
+    #return true;
+};

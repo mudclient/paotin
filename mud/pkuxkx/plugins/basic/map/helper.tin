@@ -1,0 +1,151 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+load-lib event;
+
+event.Define {map/walk/boat/in}     {无参} {$MODULE}    {已上船};
+event.Define {map/walk/boat/out}    {无参} {$MODULE}    {即将下船};
+
+VAR {地图脚本同步信息} map.sync.room-id {};
+
+#alias {map.Sync} {
+    #local prev     {%1};
+    #local current  {%2};
+    #local next     {%3};
+    #local message  {};
+
+    #if { "$prev$current$next" == "" } {
+        #local message {WALK-SYNC-MESSAGE};
+    };
+    #else {
+        #local message {F${prev}-V${current}-T$next};
+        #var map.sync.room-id {
+            {prev}{$prev}
+            {current}{$current}
+            {next}{$next}
+        };
+    };
+
+    sync.Wait {
+        #line gag;
+        okLog 服务器已同步。;
+        event.DelayEmit map/walk/continue;
+    } {$message};
+};
+
+#alias {map.GuoJiang}   {map.shaogong 过江};
+#alias {map.GuoHe}      {map.shaogong 过河};
+#alias {map.YellBoat}   {map.shaogong 自助};
+
+#alias {map.shaogong} {
+    #local words {%1};
+
+    #class map.shaogong open;
+
+    #alias {map.waitBoat} { #var map-Boat-state {waitBoat} };
+
+    #action {^只听得江面上隐隐传来：“别急嘛，这儿正忙着呐……”$} {
+        #nop 不依赖触发了，用定时器靠谱一些;
+    };
+    #action {^岸边一只渡船上的艄公说道：正等着你呢，上来吧。$} {
+        #if { "${map-Boat-state}" == "waitBoat" } {
+            #var map-Boat-state {enterBoat};
+            #untick map.yellboat;
+            enter;
+            event.Emit map/walk/boat/in;
+        };
+    };
+    #action {^一叶扁舟缓缓地驶了过来，艄公将一块踏脚板搭上堤岸，以便乘客{上下。|}$} {
+        #if { "${map-Boat-state}" == "waitBoat" } {
+            #var map-Boat-state {enterBoat};
+            #untick map.yellboat;
+            enter;
+            event.Emit map/walk/boat/in;
+        };
+    };
+
+    #action {^%*接过你递给的船资%S。$}                                  {map.waitBoat};
+    #action {^你的车船通账上还剩%S，这一趟的船资是%S。$}                {map.waitBoat};
+    #action {^%S道：原来是%S的人，快请上船。$}                          {map.waitBoat};
+    #action {^你吸了口气，一声“船家”，声音中正平和地远远传了出去。$}  {map.waitBoat};
+    #action {^你使出吃奶的力气喊了一声：“船家”$}                      {map.waitBoat};
+
+    #action {^艄公把踏脚板收起来，说了一声“坐稳喽”，竹篙一点，扁舟向{|江心驶去。}$} {
+        #if { "${map-Boat-state}" == "enterBoat" } {
+            #var map-Boat-state {inBoat};
+            #untick map.yellboat;
+        };
+    };
+
+    #action {^艄公说{ |}“到啦，上岸吧”{ |}，随即把一块踏脚板搭上堤岸。$} {
+        #if { "${map-Boat-state}" == "inBoat" } {
+            #nop 北侠 BUG 导致这条信息和下面赶下船的信息同时出现，这样会导致 out 失效。;
+            #nop 所以做一些防御处理;
+            #delay map-Boat-out {
+                #var map.stepaccu 1;
+                #unvar map-Boat-state;
+                #undelay map-Boat-out;
+                event.Emit map/walk/boat/out;
+                busy.Halt {out; map.BotReturn map.shaogong};
+            } {0.05};
+        };
+    };
+
+    #action {^艄公要继续做生意了，所有人被赶下了渡船。$} {
+        #if { "${map-Boat-state}" == "inBoat" } {
+            #delay map-Boat-out {
+                #var map.stepaccu 1;
+                #unvar map-Boat-state;
+                #undelay map-Boat-out;
+                event.Emit map/walk/boat/out;
+                busy.Halt {map.BotReturn map.shaogong};
+            } {0};
+        };
+    };
+
+    #tick map.yellboat {yell boat} 1;
+
+    #class map.shaogong close;
+
+    #if { "$words" == "自助" } {
+        yell boat;
+    };
+    #else {
+        ask shao gong about $words;
+    };
+};
+
+#alias {map.SpecialBoat} {
+    #class map.SpecialBoat open;
+    #action {^你跃上木船，船夫把木船划向海中。$}    {event.Emit map/walk/boat/in};  #nop 神龙岛;
+    #action {^你朝船夫挥了挥手便跨上岸去。$}        {map.SpecialBoat.return};       #nop 神龙岛;
+    #action {^你从踏板上走上了船。$}                {event.Emit map/walk/boat/in};  #nop 桃花岛;
+    #action {^你沿着踏板走了上去。$}                {map.SpecialBoat.return};       #nop 桃花岛;
+    #action {map.SpecialBoat.return} {event.Emit map/walk/boat/out; busy.Halt {map.BotReturn map.SpecialBoat}};
+    #class map.SpecialBoat close;
+    enter boat;
+};
+
+#alias {map.Ride} {
+    #local target {%1};
+
+    #class map.Ride open;
+    #action {^你跳上了小船，操舟向%*划去。$}        {event.Emit map/walk/boat/in};
+    #action {^你跳上了羊皮筏子，操舟向%*划去。$}    {event.Emit map/walk/boat/in};
+    #action {^你从小船上跳了下来，到了%*。$}        {event.Emit map/walk/boat/out; busy.Halt {map.BotReturn map.Ride}};
+    #class map.Ride close;
+    ride $target;
+};
+
+#alias {map.BotReturn} {
+    #local bot {%1};
+    #class $bot kill;
+    event.DelayEmit {map/walk/continue} {$bot};
+};

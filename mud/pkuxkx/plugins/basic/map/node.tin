@@ -1,0 +1,172 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+load-lib event;
+
+event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息，并更新到 gMapRoom 全局变量。};
+
+/*
+╭───扬州─────────┬─────────────╮
+│目的地                      │拼音名称                  │
+│丐帮分舵                    │gaibang                   │
+│濠州府                      │haozhou                   │
+│长江[建康府]                │jiankang                  │
+│曲阜                        │qufu                      │
+│往生堂                      │shashou                   │
+│信阳                        │xinyang                   │
+│长江[镇江]                  │zhenjiang                 │
+├──────────────┴─────────────┤
+│walk [拼音名]命令使用内建路径。                         │
+│walk -c [拼音名]返回具体地点的路径。                    │
+│node 命令列出玩家自建路径。                             │
+╰───────────────────北大侠客行────╯
+*/
+
+///=== {
+// ## map.GetNodeInfo
+//    通过 walk -c 命令查询当前房间的节点信息。如果当前房间不是节点，则什么也获取不到。
+//    否则可以获得两个信息：
+//        1. 当前节点的名称，如「扬州」，储存在 \$gMapRoom[node]。
+//        2. 当前节点所联通的节点列表，是个表格，储存在 \$gMapRoom[nodeLinks];
+// };
+#alias {map.GetNodeInfo} {
+    #if { "$gMapRoom[node]" != "" } {
+        #return;
+    };
+
+    #class map.GetNodeInfo open;
+
+    #alias {map.GetNodeInfo.done} {
+        #var gMapRoom[area][WALK] {@default{%%1;$gMapRoom[area][WALK]}};
+        #line gag;
+        #class map.GetNodeInfo kill;
+
+        #if { &gMapRoom[nodeLinks][] > 0 } {
+            #delay 0 okLog 节点信息已识别。;
+        };
+
+        event.DelayEmit map/GotNodeInfo;
+    };
+
+    #gag {^%*{|ID=map/getnode}$};
+
+    #action {{*UTF8}{^}╭─{(─)*}─{\p{Han}+}─{(─|┬)*}──╮{|ID=map/getnode}$} {
+        #var gMapRoom[node]         {%%4};
+        #var gMapRoom[nodeLinks]    {};
+
+        #class map.GetNodeInfo open;
+
+        #action {^│目的地%s│拼音名称%s│$} {#line gag} {4.999};
+        #action {^│%S%s│%S%s│{|ID=map/getnode}$} {
+            #var {gMapRoom[nodeLinks][%%%3]} {%%%1};
+        };
+
+        #class map.GetNodeInfo close;
+    };
+
+    #action {^%*内的系统内建路径出发点在：%*，请查询localmaps获得具体方位。{|ID=map/getnode}$} {
+        #var gMapRoom[area][WALK] {%%1};
+    };
+
+    #action {^%*内共有一处内建玩家路径起点，在%*。{|ID=map/getnode}$} {
+        #var gMapRoom[area][WALK] {%%1};
+    };
+
+    #action {^%*内共有%d处内建玩家路径起点，分别在%*。{|ID=map/getnode}$} {
+        #var gMapRoom[area][WALK] {%%1};
+    };
+
+    #action {^%*当前区域没有任何内建玩家路径起点。} {
+        #var gMapRoom[area][WALK] {%%1};
+    };
+
+    #class map.GetNodeInfo close;
+
+    walk -c;
+    sync.Wait {map.GetNodeInfo.done} {map/GetNodeInfo};
+};
+
+///=== {
+// ## map.WalkNodes <节点列表> [<回调钩子ID>]
+//    执行 walk 命令，按节点列表顺序依次行走，并发射走路机器人事件。
+//    可选的回调钩子 ID 可以只唤醒指定的钩子，避免惊群。
+//    到达目的地后会自动执行 look 命令。
+// };
+#alias {map.WalkNodes} {
+    #class map.WalkNodes open;
+
+    #var map.WalkNodes.nodes   {@list.FromSlist{%1}};
+    #var map.WalkNodes.hook    {%2};
+    #var map.WalkNodes.delay   {3};
+
+    #local ID {|ID=map/WalkNodes};
+
+    #action {^你开始往%*方向飞奔过去……{$ID}$} {
+        #nop prompt.Set {{nodeLinks}{<120>正在前往【%%1】，赶路中…}};
+        #var map.WalkNodes.delay   {3};
+    };
+
+    #action {^你因为种种原因停了下来，可以用walk继续进行。{$ID}$} {
+        #switch {"$gMapRoom[name]"} {
+            #case {"襄阳南门"}  {ask shou jiang about 投军; walk};
+            #case {"万纶台"}    {ask liang liuhe about 拜山; walk};
+            #default {
+                tuna max;
+                #delay $map.WalkNodes.delay {halt; walk};
+                #var map.WalkNodes.delay   {1};
+            };
+        };
+    };
+
+    #action {^你到达了%*。{$ID}$} {
+        #delay 0 {map.WalkNodes.walk-next};
+    };
+
+    #alias {map.WalkNodes.walk-next} {
+        #if { &map.WalkNodes.nodes[] > 0 } {
+            #local node {$map.WalkNodes.nodes[1]};
+            #list map.WalkNodes.nodes delete 1;
+            #if { "$node" == "DOCK/dock" } {
+                event.HandleOnce map/walk/continue {map.shaogong} {map} {map.WalkNodes.walk-next};
+                map.YellBoat;
+            };
+            #elseif { "$node" == "DOCK/ride{| \S+}" } {
+                #replace node {DOCK/ride} {};
+                event.HandleOnce map/walk/continue {map.Ride} {map} {map.WalkNodes.walk-next};
+                map.Ride $node;
+            };
+            #elseif { "$node" == "PATH/{\{.*\}}" } {
+                #replace node {PATH/{\{(.*)\}}} {&2};
+                xtt.SendAtOnce {$node};
+                sync.Wait {map.WalkNodes.walk-next};
+            };
+            #else {
+                xtt.Send {walk $node};
+            };
+        };
+        #else {
+            #local hook {$map.WalkNodes.hook};
+            #class map.WalkNodes kill;
+            event.Emit map/walk/continue {$hook};
+        };
+    };
+
+    #class map.WalkNodes close;
+
+    map.WalkNodes.walk-next;
+};
+
+/*
+襄阳南门
+守军拦住了你的去路，大声喝到：干什么的？要想通过先问问我们守将大人！
+守将给了你一块腰牌。
+牧民告诉你：牧场上最近出现了一只游荡的野狼，已经吞食了很多单身的旅人，没事最好经过这里。
+走路太快，你没在意脚下，被杂草绊了一下。
+*/
