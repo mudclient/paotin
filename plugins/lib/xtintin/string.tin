@@ -116,8 +116,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {str.FromHexCode} {#format result {%x} {%0}};
 #func {hex2char}        {#return {@str.FromHexCode{%0}}};
 
-#func {str.ToHexCode}   {#format result {%A} {%0}; #format result {%X} {$result}};
+#func {str.ToHexCode}   {#format result {%A} {%0}; #return @str.DecToHex{$result}};
 #func {char2hex}        {#return {@str.ToHexCode{%0}}};
+
+#func {str.HexToDec}    {#format result {%D} {%0}};
+#func {hex2dec}         {#return {@str.HexToDec{%0}}};
+
+#func {str.DecToHex}    {#format result {00%X} {%0}; #format result {%.-2s} {$result}};
+#func {dec2hex}         {#return {@str.DecToHex{%0}}};
 
 ///=== {
 // #@ str.Format <格式> <参数>
