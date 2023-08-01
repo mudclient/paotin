@@ -138,7 +138,7 @@ sudo apt-get install build-essential zlib1g-dev libpcre++-dev git bash tmux
 #### Android(Termux)
 
 ```
-apt install make libgnutls pcre zlib git bash tmux
+apt install clang which make libgnutls pcre zlib git bash tmux
 ```
 
 #### 其它类 Unix 系统
