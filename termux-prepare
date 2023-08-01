@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+apt update
+apt upgrade
+apt reinstall readline bash
+apt install git clang which make libgnutls pcre zlib git bash tmux ncurses-utils
+
+cd
+mkdir -p my-paotin/{ids,etc,data,log,plugins}
+git clone https://github.com/mudclient/paotin
+
+cd paotin
+ln -s $HOME/my-paotin var
