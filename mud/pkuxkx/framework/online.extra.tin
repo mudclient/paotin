@@ -1,0 +1,36 @@
+#nop vim: set filetype=tt:;
+
+/*
+模块名称：几个常用的别名
+模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
+版权声明：本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#nop 武当、少林等门派的诵经文本会干扰机器运行，使用全局替换从一开始就屏蔽掉。;
+#substitute {~\e[1;36m%+1u..\e[2;37;0m} {};
+
+#alias {online.KeepAlive} {
+    #local blankly {true};
+    #if { @isFalse{$char[HP][忙]} } {
+        #if { $char[HP][食物] < $char[HP][最大食物] } {
+            xtt.Send eat $char[favorite][food];
+            #local blankly {false};
+        };
+        #if { $char[HP][饮水] < $char[HP][最大饮水] } {
+            xtt.Send drink $char[favorite][water];
+            #local blankly {false};
+        };
+    };
+    #if { @isTrue{$blankly} } {
+        ga.Sync;
+    };
+};
+
+event.HandleOnce {user-online} {pkuxkx/online} {pkuxkx/online} {
+    event.Handle {char/hpbrief} {prompt} {framework/online} {prompt.UpdateHP};
+    event.Handle {char/status}  {prompt} {framework/online} {prompt.UpdateSM};
+};

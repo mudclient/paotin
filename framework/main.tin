@@ -66,7 +66,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         event.Define {user-online} {无参} {framework} {已经登录到服务器，所有命令都可以正常使用了。};
         load-module lib/ui;
         #if { "$user[manual]" != "true" } {
-            #delay KeepAlive {#zap} {$session[reconnect]};
+            #delay online.WatchDog {#zap} {$session[reconnect]};
         };
     };
 };

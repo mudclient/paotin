@@ -1,0 +1,106 @@
+#nop vim: set filetype=tt:;
+
+/*
+模块名称：几个常用的别名
+模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
+版权声明：本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var login[session]     {};
+#var login[user]        {};
+#var login[autoexec]    {};
+
+#alias {login} {
+    #var    login[session]  {%1};
+    #var    login[user]     {%2};
+    #var    login[autoexec] {%3};
+    #session {$session[name]} {$session[host]} {$session[port]};
+};
+
+#event {SESSION CONNECTED} {
+    #if { "%0" !== "$login[session][name]" } {
+        #return;
+    };
+
+    login.auto-login;
+};
+
+#alias {login.login-success} {
+    #local type {%%1};
+
+    #showme 登录成功。;
+
+    #if { @isTrue{$login[user][manual]} } {
+        login.write-id-file;
+        login.init-game;
+    };
+
+    #local handler $login[autoexec];
+    #class login.auto-login kill;
+    #undelay login.login-success;
+    kill-module login;
+    $handler;
+    #if { "$user[GMCP]" == "true" } {
+        #delay 1 {
+            load-module gmcp;
+            gmcp.${gCurrentMUDLIB}.Enable;
+        };
+    };
+};
+
+#alias {login.init-game} {
+    #if { "$login[user][id]" == "" || "$user[id]" != "" } {
+        #return;
+    };
+
+    #var user[id]           {$login[user][id]};
+    #var user[passwd]       {$login[user][passwd]};
+    #gts #var user[id]      {$login[user][id]};
+    #gts #var user[passwd]  {$login[user][passwd]};
+
+    #local path {$user[id]};
+    #if { "$session[log_path]" != "" } {
+        #local path {$session[log_path]};
+    };
+
+    #if { !@InitLog{$path} } {
+        #echo {<119>创建日志目录 $gLog[PATH]/$path 时遇到错误。<299>};
+        #echo {<139>请检查你的安装环境，或者参考使用手册重新安装本软件。<299>};
+        #return;
+    };
+
+    log.Open;
+    #screen set title GAME-$user[id];
+
+    NOTE 启动配置文件已生成，下次你可以直接 start $login[user][id] 进入游戏。;
+};
+
+#alias {login.write-id-file} {
+    #if { "$login[user][id]" == "" || "$user[id]" != "" } {
+        #return;
+    };
+
+    #local id-file {ids/$login[user][id]};
+
+    #local output {};
+    #script output {test -d var/ids && echo true || echo false};
+    #if { "$output[1]" == "true" } {
+        #local id-file {var/$id-file};
+    };
+
+    #if { @existsFile{$id-file} } {
+        #return;
+    };
+
+    #script output {cp ids/$gCurrentMUDLIB $id-file};
+    #script output {sed -i.bak 's/^#var user\[id\]       {.*};$/#var user[id]       {$login[user][id]};/' $id-file};
+    #script output {sed -i.bak 's/^#var user\[name\]     {.*};$/#var user[name]     {};/' $id-file};
+    #script output {sed -i.bak 's/^#var user\[passwd\]   {.*};$/#var user[passwd]   {$login[user][passwd]};/' $id-file};
+    #script output {sed -i.bak '/^#nop 上面三处修改完毕之后，请删除下面这行文字：;$/d' $id-file};
+    #script output {sed -i.bak '/^#var user\[manual\]   {true};$/d' $id-file};
+    #script output {rm ${id-file}.bak};
+};
