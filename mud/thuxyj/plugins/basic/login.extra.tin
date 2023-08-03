@@ -1,0 +1,88 @@
+#nop vim: set filetype=tt:;
+
+/*
+模块名称：几个常用的别名
+模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
+版权声明：本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#alias {login.auto-login} {
+    #class login.auto-login open;
+
+    #config {IAC GA} {OFF};
+
+    #nop 如果角色设置了 GMCP 支持，则积极回应服务器的 GMCP 协商请求。;
+    #if { "$user[GMCP]" == "true" } {
+        load-lib gmcp;
+        gmcp.Enable;
+    };
+
+    #if { "$session[UTF8]" == "true" } {
+        #config {charset} {UTF-8};
+    };
+    #else {
+        #config {charset} {GBK1TOUTF8};
+    };
+
+    #line oneshot #action {^%sWelcome to Xi You Ji! Select GB or BIG5 (gb/big5):$} {
+        #line oneshot #event {CATCH VT100 ERASE SCREEN ALL} {#0;#buffer end};
+        xtt.Answer gb;
+    };
+
+    #line oneshot #action {^您是否是中小学学生或年龄更小？(yes/no)$} {
+        #delay 0 #send no;
+    };
+
+    #line oneshot #action {^您的英文名字：（新玩家请键入 new 注册）$} {
+        #if { "$login[user][id]" != "" } {
+            xtt.Answer {$login[user][id]};
+        };
+        #else {
+            #line oneshot #macro {\n} {
+                #cursor get {login[user][id]};
+                #cursor clear;
+                #if { "$login[user][id]" == "#%*" } {
+                    #var login[user][id] {};
+                };
+                #if { "$login[user][id]" != "" } {
+                    xtt.Answer {$login[user][id]};
+                };
+            };
+        };
+    };
+
+    #action {^请输入相应密码：$} {
+        #if { "$login[user][passwd]" != "" } {
+            xtt.Answer {$login[user][passwd]};
+            #delay {login.check} {look} 1;
+        };
+        #else {
+            #cursor flag echo on;
+            #line oneshot #macro {\n} {
+                #cursor get {login[user][passwd]};
+                #cursor clear;
+                #if { "$login[user][passwd]" != "" } {
+                    xtt.Answer {$login[user][passwd]};
+                };
+            };
+        };
+    };
+
+    #line oneshot #action {^您要将另一个连线中的相同人物赶出去，取而代之吗？(y/n)$} {
+        xtt.Answer y;
+    };
+
+    #line oneshot #action {^%s目前权限：(player)%s$} {
+        #delay {login.login-success} {login.login-success} 1;
+    };
+
+    #line oneshot #action {^重新连线完毕。$} {
+        #delay {login.login-success} {login.login-success 断线重连} 0;
+    };
+
+    #class login.auto-login close;
+};

@@ -12,20 +12,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #class main open;
 
-#nop 武当、少林等门派的诵经文本会干扰机器运行，使用全局替换从一开始就屏蔽掉。;
-#substitute {~\e[1;36m%+1u..\e[2;37;0m} {};
+#alias {online.KeepAlive} {uptime};
 
-#ticker {eat}       {xtt.Send eat $char[favorite][food]}    {60};
-#ticker {drink}     {xtt.Send drink $char[favorite][water]} {60};
+#tick {online.KeepAlive} {online.KeepAlive} {60};
 
 #delay 1 {
     load-lib    ga;
+    load-module silent;
     load-module basic/char;
     load-module shortcut;
-    load-module silent;
-
-    event.Handle {char/hpbrief} {prompt} {framework/online} {prompt.UpdateHP};
-    event.Handle {char/status}  {prompt} {framework/online} {prompt.UpdateSM};
 
     tmux.SetTheme GAME;
 
@@ -36,8 +31,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 #event {RECEIVED OUTPUT} {
-    #undelay KeepAlive;
-    #delay KeepAlive {#zap} 180;
+    #undelay online.WatchDog;
+    #delay online.WatchDog {#zap} 180;
 };
 
 #class main close;

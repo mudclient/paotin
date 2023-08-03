@@ -1,0 +1,113 @@
+#nop vim: set filetype=tt:;
+
+/*
+模块名称：几个常用的别名
+模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
+版权声明：本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#alias {login.auto-login} {
+    #class login.auto-login open;
+
+    #config {IAC GA} {OFF};
+
+    #nop 如果角色设置了 GMCP 支持，则积极回应服务器的 GMCP 协商请求。;
+    #if { "$user[GMCP]" == "true" } {
+        load-lib gmcp;
+        gmcp.Enable;
+    };
+
+    #if { "$session[UTF8]" == "true" } {
+        #config {charset} {UTF-8};
+    };
+    #else {
+        #config {charset} {GBK1TOUTF8};
+    };
+
+    #line oneshot #action {^北大侠客行已经执行了%*。$} {
+        #local uptime {@time.ParseDoC{%%1}};
+    };
+
+    #line oneshot #action {^Input 1 for GBK, 2 for UTF8, 3 for BIG5$} {
+        #nop;
+    };
+
+    #line oneshot #action {^您的英文名字（要注册新人物请输入new。）：$} {
+        #if { "$session[UTF8]" == "false" } {
+            #delay 0 #send {2};
+        };
+
+        #config {charset} {UTF-8};
+
+        #if { "$login[user][id]" != "" } {
+            xtt.Answer {$login[user][id]};
+        };
+        #else {
+            #line oneshot #macro {\n} {
+                #cursor get {login[user][id]};
+                #cursor clear;
+                #if { "$login[user][id]" == "#%*" } {
+                    #var login[user][id] {};
+                };
+                #if { "$login[user][id]" != "" } {
+                    xtt.Answer {$login[user][id]};
+                };
+            };
+        };
+    };
+
+    #line oneshot #action {^此ID档案已存在，请输入密码：$} {
+        #if { "$login[user][passwd]" != "" } {
+            xtt.Answer {$login[user][passwd]};
+            #delay {login.check} {look} 1;
+        };
+        #else {
+            #cursor flag echo on;
+            #line oneshot #macro {\n} {
+                #cursor get {login[user][passwd]};
+                #cursor clear;
+                #if { "$login[user][passwd]" != "" } {
+                    xtt.Answer {$login[user][passwd]};
+                };
+            };
+        };
+    };
+
+    #line oneshot #action {^您要将另一个连线中的相同人物赶出去，取而代之吗？(y/n)$} {
+        xtt.Answer y;
+    };
+
+    #line oneshot #action {^%s欢迎来到北大侠客行！%s$} {
+        #delay {login.login-success} {login.login-success 重新登录} 0;
+    };
+
+    #line oneshot #action {^%s目前权限：(player)%s$} {
+        #delay {login.login-success} {login.login-success} 1;
+    };
+
+    #line oneshot #action {^如果同意请用agree %w命令签署确认这些条款。$} {
+        #if { @isTrue{$user[AGREE]} } {
+            #send {agree %%1};
+        };
+        #else {
+            #undelay {login.login-success};
+            #undelay {login.check};
+            warnLog 请在十秒内输入 agree %%1 命令以继续游戏。;
+            #delay {login.agree.fail} {#zap} 10;
+        };
+    };
+
+    #line oneshot #action {^感谢您同意北侠玩家要约，现在可以正常进入游戏。$} {
+        #undelay {login.agree.fail};
+    };
+
+    #line oneshot #action {^重新连线完毕。$} {
+        #delay {login.login-success} {login.login-success 断线重连} 0;
+    };
+
+    #class login.auto-login close;
+};

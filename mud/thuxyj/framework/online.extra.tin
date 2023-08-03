@@ -10,23 +10,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ===========
 */
 
-#ticker {save-data}     {xtt.Send save}     {600};
-#ticker {backup-data}   {xtt.Send backup}   {1800};
+#alias {online.KeepAlive} {localtime};
 
-#delay 1 {
+event.HandleOnce {user-online} {thuxyj/online} {thuxyj/online} {
     set openmap 1;
-
-    load-module basic/char;
-    load-module shortcut;
-
-    event.Handle {char/hpbrief} {prompt} {framework/online} {prompt.UpdateHP};
-    event.Handle {char/status}  {prompt} {framework/online} {prompt.UpdateSM};
-
-    #nop 提供给用户的自动执行函数;
-    user-online;
-};
-
-#event {RECEIVED OUTPUT} {
-    #undelay KeepAlive;
-    #delay KeepAlive {#zap} 180;
 };
