@@ -52,6 +52,8 @@ event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参�
     #local line {%0};
     #replace line {{$TELNET[GA]|$TELNET[EOR]}$} {};
 
+    #local cmd {};
+
     #if { &gXttPipeLine[] > 0 } {
         #local cmd {$gXttPipeLine[1]};
         #list gXttPipeLine delete {1};
@@ -71,4 +73,29 @@ event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参�
 #alias {ga.On} {
     #send {$TELNET[IAC]$TELNET[WILL]$TELNET[LINEMODE]\};
     #send {$TELNET[IAC]$TELNET[DONT]$TELNET[SGA]\};
+};
+
+#alias {ga.Sync} {
+    sync.Wait {#0};
+};
+
+#alias {ga.Confirm} {
+    #local cmd {%1};
+
+    #while { &gXttPipeLine[] > 0 && {$gXttPipeLine[1]} !== {$cmd} } {
+        #list gXttPipeLine delete {1};
+    };
+};
+
+#func {ga.ThisCmd} {
+    #return {$gXttPipeLine[1]};
+};
+
+#func {ga.IsUnderway} {
+    #if { &gXttPipeLine[] > 1 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
 };
