@@ -109,10 +109,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #nop 根据服务器返回的信息，调用相应的回调代码。;
 #action {^系统回馈：R:sync-%*$E} {
     #local uuid {%1};
+
+    ga.Confirm {response R:sync-$uuid};
+
     #local callback {$gSyncHandlers[$uuid]};
     #unvar {gSyncHandlers[$uuid]};
     #if { {$callback} != {} } {
         $callback;
     };
+
     #line gag;
 };
