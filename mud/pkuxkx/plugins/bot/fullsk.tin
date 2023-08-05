@@ -14,7 +14,7 @@
         {path-sleep2lw}     {从睡觉房间到领悟房间的路径}
         {food}              {饿了吃什么，默认与全局偏好食物(char[favorite][food])相同}
         {water}             {渴了喝什么，默认与全局偏好饮料(char[favorite][water])相同}
-        {fullme-bot}        {吃饭喝水机器人，如果身上没有食水会自动前往吃喝}
+        {dine-bot}          {吃饭喝水机器人，如果身上没有食水会自动前往吃喝}
         {auto-path}         {如果设置为「true」，则根据门派和当前位置自动匹配方案}
         {skills}            {字符串列表，需要补满哪些技能（ID或名称）。默认按照 jifa 列表}
         {allow-jifa}        {是否允许重新激发，不允许则按当前 jifa 状态。}
@@ -23,31 +23,32 @@
 };
 
 /*
-* 核心技术
-    - 通过 jifa 和 skills 自动配置 fullsk 任务列表，无需手动配置，或者简化配置
-    - 通过 skbrief 来检测是否已经停止练习，自动切换下一个武功，防止触发不到
-    - 检测气血和精神的消耗情况，动态调整练习次数
-* 练功目标
-    - 设定时间，到点就停
-    - 练一级就停
-    - 一直练下去，直到目标达成
-* 设定练功范围
-    - 默认补满 jifa 的武功，优先特殊，然后基本
-    - 可自定义武功列表
-* 是否允许重新 jifa
-    - 不允许则按照当前 jifa 状态练习
-    - 如果允许的话，则尝试 jifa 到 parry，或者别的武功进行练习，完事之后可以再激发回来
-* 练功顺序
-    - 优先基本内功
-    - 其次招架
-    - 其次轻功
-    - 其次常用兵器
-    - 其次常用拳脚
-    - 最后其它武功
-* 其它注意事项
-    - 切换武器
-    - 空闲利用
-    - 是否睡觉
+* [X] 核心技术
+    - [X] 通过 jifa 和 skills 自动配置 fullsk 任务列表，无需手动配置，或者简化配置
+    - [X] 通过 skbrief 来检测是否已经停止练习，自动切换下一个武功，防止触发不到
+    - [X] 检测气血和精神的消耗情况，动态调整练习次数
+* [X] 练功目标
+    - [ ] 设定时间，到点就停
+    - [ ] 练一级就停
+    - [X] 一直练下去，直到目标达成
+* [X] 设定练功范围
+    - [X] 默认补满 jifa 的武功，优先特殊，然后基本
+    - [X} 可自定义武功列表
+* [ ] 是否允许重新 jifa
+    - [X] 不允许则按照当前 jifa 状态练习
+    - [X] 如果允许的话，则尝试 jifa 到 parry，或者别的武功进行练习
+    - [ ] 完事之后可以再激发回来
+* [ ] 练功顺序
+    - [ ] 优先基本内功
+    - [ ] 其次招架
+    - [ ] 其次轻功
+    - [ ] 其次常用兵器
+    - [ ] 其次常用拳脚
+    - [ ] 最后其它武功
+* [ ] 其它注意事项
+    - [X] 切换武器
+    - [ ] 空闲利用
+    - [ ] 是否睡觉
 
 几种恢复内力的方式比较：
 睡觉：每次恢复 50% 内力，气血/精神全部加满；缺点：约 20 秒的睡眠时间，另外有 50 秒的 CD。
@@ -98,10 +99,10 @@ load-module basic/busy;
             #local leftCmds     {$fullsk-path[$menpai][$left]};
             #local rightCmds    {$fullsk-path[$menpai][$right]};
             #if { "$leftCmds" != "" && "$rightCmds" == "" } {
-                #var {fullsk-path[$menpai][$right]} {@reverseCmds{$leftCmds}};
+                #var {fullsk-path[$menpai][$right]} {@path.Reverse{$leftCmds}};
             };
             #elseif { "$leftCmds" == "" && "$rightCmds" != "" } {
-                #var {fullsk-path[$menpai][$left]} {@reverseCmds{$rightCmds}};
+                #var {fullsk-path[$menpai][$left]} {@path.Reverse{$rightCmds}};
             };
         };
     };
@@ -190,64 +191,15 @@ load-module basic/busy;
         #line oneshot #alias {fullsk.qnod} {
             okLog 那么，就要开始了。;
             fullsk.goto sleep;
-            #delay 1 {fullsk.fullme};
-        };
-    };
-};
-
-#var fullsk-fullme-last-food    {-1};
-#var fullsk-fullme-last-water   {-1};
-
-#alias {fullsk.fullme} {
-    #nop 优先采用身上的补给物进行补充;
-    #nop 如果身上的东西不能够解决问题，就用 fullme 机器人。;
-    #if {   $char[HP][食物] <= $fullsk-fullme-last-food
-        ||  $char[HP][饮水] <= $fullsk-fullme-last-water } {
-        #if { "$bot_fullsk[config][fullme-bot]" != "" } {
-            $bot_fullsk[config][fullme-bot] {
-                fullsk.goto lw;
-                fullsk.next-skill;
+            #delay 1 {
+                #alias fullsk.dine.callback {
+                    fullsk.goto lw;
+                    fullsk.next-skill;
+                };
+                fullsk.dine;
             };
         };
-        #else {
-            #delay 0 {errLog 没有食物和饮料了，无法继续练功。};
-        };
-        #var fullsk-fullme-last-food    {-1};
-        #var fullsk-fullme-last-water   {-1};
-        #return;
     };
-
-    #local wait {};
-    #if { $char[HP][食物] < $char[HP][最大食物] / 2 } {
-        #local food {$char[favorite][food]};
-        #if { "$bot_fullsk[config][food]" != "" } {
-            #local food {$bot_fullsk[config][food]};
-        };
-
-        #if { "$food" != "" } {
-            #3 eat $bot_fullsk[config][food];
-            #local wait {true};
-            #var fullsk-fullme-last-food {$char[HP][食物]};
-        };
-        #else {
-            #delay 0 {errLog 配置错误，没吃没喝，又不 fullme，怎么练功？};
-            #return;
-        };
-    };
-
-    #if { $char[HP][饮水] < $char[HP][最大饮水] / 2 } {
-        drink;
-        #local wait {true};
-        #var fullsk-fullme-last-water {$char[HP][饮水]};
-    };
-
-    #nop 如果吃过喝过了，就等待食物和饮水回复;
-    #if { "$wait" == "true" } {
-        #delay {fullsk.fullme} {fullsk.fullme} 3;
-        #return;
-    };
-
-    fullsk.next-skill;
 };
 
 #var fullsk-current-skill-idx   {0};
@@ -360,10 +312,16 @@ load-module basic/busy;
             #return;
         };
 
+        #if { @fullsk.needDine{} } {
+            #alias fullsk.dine.callback {fullsk.lingwu.calc};
+            fullsk.dine;
+            #return;
+        };
+
         #if { $char[HP][内力百分比] < 20 } {
             #if { $char[HP][内力百分比] > 2 || $char[HP][精神百分比] > 80 } {
                 #if { $char[HP][内力百分比] > 2 && $char[HP][精神百分比] > 20 && "$checked" == "true" } {
-                    #var fullsk-lingwu-times {@min{@eval{$fullsk-lingwu-times * 11 / 10};1000}};
+                    #var fullsk-lingwu-times {@math.Min{@math.Eval{$fullsk-lingwu-times * 11 / 10};1000}};
                 };
                 fullsk.lingwu.do;
             };
@@ -522,6 +480,12 @@ load-module basic/busy;
 
         #nop 睡着了就什么也不做。;
         #if { $fullsk-sleep } {
+            #return;
+        };
+
+        #if { @fullsk.needDine{} } {
+            #alias fullsk.dine.callback {fullsk.lianxi.calc};
+            fullsk.dine;
             #return;
         };
 
@@ -814,7 +778,10 @@ load-module basic/busy;
 
 #var fullsk-current-room {lw};
 #var fullsk-jianxinju    {false};
-#action {^你进入了剑心居。$} {#var fullsk-jianxinju {true}};
+#action {^你进入了剑心居。{|ID=bot/fullsk}$} {
+    #var fullsk-jianxinju {true};
+    #delay 3 {char.GetHP2};
+};
 
 #alias {fullsk.goto} {
     #local target {%1};
@@ -846,12 +813,151 @@ load-module basic/busy;
 #action {~^%c你的「%*」进步了！$CE} {fullskLog %0};
 #action {^你的基本功夫比你的高级功夫还高！$} {skills};
 
-#alias {fullsk.test} {
-    load-module wd;
-    reload-module bot/fullsk {
-        {food}              {guo}
-        {water}             {cha}
-        {fullme-bot}        {wudang.fullme}
-        {skills}            {太极拳;太极剑}
+#var fullsk-dine-last-food    {-1};
+#var fullsk-dine-last-water   {-1};
+
+#alias {fullsk.dine} {
+    #nop 优先采用身上的补给物进行补充;
+    #nop 如果身上的东西不能够解决问题，就用 dine 机器人。;
+    #if {   $char[HP][食物] <= $fullsk-dine-last-food
+        ||  $char[HP][饮水] <= $fullsk-dine-last-water } {
+        #if { "$bot_fullsk[config][dine-bot]" != "" } {
+                fullsk.goto lw;
+                fullsk.next-skill;
+            };
+            $bot_fullsk[config][dine-bot];
+        };
+        #else {
+            #delay 0 {errLog 没有食物和饮料了，无法继续练功。};
+        };
+        #var fullsk-dine-last-food    {-1};
+        #var fullsk-dine-last-water   {-1};
+        #return;
     };
+
+    #local wait {};
+    #if { $char[HP][食物] < $char[HP][最大食物] / 2 } {
+        #local food {$char[favorite][food]};
+        #if { "$bot_fullsk[config][food]" != "" } {
+            #local food {$bot_fullsk[config][food]};
+        };
+
+        #if { "$food" != "" } {
+            #3 eat $bot_fullsk[config][food];
+            #local wait {true};
+            #var fullsk-dine-last-food {$char[HP][食物]};
+        };
+        #else {
+            #delay 0 {errLog 配置错误，没吃没喝，又不 dine，怎么练功？};
+            #return;
+        };
+    };
+
+    #if { $char[HP][饮水] < $char[HP][最大饮水] / 2 } {
+        drink;
+        #local wait {true};
+        #var fullsk-dine-last-water {$char[HP][饮水]};
+    };
+
+    #nop 如果吃过喝过了，就等待食物和饮水回复;
+    #if { "$wait" == "true" } {
+        #delay {fullsk.dine} {fullsk.dine} 3;
+        #return;
+    };
+
+    fullsk.next-skill;
 };
+
+#alias {fullsk.jxj-dine} {
+    #class fullsk.jxj-dine open;
+
+    #var fullsk.jxj-dine.state {喝水};
+
+    #action {^你身上没有baozi这种食物。$}   {fullsk.jxj-dine.goto 叫小童};
+    #action {^这里没有baozi这种食物。$}     {fullsk.jxj-dine.goto 叫小童};
+
+    #action {^你感觉有点口渴，于是捧起窗边的山泉水，慢慢喝了下去。$} {
+        fullsk.jxj-dine.do;
+    };
+
+    #action {^你{拿起包子咬了几口|将剩下的包子吃得干干净净}。$} {
+        fullsk.jxj-dine.do;
+    };
+
+    #action {^你轻轻击掌三下，不一会儿房门轻开，进来一名小童，向你欠身行礼，%*$} {
+        fullsk.jxj-dine.goto 要包子;
+    };
+
+    #action {^你对小童说道：“先来十个包子吧，要醉仙楼的。饭钱直接从钱老板那里扣就好。”$} {
+        fullsk.jxj-dine.goto 等包子;
+    };
+
+    #action {^不一会儿，小童将十个醉仙楼的包子送到你面前，躬身一礼，说道：“您有事请随时吩咐。”$} {
+        get all;
+        fullsk.jxj-dine.goto 吃饭;
+    };
+
+    #action {^你看着小童，一时不知道说什么好。小童看你没有反应，深施一礼，又退了出去关上了门。$} {
+        fullsk.jxj-dine.goto 叫小童;
+    };
+
+    #action {^你轻轻击掌三下，等了一会儿，却不见有人回应。大概都在忙吧。$} {
+        fullsk.jxj-dine.goto 叫小童;
+    };
+
+    #alias {fullsk.jxj-dine.do} {
+        #if { @isTrue{$char[HP][忙]} } {
+            #return;
+        };
+
+        #switch {"$fullsk.jxj-dine.state"} {
+            #case {"喝水"} {
+                #if { $char[HP][饮水] < $char[HP][最大饮水] } {
+                    drink water;
+                };
+                #else {
+                    fullsk.jxj-dine.goto 吃饭;
+                };
+            };
+            #case {"吃饭"} {
+                #if { $char[HP][食物] < $char[HP][最大食物] } {
+                    eat baozi;
+                };
+                #else {
+                    okLog 已经吃饱喝足了。;
+                    #class fullsk.jxj-dine kill;
+                    fullsk.dine.callback;
+                };
+            };
+            #case {"叫小童"} {clap 3};
+            #case {"要包子"} {food; ga.Sync};
+            #case {"等包子"} {#0};
+        };
+    };
+
+    #alias {fullsk.jxj-dine.goto} {
+        #local state {%%1};
+        #if { "$fullsk.jxj-dine.state" != "$state" } {
+            #var fullsk.jxj-dine.state {$state};
+            fullsk.jxj-dine.do;
+        };
+    };
+
+    xtt.Tick fullsk.jxj-dine {fullsk.jxj-dine.do} 3;
+
+    #class fullsk.jxj-dine close;
+
+    #var fullsk-jianxinju {true};
+};
+
+#func {fullsk.needDine} {
+    #if { $char[HP][饮水] < $char[HP][最大饮水] / 10 } {
+        #return 1;
+    };
+    #if { $char[HP][食物] < $char[HP][最大食物] / 10 } {
+        #return 1;
+    };
+    #return 0;
+};
+
+#alias {fullsk.dine.callback} {#0};
