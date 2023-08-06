@@ -66,6 +66,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    往字符串列表里追加新内容。
 //    <119>注意<299>，由于 TinTin++ 自身语法的缺陷，字符串列表的第一个元素只能是
 //    简单字符串，不能是列表、字符串列表、表格，其余元素不受此限制。
+//
+//  EXAMPLE: \@slist.Append{{a;b;c};X}
+//  RESULT:  {a;b;c;X}
+//
+//  EXAMPLE: \@slist.Append{{a;b;c};{X;Y}}
+//  RESULT:  {a;b;c;{X;Y}}
+//
+//  EXAMPLE: \@slist.Append{{a;b;c};{{X}{xxx}{Y}{yyy}}}
+//  RESULT:  {a;b;c;{{X}{xxx}{Y}{yyy}}}
+//
+//  EXAMPLE: \@slist.Append{{};X}
+//  RESULT:  {X}
 // };
 #func {slist.Append} {
     #local list {%1};
@@ -74,10 +86,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #if { {$list} === {} } {
         #line sub {var;secure} #cat list $str;
     };
-    #elseif { "$str" == "%*;%*" } {
+    #elseif { {$str} == {%*;%*} } {
         #cat list {;{$str}};
     };
-    #elseif { "&str" == "{.*}" } {
+    #elseif { {$str} == {\{%*\}} } {
         #cat list {;{$str}};
     };
     #else {

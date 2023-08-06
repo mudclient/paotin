@@ -110,6 +110,21 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ list.Insert <列表> <下标> <内容>
 //    将内容插入到列表的指定下标处，如果下标超过列表现有长度，则先扩展列表。
+//
+//    EXAMPLE: \@list.Insert{{{1}{a}{2}{b}{3}{c}};1;X}
+//    RESULT:  {{1}{X}{2}{a}{3}{b}{4}{c}}
+//
+//    EXAMPLE: \@list.Insert{{{1}{a}{2}{b}{3}{c}};2;X}
+//    RESULT:  {{1}{a}{2}{X}{3}{b}{4}{c}}
+//
+//    EXAMPLE: \@list.Insert{{{1}{a}{2}{b}{3}{c}};3;X}
+//    RESULT:  {{1}{a}{2}{b}{3}{X}{4}{c}}
+//
+//    EXAMPLE: \@list.Insert{{{1}{a}{2}{b}{3}{c}};4;X}
+//    RESULT:  {{1}{a}{2}{b}{3}{c}{4}{X}}
+//
+//    EXAMPLE: \@list.Insert{{{1}{a}{2}{b}{3}{c}};5;X}
+//    RESULT:  {{1}{a}{2}{b}{3}{c}{4}{}{5}{X}}
 // };
 #func {list.Insert} {
     #local l {%1};
@@ -121,7 +136,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #list l add {$data};
     };
     #else {
-        #list l set {$idx} {$data};
+        #list l insert {$idx} {$data};
     };
 
     #return {$l};
