@@ -43,7 +43,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #var gLog[initialled]   {true};
 
     load-lib option;
-    option.Define {EchoCommand} {Bool} {是否回显发送的命令} {false};
+    option.Define {EchoCommand} {Bool}  {是否回显发送的命令}        {false};
+    option.Define {DebugLog}    {Bool}  {是否开启调试日志}          {false};
+    option.Define {DebugTags}   {Slist} {记录调试日志的 tag 列表}   {};
 
     #return 1;
 };
@@ -54,7 +56,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {warnLog}    {log.write {$gLog[warn]}   {<139>%0}   {ECHO}};
 #alias {errLog}     {log.write {$gLog[error]}  {<119>%0}   {ECHO}};
 #alias {infoLog}    {log.write {$gLog[info]}   {%0}        {ECHO}};
-#alias {dbgLog}     {log.write {$gLog[debug]}  {%0}};
+
+#alias {dbgLog} {
+    #local tag {%1};
+
+    #if { @option.IsDisable{DebugLog} } {
+        #return;
+    };
+
+    #if { @slist.Contains{{@option.Get{DebugTags}};$tag} } {
+        log.write {$gLog[debug]} {<850>%0<999>} {ECHO};
+    };
+};
 
 #alias {noLog}      {#0};
 
