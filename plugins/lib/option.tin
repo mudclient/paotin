@@ -269,7 +269,7 @@ load-lib storage;
     #local type     {%2};
     #local value    {%3};
 
-    #local types {Bool|String|Number};
+    #local types {Bool|String|Slist|Number};
     #if { "$type" != "{$types}" } {
         errLog 不能识别的选项类型: 「$type」，目前仅支持选项类型：{$types};
         #return;
