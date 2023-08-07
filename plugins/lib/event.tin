@@ -147,9 +147,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { &gEventHandlers[$name][] <= 0 } {
+        dbgLog event => 事件「$name」已产生，但因为没有注册接受者所以无法投递。;
         #return;
     };
 
+    #local delivered {false};
     #local hook {};
     #foreach {*gEventHandlers[$name][]} {hook} {
         #local options  {$gEventHandlers[$name][$hook][options]};
@@ -158,6 +160,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #if { "$pHook" != "" && "$hook" != "$pHook" } {
             #continue;
         };
+
+        #local delivered {true};
+        dbgLog event => 事件「$name」即将投递给「$gEventHandlers[$name][$hook][module]」模块的「$hook」。;
+
         #if { "$options[justOnce]" == "true" } {
             #unvar {gEventHandlers[$name][$hook]};
         };
@@ -167,6 +173,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #else {
             $code {$args};
         };
+    };
+
+    #if { @isFalse{$delivered} } {
+        dbgLog event => 事件「$name」已产生，但因为没有匹配的接受者所以无法投递。;
     };
 };
 
