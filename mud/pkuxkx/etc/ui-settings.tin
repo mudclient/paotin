@@ -92,10 +92,11 @@
 #nop 热键绑定;
 #list global-key-bindings create {
     {{key}{\cd}     {action}{cli.SmartToggle}}
-    {{key}{\cod}    {action}{xtt.ToggleDisableCommands}}
+    {{key}{\coD}    {action}{xtt.ToggleDisableCommands}}
     {{key}{\cos}    {action}{prompt.ToggleSwitch}}
     {{key}{\cob}    {action}{beautify.ToggleSwitch}}
     {{key}{\col}    {action}{option.List}}
+    {{key}{\cod}    {action}{option.Toggle DebugLog}}
     {{key}{\coe}    {action}{option.Toggle EchoCommand}}
     {{key}{\com}    {action}{option.Toggle GagMove}}
     {{key}{\cog}    {action}{option.Toggle GMCPDebug}}
