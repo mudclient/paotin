@@ -7,8 +7,10 @@ if [ "x$MODE" == "xdaemon" ]; then
     exit
 fi
 
+mkdir -p $HOME/tmux
+
 if [ "x$TMUXCMD" = "x" ]; then
-    export TMUXCMD="tmux -L MUD"
+    export TMUXCMD="tmux -S $HOME/tmux/sock"
 fi
 
 SESSION=MUD
