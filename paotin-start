@@ -29,7 +29,7 @@ fi
 
 export HOME=$(pwd)
 export PATH=$HOME/bin:$PATH
-export TMUXCMD="tmux -L MUD -f $HOME/tmux.conf"
+export TMUXCMD="tmux -S $HOME/tmux/sock -f $HOME/tmux.conf"
 
 test -f .bash_profile || ln -s profile.sh .bash_profile
 exec bash -l start-ui
