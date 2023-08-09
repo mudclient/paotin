@@ -92,6 +92,11 @@ VAR {正在等待的回调列表}    busy.wait-list {};
     #else {
         #delay busy.checkbusy {checkbusy} 1;
     };
+
+    #line gag;
 };
 
-#action {^你不忙{|ID=basic/busy}$} {#delay {busy.on-idle} {busy.on-idle} 0};
+#action {^你不忙{|ID=basic/busy}$} {
+    #delay {busy.on-idle} {busy.on-idle} 0;
+    #line gag;
+};
