@@ -43,9 +43,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #var gLog[initialled]   {true};
 
     load-lib option;
-    option.Define {EchoCommand} {Bool}  {是否回显发送的命令}        {false};
-    option.Define {DebugLog}    {Bool}  {是否开启调试日志}          {false};
-    option.Define {DebugTags}   {Slist} {记录调试日志的 tag 列表}   {};
+    option.Define {EchoCommand}     {Bool}  {是否回显发送的命令}        {false};
+    option.Define {DebugLog}        {Bool}  {是否开启调试日志}          {false};
+    option.Define {DebugLogEcho}    {Bool}  {是否显示调试日志}          {false};
+    option.Define {DebugTags}       {Slist} {记录调试日志的 tag 列表}   {};
 
     #return 1;
 };
@@ -64,8 +65,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return;
     };
 
+    #local echo {};
+    #if { @option.IsEnable{DebugLogEcho} } {
+        #local echo {ECHO};
+    };
+
     #if { @slist.Contains{{@option.Get{DebugTags}};$tag} } {
-        log.write {$gLog[debug]} {<850>%0<999>} {ECHO};
+        log.write {$gLog[debug]} {<850>%0<999>} {$echo};
     };
 };
 
