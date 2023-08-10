@@ -14,21 +14,122 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ dir.Name <方向全拼|方向缩写> [<严格模式>]
 //    给出指定方向的中文名称。方向可以通过英文单词或者英文单词的缩写给出。
 //
+//  EXAMPLE: \@dir.Name{eastup}
+//  RESULT:  {东上}
+//
+//  EXAMPLE: \@dir.Name{eu}
+//  RESULT:  {东上}
+//
+//  EXAMPLE: \@dir.Name{enter}
+//  RESULT:  {进去}
+//
+//  EXAMPLE: \@dir.Name{eastup;1}
+//  RESULT:  {东上}
+//
+//  EXAMPLE: \@dir.Name{eu;1}
+//  RESULT:  {东上}
+//
+//  EXAMPLE: \@dir.Name{enter;1}
+//  RESULT:  {进去}
+//
+//  EXAMPLE: \@dir.Name{open door}
+//  RESULT:  {open door}
+//
+//  EXAMPLE: \@dir.Name{open door;1}
+//  RESULT:  {}
+// };
+#func {dir.Name}    { #return @__dir_convert_dir__{name; %1; %2}; };
+
+///=== {
 // #@ dir.Short <方向全拼> [<严格模式>]
 //    给出方向对应的英文单词缩写。
 //
+//  EXAMPLE: \@dir.Short{eastup}
+//  RESULT:  {eu}
+//
+//  EXAMPLE: \@dir.Short{eu}
+//  RESULT:  {eu}
+//
+//  EXAMPLE: \@dir.Short{enter}
+//  RESULT:  {enter}
+//
+//  EXAMPLE: \@dir.Short{open door}
+//  RESULT:  {open door}
+//
+//  EXAMPLE: \@dir.Short{eastup;1}
+//  RESULT:  {eu}
+//
+//  EXAMPLE: \@dir.Short{eu;1}
+//  RESULT:  {eu}
+//
+//  EXAMPLE: \@dir.Short{enter;1}
+//  RESULT:  {enter}
+//
+//  EXAMPLE: \@dir.Short{open door;1}
+//  RESULT:  {}
+// };
+#func {dir.Short}   { #return @__dir_convert_dir__{short; %1; %2}; };
+
+///=== {
 // #@ dir.Long <方向缩写> [<严格模式>]
 //    给出方向对应的英文单词全拼。
 //
+//  EXAMPLE: \@dir.Long{eu}
+//  RESULT:  {eastup}
+//
+//  EXAMPLE: \@dir.Long{eastup}
+//  RESULT:  {eastup}
+//
+//  EXAMPLE: \@dir.Long{out}
+//  RESULT:  {out}
+//
+//  EXAMPLE: \@dir.Long{open door}
+//  RESULT:  {open door}
+//
+//  EXAMPLE: \@dir.Long{eu;1}
+//  RESULT:  {eastup}
+//
+//  EXAMPLE: \@dir.Long{eastup;1}
+//  RESULT:  {eastup}
+//
+//  EXAMPLE: \@dir.Long{out;1}
+//  RESULT:  {out}
+//
+//  EXAMPLE: \@dir.Long{open door;1}
+//  RESULT:  {}
+// };
+#func {dir.Long}    { #return @__dir_convert_dir__{long; %1; %2}; };
+
+///=== {
 // #@ dir.Reverse <方向> [<严格模式>]
 //    给出方向对应的相反方向。
 //
+//  EXAMPLE: \@dir.Reverse{eu}
+//  RESULT:  {wd}
+//
+//  EXAMPLE: \@dir.Reverse{eastup}
+//  RESULT:  {westdown}
+//
+//  EXAMPLE: \@dir.Reverse{enter}
+//  RESULT:  {out}
+//
+//  EXAMPLE: \@dir.Reverse{open door}
+//  RESULT:  {open door}
+//
+//  EXAMPLE: \@dir.Reverse{eu;1}
+//  RESULT:  {wd}
+//
+//  EXAMPLE: \@dir.Reverse{eastup;1}
+//  RESULT:  {westdown}
+//
+//  EXAMPLE: \@dir.Reverse{enter;1}
+//  RESULT:  {out}
+//
+//  EXAMPLE: \@dir.Reverse{open door;1}
+//  RESULT:  {}
+//
 ///// 以上函数中，凡是支持严格模式参数的，如果严格模式为 true，则给错误方向给出空字符串结果。
 // };
-#func {dir.Name}    { #return @__dir_convert_dir__{name; %1; %2}; };
-#func {dir.Short}   { #return @__dir_convert_dir__{short; %1; %2}; };
-#func {dir.Long}    { #return @__dir_convert_dir__{long; %1; %2}; };
-
 #func {dir.Reverse}  {
     #if { "%1" == "enter{| .*}" } {
         #return {out};
@@ -41,10 +142,22 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // #@ dir.IsDir <方向全拼|方向缩写>
 //    检查参数是否是一个合格的方向指令。
+//
+//  EXAMPLE: \@dir.IsDir{eu}
+//  RESULT:  {1}
+//
+//  EXAMPLE: \@dir.IsDir{eastup}
+//  RESULT:  {1}
+//
+//  EXAMPLE: \@dir.IsDir{enter}
+//  RESULT:  {1}
+//
+//  EXAMPLE: \@dir.IsDir{open door}
+//  RESULT:  {0}
 // };
 #func {dir.IsDir} {
     #local cmd {%0};
-    #if { "@dir.Name{$cmd}" == "" } {
+    #if { "@dir.Name{{$cmd};1}" == "" } {
         #return 0;
     };
     #else {
@@ -53,8 +166,108 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 ///=== {
+// #@ dir.Type <方向指令>
+//    计算方向指令的类型。方向指令有几大类：
+//      - 标准出口(exit):    标准出口应当是一个小写字母拼写形式的出口
+//      - 隐藏出口(hidden):  规定全大写字母拼写形式的出口为隐藏出口
+//      - 动态出口(dynamic): 规定首字母大写拼写形式的出口为动态出口
+//      - 非标指令(ad-hoc):  如果方向指令转换为小写之后，不是标准出口，则为非标指令
+//
+//    EXAMPLE: \@dir.Type{north}
+//    RESULT:  {exit}
+//
+//    EXAMPLE: \@dir.Type{NORTH}
+//    RESULT:  {hidden}
+//
+//    EXAMPLE: \@dir.Type{North}
+//    RESULT:  {dynamic}
+//
+//    EXAMPLE: \@dir.Type{open door}
+//    RESULT:  {ad-hoc}
+// };
+#func {dir.Type} {
+    #local dir {%0};
+    #local exit {@str.ToLower{$dir}};
+    #if { ! @dir.IsDir{$exit} } {
+        #return {ad-hoc};
+    };
+    #elseif { "$dir" == "{[A-Z]+}" } {
+        #return {hidden};
+    };
+    #elseif { "$dir" == "{[A-Z][a-z]+}" } {
+        #return {dynamic};
+    };
+    #else {
+        #return {exit};
+    };
+};
+
+///=== {
+// #@ dir.ToCmd <方向指令> [<模式>]
+//    根据方向指令的类别，生成对应的命令。
+//    可选的模式用来生成特殊情形下的命令，例如推车程序。
+//
+//    EXAMPLE: \@dir.ToCmd{north}
+//    RESULT:  {go north}
+//
+//    EXAMPLE: \@dir.ToCmd{NORTH}
+//    RESULT:  {north}
+//
+//    EXAMPLE: \@dir.ToCmd{North}
+//    RESULT:  {go north}
+//
+//    EXAMPLE: \@dir.ToCmd{open door}
+//    RESULT:  {open door}
+//
+//    EXAMPLE: \@dir.ToCmd{north;ganche}
+//    RESULT:  {gan che to north}
+//
+//    EXAMPLE: \@dir.ToCmd{NORTH;ganche}
+//    RESULT:  {gan che to north}
+//
+//    EXAMPLE: \@dir.ToCmd{North;ganche}
+//    RESULT:  {gan che to north}
+//
+//    EXAMPLE: \@dir.ToCmd{ride;ganche}
+//    RESULT:  {ride}
+// };
+#func {dir.ToCmd} {
+    #local dir  {%1};
+    #local mode {@default{%2;go}};
+    #local type {@dir.Type{$dir}};
+
+    #if { "$mode" == "go" } {
+        #switch {"$type"} {
+            #case {"exit"}      {#return {go $dir}};
+            #case {"hidden"}    {#return {@str.ToLower{$dir}}};
+            #case {"dynamic"}   {#return {go @str.ToLower{$dir}}};
+            #case {"ad-hoc"}    {#return {$dir}};
+            #default            {#return {$dir}};
+        };
+    };
+    #elseif { "$mode" == "ganche" } {
+        #switch {"$type"} {
+            #case {"exit"}      {#return {gan che to $dir}};
+            #case {"hidden"}    {#return {gan che to @str.ToLower{$dir}}};
+            #case {"dynamic"}   {#return {gan che to @str.ToLower{$dir}}};
+            #case {"ad-hoc"}    {#return {$dir}};
+            #default            {#return {$dir}};
+        };
+    };
+};
+
+///=== {
 // #@ path.Reverse <路径>
 //    给出路径对应的反向路径。
+//
+//  EXAMPLE: \@path.Reverse{n;e;s;w}
+//  RESULT:  {e;n;w;s}
+//
+//  EXAMPLE: \@path.Reverse{north;east;south;west}
+//  RESULT:  {east;north;west;south}
+//
+//  EXAMPLE: \@path.Reverse{north;east;hp;south;west}
+//  RESULT:  {east;north;hp;west;south}
 // };
 #func {path.Reverse} {
     #local path     {%0};
@@ -66,6 +279,117 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #return {@slist.FromList{$newPath}};
+};
+
+///=== {
+// #@ path.Simplify <路径>
+//    化简路径。返回化简后的新路径。
+//
+//  EXAMPLE: \@path.Simplify{north;north;north;east;west;south}
+//  RESULT:  {north;north}
+//
+//  EXAMPLE: \@path.Simplify{north;north;north;east;south;west}
+//  RESULT:  {north;north;north;east;south;west}
+//
+//  EXAMPLE: \@path.Simplify{n;n;n;e;w;s}
+//  RESULT:  {n;n}
+//
+//  EXAMPLE: \@path.Simplify{n;n;n;e;s;w}
+//  RESULT:  {n;n;n;e;s;w}
+//
+//  EXAMPLE: \@path.Simplify{n;n;n;e;hp;w;s}
+//  RESULT:  {n;n;n;e;hp;w;s}
+//
+// };
+#func {path.Simplify} {
+    #local path {@list.FromSlist{%0}};
+    #local count {&path[]};
+    #if { $count == 0 } {
+        #return {};
+    };
+
+    #local idx {1};
+    #while { $idx < $count } {
+        #local current {$path[$idx]};
+        #local next {$path[@math.Eval{$idx + 1}]};
+        #if { "@dir.Long{$current}" !== "@dir.Reverse{@dir.Long{$next}}" } {
+            #math idx {$idx + 1};
+            #continue;
+        };
+
+        #list path delete $idx 2;
+        #local idx      {@math.Max{1;@math.Eval{$idx - 2}}};
+        #local count    {@math.Eval{$count - 2}};
+    };
+
+    #return {@slist.FromList{$path}};
+};
+
+///=== {
+// ## path.Compact <路径>
+//    压缩路径。返回后的新路径。
+//
+//  EXAMPLE: \@path.Compact{north;north;north;east;south;south;west}
+//  RESULT:  {#3 north;east;#2 south;west}
+//
+//  EXAMPLE: \@path.Compact{n;n;n;e;s;s;w}
+//  RESULT:  {#3 n;e;#2 s;w}
+// };
+#func {path.Compact} {
+    #local path {%0};
+
+    #local newPath {};
+    #local step {};
+    #local last {};
+    #local count {};
+
+    #foreach {$path;} {step} {
+        #if { "$last" == "$step" } {
+            #math count {$count + 1};
+        };
+        #else {
+            #if { "$last" != "" } {
+                #if { $count > 2 } {
+                    #list newPath add {#$count $last};
+                };
+                #else {
+                    #local tmp {};
+                    #loop 1 {$count} {tmp} {
+                        #list newPath add {$last};
+                    };
+                };
+            };
+            #local last {$step};
+            #local count {1};
+        };
+        #if { "$step" == "" } {
+            #break;
+        };
+    };
+
+    #return {@slist.FromList{$newPath}};
+};
+
+///=== {
+// #@ path.Long <路径>
+//    返回长版本的路径。路径中的每个方向命令都会被扩展成完整的单词。
+//
+//  EXAMPLE: \@path.Long{n;n;n;e;w;s}
+//  RESULT:  {north;north;north;east;west;south}
+// };
+#func {path.Long} {
+    #return {@fp.Transform{{%0};{\@dir.Long{VALUE}}}};
+};
+
+///=== {
+// #@ path.Short <路径>
+//    返回长版本的路径。路径中的每个方向命令都会被简化。
+//
+//  EXAMPLE: \@path.Short{north;north;north;east;south;west}
+//  RESULT:  {n;n;n;e;s;w}
+// };
+#func {path.Short} {
+    #return {@fp.Transform{{%0};{\@dir.Short{VALUE}}}};
 };
 
 #var xtt.dir.table {
@@ -121,7 +445,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {__dir_convert_dir__} {
     #local field        {%1};
     #local dir          {%2};
-    #local restricted   {%2};
+    #local restricted   {%3};
 
     #if { "$dir" == "" } {
         #return {};
@@ -140,48 +464,4 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #else {
         #return {$entry[$field]};
     };
-};
-
-///=== {
-// #@ path.Compact <路径>
-//    压缩路径。返回压缩后的新路径。
-// };
-#func {path.Compact} {
-    #local path {@list.FromSlist{%0}};
-    #local count {&path[]};
-    #if { $count == 0 } {
-        #return {};
-    };
-
-    #local idx {1};
-    #while { $idx < $count } {
-        #local current {$path[$idx]};
-        #local next {$path[@math.Eval{$idx + 1}]};
-        #if { "@dir.Long{$current}" !== "@dir.Reverse{@dir.Long{$next}}" } {
-            #math idx {$idx + 1};
-            #continue;
-        };
-
-        #list path delete $idx 2;
-        #local idx      {@math.Max{1;@math.Eval{$idx - 2}}};
-        #local count    {@math.Eval{$count - 2}};
-    };
-
-    #return {@slist.FromList{$path}};
-};
-
-///=== {
-// #@ path.Long <路径>
-//    返回长版本的路径。路径中的每个方向命令都会被扩展成完整的单词。
-// };
-#func {path.Long} {
-    #return {@fp.Transform{{%0};{\@dir.Long{VALUE}}}};
-};
-
-///=== {
-// #@ path.Short <路径>
-//    返回长版本的路径。路径中的每个方向命令都会被简化。
-// };
-#func {path.Short} {
-    #return {@fp.Transform{{%0};{\@dir.Short{VALUE}}}};
 };
