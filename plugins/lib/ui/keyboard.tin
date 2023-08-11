@@ -72,7 +72,7 @@
     prompt.Set {{search}{}};
     prompt.Change {};
 
-    #class {keyboard-nromal-mode} assign {#macro {\cb} {keyboard.LessMode; #buffer up 20}};
+    #class {keyboard-normal-mode} assign {#macro {\cb} {keyboard.LessMode; #buffer up 20}};
 };
 
 #alias {keyboard.backup-macro} {
