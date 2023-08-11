@@ -108,6 +108,7 @@ load-lib storage;
 
     #if { @isTrue{$changed} } {
         storage.Save {alert} {alert-items};
+        alert.perform;
     };
 
     #if { &alert-items[] > 0 } {
