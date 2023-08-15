@@ -84,7 +84,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local str  {%2};
 
     #if { {$list} === {} } {
-        #line sub {var;secure} #cat list $str;
+        #if { {$str} != {} } {
+            #line sub {var;secure} #cat list $str;
+        };
     };
     #elseif { {$str} == {%*;%*} } {
         #cat list {;{$str}};
