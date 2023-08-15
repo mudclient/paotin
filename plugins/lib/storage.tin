@@ -19,7 +19,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///// 各模块可以通过 API storage.Save 按需创建自己的存储文件，在其中存储一个或多个
 ///// 变量，并在需要时通过 API storage.Load 提取这些变量。
 /////
-///// 另外，storage 模块自行维护了一个全局存储文件。再简单使用场景下，其它模块
+///// 另外，storage 模块自行维护了一个全局存储文件。在简单使用场景下，其它模块
 ///// 可以通过 API storage.SetGlobal 和 storage.GetGlobal 来读写这个全局存储文件。
 ///// 这对读写少量的数据显得更加方便。
 ///// };
@@ -35,12 +35,15 @@ VAR {存储路径} storage-path {data};
 #func {lib_storage.Init} {
     #local _ {@mkdir{data}};
 
+    #local files {};
     #line quiet #scan dir {var/data/} files;
     #if { &files[] > 0 } {
         #var storage-path {var/data};
     };
 
     storage.Load {storage} {storage-globals};
+
+    dbgLog storage 全局存储项已加载。;
 
     #return {true};
 };
@@ -61,7 +64,21 @@ VAR {存储路径} storage-path {data};
     #class comm-store-tmp open;
     #local var {};
     #foreach {$vars} {var} {
-        #var {dump-$var} {${$var}};
+        #local count {&{${var}[]}};
+        #if { $count < 100 } {
+            #var {dump-$var} {${$var}};
+            dbgLog storage 变量 $var 已写入磁盘。共有 @math.Max{$count;1} 个数据项。;
+            #continue;
+        };
+
+        #local idx {0};
+        #loop 1 {$count} {idx} {
+            #local key   {*{${var}[+$idx]}};
+            #local value {${${var}[+$idx]}};
+            #var {dump-${var}[$key]} {$value};
+        };
+
+        dbgLog storage 变量 $var 已写入磁盘。共有 $count 个数据项。;
     };
     #class comm-store-tmp close;
 
@@ -87,7 +104,21 @@ VAR {存储路径} storage-path {data};
     #line quiet #class comm-store-tmp {assign} {load-file data/${file}.tin};
     #local var {};
     #foreach {$vars} {var} {
-        #var {$var} {${dump-$var}};
+        #local count {&{dump-${var}[]}};
+        #if { $count < 100 } {
+            #var {$var} {${dump-$var}};
+            dbgLog storage 已从磁盘中加载变量 $var，共有 @math.Max{$count;1} 个数据项。;
+            #continue;
+        };
+
+        #local idx {0};
+        #loop 1 {$count} {idx} {
+            #local key   {*{dump-${var}[+$idx]}};
+            #local value {${dump-${var}[+$idx]}};
+            #var {${var}[$key]} {$value};
+        };
+
+        dbgLog storage 已从磁盘中加载变量 $var，共有 $count 个数据项。;
     };
     #class comm-store-tmp kill;
 };
@@ -108,6 +139,8 @@ VAR {存储路径} storage-path {data};
 
     #var storage-globals[$key] {$value};
     storage.Save {storage} {storage-globals};
+
+    dbgLog storage 全局存储项已写入磁盘。;
 };
 
 ///=== {
