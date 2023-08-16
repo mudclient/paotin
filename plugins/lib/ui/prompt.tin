@@ -108,11 +108,10 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
    倒计时结束后，如果 cooldown 时间比倒计时时间还要长，则还会继续显示一段时间之
    后才会被隐藏。
 */
-#var prompt-fields {};
-#list prompt-fields create {};
 
-#nop 配色主题，注意这里不要直接嵌入 SGR（ansi codes），否则计算宽度时会有问题。;
-#var prompt-theme {
+VAR {信息栏的字段列表} prompt-fields {};
+
+VAR {信息栏的默认配色主题} prompt-theme {
     {Disable}{<bbc>}
     {BusyColor}{<239>}
     {BattleColor}{<119>}
@@ -125,35 +124,30 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     {Value}{<299>}
 };
 
-#nop 自定义图标;
-#var prompt-icon {
+VAR {常用图标} prompt-icon {
     {DisableRefresh}{🚫}
 };
 
-#nop 热键绑定;
-#var global-key-bindings {};
-#list global-key-bindings create {
-    {{key}{\cos}    {action}{prompt.ToggleSwitch}}
+VAR {热键绑定} global-key-bindings {
+    {1}     {{key}{\cos}    {action}{prompt.ToggleSwitch}}
 };
 
-#var prompt-top-max-line {0};
-#var prompt-bot-max-line {0};
+VAR {信息栏的顶部高度（自动计算）}  prompt-top-max-line     {0};
+VAR {信息栏的底部高度（自动计算）}  prompt-bot-max-line     {0};
+VAR {屏幕的宽度（自动更新）}        prompt-screen-width     {0};
+VAR {所有的字段值的字典}            prompt-dict             {};
 
-#nop 所有的字段值的字典;
-#var prompt-dict {};
-
-#nop 上次实际绘制屏幕的时间;
-#var prompt-refresh {
+VAR {上次实际绘制屏幕的时间} prompt-refresh {
     {global}{false}
     {lines} {false}
     {prompt}{false}
 };
 
-#nop 提示符;
-#var prompt-prompt {Input};
+VAR {命令输入提示符} prompt-prompt {Input};
 
 #func {lib_ui_prompt.Init} {
     load-file {etc/ui-settings.tin};
+    #local _ @prompt.ScreenWidth{};
     prompt.Set {};
     prompt.bindKey;
     prompt.Enable;
@@ -364,8 +358,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     };
 
     #if { "${prompt-top-max-line}" != "$topMaxLine" || "${prompt-bot-max-line}" != "$botMaxLine" } {
-        #local lineWidth {};
-        #screen get COLS lineWidth;
+        #local lineWidth {@prompt.ScreenWidth{}};
         #local spaceLine {};
         #format spaceLine {%-${lineWidth}s} {};
 
@@ -557,8 +550,7 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     #local newText {@str.Trim{$text}};
     #math width {$width + @str.Width{$newText} - @str.Width{$text}};
 
-    #local screenWidth {0};
-    #screen get COLS screenWidth;
+    #local screenWidth {$prompt-screen-width};
 
     #local leftLen {0};
     #local rightLen {0};
@@ -588,6 +580,8 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
 #event {SCREEN RESIZE} {
     #var prompt-top-max-line {0};
     #var prompt-bot-max-line {0};
+    #var prompt-screen-width {0};
+    #local _ @prompt.ScreenWidth{};
     prompt.refresh;
     #buffer end;
 };
@@ -653,6 +647,13 @@ tt++ table 由一组选项和与之对应的选项值来组成，用来说明想
     #else {
         okLog 你抬头看着远方，若有所思，接着又奋笔疾书，在笔记本上记下一些东西。;
     };
+};
+
+#func {prompt.ScreenWidth} {
+    #if { $prompt-screen-width == 0 } {
+        #screen get COLS prompt-screen-width;
+    };
+    #return {$prompt-screen-width};
 };
 
 #alias {prompt.test} {
