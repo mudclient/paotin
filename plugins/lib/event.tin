@@ -20,18 +20,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {NOTE}      {本文件属于 PaoTin++ 的一部分}
 };
 
-#func {lib_event.Init} {
-    #class data/lib/event open;
-    #var gEventHandlers {};
-    #var gValidEvent    {};
-    #class data/lib/event close;
+VAR {已注册的 PaoTin++ 事件句柄}  gEventHandlers {};
+VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
 
+#func {lib_event.Init} {
     #return true;
 };
 
 #func {__xtt_event_name_is_valid__} {
-    #local name {%1};
-    #if { "$name" == "{[_a-zA-Z]([./_a-zA-Z0-9-]*[a-zA-Z0-9])?}" } {
+    #local event {%1};
+    #if { "$event" == "{[_a-zA-Z]([./_a-zA-Z0-9-]*[a-zA-Z0-9])?}" } {
         #return {true};
     };
 
@@ -53,12 +51,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //        - 说明：事件的简短说明。会出现在类似于 event.List 的用户交互界面。
 // };
 #alias {event.Define} {
-    #local name     {%1};
+    #local event    {%1};
     #local type     {%2};
     #local module   {%3};
     #local desc     {%4};
 
-    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
+    #if { "@__xtt_event_name_is_valid__{{$event}}" != "true" } {
         xtt.Usage event.Define 事件名称不是合法的标识符名称;
         #return;
     };
@@ -72,7 +70,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return;
     };
 
-    #var {gValidEvent[$name]} {
+    #var {gValidEvent[$event]} {
         {type}{$type}
         {module}{$module}
         {desc}{$desc}
@@ -93,8 +91,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #echo {%h} { 已经定义的事件列表 };
 
-    #echo {%-20s %-5s %-30s %s} {事件/已注册的钩子} {类型} {模块} {说明/代码};
-    #echo {%-20s %-5s %-30s %s} {@str.Repeat{20;-}} {----} {@str.Repeat{30;-}} {------------};
+    #echo {%-30s %-5s %-40s %s} {事件/已注册的钩子} {类型} {模块} {说明/代码};
+    #echo {%-30s %-5s %-40s %s} {@str.Repeat{30;-}} {----} {@str.Repeat{40;-}} {------------};
 
     #foreach {*gValidEvent[]} {event} {
         #local type {有参};
@@ -102,23 +100,31 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             #local type {无参};
         };
 
-        #echo {%-20s %-5s %-30s %s}{$event} {$type}
+        #echo {%-30s %-5s %-40s %s}{$event} {$type}
             {@genModuleLink{$gValidEvent[$event][module];MOD}}
             {$gValidEvent[$event][desc]};
-        #local hook {};
-        #local count {0};
-        #foreach {*gEventHandlers[$event][]} {hook} {
-            #local len {1};
-            #format len {%L} {$hook};
-            #math len {16 - $len};
-            #math count {$count + 1};
-            #local lead {├};
-            #if { $count == &gEventHandlers[$event][] } {
-                #local lead {╰};
+        #local classCount {0};
+        #local class {};
+        #foreach {*gEventHandlers[$event][]} {class} {
+            #local hook {};
+            #math classCount {$classCount + 1};
+            #local hookCount {0};
+            #foreach {*gEventHandlers[$event][$class][]} {hook} {
+                #math hookCount {$hookCount + 1};
+
+                #local lead {├};
+                #if {  $classCount == &gEventHandlers[$event][] 
+                    && $hookCount == &gEventHandlers[$event][$class][] } {
+                    #local lead {╰};
+                };
+
+                #local len {1};
+                #format len {%L} {$hook};
+                #math len {26 - $len};
+                #echo { $lead@str.Repeat{$len;─} %s        %-40s %s}{$hook}
+                    {@genModuleLink{$gEventHandlers[$event][$class][$hook][module];MOD}}
+                    {$gEventHandlers[$event][$class][$hook][code]};
             };
-            #echo { $lead@str.Repeat{$len;─} %s        %-30s %s}{$hook}
-                {@genModuleLink{$gEventHandlers[$event][$hook][module];MOD}}
-                {$gEventHandlers[$event][$hook][code]};
         };
     };
 
@@ -132,51 +138,56 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    你可以参考 event.Handle 理解什么是事件回调钩子。
 // };
 #alias {event.Emit} {
-    #local name  {%1};
+    #local event {%1};
     #local pHook {%2};
     #local args  {%3};
 
-    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
+    #if { "@__xtt_event_name_is_valid__{{$event}}" != "true" } {
         xtt.Usage event.Emit 事件名称不是合法的标识符名称;
         #return;
     };
 
-    #if { "$gValidEvent[$name]" == "" } {
-        xtt.Usage event.Emit {未定义的事件名称: $name};
+    #if { "$gValidEvent[$event]" == "" } {
+        xtt.Usage event.Emit {未定义的事件名称: $event};
         #return;
     };
 
-    #if { &gEventHandlers[$name][] <= 0 } {
-        dbgLog event => 事件「$name」已产生，但因为没有注册接受者所以无法投递。;
-        #return;
-    };
-
+    #local count {0};
     #local delivered {false};
-    #local hook {};
-    #foreach {*gEventHandlers[$name][]} {hook} {
-        #local options  {$gEventHandlers[$name][$hook][options]};
-        #local code     {$gEventHandlers[$name][$hook][code]};
-        #nop 如果发射事件时指定了 pHook，则只唤醒指定的 hook，注意这里的 pHook 支持通配符;
-        #if { "$pHook" != "" && "$hook" != "$pHook" } {
-            #continue;
-        };
+    #local class {};
+    #foreach {*gEventHandlers[$event][]} {class} {
+        #local hook {};
+        #foreach {*gEventHandlers[$event][$class][]} {hook} {
+            #local options  {$gEventHandlers[$event][$class][$hook][options]};
+            #local code     {$gEventHandlers[$event][$class][$hook][code]};
 
-        #local delivered {true};
-        dbgLog event => 事件「$name」即将投递给「$gEventHandlers[$name][$hook][module]」模块的「$hook」。;
+            #math count {$count + 1};
 
-        #if { "$options[justOnce]" == "true" } {
-            #unvar {gEventHandlers[$name][$hook]};
-        };
-        #if { "$args" == "" || "$gValidEvent[$name][type]" == "无参" } {
-            $code;
-        };
-        #else {
-            $code {$args};
+            #nop 如果发射事件时指定了 pHook，则只唤醒指定的 hook，注意这里的 pHook 支持通配符;
+            #if { "$pHook" != "" && "$hook" != "$pHook" } {
+                #continue;
+            };
+
+            #local delivered {true};
+            dbgLog event => 事件「$event」即将投递给「$gEventHandlers[$event][$class][$hook][module]」模块的「$hook」。;
+
+            #if { "$options[justOnce]" == "true" } {
+                #unvar {gEventHandlers[$event][$class][$hook]};
+            };
+            #if { "$args" == "" || "$gValidEvent[$event][type]" == "无参" } {
+                $code;
+            };
+            #else {
+                $code {$args};
+            };
         };
     };
 
-    #if { @isFalse{$delivered} } {
-        dbgLog event => 事件「$name」已产生，但因为没有匹配的接受者所以无法投递。;
+    #if { $count == 0 } {
+        dbgLog event => 事件「$event」已产生，但因为没有注册接受者所以无法投递。;
+    };
+    #elseif { @isFalse{$delivered} } {
+        dbgLog event => 事件「$event」已产生，但因为没有与 {$pHook} 相匹配的接受者所以无法投递。;
     };
 };
 
@@ -193,6 +204,33 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #delay 0 {event.Emit %0};
 };
 
+#alias {event.handle} {
+    #local event    {%1};
+    #local hook     {%2};
+    #local module   {%3};
+    #local code     {%4};
+    #local method   {%5};
+    #local options  {%6};
+
+    #if { "$event" == "" || "$hook" == "" || "$module" == "" || {$code} == {} } {
+        xtt.Usage $method;
+        #return;
+    };
+
+    #if { "@__xtt_event_name_is_valid__{{$event}}" != "true" } {
+        xtt.Usage $method 事件名称不是合法的标识符名称;
+        #return;
+    };
+
+    #local class {@default{$options[class];ANY_CLASS}};
+
+    #var {gEventHandlers[$event][$class][$hook]} {
+        {options}{$options}
+        {module}{$module}
+        {code}{$code}
+    };
+};
+
 ///=== {
 // ## event.Handle <事件名称> <回调钩子> <所属模块> <回调代码>
 //    注册事件回调钩子。参数说明如下：
@@ -203,58 +241,33 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //        - 回调代码: 用来指明钩子被回调时要执行的代码。
 // };
 #alias {event.Handle} {
-    #local name     {%1};
-    #local hook     {%2};
-    #local module   {%3};
-    #local code     {%4};
-
-    #if { "$name" == "" || "$hook" == "" || "$module" == "" || {$code} == {} } {
-        xtt.Usage event.Handle;
-        #return;
-    };
-
-    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
-        xtt.Usage event.Handle 事件名称不是合法的标识符名称;
-        #return;
-    };
-
-    #var {gEventHandlers[$name][$hook]} {
-        {module}{$module}
-        {code}{$code}
-    };
+    event.handle {%1} {%2} {%3} {%4} {event.Handle} {};
 };
 
 ///=== {
 // ## event.HandleOnce <事件名称> <回调钩子> <所属模块> <回调代码>
-//    注册事件回调钩子，但是本钩子只会被执行一次，然后会自动注销。
-//    参数说明如下：
-//        - 事件名称: 本钩子要关联的事件的名称，需要事先用 event.Define 声明。
-//        - 回调钩子: 本次注册的钩子，可以在随后用来取消本钩子，或者当事件发射时，
-//                    发射方可以用正则表达式指定要触发哪些钩子。
-//        - 所属模块: 注册钩子所在的代码模块。必须是一个严格的 PaoTin++ 模块描述符。
-//        - 回调代码: 用来指明钩子被回调时要执行的代码。
+//    同 event.Handle，但是本钩子只会被执行一次，然后会自动注销。
 // };
 #alias {event.HandleOnce} {
-    #local name     {%1};
-    #local hook     {%2};
-    #local module   {%3};
-    #local code     {%4};
+    event.handle {%1} {%2} {%3} {%4} {event.HandleOnce} {{justOnce}{true}};
+};
 
-    #if { "$name" == "" || "$hook" == "" || "$module" == "" || {$code} == {} } {
-        xtt.Usage event.HandleOnce;
-        #return;
-    };
+///=== {
+// ## event.ClassHandle <事件名称> <回调钩子> <所属模块> <回调代码>
+//    同 event.Handle，但会在当前 #class 消亡时自动注销。
+// };
+#alias {event.ClassHandle} {
+    #info session save;
+    event.handle {%1} {%2} {%3} {%4} {event.ClassHandle} {{class}{$info[SESSION][CLASS]}};
+};
 
-    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
-        xtt.Usage event.HandleOnce 事件名称不是合法的标识符名称;
-        #return;
-    };
-
-    #var {gEventHandlers[$name][$hook]} {
-        {options}{{justOnce}{true}}
-        {module}{$module}
-        {code}{$code}
-    };
+///=== {
+// ## event.ClassHandleOnce <事件名称> <回调钩子> <所属模块> <回调代码>
+//    同 event.HandleOnce，但会在当前 #class 消亡时自动注销。
+// };
+#alias {event.ClassHandleOnce} {
+    #info session save;
+    event.handle {%1} {%2} {%3} {%4} {event.ClassHandleOnce} {{justOnce}{true}{class}{$info[SESSION][CLASS]}};
 };
 
 ///=== {
@@ -262,18 +275,202 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    注销已注册的事件回调钩子。
 // };
 #alias {event.UnHandle} {
-    #local name {%1};
-    #local hook {%2};
+    #local event    {%1};
+    #local hook     {%2};
 
-    #if { "$name" == "" || "$hook" == "" } {
+    #if { "$event" == "" || "$hook" == "" } {
         xtt.Usage event.UnHandle;
         #return;
     };
 
-    #if { "@__xtt_event_name_is_valid__{{$name}}" != "true" } {
+    #if { "@__xtt_event_name_is_valid__{{$event}}" != "true" } {
         xtt.Usage event.UnHandle 事件名称不是合法的标识符名称;
         #return;
     };
 
-    #unvar {gEventHandlers[$name][$hook]};
+    #local class {};
+    #foreach {*gEventHandlers[$event][]} {class} {
+        #unvar {gEventHandlers[$event][$class][$hook]};
+    };
+};
+
+VAR {已注册的 TinTin++ 事件句柄}        gTTEventHandlers    {};
+VAR {当前正在处理的 TinTin++ 事件名称}  gTTEventName        {};
+VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
+
+#alias {ttevent.handle} {
+    #local event    {%1};
+    #local hook     {%2};
+    #local module   {%3};
+    #local code     {%4};
+    #local method   {%5};
+    #local options  {%6};
+
+    #if { "$event" == "" || "$hook" == "" || "$module" == "" || {$code} == {} } {
+        xtt.Usage $method;
+        #return;
+    };
+
+    #if { "$event" != "{[A-Za-z0-9. -]+}" } {
+        xtt.Usage $method 事件名称不是合法的标识符名称;
+        #return;
+    };
+
+    #local class {@default{$options[class];ANY_CLASS}};
+    #if { "$class" != "ANY_CLASS" } {
+        ttevent.HandleOnce {CLASS CLEAR $class} {event} {event} {event.on-class-kill};
+    };
+
+    #if { &gTTEventHandlers[$event][$class][] == 0 } {
+        #line quiet #line sub var #event {$event} {
+            #var gTTEventName       {$event}; 
+            #var gTTEventArgZero    {%%0};
+            ttevent.emit
+        };
+    };
+
+    #var {gTTEventHandlers[$event][$class][$hook]} {
+        {options}{$options}
+        {module}{$module}
+        {code}{$code}
+    };
+};
+
+#alias {ttevent.emit} {
+    #local event {$gTTEventName};
+
+    #local count {0};
+    #local delivered {false};
+    #local class {};
+    #foreach {*gTTEventHandlers[$event][]} {class} {
+        #local hook {};
+        #foreach {*gTTEventHandlers[$event][$class][]} {hook} {
+            #local options  {$gTTEventHandlers[$event][$class][$hook][options]};
+            #local code     {$gTTEventHandlers[$event][$class][$hook][code]};
+
+            #local delivered {true};
+            dbgLog ttevent => 事件「$event」即将投递给「$gTTEventHandlers[$event][$class][$hook][module]」模块的「$hook」。;
+
+            #if { "$options[justOnce]" != "true" } {
+                #math count {$count + 1};
+            };
+            #else {
+                #unvar {gTTEventHandlers[$event][$class][$hook]};
+                #if { &gTTEventHandlers[$event][$class][] == 0 } {
+                    #unvar {gTTEventHandlers[$event][$class]};
+                    #if { &gTTEventHandlers[$event][] == 0 } {
+                        #unvar {gTTEventHandlers[$event]};
+                    };
+                };
+            };
+            #nop XXX: 注意这里不能加分号，一定要注意。;
+            $code
+        };
+    };
+
+    #if { $count == 0 } {
+        #unevent {$event};
+    };
+
+    #if { @isFalse{$delivered} } {
+        dbgLog ttevent => 事件「$event」已产生，但因为没有注册接受者所以无法投递。;
+    };
+};
+
+///=== {
+// ## ttevent.Handle <事件名称> <回调钩子> <所属模块> <回调代码>
+//    注册 #event 事件回调钩子。参数说明如下：
+//        - 事件名称: 本钩子要关联的事件的名称，参考 #help event。
+//        - 回调钩子: 本次注册的钩子，可以在随后用来取消本钩子。
+//        - 所属模块: 注册钩子所在的代码模块。必须是一个严格的 PaoTin++ 模块描述符。
+//        - 回调代码: 用来指明钩子被回调时要执行的代码。
+// };
+#alias {ttevent.Handle} {
+    ttevent.handle {%1} {%2} {%3} {%4} {ttevent.Handle} {};
+};
+
+///=== {
+// ## ttevent.HandleOnce <事件名称> <回调钩子> <所属模块> <回调代码>
+//    同 ttevent.Handle，但是本钩子只会被执行一次，然后会自动注销。
+// };
+#alias {ttevent.HandleOnce} {
+    event.handle {%1} {%2} {%3} {%4} {event.ClassHandleOnce} {{justOnce}{true}};
+};
+
+///=== {
+// ## ttevent.ClassHandle <事件名称> <回调钩子> <所属模块> <回调代码>
+//    同 ttevent.Handle，但会在当前 #class 消亡时自动注销。
+// };
+#alias {ttevent.ClassHandle} {
+    #info session save;
+    event.handle {%1} {%2} {%3} {%4} {event.ClassHandleOnce} {{class}{$info[SESSION][CLASS]}};
+};
+
+///=== {
+// ## ttevent.ClassHandleOnce <事件名称> <回调钩子> <所属模块> <回调代码>
+//    同 ttevent.HandleOnce，但会在当前 #class 消亡时自动注销。
+// };
+#alias {ttevent.ClassHandleOnce} {
+    #info session save;
+    event.handle {%1} {%2} {%3} {%4} {event.ClassHandleOnce} {{justOnce}{true}{class}{$info[SESSION][CLASS]}};
+};
+
+///=== {
+// ## ttevent.UnHandle <事件名称> <事件回调钩子名称>
+//    注销已注册的事件回调钩子。
+// };
+#alias {ttevent.UnHandle} {
+    #local event    {%1};
+    #local hook     {%2};
+
+    #if { "$event" == "" || "$hook" == "" } {
+        xtt.Usage ttevent.UnHandle;
+        #return;
+    };
+
+    #if { "$event" != "{[A-Za-z0-9. -]+}" } {
+        xtt.Usage ttevent.UnHandle 事件名称不是合法的标识符名称;
+        #return;
+    };
+
+    #local count {0};
+    #local class {};
+    #foreach {*gTTEventHandlers[$event][]} {class} {
+        #unvar {gTTEventHandlers[$event][$class][$hook]};
+        #math count {$count + &gTTEventHandlers[$event][$class][]};
+        #if { &gTTEventHandlers[$event][$class][] == 0 } {
+            #unvar {gTTEventHandlers[$event][$class]};
+            #if { &gTTEventHandlers[$event][] == 0 } {
+                #unvar {gTTEventHandlers[$event]};
+            };
+        };
+    };
+
+    #if { $count == 0 } {
+        #unevent {$event};
+    };
+};
+
+/*
+   对于 TinTin++ 而言，考虑到性能，这里只删钩子，不注销 #event 本身。
+   注销动作延迟到下一次 event 被触发时进行。
+ */
+#alias {event.on-class-kill} {
+    #local class {$gTTEventArgZero};
+
+    #local event {};
+    #foreach {*gEventHandlers[]} {event} {
+        #unvar {gEventHandlers[$event][$class]};
+        #if { &gEventHandlers[$event][] == 0 } {
+            #unvar {gEventHandlers[$event]};
+        };
+    };
+
+    #foreach {*gTTEventHandlers[]} {event} {
+        #unvar {gTTEventHandlers[$event][$class]};
+        #if { &gTTEventHandlers[$event][] == 0 } {
+            #unvar {gTTEventHandlers[$event]};
+            #unevent {$event};
+        };
+    };
 };
