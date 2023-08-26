@@ -554,11 +554,11 @@ option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定�
         #elseif { {$input} == {{?i}#{$cmds} %*} } {
             #replace input {^#} {#un};
         };
-        #elseif { {$input} == {event.Handle{|Once} %*} } {
-            #replace input {^event.Handle{Once|}} {event.UnHandle};
+        #elseif { {$input} == {{tt|}event.{Class|}Handle{|Once} %*} } {
+            #replace input {^{tt|}event.{Class|}Handle{Once|}} {&1event.UnHandle};
         };
-        #elseif { {$input} == {event.UnHandle %*} } {
-            #replace input {^event.UnHandle} {event.Handle};
+        #elseif { {$input} == {{tt|}event.UnHandle %*} } {
+            #replace input {^{tt|}event.UnHandle} {&1event.Handle};
         };
         #else {
             #local input {#line debug $input};
