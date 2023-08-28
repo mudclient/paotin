@@ -23,7 +23,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             };
         };
         #if { $char[HP][饮水] < $char[HP][最大饮水] / 3 } {
-            #if { "$char[favorite][food]" != "NOTHING" } {
+            #if { "$char[favorite][water]" != "NOTHING" } {
                 xtt.Send drink $char[favorite][water];
                 #local blankly {false};
             };
