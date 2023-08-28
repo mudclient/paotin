@@ -5,9 +5,14 @@ apt upgrade
 apt reinstall readline bash
 apt install git clang which make libgnutls pcre zlib git bash tmux ncurses-utils
 
-cd
-mkdir -p my-paotin/{ids,etc,data,log,plugins}
-git clone https://github.com/mudclient/paotin
+if [ -d /data/data/com.termux/files/home/storage/shared/ ]; then
+    mkdir /data/data/com.termux/files/home/storage/shared/my-paotin
+    ln -s /data/data/com.termux/files/home/storage/shared/my-paotin ~/my-paotin
+else
+    mkdir ~/my-paotin
+fi
 
-cd paotin
-ln -s $HOME/my-paotin var
+mkdir -p ~/my-paotin/{ids,etc,data,log,plugins}
+
+git clone https://github.com/mudclient/paotin
+ln -s ~/my-paotin paotin/var
