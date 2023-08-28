@@ -16,13 +16,17 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {online.KeepAlive} {
     #local blankly {true};
     #if { @isFalse{$char[HP][忙]} } {
-        #if { $char[HP][食物] < $char[HP][最大食物] } {
-            xtt.Send eat $char[favorite][food];
-            #local blankly {false};
+        #if { $char[HP][食物] < $char[HP][最大食物] / 3 } {
+            #if { "$char[favorite][food]" != "{NOTHING|}" } {
+                xtt.Send eat $char[favorite][food];
+                #local blankly {false};
+            };
         };
-        #if { $char[HP][饮水] < $char[HP][最大饮水] } {
-            xtt.Send drink $char[favorite][water];
-            #local blankly {false};
+        #if { $char[HP][饮水] < $char[HP][最大饮水] / 3 } {
+            #if { "$char[favorite][food]" != "NOTHING" } {
+                xtt.Send drink $char[favorite][water];
+                #local blankly {false};
+            };
         };
     };
     #if { @isTrue{$blankly} } {
