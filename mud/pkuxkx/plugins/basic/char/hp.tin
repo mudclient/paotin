@@ -450,6 +450,13 @@ hp -neili 格式：
         char.hp.parse.hp-neili;
     };
 
+    #action {~^%c【状态】%*\e[2;37;0m{?:|、(.*)\x1b\[2;37;0m}%s%c$} {
+        #var char[STATUS][健康状态] {%%2};
+        #var char[STATUS][持续效果] {%%3};
+        event.DelayEmit char/status;
+        #class char.GetHP kill;
+    } {4};
+
     #action {^你用HP太频繁了，请尽量使用hpbrief命令，节约系统资源，谢谢。$} {
         #class char.GetHP kill;
     };
@@ -466,7 +473,7 @@ hp -neili 格式：
 };
 
 #alias {hp} {
-    #if { "%0" == "{|-neili}" } {
+    #if { "%0" == "{|-neili|-status}" } {
         char.GetHP %0;
     };
     #else {
