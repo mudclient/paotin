@@ -1,0 +1,19 @@
+# vim: set filetype=nanorc:
+
+set autoindent
+set casesensitive
+set boldtext
+set mouse
+set noconvert
+set tabsize 4
+set tabstospaces
+
+# PaoTin++ 语法高亮设置
+
+syntax "PaoTin" "\.(tin)$"
+icolor yellow "#nop .*"
+icolor cyan "#\<(|un)(act(|i(|o(|n)))|ali(|a(|s))|tic(|k(|e(|r)))|var(|i(|a(|b(|l(|e)))))|del(|a(|y))|gag|tab|but(|t(|o(|n)))|eve(|n(|t))|fun(|c(|t(|i(|o(|n)))))|hig(|h(|l(|i(|g(|h(|t))))))|mac(|r(|o))|pat(|h(|d(|i(|r))))|pro(|m(|p(|t)))|sub(|s(|t(|i(|t(|u(|t(|e))))))))\>"
+icolor cyan "#\<(echo|show(|m(|e))|cat|regex|local|replace|unlocal)\>"
+icolor green "#\<(if|elseif|else|break|continue|return|switch|case|default|while|foreach|loop|match|parse)\>"
+color magenta "[(){}]" "\[" "\]"
+color brightblue start="/\*" end="\*/"

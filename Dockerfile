@@ -61,6 +61,7 @@ COPY ids/thuxyj         /paotin/ids/
 COPY ids/paotin         /paotin/ids/
 
 COPY init.vim           /paotin/.config/nvim/
+COPY nanorc             /root/.nanorc
 
 COPY --from=0 /vim-plug/plug.vim    /paotin/.local/share/nvim/site/autoload/plug.vim
 COPY --from=0 /gruvbox      /paotin/.local/share/nvim/plugged/gruvbox/
