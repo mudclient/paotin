@@ -34,7 +34,7 @@ ENV LANG=zh_CN.UTF8     \
 WORKDIR /paotin/
 
 RUN    apk update \
-    && apk add --no-cache tmux bash ncurses less neovim nano
+    && apk add --no-cache tmux bash ncurses less neovim nano lf
 
 # 设置时区为上海
 RUN apk add --no-cache tzdata \
