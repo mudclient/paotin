@@ -1,5 +1,5 @@
 # STAGE 1，在临时镜像中编译 tintin
-FROM alpine:latest
+FROM alpine:3.18.3
 
 # 安装编译器和依赖包
 RUN    apk update \
@@ -21,7 +21,7 @@ RUN echo '/usr/bin/gcc --static $*' > gcc && chmod +x gcc
 RUN ./configure && make && strip tt++
 
 # STAGE 2: 生成最终镜像
-FROM alpine:latest
+FROM alpine:3.18.3
 LABEL name="paotin"
 LABEL maintainer="dzp <danzipao@gmail.com>"
 
