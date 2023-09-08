@@ -613,7 +613,7 @@ option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定�
 
         #class xtt.Ping kill;
 
-        okLog 网络测速结果如右，最大值 $max 毫秒，最小值: $min 毫秒，平均值 $avg 毫秒;
+        okLog 网络测速结果如右：最大值 $max 毫秒，最小值 $min 毫秒，平均值 $avg 毫秒;
     };
 
     #class xtt.Ping close;
