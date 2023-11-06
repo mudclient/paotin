@@ -94,6 +94,25 @@ load-lib alert;
         };
     };
 
+    #if { {$text} == {%*上次争胜后各门派完成主流任务统计：%*} } {
+        #class chat.log open;
+
+        #action {~^%*{|ID=chat.log}$} {
+            chat.log {%1} {%%0};
+        } {4.993};
+
+        #action {~^%*次。%*$} {
+            chat.log {%1} {%%0};
+            #class chat.log kill;
+        } {4.992};
+
+        #delay chat.log {#class chat.log kill} 0;
+
+        #class chat.log close;
+
+        #return;
+    };
+
     #if { "$type" == "江湖" } {
         #if { {$text} == {%*神力和纵跃排行榜%*} } {
             #class chat.log open;
@@ -110,6 +129,11 @@ load-lib alert;
             #delay chat.log {#class chat.log kill} 0;
 
             #class chat.log close;
+        };
+        #elseif { {$text} == {%*以下是最近一小时之内死于非命的江湖儿女。%*} } {
+            #line multishot 4 #action {~^%*{|ID=chat.log}$} {
+                chat.log {%1} {%%0};
+            } {4.993};
         };
         #elseif { {$text} == {%*{[^m )]}\e[0m} } {
             #local lines {1};
