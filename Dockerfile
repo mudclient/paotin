@@ -1,6 +1,8 @@
 # STAGE 1，在临时镜像中编译 tintin
 FROM alpine:3.18.3
 
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+
 # 安装编译器和依赖包
 RUN    apk update \
     && apk add --no-cache git gcc libc-dev zlib-dev zlib-static pcre-dev make curl
@@ -32,6 +34,8 @@ ENV LANG=zh_CN.UTF8     \
     PATH=/paotin/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 WORKDIR /paotin/
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 
 RUN    apk update \
     && apk add --no-cache tmux bash ncurses less neovim nano lf
