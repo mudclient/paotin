@@ -213,7 +213,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         };
     };
 
-    #local format {    %-30s %-40s %-10s %s};
+    #local format {    %-35s %-30s %-10s %s};
     #echo {<128>$format} {class} {变量} {类型} {值};
 
     #draw Yellow scroll line 1 1 1 95;
@@ -233,11 +233,22 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
                 #local value {@mslp.Var{$name;<139>[... 共 $nest 项数据]<299>}};
             };
 
+            #local showClass {$class};
+			#replace showClass {^data/} {};
+
             #echo {<060>$format}
-                {@genModuleLink{$class;MOD}<060>}
-                {@mslp.Exec{{xtt.delTrigger var $name};<119>✗<269>;false} @linkToHelp{$class;$name}}
+                {@genModuleLink{$showClass;MOD}<060>}
+                {@mslp.Exec{{xtt.delTrigger var $name};<119>✗<269>;false} @linkToHelp{$showClass;$name}}
                 {$type}
                 {$value};
+
+			#if { "$gPaoTinVars[$name]" != "" } {
+				#echo {$format}
+					{}
+					{  ╰── $gPaoTinVars[$name][cnName]}
+					{}
+					{};
+			};
         };
     };
 };
@@ -351,7 +362,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #else {
         #var {$name} {$value};
     };
+
+	#var gPaoTinVars[$name] {
+		{name}		{$name}
+		{cnName}	{$cnName}
+	};
 };
+
+VAR {用 VAR 关键字定义的 PaoTin++ 变量清单，包含其中文含义} gPaoTinVars {};
 
 load-lib option;
 option.Define {DisableOutput} {Bool} {是否禁止向服务器发送命令} {false};
