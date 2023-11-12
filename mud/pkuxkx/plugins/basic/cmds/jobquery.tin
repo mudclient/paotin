@@ -85,7 +85,7 @@ jobquery 本来就有两个别名：
         #delay jobquery {job.Query {%1} {%2}} $cd;
     };
 
-    #line oneshot #action {^╭───北侠任务查询助理─{(─|┬)+}─╮$} {
+    #line oneshot #action {^╭──┬北侠任务查询助理─{(─|┬)+}─╮$} {
         jobquery.parse.output {%1};
         #if { "%1" == "gag" } {
             #line gag;
