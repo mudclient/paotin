@@ -92,9 +92,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    列出系统中符合条件的别名，如果省略条件则列出所有别名。
 //    一些不够规整的别名不会被列出。只有符合 PaoTin++ 规范的别名才会被列出。
 //    正则表达式会被运用到别名所属模块名称和别名名称上，两者符合其一即可被列出。
-//    你也可以通过 ALIASES 别名来使用本别名。
+//    你也可以通过 ALIS 别名来使用本别名。
 // };
-#alias {ALIASES} {xtt.ListAlias};
+#alias {ALIS} {xtt.ListAlias};
 #alias {xtt.ListAlias} {
     #local pattern {%1};
 
@@ -256,8 +256,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {xtt.delTrigger} {
     #local type     {%1};
     #local trigger  {%2};
-    #local cmd {#un$type $trigger};
-    $cmd;
+    #local cmd {#un$type {$trigger}};
+    #replace cmd {\\} {};
+	$cmd;
 };
 
 ///=== {
@@ -330,6 +331,56 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
                 {@genModuleLink{$class;MOD}<060>}
                 {@mslp.Exec{{xtt.delTrigger func $name};<119>✗<269>;false} @linkToHelp{$class;$name}}
                 {$type};
+        };
+    };
+};
+
+///=== {
+// ## xtt.ListAction [<正则表达式>]
+//    列出系统中符合条件的文本触发，如果省略条件则列出所有文本触发。
+//    正则表达式会被运用到文本触发所属模块名称和文本触发的条件上，两者符合其一即可被列出。
+//    你也可以通过 ACTS 别名来使用本别名。
+// };
+#alias {ACTS} {xtt.ListAction};
+#alias {xtt.ListAction} {
+    #local pattern {%1};
+
+    #info actions save;
+
+    #local actionTable {};
+    #local index {};
+    #loop {1} {&info[ACTIONS][]} {index} {
+        #local name     {$info[ACTIONS][+$index][arg1]};
+        #local class    {$info[ACTIONS][+$index][class]};
+
+        #if { "$class" == "" && "$pattern" != "all" } {
+            #continue;
+        };
+
+        #if { "$class" == "" } {
+            #local class {未分组};
+        };
+
+        #if { "$pattern" != "{|all}" && "$class/$name" != "%*$pattern%*" } {
+            #continue;
+        };
+
+        #list {actionTable[$class]} sort {$name};
+    };
+
+    #local format {    %-30s %-40s %-10s};
+    #echo {<128>$format} {class} {文本触发};
+
+    #draw Yellow scroll line 1 1 1 90;
+
+    #local classList {@list.Sort{*actionTable[]}};
+    #local class {};
+    #foreach {$classList} {class} {
+        #local name {};
+        #foreach {${actionTable[$class][]}} {name} {
+            #echo {<060>$format}
+                {@genModuleLink{$class;MOD}<060>}
+                {@mslp.Exec{{xtt.delTrigger action {$name}};<119>✗<269>;false} $name}
         };
     };
 };
