@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+FILE=$1
+
+if [ "x$FILE" == "x-h" ]; then
+    echo -e '用法: \x1b[1;32;92mplain \x1b[1;33;93m<原始文件名>\x1b[0m';
+    echo 可以将指定的文件中的颜色代码全部过滤掉。;
+    echo 结果打印到标准输出。;
+    echo;
+    echo 如果省略文件名，则从标准输入读取内容。;
+    exit
+fi
+
+sed 's/\x1b\[[0-9;]*m//g' $FILE
