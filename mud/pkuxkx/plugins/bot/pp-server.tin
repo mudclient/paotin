@@ -12,19 +12,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {AUTHOR}    {担子炮}
 };
 
-#nop 普通订单;
-#var pp-svip-order      {};
-#nop VIP 订单;
-#var pp-vip-order       {};
-#nop SVIP 订单;
-#var pp-public-order    {};
+VAR {普通订单}      pp-svip-order       {};
+VAR {VIP 订单}      pp-vip-order        {};
+VAR {SVIP 订单}     pp-public-order     {};
 
-#nop VIP 清单;
-#var pp-vip-list        {};
-#nop SVIP 清单;
-#var pp-svip-list       {};
-#nop 黑名单;
-#var pp-black-list      {};
+VAR {VIP 清单}      pp-vip-list         {};
+VAR {SVIP 清单}     pp-svip-list        {};
+VAR {黑名单}        pp-black-list       {};
 
 load-lib storage;
 
@@ -58,15 +52,12 @@ load-lib storage;
         #return;
     };
 
-    #local now {};
-    #format now {%T};
-
     #local order {
         {name}  {$name}
         {uid}   {$uid}
         {qid}   {$qid}
         {retry} {0}
-        {time}  {$now}
+        {time}  {@time.Now{}}
     };
 
     #if { &pp-svip-list[$uid][] > 0 } {
@@ -109,8 +100,8 @@ load-lib storage;
     #list {$order-list-name} add {{$new-order}};
 };
 
-#var pp-working         {false};
-#var pp-current-order   {};
+VAR {是否正在工作状态}  pp-working          {false};
+VAR {当前订单}          pp-current-order    {};
 
 #tick pp.check {pp.check} 1;
 
@@ -140,18 +131,32 @@ load-lib storage;
     };
 
     #var pp-working {true};
-
     #var pp-current-order {$order};
-    halt; yun regenerate; pp.do;
+
+    #if { "$char[HP][忙]" == "true" } {
+        halt;
+    };
+
+    pp.do;
 };
 
+VAR {上次查询时间}  {pp-last-time}      {0};
+
 #alias {pp.do} {
+    #local cd       {10};
+    #local delay    {$pp-last-time + $cd - @time.Now{}};
+    #if { $delay > 0 } {
+        #delay pp.retry {pp.retry} {$delay};
+        #return;
+    };
+
     #class pp.do open;
 
     #local ID {|ID=pp-server};
 
     #action {^不要频繁的查询，谢谢！{$ID}$} {
         #class pp.do kill;
+        warnLog {$pp-last-time + $cd - @time.Now{}};
         #delay pp.retry {pp.retry} 1;
     };
 
@@ -163,6 +168,7 @@ load-lib storage;
 
     #action {^你默运玄功，将功力聚集于耳目，顿时觉得灵台一片空明。{$ID}$} {
         #class pp.do kill;
+        #var pp-last-time {@time.Now{}};
         pp.parse.result;
         #nop;
     };
@@ -223,11 +229,21 @@ load-lib storage;
         pp.result 失败 {};
     };
 
+    #action {^你费了半天劲，就是无法感应这个人在哪里...$} {
+        #class pp.parse.result kill;
+        pp.result 失败 {};
+    };
+
     #action {^此人已经隐姓埋名，你费了半天的力气，就是感应不出其位置。$} {
         #class pp.parse.result kill;
         pp.add-invalid-id;
         pp.result 失败 {};
     };
+
+    #delay pp.parse.result {
+        #class pp.parse.result kill;
+        pp.result 失败 {};
+    } 3;
 
     #class pp.parse.result close;
 };
@@ -292,18 +308,15 @@ load-lib storage;
     #var pp-current-order   {};
 };
 
-#nop 最近一段时间查过的 ID;
-#var pp-history-id {};
+VAR {最近一段时间查过的 ID}     pp-history-id   {};
 
 #alias {pp.add-history-id} {
     #local {qid} {$pp-current-order[qid]};
-    #local now {};
-    #format now {%T};
-    #var {pp-history-id[$qid]} {$now};
+    #var {pp-history-id[$qid]} {@time.Now{}};
 };
 
 #nop 如果一个 ID 曾经被查到过，后来又查无此人，则认为该 ID 已死亡，标注为无效 ID;
-#var pp-invalid-id {};
+VAR {无效目标 ID，列表表格，屏蔽这些 ID 一段时间防止重复查询}   pp-invalid-id   {};
 
 #alias {pp.add-invalid-id} {
     #local {qid} {$pp-current-order[qid]};
@@ -313,17 +326,14 @@ load-lib storage;
         #return;
     };
 
-    #local now {};
-    #format now {%T};
     #unvar {pp-history-id[$qid]};
-    #var {pp-invalid-id[$qid]} {$now};
+    #var {pp-invalid-id[$qid]} {@time.Now{}};
 };
 
 #tick pp.clean-history {pp.clean-history} 600;
 
 #alias {pp.clean-history} {
-    #local now {};
-    #format now {%T};
+    #local now {@time.Now{}};
 
     #local id {};
     #foreach {*pp-invalid-id[]} {id} {
@@ -372,12 +382,25 @@ load-lib storage;
     #elseif { $char[HP][最大精力] < $char[Skills][基本内功][jifa-level] * 10 } {
         pp.tuna;
     };
+    #else {
+        pp.recover;
+    };
 };
 
 #alias {pp.tuna} {
     #if { "$char[HP][忙]" == "true" } {
         #return;
     };
+
+    #if { $char[HP][内力百分比] < 10 } {
+        pp.dazuo;
+        #return;
+    };
+
+    #if { $char[HP][气血百分比] < 70 } {
+        yun recover;
+    };
+
     #if { $char[HP][当前精力] + 10 > $char[HP][最大精力] * 2 } {
         tuna 10;
     };
@@ -393,6 +416,11 @@ load-lib storage;
     #if { "$char[HP][忙]" == "true" } {
         #return;
     };
+
+    #if { $char[HP][精神百分比] < 70 } {
+        yun regenerate;
+    };
+
     #if { $char[HP][当前内力] + 10 > $char[HP][最大内力] * 2 } {
         dazuo 10;
     };
@@ -401,6 +429,27 @@ load-lib storage;
             yun recover;
         };
         dazuo max;
+    };
+};
+
+#alias {pp.recover} {
+    #if { "$char[HP][忙]" == "true" } {
+        #return;
+    };
+
+    #if { $char[HP][当前精力] < $char[HP][最大精力] * 2 * 8 / 10 } {
+        #if { $char[HP][精神百分比] < 10 } {yun regenerate};
+        #if { $char[HP][气血百分比] < 70 } {yun recover};
+        tuna max;
+    };
+    #elseif { $char[HP][当前内力] < $char[HP][最大内力] * 2 * 8 / 10 } {
+        #if { $char[HP][气血百分比] < 10 } {yun recover};
+        #if { $char[HP][精神百分比] < 70 } {yun regenerate};
+        dazuo max;
+    };
+    #else {
+        #if { $char[HP][气血百分比] < 99 } {yun recover};
+        #if { $char[HP][精神百分比] < 99 } {yun regenerate};
     };
 };
 
