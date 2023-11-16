@@ -17,10 +17,8 @@ RUN git clone --depth 1 https://github.com/mhinz/vim-startify.git /vim-startify
 RUN git clone --depth 1 https://github.com/mudclient/tintin.git --branch beta-develop
 WORKDIR /tintin/src/
 
-# 这里 hack 了一下 gcc，强制静态编译。
 ENV PATH=.:/sbin:/bin:/usr/sbin:/usr/bin
-RUN echo '/usr/bin/gcc --static $*' > gcc && chmod +x gcc
-RUN ./configure && make && strip tt++
+RUN ./configure LDFLAGS=-static && make && strip tt++
 
 # STAGE 2: 生成最终镜像
 FROM alpine:3.18.3
@@ -72,7 +70,7 @@ COPY --from=0 /gruvbox      /paotin/.local/share/nvim/plugged/gruvbox/
 COPY --from=0 /vim-mbs      /paotin/.local/share/nvim/plugged/vim-mbs/
 COPY --from=0 /mru          /paotin/.local/share/nvim/plugged/mru/
 COPY --from=0 /BufExplorer  /paotin/.local/share/nvim/plugged/BufExplorer/
-COPY --from=0 /vim-startify /paotin/.local/share/nvim/plugged/BufExplorer/
+COPY --from=0 /vim-startify /paotin/.local/share/nvim/plugged/vim-startify/
 
 COPY --from=0 /tintin/src/tt++ /paotin/bin/
 
