@@ -198,6 +198,8 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
                 #unvar {char[Skills][$skillName]};
             };
         };
+
+        event.Emit {char/skills};
     };
 
     event.HandleOnce GA {char.skills} {char} {char.skills.parse.done};
