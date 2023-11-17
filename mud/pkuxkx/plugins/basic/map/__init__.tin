@@ -29,6 +29,7 @@ load-file mud/pkuxkx/plugins/basic/map/area.tin;
 load-file mud/pkuxkx/plugins/basic/map/node.tin;
 load-file mud/pkuxkx/plugins/basic/map/xiaoyao.tin;
 load-file mud/pkuxkx/plugins/basic/map/helper.tin;
+load-file mud/pkuxkx/plugins/basic/map/tab.tin;
 
 #func {basic_map.Init} {
     event.Emit map/init;

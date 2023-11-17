@@ -1,0 +1,40 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+load-lib event;
+
+event.HandleOnce {map/init} {map/tab} {map} {map.tab-completion.init};
+
+#alias {map.tab-completion.init} {
+	event.Handle {map/GotRoomInfo} {map/tab} {map} {map.tab-completion};
+};
+
+#alias {map.tab-completion} {
+	#local idx {};
+
+	#class map.tab-completion kill;
+	#class map.tab-completion open;
+
+	#foreach {*gMapRoom[objs][]} {idx} {
+		#local obj {$gMapRoom[objs][$idx]};
+		#if { "$obj[id]" != "" } {
+			#tab $obj[id];
+		};
+	};
+
+	#local item {};
+	#foreach {$gMapRoom[items]} {item} {
+		#if { "$item" != "" } {
+			#tab $item;
+		};
+	};
+
+	#class map.tab-completion close;
+};
