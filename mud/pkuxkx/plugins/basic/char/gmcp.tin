@@ -84,7 +84,8 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
         #return;
     };
 
-    #local key      {};
+    #local needUpdate   {};
+    #local key          {};
     #foreach {*gGMCP[Status][]} {key} {
         #local value {$gGMCP[Status][$key]};
 
@@ -97,37 +98,20 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
             };
 
             #if { "$name" == "当前%*" } {
-                #local bakName {$name};
-                #replace bakName {当前} {上次};
+                #local bakName {@str.Replace{$name;当前;上次}};
+                #local pctName {@str.Replace{$name;当前%*;&1百分比}};
                 #var char[HP][$bakName] {$char[HP][$name]};
-
-                #var char[HP][$name] {$value};
-
-                #local maxName {$name};
-                #replace maxName {当前} {最大};
-
-                #if { "$gGMCP[Status][$maxName]" != "" } {
-                    #var char[HP][$maxName] {$gGMCP[Status][$maxName]};
-                };
-
-                #local pctName {$name};
-                #replace pctName {当前%*} {&1百分比};
-
-                #if { "$name" == "当前{内力|精力}" } {
-                    #math char[HP][$pctName] { $char[HP][$name] * 50 / $char[HP][$maxName] };
-                };
-                #else {
-                    #math char[HP][$pctName] { $char[HP][$name] * 100 / $char[HP][$maxName] };
-                };
-
-                #if { "$name" == "当前气血" } {
-                    #math char[HP][气血健康度] { $gGMCP[Status][有效气血] * 100 / $char[HP][最大气血] };
-                };
-                #elseif { "$name" == "当前精神" } {
-                    #math char[HP][精神健康度] { $gGMCP[Status][有效精神] * 100 / $char[HP][最大精神] };
-                };
-
-                #continue;
+                #local needUpdate[$pctName] {true};
+            };
+            #elseif { "$name" == "有效{气血|精神}" } {
+                #local health  {@str.Replace{$name;有效%*;&1健康度}};
+                #local needUpdate[$health] {true};
+            };
+            #elseif { "$name" == "最大{气血|精神|内力|精力}" } {
+                #local pctName {@str.Replace{$name;最大%*;&1百分比}};
+                #local needUpdate[$pctName] {true};
+                #local health  {@str.Replace{$name;最大%*;&1健康度}};
+                #local needUpdate[$health]  {true};
             };
             #else {
                 #if { "$name" == "忙" } {
@@ -136,9 +120,10 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
                 #elseif { "$name" == "战斗中" } {
                     #local fight {$value};
                 };
-                #var char[HP][$name] {$value};
-                #continue;
             };
+
+            #var char[HP][$name] {$value};
+            #continue;
         };
 
         #local name {$gmcp-name-map[档案][$key]};
@@ -166,8 +151,21 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
     };
 
     #if     { $hasHP } {
+        #foreach {*needUpdate[]} {key} {
+            #if { "$key" == "%*百分比" } {
+                #local current {@str.Replace{$key;%*百分比;当前&1}};
+                #local maxName {@str.Replace{$key;%*百分比;最大&1}};
+                #local scale   {@if{"$key" == "{内力|精力}百分比";2;1}};
+                #math char[HP][$key] { $char[HP][$current] * 100 / $char[HP][$maxName] * $scale };
+            };
+            #elseif { "$key" == "%*健康度" } {
+                #local effName {@str.Replace{$key;%*健康度;有效&1}};
+                #local maxName {@str.Replace{$key;%*健康度;最大&1}};
+                #math char[HP][$key] { $char[HP][$effName] * 100 / $char[HP][$maxName] };
+            };
+        };
         event.Emit char/hpbrief;
-        #delay {gmcp.HPSummarize} {char.HPSummarize} {0};
+        char.HPSummarize;
     };
 
     #if     { $hasScore }           {event.Emit char/score};
