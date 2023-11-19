@@ -3,5 +3,21 @@
 git submodule init
 (cd tintin && git fetch --all --prune)
 git submodule update --remote
-(cd tintin/src && ./configure && make && strip tt++)
-cp tintin/src/tt++ bin/
+(cd tintin/src && ./configure && make)
+cp tintin/src/tt++ bin/ || exit
+
+mkdir -p .local/share/nvim/site/autoload/
+curl https://mirror.ghproxy.com/https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim > .local/share/nvim/site/autoload/plug.vim
+
+mkdir -p .local/share/nvim/plugged
+
+cd .local/share/nvim/plugged
+
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/dzpao/vim-mbs.git
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/morhetz/gruvbox.git
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/yegappan/mru.git
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/jlanzarotta/BufExplorer.git
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/mhinz/vim-startify.git
+
+mkdir -p .config/nvim
+ln -s ../../init.vim .config/nvim/init.vim
