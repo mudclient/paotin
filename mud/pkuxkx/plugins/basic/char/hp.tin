@@ -282,6 +282,8 @@ hp -neili 格式：
 
         #math char[HP][精神百分比] { $char[HP][当前精神] * 100 / $char[HP][最大精神] };
         #math char[HP][气血百分比] { $char[HP][当前气血] * 100 / $char[HP][最大气血] };
+        #math char[HP][气血健康度] { $char[HP][有效气血] * 100 / $char[HP][最大气血] };
+        #math char[HP][精神健康度] { $char[HP][有效精神] * 100 / $char[HP][最大精神] };
 
         #unvar char.parsingHP;
         #line gag;
@@ -313,7 +315,7 @@ hp -neili 格式：
 
     #unvar char.parsingHP;
 
-    #delay {char.HPSummarize} {char.HPSummarize} {0};
+    char.HPSummarize;
 
     #line gag;
 } {2.0};
@@ -406,7 +408,7 @@ hp -neili 格式：
             {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{$char[HP][气血健康度]}}
             {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
             {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
-            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{${精神健康度}}}
+            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{$char[HP][精神健康度]}}
             {$char[HP][食物]} {$char[HP][饮水]}
     };
     #else {
@@ -415,7 +417,7 @@ hp -neili 格式：
             {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{$char[HP][气血健康度]}}
             {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
             {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
-            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{${精神健康度}}}
+            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{$char[HP][精神健康度]}}
             {$char[HP][食物]} {$char[HP][饮水]}
             {@speedo.GetSpeed{食物;60}} {@speedo.GetSpeed{饮水;60}};
     };
