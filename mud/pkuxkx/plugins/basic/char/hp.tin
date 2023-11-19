@@ -23,39 +23,41 @@ event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令
 
 #func {basic_char_hp.Init} {
     #class data/basic/char open;
-    #var char[HP]           {};
-    #var char[HP][经验]     {1};
-    #var char[HP][经验显示] {1};
-    #var char[HP][潜能]     {1};
-    #var char[HP][潜能显示] {1};
-    #var char[HP][当前内力] {0};
-    #var char[HP][最大内力] {1};
-    #var char[HP][加力]     {0};
-    #var char[HP][内力百分比] {0};
-    #var char[HP][当前精力] {0};
-    #var char[HP][最大精力] {1};
-    #var char[HP][精力百分比] {0};
-    #var char[HP][当前气血] {0};
-    #var char[HP][有效气血] {1};
-    #var char[HP][最大气血] {1};
-    #var char[HP][气血百分比] {0};
-    #var char[HP][当前精神] {0};
-    #var char[HP][有效精神] {1};
-    #var char[HP][最大精神] {1};
-    #var char[HP][精神百分比] {0};
-    #var char[HP][当前真气] {0};
-    #var char[HP][最大真气] {1};
-    #var char[HP][真气减伤] {0};
-    #var char[HP][真元]     {0};
-    #var char[HP][食物]     {0};
-    #var char[HP][最大食物] {1};
-    #var char[HP][饥饿]     {};
-    #var char[HP][饮水]     {0};
-    #var char[HP][最大饮水] {1};
-    #var char[HP][口渴]     {};
-    #var char[HP][气势]     {0};
-    #var char[HP][状态]     {};
-    #var char[HP][毒]       {};
+    #var char[HP]               {};
+    #var char[HP][经验]         {1};
+    #var char[HP][经验显示]     {1};
+    #var char[HP][潜能]         {1};
+    #var char[HP][潜能显示]     {1};
+    #var char[HP][当前内力]     {0};
+    #var char[HP][最大内力]     {1};
+    #var char[HP][加力]         {0};
+    #var char[HP][内力百分比]   {0};
+    #var char[HP][当前精力]     {0};
+    #var char[HP][最大精力]     {1};
+    #var char[HP][精力百分比]   {0};
+    #var char[HP][当前气血]     {0};
+    #var char[HP][有效气血]     {1};
+    #var char[HP][最大气血]     {1};
+    #var char[HP][气血百分比]   {0};
+    #var char[HP][气血健康度]   {0};
+    #var char[HP][当前精神]     {0};
+    #var char[HP][有效精神]     {1};
+    #var char[HP][最大精神]     {1};
+    #var char[HP][精神百分比]   {0};
+    #var char[HP][精神健康度]   {0};
+    #var char[HP][当前真气]     {0};
+    #var char[HP][最大真气]     {1};
+    #var char[HP][真气减伤]     {0};
+    #var char[HP][真元]         {0};
+    #var char[HP][食物]         {0};
+    #var char[HP][最大食物]     {1};
+    #var char[HP][饥饿]         {};
+    #var char[HP][饮水]         {0};
+    #var char[HP][最大饮水]     {1};
+    #var char[HP][口渴]         {};
+    #var char[HP][气势]         {0};
+    #var char[HP][状态]         {};
+    #var char[HP][毒]           {};
     #class data/basic/char close;
 
     set hpbrief long,report;
@@ -142,8 +144,10 @@ hp 有两种格式，非战斗状态：
     #action {^╰─────────────{(─)*}%S────╯{|ID=char.hp}$} {
         #math char[HP][气血百分比] { $char[HP][当前气血] * 100 / $char[HP][最大气血] };
         #math char[HP][精神百分比] { $char[HP][当前精神] * 100 / $char[HP][最大精神] };
-        #math char[HP][内力百分比] { $char[HP][当前内力] * 50 / $char[HP][最大内力] };
-        #math char[HP][精力百分比] { $char[HP][当前精力] * 50 / $char[HP][最大精力] };
+        #math char[HP][内力百分比] { $char[HP][当前内力] * 50  / $char[HP][最大内力] };
+        #math char[HP][精力百分比] { $char[HP][当前精力] * 50  / $char[HP][最大精力] };
+        #math char[HP][气血健康度] { $char[HP][有效气血] * 100 / $char[HP][最大气血] };
+        #math char[HP][精神健康度] { $char[HP][有效精神] * 100 / $char[HP][最大精神] };
         event.Emit char/hp;
         char.hp.parse.done;
     };
@@ -390,9 +394,6 @@ hp -neili 格式：
         #local 每秒精力变化 {};
     };
 
-    #local {气血健康度} {@math.Int{@math.Eval{$char[HP][有效气血] * 100 / $char[HP][最大气血]}}};
-    #local {精神健康度} {@math.Int{@math.Eval{$char[HP][有效精神] * 100 / $char[HP][最大精神]}}};
-
     #nop 气血恢复的数值展示为每分钟可以恢复的最大血量的倍数（以百分比形式）;
     #local {气血恢复} {@math.Int{@math.Eval{$char[STATUS][气血恢复] * 100 * 60 / $char[HP][最大气血]}}};
 
@@ -402,7 +403,7 @@ hp -neili 格式：
     #local summarize {};
     #if { "$char[HP][战斗中]" == "true" } {
         #format summarize {<099>$color〔HP摘要〕<298>气血: %s%s/%s 内力: %s%s 回气: %s/%s 精神: %s%s/%s 食水: %s/%s$combat<099>}
-            {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血健康度}}}
+            {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{$char[HP][气血健康度]}}
             {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
             {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
             {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{${精神健康度}}}
@@ -411,7 +412,7 @@ hp -neili 格式：
     #else {
         #local jingli {@if{$chat[HP][精力百分比] < 30;{@__char_hp_colorit__{$char[HP][精力百分比]} ${每秒精力变化}}}};
         #format summarize {<099>$color〔HP摘要〕<298>气血: %s%s/%s 内力: %s%s 回气: %s/%s 精神: %s%s/%s $jingli食水: %s/%s(%s/%s)$combat<099>}
-            {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{${气血健康度}}}
+            {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{$char[HP][气血健康度]}}
             {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
             {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
             {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{${精神健康度}}}
@@ -478,5 +479,44 @@ hp -neili 格式：
     };
     #else {
         xtt.Send hp %0;
+    };
+};
+
+///=== {
+// #@ char.IsBusy
+//    如果角色正忙，则返回真，否则返回假。无参数。
+// };
+#func {char.IsBusy} {
+    #if { "$char[HP][忙]" == "true" } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.IsIdle
+//    如果角色不忙，则返回真，否则返回假。无参数。
+// };
+#func {char.IsIdle} {
+    #if { "$char[HP][忙]" == "false" } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.InCombat
+//    如果角色正处于战斗中，则返回真，否则返回假。无参数。
+// };
+#func {char.IsIdle} {
+    #if { "$char[HP][战斗中]" == "true" } {
+        #return 1;
+    };
+    #else {
+        #return 0;
     };
 };

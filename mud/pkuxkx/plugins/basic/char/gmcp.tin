@@ -120,6 +120,13 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
                     #math char[HP][$pctName] { $char[HP][$name] * 100 / $char[HP][$maxName] };
                 };
 
+                #if { "$name" == "当前气血" } {
+                    #math char[HP][气血健康度] { $gGMCP[Status][有效气血] * 100 / $char[HP][最大气血] };
+                };
+                #elseif { "$name" == "当前精神" } {
+                    #math char[HP][精神健康度] { $gGMCP[Status][有效精神] * 100 / $char[HP][最大精神] };
+                };
+
                 #continue;
             };
             #else {
