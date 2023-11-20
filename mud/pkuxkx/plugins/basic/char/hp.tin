@@ -324,6 +324,7 @@ hp -neili 格式：
     #local color    {<168>};
     #local combat   {};
     #local safety   {};
+    #local width    {@prompt.ScreenWidth{}};
 
     #if { $char[HP][气血百分比] < 30 || $char[HP][精神百分比] < 70 } {
         #local safety {危险};
@@ -362,66 +363,79 @@ hp -neili 格式：
     #else {
         #local 每秒气血变化 {};
     };
+    #format 气血 {气血: %s%s/%s}
+        {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}}
+        {@__char_hp_colorit__{$char[HP][气血健康度]}};
 
-    #local 每秒精神变化 {@speedo.GetSpeed{当前精神}};
-    #if { ${每秒精神变化} > 0 } {
-        #local 每秒精神变化 {(<128>${每秒精神变化}<298>)};
-    };
-    #elseif { ${每秒精神变化} < 0 } {
-        #local 每秒精神变化 {(<118>${每秒精神变化}<298>)};
-    };
-    #else {
-        #local 每秒精神变化 {};
-    };
-
-    #local 每秒内力变化 {@speedo.GetSpeed{当前内力}};
-    #if { ${每秒内力变化} > 0 } {
-        #local 每秒内力变化 {(<128>${每秒内力变化}<298>)};
-    };
-    #elseif { ${每秒内力变化} < 0 } {
-        #local 每秒内力变化 {(<118>${每秒内力变化}<298>)};
-    };
-    #else {
-        #local 每秒内力变化 {};
+    #local 内力 {};
+    #if { $width >= 50 || $char[HP][当前内力] > $char[HP][上次内力] } {
+        #local 每秒内力变化 {@speedo.GetSpeed{当前内力}};
+        #if { ${每秒内力变化} > 0 } {
+            #local 每秒内力变化 {(<128>${每秒内力变化}<298>)};
+        };
+        #elseif { ${每秒内力变化} < 0 } {
+            #local 每秒内力变化 {(<118>${每秒内力变化}<298>)};
+        };
+        #else {
+            #local 每秒内力变化 {};
+        };
+        #format 内力 { 内力: %s%s} {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}};
     };
 
-    #local 每秒精力变化 {@speedo.GetSpeed{当前精力}};
-    #if { ${每秒精力变化} > 0 } {
-        #local 每秒精力变化 {(<128>${每秒精力变化}<298>)};
-    };
-    #elseif { ${每秒精力变化} < 0 } {
-        #local 每秒精力变化 {(<118>${每秒精力变化}<298>)};
-    };
-    #else {
-        #local 每秒精力变化 {};
-    };
-
-    #nop 气血恢复的数值展示为每分钟可以恢复的最大血量的倍数（以百分比形式）;
-    #local {气血恢复} {@math.Int{@math.Eval{$char[STATUS][气血恢复] * 100 * 60 / $char[HP][最大气血]}}};
-
-    #nop 气血治疗的数值展示为每分钟可以治疗的最大血量的倍数（以百分比形式）;
-    #local {气血治疗} {@math.Int{@math.Eval{$char[STATUS][气血治疗] * 100 * 60 / $char[HP][最大气血]}}};
-
-    #local summarize {};
-    #if { "$char[HP][战斗中]" == "true" } {
-        #format summarize {<099>$color〔HP摘要〕<298>气血: %s%s/%s 内力: %s%s 回气: %s/%s 精神: %s%s/%s 食水: %s/%s$combat<099>}
-            {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{$char[HP][气血健康度]}}
-            {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
-            {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
-            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{$char[HP][精神健康度]}}
-            {$char[HP][食物]} {$char[HP][饮水]}
-    };
-    #else {
-        #local jingli {@if{$chat[HP][精力百分比] < 30;{@__char_hp_colorit__{$char[HP][精力百分比]} ${每秒精力变化}}}};
-        #format summarize {<099>$color〔HP摘要〕<298>气血: %s%s/%s 内力: %s%s 回气: %s/%s 精神: %s%s/%s $jingli食水: %s/%s(%s/%s)$combat<099>}
-            {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}} {@__char_hp_colorit__{$char[HP][气血健康度]}}
-            {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}}
-            {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}}
-            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}} {@__char_hp_colorit__{$char[HP][精神健康度]}}
-            {$char[HP][食物]} {$char[HP][饮水]}
-            {@speedo.GetSpeed{食物;60}} {@speedo.GetSpeed{饮水;60}};
+    #local 精神 {};
+    #if { $width >= 80 } {
+        #local 每秒精神变化 {@speedo.GetSpeed{当前精神}};
+        #if { ${每秒精神变化} > 0 } {
+            #local 每秒精神变化 {(<128>${每秒精神变化}<298>)};
+        };
+        #elseif { ${每秒精神变化} < 0 } {
+            #local 每秒精神变化 {(<118>${每秒精神变化}<298>)};
+        };
+        #else {
+            #local 每秒精神变化 {};
+        };
+        #format 精神 { 精神: %s%s/%s}
+            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}}
+            {@__char_hp_colorit__{$char[HP][精神健康度]}};
     };
 
+    #local 精力 {};
+    #if { ($width >= 100 && !@char.InCombat{}) || $char[HP][当前精力] > $char[HP][上次精力] || $char[HP][精力百分比] < 30 } {
+        #local 每秒精力变化 {@speedo.GetSpeed{当前精力}};
+        #if { ${每秒精力变化} > 0 } {
+            #local 每秒精力变化 {(<128>${每秒精力变化}<298>)};
+        };
+        #elseif { ${每秒精力变化} < 0 } {
+            #local 每秒精力变化 {(<118>${每秒精力变化}<298>)};
+        };
+        #else {
+            #local 每秒精力变化 {};
+        };
+        #format 精力 { 精力: %s%s} {@__char_hp_colorit__{$char[HP][精力百分比]}} {${每秒精力变化}};
+    };
+
+    #local 回气 {};
+    #if { $width >= 110 || @char.InCombat{} } {
+        #nop 气血恢复的数值展示为每分钟可以恢复的最大血量的倍数（以百分比形式）;
+        #local {气血恢复} {@math.Int{@math.Eval{$char[STATUS][气血恢复] * 100 * 60 / $char[HP][最大气血]}}};
+        #nop 气血治疗的数值展示为每分钟可以治疗的最大血量的倍数（以百分比形式）;
+        #local {气血治疗} {@math.Int{@math.Eval{$char[STATUS][气血治疗] * 100 * 60 / $char[HP][最大气血]}}};
+        #format {回气} { 回气: %s/%s} {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}};
+    };
+
+    #local 食水 {};
+    #if { $width >= 110 } {
+        #if { @char.InCombat{} } {
+            #format {食水} { 食水: %s/%s} {$char[HP][食物]} {$char[HP][饮水]};
+        };
+        #else {
+            #format {食水} { 食水: %s/%s(%s/%s)}
+                    {$char[HP][食物]} {$char[HP][饮水]}
+                    {@speedo.GetSpeed{食物;60}} {@speedo.GetSpeed{饮水;60}};
+        };
+    };
+
+    #local summarize {<099>$color〔HP摘要〕<298>${气血}${内力}${回气}${精神}${精力}${食水}$combat<099>};
     #showme $summarize;
 };
 
@@ -435,7 +449,7 @@ hp -neili 格式：
 
 #func {__char_hp_colorit__} {
     #local percent {@math.Int{@defaultNum{%1;0}}};
-    #return {@util.Grade{$percent;<218>;15;<118>;30;<238>;60;<138>;90;<128>;101;<168>}$percent%<298>};
+    #return {@util.Grade{$percent;<218>;15;<118>;30;<238>;60;<138>;90;<128>;101;<168>}$percent%%<298>};
 };
 
 #alias {char.GetHP} {
@@ -514,7 +528,7 @@ hp -neili 格式：
 // #@ char.InCombat
 //    如果角色正处于战斗中，则返回真，否则返回假。无参数。
 // };
-#func {char.IsIdle} {
+#func {char.InCombat} {
     #if { "$char[HP][战斗中]" == "true" } {
         #return 1;
     };
