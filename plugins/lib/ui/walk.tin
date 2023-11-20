@@ -1,0 +1,215 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+///=== {
+///// 触屏走路模块允许玩家通过点击屏幕上的不同区域来控制角色向不同方向移动。
+///// 本模块对手机用户可能有一些帮助。
+/////
+///// 首次使用的用户可能需要先通过 ui.walk.Guide 别名来学习虚拟按键的方位布局。
+/////
+///// 需要特别说明的是，本模块会自动和地图系统进行集成。通过监测房间出口，会对
+///// 键位做细微的调整。
+///// 举例来说，如果东方只有一个 eastup 出口，那么 east/eastup/eastdown 三个键位
+///// 的作用就都是 eastup，如果只有一个 eastdown 也一样。南、北、西三个方向同理。
+/////
+///// 本模块加载后立即生效，如果你需要暂时禁用，可以用 ui.walk.Disable 别名。
+///// 稍后可以通过 ui.walk.Enable 重新启用。
+// };
+
+#var lib_ui_walk[META] {
+    {NAME}      {触屏走路}
+    {DESC}      {支持鼠标和触摸屏操作，点击屏幕不同区域，可以进入不同出口}
+    {AUTHOR}    {担子炮}
+};
+
+#func {lib_ui_walk.Init} {
+    ui.walk.Enable;
+    #return {true};
+};
+
+#alias {ui.walk.setup} {
+    #class ui.walk.mouse open;
+
+    #event {SHORT-CLICKED MOUSE BUTTON ONE} {
+        ui.walk.go @ui.walk.locate{%%0;%%1;left;short};
+    };
+
+    #event {SHORT-CLICKED MOUSE BUTTON THREE} {
+        okLog 鼠标右击 @ui.walk.locate{%%0;%%1;right;short};
+    };
+
+    #event {LONG-CLICKED MOUSE BUTTON ONE} {
+        okLog 鼠标长按 @ui.walk.locate{%%0;%%1;left;long};
+    };
+
+    #event {LONG-CLICKED MOUSE BUTTON THREE} {
+        okLog 鼠标长右 @ui.walk.locate{%%0;%%1;right;long};
+    };
+
+    #class ui.walk.mouse close;
+};
+
+///=== {
+// ## ui.walk.Enable
+//    开启触屏走路。
+//    本别名没有参数。
+// };
+#alias {ui.walk.Enable} {
+    ui.walk.setup;
+};
+
+///=== {
+// ## ui.walk.Disable
+//    禁用触屏走路。
+//    本别名没有参数。
+// };
+#alias {ui.walk.Disable} {
+    #class ui.walk.mouse kill;
+};
+
+///=== {
+// ## ui.walk.Guide
+//    在屏幕上展示一个虚拟键盘，展示每个按键的方位。
+//    本别名没有参数。
+// };
+#alias {ui.walk.Guide} {
+    #local height   {};
+    #local width    {};
+    #screen get rows height;
+    #screen get cols width;
+    #local height   {@math.Eval{$height - $prompt-top-max-line - $prompt-bot-max-line - 1}};
+
+    #screen clear scroll;
+
+    #local top      {@math.Eval{$height / 4}};
+    #local bot      {@math.Eval{$height * 3 / 4 + 1}};
+    #local left     {@math.Eval{$width / 4}};
+    #local right    {@math.Eval{$width * 3 / 4 + 1}};
+    #local vmid     {@math.Eval{$width / 2}};
+    #local hmid     {@math.Eval{$height / 2}};
+
+    #draw TALIGN BALIGN CALIGN box 1 1 $top @math.Eval{$left - 1} 西北;
+    #draw TALIGN BALIGN CALIGN box 1 @math.Eval{$right + 1} $top $width 东北;
+    #draw TALIGN BALIGN CALIGN box $bot 1 $height @math.Eval{$left - 1} 西南;
+    #draw TALIGN BALIGN CALIGN box $bot @math.Eval{$right + 1} $height $width 东南;
+
+    #draw TALIGN BALIGN CALIGN box 1 $left $top @math.Eval{$left * 5 / 3} 北上;
+    #draw TALIGN BALIGN CALIGN box 1 @math.Eval{$left * 5 / 3 + 1} $top @math.Eval{$left * 7 / 3} 北;
+    #draw TALIGN BALIGN CALIGN box 1 @math.Eval{$left * 7 / 3 + 1} $top $right 北下;
+
+    #draw TALIGN BALIGN CALIGN box $bot @math.Eval{$left + 1} $height @math.Eval{$left * 5 / 3} 南上;
+    #draw TALIGN BALIGN CALIGN box $bot @math.Eval{$left * 5 / 3 + 1} $height @math.Eval{$left * 7 / 3} 南;
+    #draw TALIGN BALIGN CALIGN box $bot @math.Eval{$left * 7 / 3 + 1} $height $right 南下;
+
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$top + 1}         1 @math.Eval{$top * 5 / 3} @math.Eval{$left - 1} 西上;
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$top * 5 / 3 + 1} 1 @math.Eval{$top * 7 / 3} @math.Eval{$left - 1} 西;
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$top * 7 / 3 + 1} 1 @math.Eval{$bot - 1}     @math.Eval{$left - 1} 西下;
+
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$top + 1}         @math.Eval{$right + 1} @math.Eval{$top * 5 / 3} $width 东上;
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$top * 5 / 3 + 1} @math.Eval{$right + 1} @math.Eval{$top * 7 / 3} $width 东;
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$top * 7 / 3 + 1} @math.Eval{$right + 1} @math.Eval{$bot - 1}     $width 东下;
+
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$top + 1}  @math.Eval{$left + 1} $hmid $vmid 进;
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$hmid + 1} @math.Eval{$left + 1} @math.Eval{$bot - 1}  $vmid 出;
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$top + 1}  @math.Eval{$vmid + 1} $hmid $right 上;
+    #draw TALIGN BALIGN CALIGN box @math.Eval{$hmid + 1} @math.Eval{$vmid + 1} @math.Eval{$bot - 1}  $right 下;
+
+    #buffer lock on;
+    #line oneshot #macro {\cc} {#buffer lock off; #buffer end};
+};
+
+#func {ui.walk.locate} {
+    #local row      {%1};
+    #local col      {%2};
+    #local button   {%3};
+    #local long     {%4};
+
+    #local height   {};
+    #local width    {};
+    #screen get rows height;
+    #screen get cols width;
+    #local height   {@math.Eval{$height - $prompt-top-max-line - $prompt-bot-max-line}};
+
+    #local top      {@math.Eval{$height / 4}};
+    #local bot      {@math.Eval{$height * 3 / 4 + 1}};
+    #local left     {@math.Eval{$width / 4}};
+    #local right    {@math.Eval{$width * 3 / 4 + 1}};
+    #local vmid     {@math.Eval{$width / 2}};
+    #local hmid     {@math.Eval{$height / 2}};
+
+    #local dir {};
+
+    #if { $row <= $top } {
+        #cat dir {north};
+    };
+    #elseif { $row >= $bot } {
+        #cat dir {south};
+    };
+
+    #if { $col <= $left } {
+        #cat dir {west};
+    };
+    #elseif { $col >= $right } {
+        #cat dir {east};
+    };
+
+    #local real {@sset.Intersection{{$gMapRoom[exits]};{${dir}up;$dir;${dir}down}}};
+    #if { "$dir" == "{north|south}" } {
+        #if { @sset.Size{$real} == 1 } {
+            #local dir {$real};
+        };
+        #else {
+            #if { $col <= $left * 5 / 3 } {
+                #cat dir {up};
+            };
+            #elseif { $col > $left * 7 / 3 } {
+                #cat dir {down};
+            };
+        };
+    };
+    #elseif { "$dir" == "{east|west}" } {
+        #if { @sset.Size{$real} == 1 } {
+            #local dir {$real};
+        };
+        #else {
+            #if { $row <= $top * 5 / 3 } {
+                #cat dir {up};
+            };
+            #elseif { $row > $top * 7 / 3 } {
+                #cat dir {down};
+            };
+        };
+    };
+
+    #if { "$dir" == "" } {
+        #if { $col <= $vmid } {
+            #local dir {@if{$row <= $hmid; enter; out}};
+        };
+        #else {
+            #local dir {@if{$row <= $hmid; up; down}};
+        };
+    };
+
+    #return {$dir};
+};
+
+VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
+
+///=== {
+// ## ui.walk.SetCmd <触屏走路命令>
+//    设置触屏走路时所用的命令，默认为 go。
+//    例如，推车任务时你可以设置为: ui.walk.SetCmd {gan che to} 来表示推车所用的命令。
+// };
+#alias {ui.walk.SetCmd} {
+    #var ui.walk.cmd {%1};
+};
+
+#alias {ui.walk.go} {
+    #local dir {%1};
+    $ui.walk.cmd $dir;
+};
