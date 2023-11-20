@@ -28,9 +28,7 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 };
 
 #var {gmcp-name-map} {
-    {HP} {
-        {经验}          {经验}          {combat_exp}        {经验}
-        {潜能}          {潜能}          {potential}         {潜能}
+    {HP主要} {
         {最大内力}      {最大内力}      {max_neili}         {最大内力}
         {内力}          {当前内力}      {neili}             {当前内力}
         {最大精力}      {最大精力}      {max_jingli}        {最大精力}
@@ -42,12 +40,17 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
         {有效精神}      {有效精神}      {eff_jing}          {有效精神}
         {精神}          {当前精神}      {jing}              {当前精神}
         {真气}          {当前真气}      {vigour/qi}         {当前真气}
+        {忙}            {忙}            {is_busy}           {忙}
+        {战斗中}        {战斗中}        {is_fighting}       {战斗中}
+    }
+
+    {HP次要} {
+        {经验}          {经验}          {combat_exp}        {经验}
+        {潜能}          {潜能}          {potential}         {潜能}
         {真元}          {真元}          {vigour/yuan}       {真元}
         {食物}          {食物}          {food}              {食物}
         {饮水}          {饮水}          {water}             {饮水}
-        {忙}            {忙}            {is_busy}           {忙}
         {战意}          {战意}          {fighter_spirit}    {战意}
-        {战斗中}        {战斗中}        {is_fighting}       {战斗中}
     }
 
     {档案} {
@@ -70,7 +73,8 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 #alias {char.gmcp.status} {
     #local busy     {};
     #local fight    {};
-    #local hasHP    {0};
+    #local hasHP1   {0};
+    #local hasHP2   {0};
     #local hasScore {0};
 
     #local id {$gGMCP[Status][id]};
@@ -89,17 +93,15 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
     #foreach {*gGMCP[Status][]} {key} {
         #local value {$gGMCP[Status][$key]};
 
-        #local name {$gmcp-name-map[HP][$key]};
+        #local name {$gmcp-name-map[HP主要][$key]};
         #if { "$name" != "" } {
-            #local hasHP {1};
-
-            #if { "$name" == "{当前.*|经验|潜能|食物|饮水}" } {
-                speedo.Set {$name} {$value} {true} {10};
-            };
+            #local hasHP1 {1};
 
             #if { "$name" == "当前%*" } {
+                speedo.Set {$name} {$value} {true} {10};
                 #local bakName {@str.Replace{$name;当前;上次}};
                 #local pctName {@str.Replace{$name;当前%*;&1百分比}};
+                #var char[HP][$bakName] {0};
                 #var char[HP][$bakName] {$char[HP][$name]};
                 #local needUpdate[$pctName] {true};
             };
@@ -123,6 +125,19 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
             };
 
             #var char[HP][$name] {$value};
+            #continue;
+        };
+
+        #local name {$gmcp-name-map[HP次要][$key]};
+        #if { "$name" != "" } {
+            #local hasHP2 {1};
+            #var char[HP][$name] {$value};
+            #if { "$name" == "{经验|潜能}" } {
+                speedo.Set {$name} {$value} {true} {600};
+            };
+            #elseif { "$name" == "{食物|饮水}" } {
+                speedo.Set {$name} {$value} {true} {10};
+            };
             #continue;
         };
 
@@ -150,13 +165,13 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
         warnLog 未能识别的 GMCP 状态信息 $key => $value;
     };
 
-    #if     { $hasHP } {
+    #if { $hasHP1 + $hasHP2 > 0 } {
         #foreach {*needUpdate[]} {key} {
             #if { "$key" == "%*百分比" } {
                 #local current {@str.Replace{$key;%*百分比;当前&1}};
                 #local maxName {@str.Replace{$key;%*百分比;最大&1}};
                 #local scale   {@if{"$key" == "{内力|精力}百分比";2;1}};
-                #math char[HP][$key] { $char[HP][$current] * 100 / $char[HP][$maxName] * $scale };
+                #math char[HP][$key] { $char[HP][$current] * 100 / $char[HP][$maxName] / $scale };
             };
             #elseif { "$key" == "%*健康度" } {
                 #local effName {@str.Replace{$key;%*健康度;有效&1}};
@@ -164,8 +179,15 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
                 #math char[HP][$key] { $char[HP][$effName] * 100 / $char[HP][$maxName] };
             };
         };
+
+        #if { "$char.HPSummarize.Echo" == "自动" && $hasHP1 } {
+            char.HPSummarize;
+        };
+        #elseif { "$char.HPSummarize.Echo" == "总是" } {
+            char.HPSummarize;
+        };
+
         event.Emit char/hpbrief;
-        char.HPSummarize;
     };
 
     #if     { $hasScore }           {event.Emit char/score};

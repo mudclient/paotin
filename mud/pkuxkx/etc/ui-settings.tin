@@ -104,3 +104,5 @@
     {{key}{\coM}    {action}{option.Toggle MapDebug; look}}
     {{key}{\coV}    {action}{option.Toggle ShowRoomView; look}}
 };
+
+VAR {HP摘要刷新时机，三选一：{总是|从不|自动}} char.HPSummarize.Echo {自动};
