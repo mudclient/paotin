@@ -1,0 +1,522 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var basic_char_backpack[META] {
+    {NAME}      {背包管理}
+    {DESC}      {解析背包内容，识别物品信息，并储存到变量。并提供必要的整理工具}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+/*
+i2 格式：
+你身上带著下列这些东西(负重 27%)：
+九十一两白银(Silver)
+一粒牛黃血竭丹(Xuejie dan)
+二个竹壶(Zhuhu)
+三块干粮(Gan liang)
+大砍刀(Dakan dao)
+青锋剑(Qingfeng sword)
+北侠战袍(Pkuxkx zhanpao)
+北侠战甲(Pkuxkx zhanjia)
+北侠战衣(Pkuxkx zhanyi)
+北侠战盔(Pkuxkx zhankui)
+北侠战靴(Pkuxkx zhanxue)
+锦囊(Jin nang)
+
+-------------------------------------------
+你左手拿着：大砍刀(Dakan dao)
+你右手拿着：青锋剑(Qingfeng sword)
+
+-------------------------------------------
+你身上穿着：
+北侠战袍(Pkuxkx zhanpao)
+北侠战甲(Pkuxkx zhanjia)
+北侠战衣(Pkuxkx zhanyi)
+北侠战盔(Pkuxkx zhankui)
+北侠战靴(Pkuxkx zhanxue)
+锦囊(Jin nang)
+*/
+
+VAR {所有随身物品，包括武器装备食物饮料，但不包括包袱里的内容} char.Item  {};
+VAR {现金（银票/黄金/白银/铜板）}   char.Cash           {};
+VAR {已经穿戴的装备}                char.Wear           {};
+VAR {已经装备的武器}                char.Wield          {};
+VAR {没有穿戴的装备}                char.Equip          {};
+VAR {已经 autoload 的装备}          char.Autoload       {};
+VAR {背包里所有物品的 ID}           char.ItemID         {};
+VAR {包袱及其内容}                  char.Bag            {};
+
+VAR {背包内容是否已经脏了}          char.backpack.IsDirty {1};
+
+event.Define {char/i2}          {无参} {$MODULE} {i2 命令运行完毕，背包数据已更新};
+event.Define {char/id}          {无参} {$MODULE} {id 命令运行完毕，背包数据已更新};
+event.Define {char/backpack}    {无参} {$MODULE} {i2 和 id 命令运行完毕，背包数据已更新};
+event.Define {char/bag}         {无参} {$MODULE} {look bag 命令运行完毕，背包数据已更新};
+
+#func {basic_char_backpack.Init} {
+    load-config affix;
+    load-config loots;
+    #return true;
+};
+
+#alias {char.reset.i2} {
+    #var char.Item      {};
+    #var char.Cash      {};
+    #var char.Wear      {};
+    #var char.Wield     {};
+    #var char.Equip     {};
+    #var char.Autoload  {};
+    #var char.ItemID    {};
+};
+
+#alias {char.reset.bag} {
+    #local id {%1};
+    #if { "$id" != "%+1..d" } {
+        #return;
+    };
+    #var char.Bag[$id]  {};
+};
+
+#var 汉字数词 {(?:零|一|二|三|四|五|六|七|八|九|十|百|千|万|亿)+};
+#var 汉字量词 {(?:本|块|碗|件|册|柄|把|根|枚|个|粒|味|0)};
+#var 词缀修饰 {(?:[^ ][^ ])+};
+
+#alias {char.backpack.set} {
+    #local type     {%1};
+    #local amount   {%2};
+    #local unit     {%3};
+    #local name     {%4};
+    #local id       {@str.ToLower{%5}};
+
+    #if { "$char.backpack.currentType" == "穿戴" } {
+        #local type {Wear};
+    };
+    #elseif { "$char.backpack.currentType" == "包袱" } {
+        #local type {Bag[$char.backpack.currentBag]};
+    };
+
+    #if { "$type" != "{Item|Cash|Wear|Wield|Equip|Bag\[\d+\]}" } {
+        #return;
+    };
+
+    #if { "$type" == "Item" } {
+        #if { "$amount" == "" && "$name" == "{${汉字数词}}%+1u%+1..u" } {
+            #local new {$name};
+            #replace new {^{${汉字数词}}%+1u%+1..u$} {
+                {amount}    {&1}
+                {unit}      {&2}
+                {name}      {&3}
+            };
+            #local new {$new};
+            #local keys {@table.Keys{gLootPool;{$new[name]/$id}}};
+            #local count {@sset.Size{$keys}};
+            #if { $count == 0 } {
+                warnLog 疑似未知掉落物「$new[name]/$id」，单位为「$new[unit]」，请确认。;
+            };
+            #elseif { $count == 1 } {
+                #if { "$gLootPool[$keys][unit]" == "$new[unit]" } {
+                    #local name     {$new[name]};
+                    #local unit     {$new[unit]};
+                    #local amount   {$new[amount]};
+                };
+                #else {
+                    warnLog 掉落物「$new[name]/$id」的单位「$new[unit]」与数据库中（$gLootPool[$keys][unit]）不符，请确认。;
+                };
+            };
+        };
+    };
+
+    #if { "$amount" == "" } {
+        #local amount {1};
+    };
+    #else {
+        #local amount {@math.ParseCN{$amount}};
+    };
+
+    #if { "$type" == "Wear" } {
+        #if { "$char.Wear[$name/$id]" != "" } {
+            #local amount {@math.Eval{$char.Wear[$name/$id][amount] + 1}};
+        };
+    };
+
+    #var {char.${type}[$name/$id]} {
+        {name}      {$name}
+        {id}        {@str.ToLower{$id}}
+        {amount}    {$amount}
+    };
+
+    #if { "$type" == "{Equip|Cash}" } {
+        #var {char.Item[$name/$id]} {
+            {name}      {$name}
+            {id}        {@str.ToLower{$id}}
+            {amount}    {$amount}
+        };
+    };
+};
+
+#action {^这是一个粗布做的大包袱，里面可以装很多东西。$E} {
+    #local bag {@ga.ThisCmd{}};
+    #replace bag {^%* bag%s%d$} {&3};
+    char.backpack.parse {bag} {$bag};
+};
+
+#action {^你身上带著下列这些东西(负重 %1%)：$E} {
+    #var char.backpack.IsDirty 0;
+    char.backpack.parse i2;
+};
+
+#alias {char.backpack.parse} {
+    #local where {%1};
+    #local index {%2};
+
+    #class ParseItems open;
+
+    #var char.backpack.currentType {随身};
+    #var char.backpack.currentBag  {1};
+
+    #if { "$where" == "i2" } {
+        char.reset.i2;
+    };
+    #elseif { "$where" == "bag" } {
+        #local index {@defaultNum{$index;1}};
+        #var char.backpack.currentType {包袱};
+        #var char.backpack.currentBag {$index};
+        char.reset.bag $index;
+    };
+
+    #nop 九十一两白银(Silver);
+    #action {^{?:(?:(${汉字数词})(两|文|张))?}{黄金|白银|铜板|一千两银票}(%*)$} {
+        char.backpack.set {Cash} {%%1} {%%2} {%%3} {%%4};
+    } {4.2};
+
+    #action {^{?:(?:(${汉字数词})件)?}{${全职业装}}之{${职业部位}}(%*)$} {
+        char.backpack.set {Equip} {%%1} {件} {%%2之%%3} {%%4};
+    } {4.2};
+
+    #action {^{?:(?:(${汉字数词})件)?}{${随机装备}}之{${随机部位}}(%*)$} {
+        char.backpack.set {Equip} {%%1} {件} {%%2之%%3} {%%4};
+    } {4.2};
+
+    #action {^{?:(?:(${汉字数词})件)?}{${随机首饰}}之{${首饰部位}}(%*)$} {
+        char.backpack.set {Equip} {%%1} {件} {%%2之%%3} {%%4};
+    } {4.2};
+
+    #action {^{?:(?:(${汉字数词})件)?}{${江湖套装}}%S(%*)$} {
+        char.backpack.set {Equip} {%%1} {件} {%%2之%%3} {%%4};
+    } {4.2};
+
+    #action {^{?:(?:(${汉字数词})柄)?}{${随机武器}}之{${武器种类}}(%*)$} {
+        char.backpack.set {Equip} {%%1} {柄} {%%2之%%3} {%%4};
+    } {4.2};
+
+    #nop 镶嵌了宝石的随机装备或职业装备;
+    #action {^{?:(?:(${汉字数词})(柄|件))?}%S %S之%S(%*)$} {
+        char.backpack.set {Equip} {%%1} {%%2} {%%3 %%4之%%5} {%%6};
+    } {4.2};
+
+    #nop 镶嵌了宝石的江湖套装;
+    #action {^{?:(${汉字数词})(${汉字量词})|}%S %S(%*)$} {
+        char.backpack.set {Equip} {%%1} {%%2} {%%3 %%4} {%%5};
+    } {4.3};
+
+    #nop 其它物品;
+    #action {^{?:(${汉字数词})(${汉字量词})|}%S(%*)$} {
+        char.backpack.set {Item} {%%1} {%%2} {%%3} {%%4};
+    } {4.3};
+
+    #nop 其它物品;
+    #action {^%S(%*)$} {
+        char.backpack.set {Item} {一} {个} {%%1} {%%2};
+    } {4.4};
+
+    #nop 你左手拿着：大砍刀(Dakan dao);
+    #nop 你右手拿着：青锋剑(Qingfeng sword);
+    #action {^你{左手|右手}拿着：%*(%*)$} {
+        #local hand     {%%1};
+        #local item     {%%2};
+        #local id       {@str.ToLower{%%3}};
+        #var char.Wield[$item/$hand/$id] {
+            {hand}  {$hand}
+            {item}  {$item}
+            {id}    {$id}
+        };
+    } {4.1};
+
+    #action {^你手里什么也没拿$} {
+        #var char.Wield {};
+    };
+
+    #action {^你身上穿着：$} {
+        #var char.backpack.currentType {穿戴};
+    };
+
+    event.HandleOnce GA {backpack/i2} {char/backpack} {
+        event.Emit char/i2;
+        #class ParseItems kill;
+        #0
+    };
+
+    #class ParseItems close;
+};
+
+#action {^你身上携带物品的别称如下 :$E} {
+    #class ParseItems open;
+
+    #var {char.ItemID} {};
+
+    #action {^%*%s = %*{|ID=char/ItemID}$} {
+        #local name {@str.Trim{%%1}};
+        #local ids  {@str.Split{{%%3};{, }}};
+        #local uuid {};
+        #local type {};
+        #local id {};
+        #foreach {$ids} {id} {
+            #if { "$id" == "my %*" } {
+                #replace {id} {my } {};
+                #local type {$id};
+                #continue;
+            };
+            #if { "$id" == "{am|wp}_%d" } {
+                #local uuid {$id};
+                #continue;
+            };
+
+            #local amount {1};
+            #if { &char.ItemID[$name/$id] > 0 } {
+                #local amount {@math.Eval{ $char.ItemID[$name/$id][amount] + 1 }};
+            };
+
+            #var {char.ItemID[$name/$id]} {
+                {name}      {$name}
+                {id}        {$id}
+                {amount}    {$amount}
+                {ids}       {$ids}
+            };
+        };
+
+        #if { "$uuid" != "" } {
+            #var {char.Autoload[$type/$uuid]} {
+                {name}  {$name}
+                {type}  {$type}
+                {uuid}  {$uuid}
+                {ids}   {$ids}
+            };
+        };
+    } {4};
+
+    event.HandleOnce GA {backpack/id} {char/backpack} {
+        event.Emit char/id;
+        #class ParseItems kill;
+        #0
+    };
+
+    #class ParseItems close;
+};
+
+///=== {
+// ## char.backpack.Refresh [<是否强制刷新>]
+//    刷新背包数据。
+//    默认会检测 char.backpack.IsDirty 变量，除非必要负责不向服务器发送任何命令。
+//    但用户可以传递参数 true 以启用强制刷新。
+// };
+#alias {char.backpack.Refresh} {
+    #local force {@default{%1;false}};
+
+    #if { !@isTrue{$force} && !$char.backpack.IsDirty } {
+        warnLog 背包数据未发生变更，无需刷新。;
+        #return;
+    };
+
+    #class char.backpack.refresh open;
+
+    #gag {^%*{|ID=char/backpack/refresh}$};
+
+    #action {^等等，系统喘气中......{|ID=char/backpack/Refresh}$} {
+        errLog 物品 ID 数据刷新失败，稍后即将重试。;
+        #ungag {^%*{|ID=char/backpack/refresh}$};
+        #delay char.backpack.refresh {
+            #class char.backpack.refresh assign #gag {^%*{|ID=char/backpack/refresh}$};
+            id;
+        } 10;
+    };
+
+    #nop i2 命令不会失败，但 id 命令有 CD，会失败。;
+    i2; id;
+
+    event.HandleOnce {char/id} {char.backpack.refresh} {char/backpack} {
+        okLog 背包数据已刷新。;
+        #class char.backpack.refresh kill;
+        event.Emit char/backpack;
+        #0
+    };
+
+    #undelay char.backpack.refresh;
+
+    #class char.backpack.refresh close;
+};
+
+///=== {
+// #@ char.backpack.Query <范围> <ID 或名称>
+//    查询角色是否携带有某样物品。如果有，则返回 ID 和名称；否则返回空串。
+//    查询范围：
+//      Item:       所有物品（但不包括包袱里的内容）
+//      Wear:       穿戴
+//      Wield:      手持的装备（武器或盾牌）
+//      Equip:      携带的装备
+//      Autoload:   Autoload 的装备
+//      ItemID:     id 命令看到的数据
+//      Bag:        包袱里的物品
+// };
+#func {char.backpack.Query} {
+    #local range    {%1};
+    #local key      {%2};
+    #local func     {@default{%3;char.backpack.Query}};
+
+    #if { "$range" != "{Item|Cash|Wear|Wield|Equip|Autoload|ItemID}" } {
+        xtt.Usage $func;
+        #return;
+    };
+
+    #local items {};
+    #local var {};
+    #local items {@table.Keys{char.$range;{$key/%*}}};
+    #if { "$items" == "" } {
+        #local items {@table.Keys{char.$range;{%*/$key}}};
+    };
+
+    #return {$items};
+};
+
+///=== {
+// #@ char.backpack.Has <范围> <ID 或名称>
+//    查询角色是否携带有某样物品。如果有，则返回真，否则返回假。
+//    查询范围参见 HELP char.backpack.Query。
+// };
+#func {char.backpack.Has} {
+    #local items {@char.backpack.Query{{%1};{%2}}};
+
+    #if { "$items" == "" } {
+        #return 0;
+    };
+    #else {
+        #return 1;
+    };
+};
+
+///=== {
+// ## char.backpack.SellAll
+//    把身上的低价值物品全部卖掉。
+// };
+#alias {char.backpack.SellAll} {
+    #if { $char.backpack.IsDirty } {
+        char.backpack.Refresh;
+        event.HandleOnce {char/backpack} {char.backpack.SellAll} {char/backpack} {char.backpack.SellAll};
+        #return;
+    };
+
+    #class char.backpack.SellAll open;
+
+    #var char.backpack.SellAll.index {&char.Item[]};
+
+    #alias {char.backpack.SellAll.do} {
+        #if { $char.backpack.SellAll.index == 0 } {
+            okLog 背包里的所有杂物都已经卖完了。;
+            char.backpack.Refresh true;
+            #undelay char.backpack.SellAll.do;
+            #class char.backpack.SellAll kill;
+            #return;
+        };
+
+        #if { @char.IsBusy{} } {
+            #delay char.backpack.SellAll.do {char.backpack.SellAll.do} 1;
+            #return;
+        };
+
+        #local item {$char.Item[+$char.backpack.SellAll.index]};
+        math.Inc char.backpack.SellAll.index -1;
+        #local attr {$gLootPool[$item[name]/$item[id]]};
+        #if { "$attr[value]" == "sell" } {
+            #if { $item[amount] == 1 } {
+                sell $item[id];
+            };
+            #else {
+                sell $item[id] for $item[amount];
+            };
+            #delay char.backpack.SellAll.do {char.backpack.SellAll.do} 1;
+            #return;
+        };
+
+        #delay char.backpack.SellAll.do {char.backpack.SellAll.do} 0;
+    };
+
+    char.backpack.SellAll.do;
+
+    #class char.backpack.SellAll close;
+};
+
+///=== {
+// ## char.backpack.DropAll
+//    把身上的不能卖的低价值物品全部扔掉。
+// };
+#alias {char.backpack.DropAll} {
+    #if { $char.backpack.IsDirty } {
+        char.backpack.Refresh;
+        event.HandleOnce {char/backpack} {char.backpack.DropAll} {char/backpack} {char.backpack.DropAll};
+        #return;
+    };
+
+    #class char.backpack.DropAll open;
+
+    #var char.backpack.DropAll.index {&char.Item[]};
+
+    #alias {char.backpack.DropAll.do} {
+        #if { $char.backpack.DropAll.index == 0 } {
+            okLog 背包里的所有杂物都已经扔完了。;
+            char.backpack.Refresh true;
+            #undelay char.backpack.DropAll.do;
+            #class char.backpack.DropAll kill;
+            #return;
+        };
+
+        #if { @char.IsBusy{} } {
+            #delay char.backpack.DropAll.do {char.backpack.DropAll.do} 1;
+            #return;
+        };
+
+        #local item {$char.Item[+$char.backpack.DropAll.index]};
+        math.Inc char.backpack.DropAll.index -1;
+        #local attr {$gLootPool[$item[name]/$item[id]]};
+        #if { "$attr[value]" == "drop" } {
+            #if { $item[amount] == 1 } {
+                drop $item[id];
+            };
+            #elseif { $item[amount] <= 10 } {
+                do $item[amount] drop $item[id];
+            };
+            #else {
+                #$item[amount] drop $item[id];
+            };
+            #delay char.backpack.DropAll.do {char.backpack.DropAll.do} 1;
+            #return;
+        };
+
+        #delay char.backpack.DropAll.do {char.backpack.DropAll.do} 0;
+    };
+
+    char.backpack.DropAll.do;
+
+    #class char.backpack.DropAll close;
+};
+
+#action {^你放下手中的%*。$E}           {#var char.backpack.IsDirty 1};
+#action {^你举起%*之盾遮护自身。$E}     {#var char.backpack.IsDirty 1};
+#action {^你装备%*做武器。$E}           {#var char.backpack.IsDirty 1};
+#action {^你打开盲盒，发现了%*。$E}     {#var char.backpack.IsDirty 1};

@@ -1,0 +1,176 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#nop 战利品属性表。;
+
+/*
+价值(value)字段有几种情况：
+    - sell 去当铺卖掉
+    - donate 捐献可以获得道德
+    - drop 扔掉
+    - xiang 扔功德箱里
+    - store 存储物柜里
+    - dang 当到当铺里
+    - give 给大米
+*/
+#var gLootPool {
+    {牛皮酒袋/jiudai}               {{kind}{饮料}   {unit}{个}  {value}{sell}   }
+    {酸梅汤/suanmei tang}           {{kind}{饮料}   {unit}{杯}  {value}{sell}   }
+
+    {包子/baozi}                    {{kind}{食物}   {unit}{个}  {value}{sell}   }
+    {生煎馒头/shengjian mantou}     {{kind}{食物}   {unit}{个}  {value}{sell}   }
+    {馒头/man tou}                  {{kind}{食物}   {unit}{个}  {value}{sell}   }
+    {鲜肉粽子/xianrou zongzi}       {{kind}{食物}   {unit}{个}  {value}{sell}   }
+    {清蒸鲫鱼/qingzheng jiyu}       {{kind}{食物}   {unit}{份}  {value}{sell}   }
+    {素煎饺/jian jiao}              {{kind}{食物}   {unit}{只}  {value}{sell}   }
+    {烤鸡腿/jitui}                  {{kind}{食物}   {unit}{根}  {value}{sell}   }
+    {冬菜包/dongcai bao}            {{kind}{食物}   {unit}{盘}  {value}{sell}   }
+    {扬州炒饭/yangzhou chaofan}     {{kind}{食物}   {unit}{碗}  {value}{sell}   }
+    {五香花生/huasheng}             {{kind}{食物}   {unit}{碟}  {value}{sell}   }
+    {南翔小笼/nanxiang xiaolong}    {{kind}{食物}   {unit}{笼}  {value}{sell}   }
+
+    {羊下水/yang xiashui}           {{kind}{食材}   {unit}{副}  {value}{sell}   }
+    {扇贝/shan bei}                 {{kind}{食材}   {unit}{只}  {value}{sell}   }
+    {猪心/zhu xin}                  {{kind}{食材}   {unit}{只}  {value}{sell}   }
+    {生海胆/hai dan}                {{kind}{食材}   {unit}{只}  {value}{sell}   }
+    {生蚝/sheng hao}                {{kind}{食材}   {unit}{只}  {value}{sell}   }
+    {辣椒/la jiao}                  {{kind}{食材}   {unit}{只}  {value}{sell}   }
+    {鸡蛋/ji dan}                   {{kind}{食材}   {unit}{只}  {value}{sell}   }
+    {兽肉/shou rou}                 {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {宠物肉/chongwu rou}            {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {排骨/pai gu}                   {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {牛腱子/niu jian}               {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {猪肉/zhu rou}                  {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {生牛肉/sheng niurou}           {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {生猪肉/sheng zhurou}           {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {生羊肉/sheng yangrou}          {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {盐块/yan kuai}                 {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {糖块/tang kuai}                {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {羊肩肉/yang jianrou}           {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {羊腿肉/yang tui}               {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {翡翠豆腐/doufu}                {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {螃蟹肉/pangxie rou}            {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {蹄膀/ti bang}                  {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {鸭翅/ya chi}                   {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {鸭腿/ya tui}                   {{kind}{食材}   {unit}{块}  {value}{sell}   }
+    {五花肉/wuhua rou}              {{kind}{食材}   {unit}{条}  {value}{sell}   }
+    {海参/hai shen}                 {{kind}{食材}   {unit}{条}  {value}{sell}   }
+    {牛鞭/niu bian}                 {{kind}{食材}   {unit}{根}  {value}{sell}   }
+    {鸡翅/ji chi}                   {{kind}{食材}   {unit}{根}  {value}{sell}   }
+    {鸡腿/ji tui}                   {{kind}{食材}   {unit}{根}  {value}{sell}   }
+    {米饭/mi fan}                   {{kind}{食材}   {unit}{碗}  {value}{sell}   }
+    {羊奶/yang nai}                 {{kind}{食材}   {unit}{碗}  {value}{sell}   }
+
+    {胡椒粉/hujiao fen}             {{kind}{食材}   {unit}{撮}  {value}{drop}   }
+    {姜/jiang}                      {{kind}{食材}   {unit}{只}  {value}{drop}   }
+    {葱/cong}                       {{kind}{食材}   {unit}{根}  {value}{drop}   }
+    {盐粒/yan li}                   {{kind}{食材}   {unit}{块}  {value}{drop}   }
+    {面团/mian tuan}                {{kind}{食材}   {unit}{块}  {value}{drop}   }
+    {荣华月饼/shangyueshipin}       {{kind}{食物}   {unit}{个}  {value}{drop}   }
+
+    {三国志/sanguo zhi}             {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {北史/bei shi}                  {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {北齐书/beiqi shu}              {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {南史/nan shi}                  {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {南齐书/nanqi shu}              {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {史记/shi ji}                   {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {后汉书/houhan shu}             {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {周书/zhou shu}                 {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {宋书/song shu}                 {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {宋史/song shi}                 {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {新五代史/xin wudaishi}         {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {新唐书/xin tangshu}            {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {旧五代史/jiu wudaishi}         {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {旧唐书/jiu tangshu}            {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {晋书/jin shu}                  {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {梁书/liang shu}                {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {汉书/han shu}                  {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {辽史/liao shi}                 {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {金史/jin shi}                  {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {陈书/chen shu}                 {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {隋书/sui shu}                  {{kind}{史书}   {unit}{套}  {value}{sell}   }
+    {魏书/wei shu}                  {{kind}{史书}   {unit}{套}  {value}{sell}   }
+
+    {铜钹/tong bo}                  {{kind}{兵器}   {unit}{对}  {value}{sell}   }
+    {判官笔/panguan bi}             {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {板斧/banfu}                    {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {药锄/yaochu}                   {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {蝎尾鞭/xiewei bian}            {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁刀/blade}                    {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁剑/sword}                    {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁匕/dagger}                   {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁匕首/tie bishou}             {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁戟/halberd}                  {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁斧/axe}                      {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁杖/staff}                    {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁枪/spear}                    {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁锤/hammer}                   {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {铁鞭/whip}                     {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {锄头/chu tou}                  {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {锯子/ju zi}                    {{kind}{兵器}   {unit}{把}  {value}{sell}   }
+    {狼牙箭/langya jian}            {{kind}{兵器}   {unit}{支}  {value}{sell}   }
+    {玉箫/yu xiao}                  {{kind}{兵器}   {unit}{支}  {value}{sell}   }
+    {箭/yu jian}                    {{kind}{兵器}   {unit}{支}  {value}{sell}   }
+    {方天画戟/fangtian ji}          {{kind}{兵器}   {unit}{杆}  {value}{sell}   }
+    {长枪/chang qiang}              {{kind}{兵器}   {unit}{杆}  {value}{sell}   }
+    {长矛/changmao}                 {{kind}{兵器}   {unit}{杆}  {value}{sell}   }
+    {降魔杵/xiangmo chu}            {{kind}{兵器}   {unit}{杆}  {value}{sell}   }
+    {马槊/ma shuo}                  {{kind}{兵器}   {unit}{杆}  {value}{sell}   }
+    {钢刀/blade}                    {{kind}{兵器}   {unit}{柄}  {value}{sell}   }
+    {钢剑/jian}                     {{kind}{兵器}   {unit}{柄}  {value}{sell}   }
+    {铁斧/tie fu}                   {{kind}{兵器}   {unit}{柄}  {value}{sell}   }
+    {铁钩/tie gou}                  {{kind}{兵器}   {unit}{柄}  {value}{sell}   }
+    {长剑/changjian}                {{kind}{兵器}   {unit}{柄}  {value}{sell}   }
+    {长弓/chang gong}               {{kind}{兵器}   {unit}{柄}  {value}{sell}   }
+    {长柄重斧/changbing zhongfu}    {{kind}{兵器}   {unit}{柄}  {value}{sell}   }
+    {长鞭/chang bian}               {{kind}{兵器}   {unit}{柄}  {value}{sell}   }
+    {法杵/fa chu}                   {{kind}{兵器}   {unit}{根}  {value}{sell}   }
+    {竹棒/zhubang}                  {{kind}{兵器}   {unit}{根}  {value}{sell}   }
+    {钢杖/gangzhang}                {{kind}{兵器}   {unit}{根}  {value}{sell}   }
+    {铁桨/tie jiang}                {{kind}{兵器}   {unit}{根}  {value}{sell}   }
+
+    {禅杖/chan zhang}               {{kind}{兵器}   {unit}{根}  {value}{donate;drop}}
+    {齐眉棍/qimei gun}              {{kind}{兵器}   {unit}{根}  {value}{donate;drop}}
+    {%+花枝/%*}                     {{kind}{花枝}               {value}{donate;drop}}
+
+    {铁蒺藜/tie jili}               {{kind}{暗器}   {unit}{枚}  {value}{sell}   }
+    {无影针/wuying zhen}            {{kind}{暗器}   {unit}{根}  {value}{sell}   }
+
+    {盲盒/mang he}                  {{kind}{杂物}   {unit}{只}  {value}{reserve}}
+    {折扇/zhe shan}                 {{kind}{杂物}   {unit}{把}  {value}{sell}   }
+    {骑弓/qi gong}                  {{kind}{杂物}   {unit}{柄}  {value}{sell}   }
+    {瓷酒瓶/lanling jiu}            {{kind}{杂物}   {unit}{只}  {value}{sell}   }
+    {飞镖/fei biao}                 {{kind}{杂物}   {unit}{只}  {value}{sell}   }
+    {烟杆/yan gan}                  {{kind}{杂物}   {unit}{根}  {value}{sell}   }
+
+    {花铲/hua chan}                 {{kind}{杂物}   {unit}{把}  {value}{drop}   }
+    {茶/cha}                        {{kind}{杂物}   {unit}{根}  {value}{drop}   }
+    {指劲/jin}                      {{kind}{杂物}   {unit}{道}  {value}{drop}   }
+    {菜肴/dish}                     {{kind}{杂物}   {unit}{份}  {value}{drop}   }
+    {食物/food}                     {{kind}{杂物}   {unit}{件}  {value}{drop}   }
+    {烧糊的残渣/can zha}            {{kind}{杂物}   {unit}{团}  {value}{drop}   }
+    {小糖块/tang kuai}              {{kind}{杂物}   {unit}{块}  {value}{drop}   }
+    {花瓣/hua ban}                  {{kind}{杂物}   {unit}{朵}  {value}{drop}   }
+
+    {丁香/ding xiang}               {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {康乃馨/kangnaixin}             {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {火鹤/huo he}                   {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {牡丹/mu dan}                   {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {百合/bai he}                   {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {石斛兰/shihu lan}              {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {秋海棠/qiu haitang}            {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {红玫瑰/hong meigui}            {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {蝴蝶兰/hudie lan}              {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {郁金香/yu jinxiang}            {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {马蹄莲/mati lian}              {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {白玫瑰/bai meigui}             {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+    {情人草/qingren cao}            {{kind}{花卉}   {unit}{株}  {value}{sell}   }
+    {金鱼草/jinyu cao}              {{kind}{花卉}   {unit}{朵}  {value}{sell}   }
+};

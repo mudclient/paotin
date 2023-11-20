@@ -3,7 +3,7 @@
 load-module {basic/char/hp};
 load-module {basic/char/skills};
 load-module {basic/char/status};
-load-module {basic/char/i2};
+load-module {basic/char/backpack};
 load-module {basic/char/sachet};
 load-module {basic/char/score};
 load-module {basic/char/gmcp};
