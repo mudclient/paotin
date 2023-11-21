@@ -67,12 +67,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local line {};
     #line quiet #buffer {get} {line} {$lineNo} {$endNo};
 
-    #if { "$endNo" == "" } {
-        #return {$line[1]};
-    };
-    #else {
-        #return {$line};
-    };
+    #return {$line};
 };
 
 ///=== {
@@ -96,7 +91,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #line quiet #buffer {get} {line} {$lineNo} {$endNo};
 
     #if { "$endNo" == "" } {
-        #return {@str.Plain{$line[1]}};
+        #return {@str.Plain{$line}};
     };
     #else {
         #foreach {*line[]} {lineNo} {
