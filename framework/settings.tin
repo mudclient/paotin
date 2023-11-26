@@ -32,14 +32,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #nop 两处 oneshot 处理都是故意为之，目的是为了不影响 TinTin++ 内部状态。;
 #line oneshot #event {IAC SB TTYPE} {
-    #if { {@gts{$ttype}} !== {SET} } {
-        #gts #var ttype {SET};
-        #send {\xFF\xFA\x18\x00\x50\x61\x6f\x54\x69\x6e\x2b\x2b\xFF\xF0\};
-        #line oneshot #event {CATCH SEND OUTPUT} {#0};
-    };
-    #else {
-        #gts #var ttype {DONE};
-    };
+    #send {\xFF\xFA\x18\x00\x50\x61\x6f\x54\x69\x6e\x2b\x2b\xFF\xF0\};
+    #line oneshot #event {CATCH SEND OUTPUT} {#0};
 };
 
 #nop 切分出专门的文字输入区。;
