@@ -114,7 +114,7 @@ load-lib alert;
     };
 
     #if { "$type" == "江湖" } {
-        #if { {$text} == {%*神力和纵跃排行榜%*} } {
+        #if { {$text} == {%*以下是江湖中{的|}%*排行榜%*} } {
             #class chat.log open;
 
             #action {~^%*{|ID=chat.log}$} {
