@@ -70,12 +70,13 @@
     chat $user[name]一共向你使出了一十八招！;
 };
 
+load-lib sync;
+
 #alias {i-all} {
     #class i-all open;
     #action {^你身上id为%*的东西有下面这些：$} {#line gag};
     #action {^你身上没有id为%*的东西。$} {#line gag};
     #action {^{>|}%s$} {#line gag};
-    #delay i-all {#class i-all kill} 1;
     #class i-all close;
 
     i sword;
@@ -107,6 +108,8 @@
     i cuirass;
     i pauldron;
     i cuisse;
+
+    sync.Wait {#class i-all kill};
 };
 
 #alias {ii} {
