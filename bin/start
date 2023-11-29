@@ -4,7 +4,7 @@ TT=
 ID=$1
 START_FILE=$1
 
-ECHO="echo -e"
+ECHO="$(which echo) -e"
 
 if [ "$(uname -s)" = "Darwin" ]; then
     ECHO=echo
