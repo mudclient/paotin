@@ -15,7 +15,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #alias {online.KeepAlive} {
     #local blankly {true};
-    #if { @isFalse{$char[HP][忙]} } {
+    #if { @char.IsBusy{} || @char.InCombat{} && $char[HP][食物] > 0 && $char[HP][饮水] > 0 } {
+        #nop Busy 中无法吃喝，或者战斗中除非快要饿死了否则也不吃喝。;
+    };
+    #else {
         #if { $char[HP][食物] < $char[HP][最大食物] / 3 } {
             #if { "$char[favorite][food]" != "{NOTHING|}" } {
                 xtt.Send eat $char[favorite][food];
