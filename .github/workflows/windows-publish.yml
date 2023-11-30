@@ -1,0 +1,154 @@
+name: Windows build and publish
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+on:
+  push:
+    branches: [ "beta" ]
+    # Publish semver tags as releases.
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: docker.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+
+
+jobs:
+  build:
+    runs-on: windows-2019
+
+    outputs:
+      name: ${{ steps.exe-name.outputs.EXENAME }}
+
+    defaults:
+      run:
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+
+    steps:
+      - name: Set up Cygwin
+        uses: egor-tensin/setup-cygwin@v4
+        with:
+          packages: make gcc-g++ zlib-devel
+
+      - name: Set git to use LF
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Check out code
+        uses: actions/checkout@v1
+        with:
+          submodules: true
+
+      - name: Get current time
+        id: time1
+        uses: Kaven-Universe/github-action-current-date-time@v1
+        with:
+          format: "YYYYMMDD-HHmmss"
+          timezone-offset: -480
+
+      - uses: benjlevesque/short-sha@v2.2
+        id: short-sha
+        with:
+          length: 6
+
+      - name: Generate artifact name
+        id: exe-name
+        run: |
+          echo "$GITHUB_OUTPUT"
+          echo "EXENAME=$EXENAME" >> "$GITHUB_OUTPUT"
+        env:
+          EXENAME: paotin-for-windows-setup-${{ steps.time1.outputs.time }}-B${{ github.run_number }}-g${{ steps.short-sha.outputs.sha }}.exe
+
+      - name: Install PCRE
+        run: |
+          cd $(cygpath $GITHUB_WORKSPACE)
+          curl -sL https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.bz2/download | tar jxvf -
+          (cd pcre-8.45 && ./configure --enable-unicode-properties --prefix=$(pwd)/usr LDFLAGS=-static && make && make install)
+
+      - name: Compile
+        env:
+          CFLAGS: -I../../pcre-8.45/usr/include
+          CPPFLAGS: -I../../pcre-8.45/usr/include
+          LDFLAGS: -static -L../../pcre-8.45/usr/lib
+        run: |
+          cd $(cygpath $GITHUB_WORKSPACE)
+          (cd tintin/src && ./configure && make && strip tt++ || cat config.log)
+
+      - name: Check TinTin++
+        run: |
+          cd $(cygpath $GITHUB_WORKSPACE)
+          ls -lh tintin/src/tt++
+          file tintin/src/tt++
+          ldd tintin/src/tt++
+          tintin/src/tt++ -V || true
+
+      - name: Packaging
+        run: |
+          cd $(cygpath $GITHUB_WORKSPACE)
+          cp tintin/src/tt++.exe bin/
+          cp /bin/cygwin1.dll bin/
+          rm -rf .git
+          rm -rf .github
+          rm -rf tintin
+          rm -rf pcre-8.45
+
+      - name: Create installer
+        uses: joncloud/makensis-action@v4
+        with:
+          script-file: install.nsi
+          arguments: "/V3"
+
+      - name: Rename installer
+        run: |
+          cd $(cygpath $GITHUB_WORKSPACE)
+          mv setup.exe ${{ steps.exe-name.outputs.EXENAME }}
+
+      - name: Create artifact -- PaoTin++ Installer
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.exe-name.outputs.EXENAME }}
+          path: ${{ steps.exe-name.outputs.EXENAME }}
+
+      - name: Create artifact -- WinTin++
+        uses: actions/upload-artifact@v3
+        with:
+          name: WinTin++
+          path: |
+            ${{ github.workspace }}/bin/tt++.exe
+            ${{ github.workspace }}/bin/cygwin1.dll
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ${{ github.workspace }}/tintin/src/tt++.exe
+            ${{ github.workspace }}/README.md
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Retrieve artifact files
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.build.outputs.name }}
+
+      - name: Send to file server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.FILE_SERVER_HOST }}
+          port: ${{ secrets.FILE_SERVER_PORT }}
+          username: ${{ secrets.FILE_SERVER_USER }}
+          key: ${{ secrets.FILE_SERVER_KEY }}
+          source: ${{ needs.build.outputs.name }}
+          target: ${{ secrets.FILE_SERVER_ROOT }}/Windows/
