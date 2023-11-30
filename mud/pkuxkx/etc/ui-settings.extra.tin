@@ -68,27 +68,6 @@
     { {place}{BotSepBar}        {label}{类型}       {name}{type}    }
 };
 
-#nop 配色主题，注意这里不要直接嵌入 SGR（ansi codes），否则计算宽度时会有问题。;
-#var prompt-theme {
-    {Disable}{<bbc>}
-    {BusyColor}{<239>}
-    {BattleColor}{<119>}
-    {BattleBusyColor}{<599><119>}
-    {TopSepBar}{<229>}
-    {MidSepBar}{<229>}
-    {BotSepBar}{<229>}
-    {HotLabel}{<199><F399>}
-    {CoolLabel}{<109>}
-    {Value}{<299>}
-};
-
-#nop 自定义图标;
-#var prompt-icon {
-    {DisableRefresh}{🚫}
-};
-
-#var prompt-prompt {};
-
 #nop 热键绑定;
 #list global-key-bindings create {
     {{key}{\cd}     {action}{cli.SmartToggle}}
@@ -104,5 +83,3 @@
     {{key}{\coM}    {action}{option.Toggle MapDebug; look}}
     {{key}{\coV}    {action}{option.Toggle ShowRoomView; look}}
 };
-
-VAR {HP摘要刷新时机，三选一：{总是|从不|自动}} char.HPSummarize.Echo {自动};

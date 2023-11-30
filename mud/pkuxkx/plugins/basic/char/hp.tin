@@ -250,13 +250,13 @@ hp -neili 格式：
 #action {^{|>|> }#%1,%2,%3,%4,%5,%6$} {
     #if { "${char.parsingHP}" == "" } {
         #var char[HP][经验显示] {%1};
-        #var char[HP][经验]     {@__char_hp_expandBigNumber__{%1}};
+        #var char[HP][经验]     {@char.hp.expandBigNumber{%1}};
         #var char[HP][潜能显示] {%2};
-        #var char[HP][潜能]     {@__char_hp_expandBigNumber__{%2}};
-        #var char[HP][最大内力] {@__char_hp_expandBigNumber__{%3}};
-        #var char[HP][当前内力] {@__char_hp_expandBigNumber__{%4}};
-        #var char[HP][最大精力] {@__char_hp_expandBigNumber__{%5}};
-        #var char[HP][当前精力] {@__char_hp_expandBigNumber__{%6}};
+        #var char[HP][潜能]     {@char.hp.expandBigNumber{%2}};
+        #var char[HP][最大内力] {@char.hp.expandBigNumber{%3}};
+        #var char[HP][当前内力] {@char.hp.expandBigNumber{%4}};
+        #var char[HP][最大精力] {@char.hp.expandBigNumber{%5}};
+        #var char[HP][当前精力] {@char.hp.expandBigNumber{%6}};
 
         speedo.Set {经验}       {$char[HP][经验]}       {true} {10};
         speedo.Set {潜能}       {$char[HP][潜能]}       {true} {10};
@@ -270,12 +270,12 @@ hp -neili 格式：
         #line gag;
     };
     #else {
-        #var char[HP][最大气血] {@__char_hp_expandBigNumber__{%1}};
-        #var char[HP][有效气血] {@__char_hp_expandBigNumber__{%2}};
-        #var char[HP][当前气血] {@__char_hp_expandBigNumber__{%3}};
-        #var char[HP][最大精神] {@__char_hp_expandBigNumber__{%4}};
-        #var char[HP][有效精神] {@__char_hp_expandBigNumber__{%5}};
-        #var char[HP][当前精神] {@__char_hp_expandBigNumber__{%6}};
+        #var char[HP][最大气血] {@char.hp.expandBigNumber{%1}};
+        #var char[HP][有效气血] {@char.hp.expandBigNumber{%2}};
+        #var char[HP][当前气血] {@char.hp.expandBigNumber{%3}};
+        #var char[HP][最大精神] {@char.hp.expandBigNumber{%4}};
+        #var char[HP][有效精神] {@char.hp.expandBigNumber{%5}};
+        #var char[HP][当前精神] {@char.hp.expandBigNumber{%6}};
 
         speedo.Set {当前气血} {$char[HP][当前气血]} {true} {10};
         speedo.Set {当前精神} {$char[HP][当前精神]} {true} {10};
@@ -292,10 +292,10 @@ hp -neili 格式：
 
 #nop 第三行: 真气，真元，食物，饮水;
 #action {^#%1,%2,%3,%4,{0|1},{0|1}$} {
-    #var char[HP][当前真气]  {@__char_hp_expandBigNumber__{%1}};
-    #var char[HP][当前真元]  {@__char_hp_expandBigNumber__{%2}};
-    #var char[HP][食物]      {@__char_hp_expandBigNumber__{%3}};
-    #var char[HP][饮水]      {@__char_hp_expandBigNumber__{%4}};
+    #var char[HP][当前真气]  {@char.hp.expandBigNumber{%1}};
+    #var char[HP][当前真元]  {@char.hp.expandBigNumber{%2}};
+    #var char[HP][食物]      {@char.hp.expandBigNumber{%3}};
+    #var char[HP][饮水]      {@char.hp.expandBigNumber{%4}};
     #var char[HP][战斗中]    {false};
     #var char[HP][忙]        {false};
 
@@ -321,9 +321,10 @@ hp -neili 格式：
 } {2.0};
 
 #alias {char.HPSummarize} {
-    #local color    {<168>};
-    #local combat   {};
+    #local head     {};
+    #local tail     {};
     #local safety   {};
+    #local label    {};
     #local width    {@prompt.ScreenWidth{}};
 
     #if { $char[HP][气血百分比] < 30 || $char[HP][精神百分比] < 70 } {
@@ -334,23 +335,47 @@ hp -neili 格式：
     };
 
     #if { "$char[HP][战斗中]" == "true" } {
-        #if { "$safety" == "安全" } {
-            #format color   {<B040><128>};
-            #format combat  { <118>战 <128>安<298>};
-        };
-        #elseif { "$safety" == "危险" } {
-            #format color   {<B400><118>};
-            #format combat  { <118>战 <118>危<298>};
-        };
-        #else {
-            #format color   {<218>};
-            #format combat  { <118>战<298>};
-        };
+        #local label  {<188>};
     };
 
-    #if { "$char[HP][忙]" == "true" } {
-        #format color   {<118>};
-        #format combat  {$combat <138>忙<298>};
+    #local theme {@default{{$char.HPSummarize.Theme};{
+        {前景} { {平常}{<168>} {战斗}{<118>}  {战安}{<128>}  {战危}{<118>}  {战忙}{<138>}  {危急}{<158>}  {正忙}{<138>}  }
+        {背景} { {平常}{<099>} {战斗}{<B00A>} {战安}{<B040>} {战危}{<B600>} {战忙}{<B808>} {危急}{<BA00>} {正忙}{<B330>} }
+    }}};
+
+    #switch {"$char[HP][战斗中]/$char[HP][忙]/$safety"} {
+        #case {"false/false/%*"} {
+            #local head    {$theme[背景][平常]$theme[前景][平常]};
+            #local tail     {};
+        };
+        #case {"false/true/%*"} {
+            #local head    {$theme[背景][正忙]$theme[前景][正忙]};
+            #local tail     { $theme[前景][正忙]忙<298>};
+        };
+        #case {"true/false/"} {
+            #local head    {$theme[背景][战斗]$theme[前景][战斗]};
+            #local tail     { $theme[前景][战斗]战};
+        };
+        #case {"true/true/"} {
+            #local head    {$theme[背景][战忙]$theme[前景][战忙]};
+            #local tail     { $theme[前景][战斗]战 $theme[前景][战忙]忙<298>};
+        };
+        #case {"true/false/安全"} {
+            #local head    {$theme[背景][战安]$theme[前景][战安]};
+            #local tail     { $theme[前景][战斗]战 $theme[前景][战安]安<298>};
+        };
+        #case {"true/true/安全"} {
+            #local head    {$theme[背景][战忙]$theme[前景][战忙]};
+            #local tail     { $theme[前景][战斗]战 $theme[前景][战安]安 $theme[前景][战忙]忙<298>};
+        };
+        #case {"true/false/危险"} {
+            #local head    {$theme[背景][战危]$theme[前景][战危]};
+            #local tail     { $theme[前景][战斗]战 $theme[前景][战危]危<298>};
+        };
+        #case {"true/true/危险"} {
+            #local head    {$theme[背景][危急]$theme[前景][危急]};
+            #local tail     { $theme[前景][战斗]战 $theme[前景][战危]危 $theme[前景][战忙]忙<298>};
+        };
     };
 
     #local 每秒气血变化 {@speedo.GetSpeed{当前气血}};
@@ -363,9 +388,9 @@ hp -neili 格式：
     #else {
         #local 每秒气血变化 {};
     };
-    #format 气血 {气血: %s%s/%s}
-        {@__char_hp_colorit__{$char[HP][气血百分比]}} {${每秒气血变化}}
-        {@__char_hp_colorit__{$char[HP][气血健康度]}};
+    #format 气血 {$label气血: %s%s/%s}
+        {@char.hp.colorit{$char[HP][气血百分比]}} {${每秒气血变化}}
+        {@char.hp.colorit{$char[HP][气血健康度]}};
 
     #local 内力 {};
     #if { $width >= 50 || $char[HP][当前内力] > $char[HP][上次内力] } {
@@ -379,7 +404,7 @@ hp -neili 格式：
         #else {
             #local 每秒内力变化 {};
         };
-        #format 内力 { 内力: %s%s} {@__char_hp_colorit__{$char[HP][内力百分比]}} {${每秒内力变化}};
+        #format 内力 { $label内力: %s%s} {@char.hp.colorit{$char[HP][内力百分比]}} {${每秒内力变化}};
     };
 
     #local 精神 {};
@@ -394,9 +419,9 @@ hp -neili 格式：
         #else {
             #local 每秒精神变化 {};
         };
-        #format 精神 { 精神: %s%s/%s}
-            {@__char_hp_colorit__{$char[HP][精神百分比]}} {${每秒精神变化}}
-            {@__char_hp_colorit__{$char[HP][精神健康度]}};
+        #format 精神 { $label精神: %s%s/%s}
+            {@char.hp.colorit{$char[HP][精神百分比]}} {${每秒精神变化}}
+            {@char.hp.colorit{$char[HP][精神健康度]}};
     };
 
     #local 精力 {};
@@ -411,7 +436,7 @@ hp -neili 格式：
         #else {
             #local 每秒精力变化 {};
         };
-        #format 精力 { 精力: %s%s} {@__char_hp_colorit__{$char[HP][精力百分比]}} {${每秒精力变化}};
+        #format 精力 { $label精力: %s%s} {@char.hp.colorit{$char[HP][精力百分比]}} {${每秒精力变化}};
     };
 
     #local 回气 {};
@@ -420,7 +445,7 @@ hp -neili 格式：
         #local {气血恢复} {@math.Int{@math.Eval{$char[STATUS][气血恢复] * 100 * 60 / $char[HP][最大气血]}}};
         #nop 气血治疗的数值展示为每分钟可以治疗的最大血量的倍数（以百分比形式）;
         #local {气血治疗} {@math.Int{@math.Eval{$char[STATUS][气血治疗] * 100 * 60 / $char[HP][最大气血]}}};
-        #format {回气} { 回气: %s/%s} {@__char_hp_colorit__{${气血恢复}}} {@__char_hp_colorit__{${气血治疗}}};
+        #format {回气} { $label回气: %s/%s} {@char.hp.colorit{${气血恢复}}} {@char.hp.colorit{${气血治疗}}};
     };
 
     #local 食水 {};
@@ -435,11 +460,11 @@ hp -neili 格式：
         };
     };
 
-    #local summarize {<099>$color〔HP摘要〕<298>${气血}${内力}${回气}${精神}${精力}${食水}$combat<099>};
+    #local summarize {<099>$head〔HP摘要〕<298>${气血}${内力}${回气}${精神}${精力}${食水}$tail<099>};
     #showme $summarize;
 };
 
-#func {__char_hp_expandBigNumber__} {
+#func {char.hp.expandBigNumber} {
     #local number {%1};
     #replace number {K} {*1000};
     #replace number {M} {*1000000};
@@ -447,9 +472,10 @@ hp -neili 格式：
     #return $number;
 };
 
-#func {__char_hp_colorit__} {
+#func {char.hp.colorit} {
     #local percent {@math.Int{@defaultNum{%1;0}}};
-    #return {@util.Grade{$percent;<218>;15;<118>;30;<238>;60;<138>;90;<128>;101;<168>}$percent%%<298>};
+    #local color {@default{{$char.HPSummarize.Theme[色卡]};{<218>;15;<118>;30;<238>;60;<138>;90;<128>;101;<168>}}};
+    #return {@util.Grade{$percent;$color}$percent%%<298>};
 };
 
 #alias {char.GetHP} {
@@ -535,4 +561,39 @@ hp -neili 格式：
     #else {
         #return 0;
     };
+};
+
+///=== {
+// ## char.UncolorEnemy
+//    擦掉敌人的血量告警提示的颜色，防止麻痹眼睛。
+// };
+#alias {char.UncolorEnemy} {
+    #class char.UncolorEnemy open;
+
+    #nop 气血上限组;
+    #nop 100;   #sub {^( %+2..5u看起来气血充盈，并没有受伤。}                       {%%0};
+    #nop 95+;   #sub {^( %+2..5u似乎受了点轻伤，不过光从外表看不大出来。}           {%%0};
+    #nop 90+;   #sub {^( %+2..5u看起来可能受了点轻伤。}                             {%%0};
+    #nop 80+;   #sub {^( %+2..5u受了几处伤，不过似乎并不碍事。}                     {%%0};
+    #nop 60+;   #sub {^( %+2..5u受伤不轻，看起来状况并不太好。}                     {%%0};
+    #nop 40+;   #sub {^( %+2..5u气息粗重，动作开始散乱，看来所受的伤著实不轻。}     {%%0};
+    #nop 30+;   #sub {^( %+2..5u已经伤痕累累，正在勉力支撑著不倒下去。}             {%%0};
+    #nop 20+;   #sub {^( %+2..5u受了相当重的伤，只怕会有生命危险。}                 {%%0};
+    #nop 10+;   #sub {^( %+2..5u伤重之下已经难以支撑，眼看就要倒在地上。}           {%%0};
+    #nop 5+;    #sub {^( %+2..5u受伤过重，已经奄奄一息，命在旦夕了。}               {%%0};
+    #nop 5-;    #sub {^( %+2..5u受伤过重，已经有如风中残烛，随时都可能断气。}       {%%0};
+
+    #nop 气血组;
+    #nop 100;   #sub {^( %+2..5u看起来充满活力，一点也不累。}                       {%%0};
+    #nop 95+;   #sub {^( %+2..5u似乎有些疲惫，但是仍然十分有活力。}                 {%%0};
+    #nop 90+;   #sub {^( %+2..5u看起来可能有些累了。}                               {%%0};
+    #nop 80+;   #sub {^( %+2..5u动作似乎开始有点不太灵光，但是仍然有条不紊。}       {%%0};
+    #nop 60+;   #sub {^( %+2..5u气喘嘘嘘，看起来状况并不太好。}                     {%%0};
+    #nop 40+;   #sub {^( %+2..5u似乎十分疲惫，看来需要好好休息了。}                 {%%0};
+    #nop 30+;   #sub {^( %+2..5u已经一副头重脚轻的模样，正在勉力支撑著不倒下去。}   {%%0};
+    #nop 20+;   #sub {^( %+2..5u看起来已经力不从心了。}                             {%%0};
+    #nop 10+;   #sub {^( %+2..5u摇头晃脑、歪歪斜斜地站都站不稳，眼看就要倒在地上。} {%%0};
+    #nop 10-;   #sub {^( %+2..5u已经陷入半昏迷状态，随时都可能摔倒晕去。}           {%%0};
+
+    #class char.UncolorEnemy close;
 };
