@@ -13,8 +13,7 @@
     { {place}{BotSepBar}        {label}{随手记}     {name}{note}     {color}{<134>}}
 };
 
-#nop 配色主题，注意这里不要直接嵌入 SGR（ansi codes），否则计算宽度时会有问题。;
-#var prompt-theme {
+VAR {信息栏的配色主题} prompt-theme {
     {Disable}{<bbc>}
     {BusyColor}{<239>}
     {BattleColor}{<119>}
@@ -27,12 +26,11 @@
     {Value}{<299>}
 };
 
-#nop 自定义图标;
-#var prompt-icon {
+VAR {自定义图标} prompt-icon {
     {DisableRefresh}{🚫}
 };
 
-#var prompt-prompt {};
+VAR {命令提示符，默认为空} prompt-prompt {};
 
 #nop 热键绑定;
 #list global-key-bindings create {
@@ -43,4 +41,28 @@
     {{key}{\col}    {action}{option.List}}
     {{key}{\cod}    {action}{option.Toggle DebugLog}}
     {{key}{\coe}    {action}{option.Toggle EchoCommand}}
+};
+
+VAR {HP摘要刷新时机，三选一：{总是|从不|自动}} char.HPSummarize.Echo {自动};
+
+VAR {HP摘要配色表} char.HPSummarize.Theme {
+    {色卡}  {<218>;15;<118>;30;<238>;60;<138>;90;<128>;101;<168>}
+    {前景}  {
+        {平常}  {<168>}
+        {战斗}  {<118>}
+        {战安}  {<128>}
+        {战危}  {<118>}
+        {战忙}  {<138>}
+        {危急}  {<158>}
+        {正忙}  {<138>}
+    }
+    {背景}  {
+        {平常}  {<099>}
+        {战斗}  {<B00A>}
+        {战安}  {<B040>}
+        {战危}  {<B600>}
+        {战忙}  {<B808>}
+        {危急}  {<BA00>}
+        {正忙}  {<B330>}
+    }
 };
