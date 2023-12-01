@@ -42,7 +42,7 @@ class.open module-loader;
     #local path {};
     #foreach {$moduleName;$moduleName/__init__;$moduleName/__main__} {path} {
         class.open {load-module-$moduleName};
-        #line sub var #action {^#READ {{plugins/($path)\.tin}} - FILE NOT FOUND.$} {
+        #line sub var #action {^#READ {{plugins/($path)\.tin}}: FILE NOT FOUND.$} {
             class.kill {load-module-$moduleName};
             #var {${prefix}-loaded} {false};
             #line gag;
