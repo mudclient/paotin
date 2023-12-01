@@ -68,13 +68,6 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return 0;
 };
 
-#func {existsFile} {
-    #local file {%1};
-    #local output {};
-    #script output {test -f $file && echo 1 || test -f var/$file && echo 1 || echo 0};
-    #return $output[1];
-};
-
 #func {existsJobPlugin} {
     #local job {%1};
     #return {@existsPlugin{job/$job}};
@@ -101,7 +94,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {mkdir} {
     #local dir {%1};
     #local output {};
-    #script output {mkdir -p $dir 2>/dev/null && test -d $dir && echo 1 || echo 0};
+    #line quiet #script output {mkdir -p $dir 2>/dev/null && test -d $dir && echo 1 || echo 0};
     #return $output[1];
 };
 
