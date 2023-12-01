@@ -97,6 +97,32 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
+#func {existsFile} {
+    #local file {%0};
+    #var tmpSize {0};
+    #line quiet #scan file {$file} {#var tmpSize &2};
+    #local tmp {$tmpSize};
+    #unvar tmpSize;
+    #if { $tmp > 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#func {existsDir} {
+    #local dir {%0};
+    #local output {};
+    #line quiet #scan dir {$dir} output;
+    #if { &output[] > 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
 #nop 优先加载 var/$file（玩家自定义文件），其次加载 mud/$file（MUDLIB 相关文件）;
 #alias {load-file} {
     #local file {%1};
@@ -106,17 +132,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return;
     };
 
-    #local output {};
-    #script output {test -f var/$file && echo true || echo false};
-    #if { "$output[1]" == "true" } {
+    #if { @existsFile{var/$file} } {
         #read var/$file;
         #return;
     };
 
     #if { "$gCurrentMUDLIB" != "" } {
-        #local output {};
-        #script output {test -f mud/$gCurrentMUDLIB/$file && echo true || echo false};
-        #if { "$output[1]" == "true" } {
+        #if { @existsFile{mud/$gCurrentMUDLIB/$file} } {
             #read mud/$gCurrentMUDLIB/$file;
             #return;
         };
@@ -126,15 +148,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #replace file {.tin$} {.extra.tin};
 
-    #local output {};
-    #script output {test -f mud/$gCurrentMUDLIB/$file && echo true || echo false};
-    #if { "$output[1]" == "true" } {
+    #if { @existsFile{mud/$gCurrentMUDLIB/$file} } {
         #read mud/$gCurrentMUDLIB/$file;
     };
 
-    #local output {};
-    #script output {test -f var/$file && echo true || echo false};
-    #if { "$output[1]" == "true" } {
+    #if { @existsFile{var/$file} } {
         #read var/$file;
     };
 };

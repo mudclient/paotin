@@ -86,9 +86,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #local id-file {ids/$login[user][id]};
 
-    #local output {};
-    #script output {test -d var/ids && echo true || echo false};
-    #if { "$output[1]" == "true" } {
+    #if { @existsDir{var/ids} } {
         #local id-file {var/$id-file};
     };
 
@@ -96,11 +94,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return;
     };
 
-    #script output {cp ids/$gCurrentMUDLIB $id-file};
-    #script output {sed -i.bak 's/^#var user\[id\]       {.*};$/#var user[id]       {$login[user][id]};/' $id-file};
-    #script output {sed -i.bak 's/^#var user\[name\]     {.*};$/#var user[name]     {};/' $id-file};
-    #script output {sed -i.bak 's/^#var user\[passwd\]   {.*};$/#var user[passwd]   {$login[user][passwd]};/' $id-file};
-    #script output {sed -i.bak '/^#nop 上面三处修改完毕之后，请删除下面这行文字：;$/d' $id-file};
-    #script output {sed -i.bak '/^#var user\[manual\]   {true};$/d' $id-file};
-    #script output {rm ${id-file}.bak};
+    #line quiet #script output {cp ids/$gCurrentMUDLIB $id-file};
+    #line quiet #script output {sed -i.bak 's/^#var user\[id\]       {.*};$/#var user[id]       {$login[user][id]};/' $id-file};
+    #line quiet #script output {sed -i.bak 's/^#var user\[name\]     {.*};$/#var user[name]     {};/' $id-file};
+    #line quiet #script output {sed -i.bak 's/^#var user\[passwd\]   {.*};$/#var user[passwd]   {$login[user][passwd]};/' $id-file};
+    #line quiet #script output {sed -i.bak '/^#nop 上面三处修改完毕之后，请删除下面这行文字：;$/d' $id-file};
+    #line quiet #script output {sed -i.bak '/^#var user\[manual\]   {true};$/d' $id-file};
+    #line quiet #script output {rm ${id-file}.bak};
 };

@@ -26,9 +26,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {InitLog} {
     #local path {%1};
 
-    #local output {};
-    #script output {test -d var && echo true || echo false};
-    #if { "$output[1]" == "true" } {
+    #if { @existsDir{var} } {
         #var gLog[PATH] {var/log};
     };
     #else {

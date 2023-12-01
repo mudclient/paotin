@@ -92,8 +92,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #local file {tmux/$char[档案][账号]/game-border};
-    #script {tmp} {echo '$line' > $file};
-    #script {tmp} {tmux refresh 2>/dev/null};
+    #line quiet #script {tmp} {echo '$line' > $file};
+    #line quiet #script {tmp} {tmux refresh 2>/dev/null};
 };
 
 #func {TMUX} {
