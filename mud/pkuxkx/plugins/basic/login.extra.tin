@@ -89,20 +89,22 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #delay {login.login-success} {login.login-success} 1;
     };
 
-    #line oneshot #action {^如果同意请用agree %w命令签署确认这些条款。$} {
-        #if { @isTrue{$user[AGREE]} } {
-            #send {agree %%1};
+    #line oneshot #action {^如果同意请用agree %*命令签署确认这些条款。$} {
+        #local args {@str.Trim{%%1}};
+        #info environ save;
+        #if { @isTrue{$info[ENVIRON][PKUXKX_AUTO_AGREE]} } {
+            #send {agree $args};
         };
         #else {
             #undelay {login.login-success};
             #undelay {login.check};
-            warnLog 请在十秒内输入 agree %%1 命令以继续游戏。;
-            #delay {login.agree.fail} {#zap} 10;
+            warnLog 请在十秒钟内输入 agree $args 命令以继续游戏。;
+            #delay {online.WatchDog} {#zap} {10};
         };
     };
 
     #line oneshot #action {^感谢您同意北侠玩家要约，现在可以正常进入游戏。$} {
-        #undelay {login.agree.fail};
+        #delay {online.WatchDog} {#zap} {180};
     };
 
     #line oneshot #action {^重新连线完毕。$} {
