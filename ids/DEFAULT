@@ -49,15 +49,6 @@ mudlib.Set {pkuxkx};
 #nop 是否开启鼠标支持，默认开启;
 #var user[MOUSE]            true;
 
-#nop 是否开启北侠自动签约功能，默认关闭;
-#nop ===============;
-#nop 【重要提醒】作者声明：
-#nop 请永远都不要开启本选项，以避免错过阅读并人工签署北侠玩家要约的机会。
-#nop 如果开启，则视同你已同意北侠任何过去、现在、将来提出的玩家要约，而不论你认为它是否合理。
-#nop 同时，开启本选项意味着你同意放弃向 PaoTin++ 追溯连带责任的权利。
-#nop ===============;
-#var user[AGREE]            false;
-
 #nop 默认的食物和饮料;
 #var char[favorite][food]   {gan liang};
 #var char[favorite][water]  {niurou tang};
