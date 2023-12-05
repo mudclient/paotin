@@ -513,12 +513,9 @@ option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定�
 };
 
 ///=== {
-// ## xtt.DisableAllCommands
-//    禁止发送任何命令。
-//    某些游戏模式下，玩家必须小心地输入，否则一旦输错会造成损失。此时可以用本
-//    命令来禁止所有的触发、定时器、事件，防止误发命令。
-//    此时玩家只能用 #send {.....} 命令来发送命令。
-//    注意快捷键并不会被禁止，所以玩家可以通过快捷键来切换状态。
+// ## xtt.UndoDisableAllCommands
+//    取消 xtt.DisableAllCommands 效果，恢复正常状态。
+//    参见 HELP xtt.DisableAllCommands
 // };
 #alias {xtt.UndoDisableAllCommands} {
     #class disable-all-commands kill;
