@@ -11,6 +11,7 @@
     nation;         nation*;        ask;            i2;
     buy;            list;           node;           fullme;
     shu;            dang;           verify;         perform;
+    register;
 
     amber_alert;    status_me;      set;            unset;
 };
@@ -39,8 +40,8 @@
 
     #echo {<169>命令「<139>$cmd<169>」不是一个合法的 MUD 命令，如果确认是，请更新白名单。<099>};
 
-    #if { {$cmd} != {$silent-LastCmd} } {
-        #echo {<169>本次命令<119>已被抑制<169>。如果你着急输入，可以重复一次本命令，将临时通过一次。<099>};
+    #if { {$cmd} !== {$silent-LastCmd} } {
+        #echo {<169>本次命令<119>已被抑制<169>。如果你确认命令没问题，可以先<139>回车重复<169>一次本命令，将临时通过一次。<099>};
         #var silent-LastCmd {$cmd};
     };
     #else {
