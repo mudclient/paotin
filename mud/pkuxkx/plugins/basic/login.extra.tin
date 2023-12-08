@@ -60,6 +60,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         };
     };
 
+    #if { @isTrue{$login[user][manual]} } {
+        #delay {online.WatchDog} {#zap} {600};
+    };
+
     #line oneshot #action {^此ID档案已存在，请输入密码：$} {
         #if { "$login[user][passwd]" != "" } {
             xtt.Answer {$login[user][passwd]};
@@ -98,8 +102,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #else {
             #undelay {login.login-success};
             #undelay {login.check};
-            warnLog 请在十秒钟内输入 agree $args 命令以继续游戏。;
-            #delay {online.WatchDog} {#zap} {10};
+            warnLog 请输入 agree $args 命令以继续游戏。;
         };
     };
 
