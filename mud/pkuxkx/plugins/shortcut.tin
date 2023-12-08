@@ -74,9 +74,10 @@ load-lib sync;
 
 #alias {i-all} {
     #class i-all open;
-    #action {^你身上id为%*的东西有下面这些：$} {#line gag};
-    #action {^你身上没有id为%*的东西。$} {#line gag};
-    #action {^{>|}%s$} {#line gag};
+    #action {^你身上id为%*的东西有下面这些：{|ID=i-all}$}   {#line gag};
+    #action {^你身上没有id为%*的东西。{|ID=i-all}$}         {#line gag};
+    #action {^[命令进入缓冲]{|ID=i-all}$}                   {#line gag};
+    #action {^{>|}%s{|ID=i-all}$}                           {#line gag};
     #class i-all close;
 
     i sword;
@@ -85,6 +86,12 @@ load-lib sync;
     i staff;
     i needle;
     i flute;
+    i whip;
+    i axe;
+    i spear;
+    i hammer;
+    i halberd;
+    i hook;
 
     i ring;
     i necklace;
