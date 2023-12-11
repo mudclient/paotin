@@ -234,6 +234,26 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
         #var gMapRoom[terrain] {随机地图};
     };
 
+    #action {^%s{长江渡船|黄河渡船|渡船|羊皮筏}停在岸边，随时可以出发。$} {
+        map.room.mark-river %2;
+    };
+
+    #action {^%s{长江渡船|黄河渡船|渡船|羊皮筏}正在驶回，马上就要靠岸了。$} {
+        map.room.mark-river %2;
+    };
+
+    #action {^%s{长江渡船|黄河渡船|渡船|羊皮筏}刚刚离开驶向对岸，需要一些时间才能回来。$} {
+        map.room.mark-river %2;
+    };
+
+    #alias {map.room.mark-river} {
+        #local boat {%%1};
+        #switch {"$boat"} {
+            #case {"长江渡船"}                  {#var gMapRoom[river] {长江}};
+            #case {"{黄河渡船|渡船|羊皮筏}"}    {#var gMapRoom[river] {黄河}};
+        };
+    };
+
     #action {^%s{这里(?:明显|所有|唯一)的(?:出口|方向)有|浓雾中你觉得似乎有出口通往} %*$} {
         #local desc {%%2};
         #if { "$desc" == "%*浓雾%*" } {

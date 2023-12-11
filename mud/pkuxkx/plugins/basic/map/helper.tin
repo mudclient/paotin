@@ -71,6 +71,21 @@ VAR {地图脚本同步信息} map.sync.room-id {};
         };
     };
 
+    #nop 没有一卡通时，需要通过 ask 来手动给钱。;
+    #action {^船老大一把拉住你，你还没付钱呢？$} {
+        #line oneshot #action {^{他|她}是{黄|长}{河|江}边的船老大，撑渡船几十年，现在老了，只负责在岸边收钱。$} {
+            #delay 0 {ask shao gong about 过%%%3};
+        };
+
+        #line oneshot #action {^%sLV%s%d%s$} {#line gag};
+
+        #delay 0 {
+            #gag {^%*{|ID=map.shaogong}$};
+            look shao gong;
+            sync.Wait {#ungag {^%*{|ID=map.shaogong}$}};
+        };
+    };
+
     #action {^%*接过你递给的船资%S。$}                                  {map.waitBoat};
     #action {^你的车船通账上还剩%S，这一趟的船资是%S。$}                {map.waitBoat};
     #action {^%S道：原来是%S的人，快请上船。$}                          {map.waitBoat};
