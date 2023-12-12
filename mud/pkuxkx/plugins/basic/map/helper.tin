@@ -90,6 +90,7 @@ VAR {地图脚本同步信息} map.sync.room-id {};
     #action {^你的车船通账上还剩%S，这一趟的船资是%S。$}                {map.waitBoat};
     #action {^%S道：原来是%S的人，快请上船。$}                          {map.waitBoat};
     #action {^你吸了口气，一声“船家”，声音中正平和地远远传了出去。$}  {map.waitBoat};
+    #action {^你鼓足中气，长啸一声：“船家！”$}                        {map.waitBoat};
     #action {^你使出吃奶的力气喊了一声：“船家”$}                      {map.waitBoat};
 
     #action {^艄公把踏脚板收起来，说了一声“坐稳喽”，竹篙一点，扁舟向{|江心驶去。}$} {
