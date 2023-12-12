@@ -1,0 +1,396 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#nop 本文件是 xtintin 的一部分，实现了一些队列处理函数;
+
+///=== {
+///// 队列处理函数：
+/////
+// #@ queue.Size <队列名称>
+//    返回队列的长度。
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local size \@queue.Size{q};
+//
+//    ASSERT: {\$size} === {0}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q;foo};
+//      #local _ \@queue.Push{q;bar};
+//      #local _ \@queue.Push{q;baz};
+//      #local size \@queue.Size{q};
+//
+//    ASSERT: {\$size} === {3}
+// };
+#func {queue.Size} {
+    #local queue.local.queue {%1};
+    #local queue.local.size  {0};
+    #list {$queue.local.queue} {size} queue.local.size;
+    #return {$queue.local.size};
+};
+
+///=== {
+// #@ queue.IsEmpty <队列名称>
+//    如果队列为空，则返回真，否则返回假。
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local b \@queue.IsEmpty{q};
+//
+//    ASSERT: {\$b} === {1}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q;foo};
+//      #local _ \@queue.Push{q;bar};
+//      #local _ \@queue.Push{q;baz};
+//      #local b \@queue.IsEmpty{q};
+//
+//    ASSERT: {\$b} === {0}
+// };
+#func {queue.IsEmpty} {
+    #if { @queue.Size{%1} > 0 } {
+        #return 0;
+    };
+    #else {
+        #return 1;
+    };
+};
+
+///=== {
+// #@ queue.First <队列名称>
+//    返回队列的第一个元素。如果队列为空则返回空。
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local v \@queue.First{q};
+//
+//    ASSERT: {\$v} === {}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q;foo};
+//      #local _ \@queue.Push{q;bar};
+//      #local _ \@queue.Push{q;baz};
+//      #local v \@queue.First{q};
+//
+//    ASSERT: {\$v} === {foo}
+// };
+#func {queue.First} {
+    #local queue.local.queue {%1};
+    #local queue.local.value {${${queue.local.queue}[1]}};
+    #return {$queue.local.value};
+};
+
+///=== {
+// #@ queue.Last <队列名称>
+//    返回队列的最后一个元素。如果队列为空则返回空。
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local v \@queue.Last{q};
+//
+//    ASSERT: {\$v} === {}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q;foo};
+//      #local _ \@queue.Push{q;bar};
+//      #local _ \@queue.Push{q;baz};
+//      #local v \@queue.Last{q};
+//
+//    ASSERT: {\$v} === {baz}
+// };
+#func {queue.Last} {
+    #local queue.local.queue {%1};
+    #local queue.local.value {${${queue.local.queue}[-1]}};
+    #return {$queue.local.value};
+};
+
+///=== {
+// #@ queue.Push <队列名称> <元素>
+//   将元素推入队列末尾。没有返回值。
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q;foo};
+//      #local _ \@queue.Push{q;bar};
+//      #local _ \@queue.Push{q;baz};
+//
+//    ASSERT: {\$q} === {{1}{foo}{2}{bar}{3}{baz}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q; {f;o;o}};
+//      #local _ \@queue.Push{q; {b;a;r}};
+//      #local _ \@queue.Push{q; {b;a;z}};
+//
+//    ASSERT: {\$q} === {{1}{f;o;o}{2}{b;a;r}{3}{b;a;z}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q; { {1}{f} {2}{o} {3}{o} }};
+//      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{r} }};
+//      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{z} }};
+//
+//    ASSERT: {\$q} === {{1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}{3}{{1}{b}{2}{a}{3}{z}}}
+// };
+#func {queue.Push} {queue.Push {%1} {%2}; #return {}};
+
+///=== {
+// #@ queue.Pop <队列名称>
+//   从队列末尾取出元素。返回取出的元素。
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q;foo};
+//      #local _ \@queue.Push{q;bar};
+//      #local _ \@queue.Push{q;baz};
+//      #local v {\@queue.Pop{q}};
+//
+//    ASSERT: {v=\$v, q=\$q} === {v=baz, q={1}{foo}{2}{bar}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q; {f;o;o}};
+//      #local _ \@queue.Push{q; {b;a;r}};
+//      #local _ \@queue.Push{q; {b;a;z}};
+//      #local v {\@queue.Pop{q}};
+//
+//    ASSERT: {v={\$v}, q=\$q} === {v={b;a;z}, q={1}{f;o;o}{2}{b;a;r}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q; { {1}{f} {2}{o} {3}{o} }};
+//      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{r} }};
+//      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{z} }};
+//      #local v {\@queue.Pop{q}};
+//
+//    ASSERT: {v={\$v}, q=\$q} === {v={{1}{b}{2}{a}{3}{z}}, q={1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}}
+// };
+#func {queue.Pop} {
+    #local queue.local.queue {%1};
+
+    #if { @queue.Size{$queue.local.queue} == 0 } {
+        #return {};
+    };
+
+    #local queue.local.value {${${queue.local.queue}[-1]}};
+    #list {$queue.local.queue} delete {-1};
+    #return {$queue.local.value};
+};
+
+///=== {
+// #@ queue.Shift <队列名称>
+//   从队列开头取出元素。返回取出的元素。
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q;foo};
+//      #local _ \@queue.Push{q;bar};
+//      #local _ \@queue.Push{q;baz};
+//      #local v {\@queue.Shift{q}};
+//
+//    ASSERT: {v=\$v, q=\$q} === {v=foo, q={1}{bar}{2}{baz}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q; {f;o;o}};
+//      #local _ \@queue.Push{q; {b;a;r}};
+//      #local _ \@queue.Push{q; {b;a;z}};
+//      #local v {\@queue.Shift{q}};
+//
+//    ASSERT: {v={\$v}, q=\$q} === {v={f;o;o}, q={1}{b;a;r}{2}{b;a;z}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q; { {1}{f} {2}{o} {3}{o} }};
+//      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{r} }};
+//      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{z} }};
+//      #local v {\@queue.Shift{q}};
+//
+//    ASSERT: {v={\$v}, q=\$q} === {v={{1}{f}{2}{o}{3}{o}}, q={1}{{1}{b}{2}{a}{3}{r}}{2}{{1}{b}{2}{a}{3}{z}}}
+// };
+#func {queue.Shift} {
+    #local queue.local.queue {%1};
+
+    #if { @queue.Size{$queue.local.queue} == 0 } {
+        #return {};
+    };
+
+    #local queue.local.value {${${queue.local.queue}[+1]}};
+    #list {$queue.local.queue} delete {1};
+    #return {$queue.local.value};
+};
+
+///=== {
+// #@ queue.Unshift <队列名称> <元素>
+//   将元素推入队列开头。没有返回值。
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q;foo};
+//      #local _ \@queue.Push{q;bar};
+//      #local _ \@queue.Push{q;baz};
+//
+//    ASSERT: {\$q} === {{1}{foo}{2}{bar}{3}{baz}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q; {f;o;o}};
+//      #local _ \@queue.Push{q; {b;a;r}};
+//      #local _ \@queue.Push{q; {b;a;z}};
+//
+//    ASSERT: {\$q} === {{1}{f;o;o}{2}{b;a;r}{3}{b;a;z}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      #local _ \@queue.Push{q; { {1}{f} {2}{o} {3}{o} }};
+//      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{r} }};
+//      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{z} }};
+//
+//    ASSERT: {\$q} === {{1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}{3}{{1}{b}{2}{a}{3}{z}}}
+// };
+#func {queue.Unshift} {queue.Unshift {%1} {%2}; #return {}};
+
+///=== {
+///// 别名版队列处理：
+//
+// ## queue.Push <队列名称> <元素>
+//   将元素推入队列末尾。
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Push q foo;
+//      queue.Push q bar;
+//      queue.Push q baz;
+//
+//    ASSERT: {\$q} === {{1}{foo}{2}{bar}{3}{baz}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Push q {f;o;o};
+//      queue.Push q {b;a;r};
+//      queue.Push q {b;a;z};
+//
+//    ASSERT: {\$q} === {{1}{f;o;o}{2}{b;a;r}{3}{b;a;z}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Push q { {1}{f} {2}{o} {3}{o} };
+//      queue.Push q { {1}{b} {2}{a} {3}{r} };
+//      queue.Push q { {1}{b} {2}{a} {3}{z} };
+//
+//    ASSERT: {\$q} === {{1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}{3}{{1}{b}{2}{a}{3}{z}}}
+//
+// ## queue.Pop <队列名称>
+//   从队列末尾取出元素，并丢弃。
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Push q foo;
+//      queue.Push q bar;
+//      queue.Push q baz;
+//      queue.Pop q;
+//
+//    ASSERT: {\$q} === {{1}{foo}{2}{bar}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Push q {f;o;o};
+//      queue.Push q {b;a;r};
+//      queue.Push q {b;a;z};
+//      queue.Pop q;
+//
+//    ASSERT: {\$q} === {{1}{f;o;o}{2}{b;a;r}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Push q { {1}{f} {2}{o} {3}{o} };
+//      queue.Push q { {1}{b} {2}{a} {3}{r} };
+//      queue.Push q { {1}{b} {2}{a} {3}{z} };
+//      queue.Pop q;
+//
+//    ASSERT: {\$q} === {{1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}}
+//
+// ## queue.Shift <队列名称>
+//   从队列开头取出元素，并丢弃。
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Push q foo;
+//      queue.Push q bar;
+//      queue.Push q baz;
+//      queue.Shift q;
+//
+//    ASSERT: {\$q} === {{1}{bar}{2}{baz}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Push q {f;o;o};
+//      queue.Push q {b;a;r};
+//      queue.Push q {b;a;z};
+//      queue.Shift q;
+//
+//    ASSERT: {\$q} === {{1}{b;a;r}{2}{b;a;z}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Push q { {1}{f} {2}{o} {3}{o} };
+//      queue.Push q { {1}{b} {2}{a} {3}{r} };
+//      queue.Push q { {1}{b} {2}{a} {3}{z} };
+//      queue.Shift q;
+//
+//    ASSERT: {\$q} === {{1}{{1}{b}{2}{a}{3}{r}}{2}{{1}{b}{2}{a}{3}{z}}}
+//
+// ## queue.Unshift <队列名称> <元素>
+//   将元素推入队列开头。
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Unshift q baz;
+//      queue.Unshift q bar;
+//      queue.Unshift q foo;
+//
+//    ASSERT: {\$q} === {{1}{foo}{2}{bar}{3}{baz}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Unshift q {b;a;z};
+//      queue.Unshift q {b;a;r};
+//      queue.Unshift q {f;o;o};
+//
+//    ASSERT: {\$q} === {{1}{f;o;o}{2}{b;a;r}{3}{b;a;z}}
+//
+//    EXAMPLE:
+//      #local q {};
+//      queue.Unshift q { {1}{b} {2}{a} {3}{z} };
+//      queue.Unshift q { {1}{b} {2}{a} {3}{r} };
+//      queue.Unshift q { {1}{f} {2}{o} {3}{o} };
+//
+//    ASSERT: {\$q} === {{1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}{3}{{1}{b}{2}{a}{3}{z}}}
+// };
+
+#alias {queue.Push} {
+    #local queue.local.queue {%1};
+    #local queue.local.value {%2};
+
+    #list {$queue.local.queue} add {{$queue.local.value}};
+};
+
+#alias {queue.Pop}      {#local _ @queue.Pop{{%1}}};
+#alias {queue.Shift}    {#local _ @queue.Shift{{%1}}};
+
+#alias {queue.Unshift} {
+    #local queue.local.queue {%1};
+    #local queue.local.value {%2};
+
+    #list {$queue.local.queue} insert {1} {$queue.local.value};
+};
