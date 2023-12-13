@@ -72,16 +72,23 @@ VAR {正在等待的回调列表}    busy.wait-list {};
 };
 
 #alias {busy.on-idle} {
-    #while { &busy.wait-list[] > 0 } {
-        #local code {$busy.wait-list[1]};
-        #list busy.wait-list delete 1;
+    #undelay busy.checkbusy;
+    #undelay busy.on-idle;
+    #untick busy.Halt;
+
+    #local todo {$busy.wait-list};
+    #var busy.wait-list {};
+
+    #while { &todo[] > 0 } {
+        #local code {$todo[1]};
+        #list todo delete 1;
         $code
     };
-
-    #undelay busy.checkbusy;
 };
 
 #action {^你正忙{|ID=basic/busy}$} {
+    #undelay busy.on-idle;
+
     #if { &busy.wait-list[] == 0 } {
         #return;
     };
@@ -97,6 +104,7 @@ VAR {正在等待的回调列表}    busy.wait-list {};
 };
 
 #action {^你不忙{|ID=basic/busy}$} {
+    #undelay busy.checkbusy;
     #delay {busy.on-idle} {busy.on-idle} 0;
     #line gag;
 };
