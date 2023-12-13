@@ -113,10 +113,21 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
         #var map.WalkNodes.delay   {3};
     };
 
+    #action {^频繁使用此命令会对系统造成很重负担，请稍等。{$ID}$} {
+        #delay map.WalkNodes.retry {walk} $map.WalkNodes.delay;
+    };
+
     #action {^你因为种种原因停了下来，可以用walk继续进行。{$ID}$} {
         #switch {"$gMapRoom[name]"} {
             #case {"襄阳南门"}  {ask shou jiang about 投军; walk};
             #case {"万纶台"}    {ask liang liuhe about 拜山; walk};
+            #case {"山路"} {
+                #local obj {@map.Room.GetObjByID{shan xiao}};
+                #if { "$obj[name]" == "山魈" } {
+                    give 1 coin to shan xiao;
+                    busy.Wait walk;
+                };
+            };
             #default {
                 tuna max;
                 #delay $map.WalkNodes.delay {halt; walk};
