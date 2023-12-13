@@ -142,10 +142,10 @@ exit
 
 #action {~^{\d\d\d\d-\d\d-\d\d }{\d\d:\d\d}{:\d\d}{ }%*$} {
 	#switch {$hide-date} {
-		#case {0} {#echo {%s} {%0}};
-		#case {1} {#echo {%s} {%2%3%4%5}};
-		#case {2} {#echo {%s} {%2%4%5}};
-		#case {3} {#echo {%s} {%5}};
+		#case {0} {#echo {%s} {@Beautify{%0}}};
+		#case {1} {#echo {%s} {@Beautify{%2%3%4%5}}};
+		#case {2} {#echo {%s} {@Beautify{%2%4%5}}};
+		#case {3} {#echo {%s} {@Beautify{%5}}};
 	};
 	#line gag;
 };
