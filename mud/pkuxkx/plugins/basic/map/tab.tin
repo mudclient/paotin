@@ -13,28 +13,28 @@ load-lib event;
 event.HandleOnce {map/init} {map/tab} {map} {map.tab-completion.init};
 
 #alias {map.tab-completion.init} {
-	event.Handle {map/GotRoomInfo} {map/tab} {map} {map.tab-completion};
+    event.Handle {map/GotRoomInfo} {map/tab} {map} {map.tab-completion};
 };
 
 #alias {map.tab-completion} {
-	#local idx {};
+    #local idx {};
 
-	#class map.tab-completion kill;
-	#class map.tab-completion open;
+    #class map.tab-completion kill;
+    #class map.tab-completion open;
 
-	#foreach {*gMapRoom[objs][]} {idx} {
-		#local obj {$gMapRoom[objs][$idx]};
-		#if { "$obj[id]" != "" } {
-			#tab $obj[id];
-		};
-	};
+    #foreach {*gMapRoom[objs][]} {idx} {
+        #local obj {$gMapRoom[objs][$idx]};
+        #if { "$obj[id]" != "" } {
+            #tab $obj[id];
+        };
+    };
 
-	#local item {};
-	#foreach {$gMapRoom[items]} {item} {
-		#if { "$item" != "" } {
-			#tab $item;
-		};
-	};
+    #local item {};
+    #foreach {$gMapRoom[items]} {item} {
+        #if { "$item" != "" } {
+            #tab $item;
+        };
+    };
 
-	#class map.tab-completion close;
+    #class map.tab-completion close;
 };

@@ -234,7 +234,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             };
 
             #local showClass {$class};
-			#replace showClass {^data/} {};
+            #replace showClass {^data/} {};
 
             #echo {<060>$format}
                 {@genModuleLink{$showClass;MOD}<060>}
@@ -242,13 +242,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
                 {$type}
                 {$value};
 
-			#if { "$gPaoTinVars[$name]" != "" } {
-				#echo {$format}
-					{}
-					{  ╰── $gPaoTinVars[$name][cnName]}
-					{}
-					{};
-			};
+            #if { "$gPaoTinVars[$name]" != "" } {
+                #echo {$format}
+                    {}
+                    {  ╰── $gPaoTinVars[$name][cnName]}
+                    {}
+                    {};
+            };
         };
     };
 };
@@ -258,7 +258,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local trigger  {%2};
     #local cmd {#un$type {$trigger}};
     #replace cmd {\\} {};
-	$cmd;
+    $cmd;
 };
 
 ///=== {
@@ -414,10 +414,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #var {$name} {$value};
     };
 
-	#var gPaoTinVars[$name] {
-		{name}		{$name}
-		{cnName}	{$cnName}
-	};
+    #var gPaoTinVars[$name] {
+        {name}      {$name}
+        {cnName}    {$cnName}
+    };
 };
 
 VAR {用 VAR 关键字定义的 PaoTin++ 变量清单，包含其中文含义} gPaoTinVars {};

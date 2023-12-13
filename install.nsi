@@ -16,7 +16,7 @@ var drive
 
 Function getDrivesCallback
     ${NSD_CB_AddString} $hctrl "$9"
-	Push $0
+    Push $0
 FunctionEnd
 
 Function changeSelect
@@ -25,21 +25,21 @@ Function changeSelect
 FunctionEnd
 
 Function SelectDriver
-	nsDialogs::Create 1018
-	Pop $dialog
+    nsDialogs::Create 1018
+    Pop $dialog
 
     ${NSD_CreateLabel} 0 10u 100% 20u "Select which disk you want to install to:"
     Pop $hctrl
     ${NSD_CreateDropList} 0 30u 100% 80u "Select"
     Pop $hctrl
 
-	${GetDrives} "HDD" "getDrivesCallback"
+    ${GetDrives} "HDD" "getDrivesCallback"
     StrCpy $drive "C:\"
     ${NSD_CB_SelectString} $hctrl "$drive"
 
     ${NSD_OnChange} $hctrl "changeSelect"
 
-	nsDialogs::Show
+    nsDialogs::Show
 FunctionEnd
 
 var file
@@ -48,8 +48,8 @@ var dir
 Section
     StrCpy $drive $drive 2
     StrCpy $file "$TEMP\settings.json"
-	FileOpen $R3 $file w
-	FileWrite $R3 "{$\r$\n"
+    FileOpen $R3 $file w
+    FileWrite $R3 "{$\r$\n"
     FileWrite $R3 "    $\"profiles$\": $\r$\n"
     FileWrite $R3 "    {$\r$\n"
     FileWrite $R3 "        $\"defaults$\": {},$\r$\n"
