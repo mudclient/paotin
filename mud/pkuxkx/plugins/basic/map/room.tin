@@ -101,11 +101,13 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #var gMapRoom[view]         {};                 #nop 房间的风景（非文字描述）;
     #var gMapRoom[fog]          {false};            #nop 是否有雾;
     #var gMapRoom[exits]        {};                 #nop 出口列表;
+    #var gMapRoom[colorExits]   {};                 #nop 带颜色的出口;
     #var gMapRoom[exitHint]     {};                 #nop 出口所连接的房间;
     #var gMapRoom[existShown]   {false};            #nop 出口信息已出现;
     #var gMapRoom[lookable]     {};                 #nop 你可以看看(look)的东西;
     #var gMapRoom[objs]         {};                 #nop 房间物品，不包含生物;
     #var gMapRoom[items]        {};                 #nop 房间特殊物品;
+    #var gMapRoom[colorItems]   {};                 #nop 带颜色的房间特殊物品;
     #var gMapRoom[dynItems]     {};                 #nop 房间动态物品;
     #var gMapRoom[npcs]         {};                 #nop 房间NPC， 不包含非生物和玩家;
     #var gMapRoom[players]      {};                 #nop 房间玩家，不包含非生物和NPC;
@@ -174,6 +176,9 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #action {^%s你可以看看(look):%*。$} {
         #local items {@str.Split{{%%2};{{，|,}}}};
         #var gMapRoom[items] {$items};
+
+        #local raw {@buffer.RawLine{}};
+        #replace raw {<{\e\[([0-9\e\[m;]+)m([^>]+)\e\[2;37;0m}>} {@map.Room.colorItems{colorItems;{{color}{&2}{name}{&3}}}};
 
         #class map.Room.getInfo.map kill;
         #class map.Room.getInfo.desc kill;
@@ -271,6 +276,9 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
 
         #if { @option.IsEnable{MapDebug} } {#line gag};
 
+        #local raw {@buffer.RawLine{}};
+        #var gMapRoom[colorExitStr] {$raw};
+
         #if { "$gMapRoom[exitStr]" == "%*。" } {
             map.parseExit;
             #return;
@@ -279,13 +287,17 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
         #class map.Room.getInfo.exit open;
         #local exitCharsets {和|、|[a-z A-Z]};
         #action {^{($exitCharsets)+}$} {
-            #var gMapRoom[exitStr] {$gMapRoom[exitStr]%%%1};
+            #local raw {@buffer.RawLine{}};
+            #cat gMapRoom[exitStr]      {%%%1};
+            #cat gMapRoom[colorExitStr] {$raw};
             #if { @option.IsEnable{MapDebug} } {#line gag};
         };
 
         #action {^{($exitCharsets)*}。$} {
             #class map.Room.getInfo.exit kill;
-            #var gMapRoom[exitStr] {$gMapRoom[exitStr]%%%1};
+            #local raw {@buffer.RawLine{}};
+            #cat gMapRoom[exitStr]      {%%%1};
+            #cat gMapRoom[colorExitStr] {$raw};
             map.parseExit;
         } {4};
         #class map.Room.getInfo.exit close;
@@ -334,6 +346,9 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
         #local exitList {@slist.Sort{$exitList}};
         #var gMapRoom[exits] {$exitList};
 
+        #replace gMapRoom[colorExitStr] {{\e\[([0-9\e\[m;]+)m}{[a-z]{2,9}}{\e\[2;37;0m}} {@map.Room.colorItems{colorExits;{{color}{&2}{name}{&3}}}};
+        #unvar gMapRoom[colorExitStr];
+
         #if { @option.IsEnable{MapDebug} } {
             #local exitStr {$gMapRoom[exits]};
             #if { &gMapRoom[exitHint][] > 0 } {
@@ -359,6 +374,13 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
 
         #nop 同步事件以允许插件修改房间信息。;
         event.Emit {map/GotRoomInfo};
+    };
+
+    #func {map.Room.colorItems} {
+        #local key  {%%1};
+        #local data {%%2};
+        #replace data[color] {m\e\[} {;};
+        #var gMapRoom[$key][$data[name]] {$data[color]};
     };
 
     #class map.Room.getInfo close;
