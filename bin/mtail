@@ -101,12 +101,12 @@ exit
 
 #var hide-date {1};
 #alias {hide-date} {
-	#switch {$hide-date} {
-		#case {0} {#var hide-date 1; #echo {<160>日志显示模式已切换至 HH:MM:SS<299>}};
-		#case {1} {#var hide-date 2; #echo {<160>日志显示模式已切换至 HH:MM<299>}};
-		#case {2} {#var hide-date 3; #echo {<160>日志显示模式已切换至不显示时间戳<299>}};
-		#case {3} {#var hide-date 0; #echo {<160>日志显示模式已切换至 YYYY-mm-dd HH:MM:SS<299>}};
-	};
+    #switch {$hide-date} {
+        #case {0} {#var hide-date 1; #echo {<160>日志显示模式已切换至 HH:MM:SS<299>}};
+        #case {1} {#var hide-date 2; #echo {<160>日志显示模式已切换至 HH:MM<299>}};
+        #case {2} {#var hide-date 3; #echo {<160>日志显示模式已切换至不显示时间戳<299>}};
+        #case {3} {#var hide-date 0; #echo {<160>日志显示模式已切换至 YYYY-mm-dd HH:MM:SS<299>}};
+    };
 };
 
 #alias {switch-log} {
@@ -141,13 +141,13 @@ exit
 };
 
 #action {~^{\d\d\d\d-\d\d-\d\d }{\d\d:\d\d}{:\d\d}{ }%*$} {
-	#switch {$hide-date} {
-		#case {0} {#echo {%s} {@Beautify{%0}}};
-		#case {1} {#echo {%s} {@Beautify{%2%3%4%5}}};
-		#case {2} {#echo {%s} {@Beautify{%2%4%5}}};
-		#case {3} {#echo {%s} {@Beautify{%5}}};
-	};
-	#line gag;
+    #switch {$hide-date} {
+        #case {0} {#echo {%s} {@Beautify{%0}}};
+        #case {1} {#echo {%s} {@Beautify{%2%3%4%5}}};
+        #case {2} {#echo {%s} {@Beautify{%2%4%5}}};
+        #case {3} {#echo {%s} {@Beautify{%5}}};
+    };
+    #line gag;
 };
 
 #event {SCREEN RESIZE} {#buffer end};
