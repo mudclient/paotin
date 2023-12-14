@@ -20,6 +20,7 @@ load-lib speedo;
 
 event.Define {char/hp}       {无参}  {$MODULE} {已经获取到 hp 命令输出结果，并更新 char[HP]。};
 event.Define {char/hpbrief}  {无参}  {$MODULE} {已经获取到 hpbrief 命令输出结果，并更新 char[HP]。};
+event.Define {char/hpneili}  {无参}  {$MODULE} {已经获取到 hp -neili 命令输出结果，并更新 char[HP]。};
 
 #func {basic_char_hp.Init} {
     #class data/basic/char open;
@@ -168,21 +169,29 @@ hp 有两种格式，非战斗状态：
 
 /*
 hp -neili 格式：
-┌─其他信息────────────┬─────────────────┐
-│【走火入魔】 0.00  %              │【极限内力】 0                    │
-└─────────────────┴─────────北大侠客行───┘
-┌──内力显示─────────────────────────────┐
-│□太极神功 (taiji-shengong)                 　 -   2117/  5109(6040)  │
-├──其他信息───────────┬─────────────────┤
-│【走火入魔】 -41.50%              │【极限内力】 6040                 │
-└─────────────────┴─────────北大侠客行───┘
-┌─内力显示──────────────────────────────┐
-│  北冥神功 (beiming-shengong)               　 -   8385/  8385(8578)  │
-│□逍遥派内功 (xiaoyao-neigong)              　 -   2865/  2865(4480)  │
-│  观花诀 (guanhua-jue)                      　 -   1695/  1695(4662)  │
-├─其他信息────────────┬─────────────────┤
-│【走火入魔】 -1.13 %              │【极限内力】 11613                │
-└─────────────────┴─────────北大侠客行───┘
+2023-12-14 13:30:11 INPUT: hp -neili （无内功）
+┌─其他信息──────────────┬───────────────────┐
+│【走火入魔】 0.00  %                  │【极限内力】 0                        │
+│【恢复效率】 14.00 %                  │                                      │
+└───────────────────┴───────────北大侠客行───┘
+2023-12-14 13:40:11 INPUT: hp -neili （单一内功）
+雪山内功(xueshan-neigong).
+┌─内力显示──────────────────────────────────┐
+│□雪山内功(xueshan-neigong)           ★★★★★    　 -  12394/ 11675(11675) │
+├─其他信息──────────────┬───────────────────┤
+│【走火入魔】 0.00  %                  │【极限内力】 11675                    │
+│【恢复效率】 829.00 %                 │                                      │
+└───────────────────┴───────────北大侠客行───┘
+2023-12-14 13:45:19 INPUT: hp -neili （多种内功）
+北冥神功(beiming-shengong).
+逍遥派内功(xiaoyao-neigong).
+┌─内力显示──────────────────────────────────┐
+│  北冥神功(beiming-shengong)          ★★★☆      　 -   8385/  8385(8578)  │
+│□逍遥派内功(xiaoyao-neigong)         ★★★★☆    　 -   2889/  2889(4710)  │
+├─其他信息──────────────┬───────────────────┤
+│【走火入魔】 0.00  %                  │【极限内力】 11768                    │
+│【恢复效率】 471.00 %                 │                                      │
+└───────────────────┴───────────北大侠客行───┘
 */
 
 #alias {char.hp.parse.hp-neili} {
@@ -190,12 +199,13 @@ hp -neili 格式：
 
     #var char[HP][内力上限] {1};
 
-    #action {^│{□|  }%S (%S)%s　 - %s%d/%s%d(%d)%s│$} {
+    #action {^│{□|  }%S(%S) %s %S %s　 - %s%d/%s%d(%d)%s│{|ID=char/hp-neili}$} {
         #local name     {@str.Trim{%%2}};
         #local id       {@str.Trim{%%3}};
-        #local current  {@str.Trim{%%6}};
-        #local max      {@str.Trim{%%8}};
-        #local limit    {@str.Trim{%%9}};
+        #local stars    {@str.Trim{%%5}};
+        #local current  {@str.Trim{%%8}};
+        #local max      {@str.Trim{%%10}};
+        #local limit    {@str.Trim{%%11}};
 
         #if { "%%1" == "□" } {
             #local name {$char[Skills][基本内功][jifa-to]};
@@ -207,20 +217,24 @@ hp -neili 格式：
         #if { "$char[Skills][$name]" != "" } {
             #var char[Skills][$name][neili]         {$current};
             #var char[Skills][$name][max-neili]     {$max};
+            #var char[Skills][$name][stars]         {$stars};
             #var char[Skills][$name][neili-limit]   {$limit};
         };
     };
 
-    #action {~^%*【恢复效率】%*%+1..c{[0-9.]+}\%%*$} {
-        #echo {%s} {@Beautify{%%1【恢复效率】%%2%%3@str.Left{{@str.Format{{%.2f};@math.Eval{%%4 / 100}}     };@math.Eval{@str.Width{%%4}}} %%5}};
+    #action {~^%*【恢复效率】%*%+1..c{[0-9.]+}\%%*{|ID=char/hp-neili}$} {
+        #local name {$char[Skills][基本内功][jifa-to]};
+        #local multiple {@math.Eval{%%4 / 100}};
+        #var char[Skills][$name][multiple] {$multiple};
+        #echo {%s} {@Beautify{%%1【恢复效率】%%2%%3@str.Left{{@str.Format{{%.2f};$multiple}     };@math.Eval{@str.Width{%%4}}} %%5}};
         #line gag;
     };
 
-    #action {^│【走火入魔】 %*% %s│【极限内力】 %d%s │$} {
+    #action {^│【走火入魔】 %*% %s│【极限内力】 %d%s │{|ID=char/hp-neili}$} {
         #var char[HP][走火入魔] {@str.Trim{%%1}};
     };
 
-    #action {^└─────────────{(─)*}%S─{(─)*}─┘{|ID=char.hp-neili}$} {
+    #action {^└─────────────{(─)*}%S─{(─)*}─┘{|ID=char/hp-neili}$} {
         char.hp-neili.parse.done;
     };
 
@@ -229,6 +243,7 @@ hp -neili 格式：
         #class char-hp-parse-hp-neili kill;
         #class char.GetHP kill;
         event.UnHandle GA {char.hp-neili};
+        event.DelayEmit char/hpneili;
     };
 
     event.HandleOnce GA {char.hp-neili} {char} {char.hp-neili.parse.done};
