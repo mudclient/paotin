@@ -681,3 +681,23 @@ hp -neili 格式：
 
     #class char.UncolorEnemy close;
 };
+
+#action {^你的内力增加了！！$E} {
+    #line oneshot #alias {char.log-dazuo} {
+        #local name {$char[Skills][基本内功][jifa-to]};
+        #local limit {$char[Skills][$name][neili-limit]};
+        #if { "$limit" != "" } {
+            #local limit { / $limit};
+        };
+        fullskLog <139>$name<299> 的内力提升！当前进度: $gGMCP[Status][最大内力]$limit;
+    };
+    event.HandleOnce {GMCP.Status} {char.log-dazuo} {char/hp} {char.log-dazuo};
+} {9.1};
+
+#action {^你的精力上限增加了！！$E} {
+    #line oneshot #alias {char.log-tuna} {
+        #local limit {@math.Eval{@char.SkillJifaLevel{基本内功} * 10}};
+        fullskLog <139>你的精力上限增加了！！<299> 当前进度: $gGMCP[Status][最大精力] / $limit;
+    };
+    event.HandleOnce {GMCP.Status} {char.log-tuna} {char/hp} {char.log-tuna};
+} {9.1};
