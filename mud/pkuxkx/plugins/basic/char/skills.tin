@@ -396,3 +396,21 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 
     #return {@defaultNum{$char[Skills][$skill][jifa-level];$level}};
 };
+
+#action {^你的「%*」进步了！$E} {
+    #local name {%1};
+
+    #if { "$char[Skills][$name]" == "" } {
+        #return;
+    };
+
+    #local level {@math.Floor{ @char.SkillLevel{$name} }};
+    #local limit {@char.SkillLimit{$name}};
+    fullskLog @buffer.RawLine{} 当前进度: $level / $limit;
+
+    skbrief $char[Skills][$name][code];
+
+    #if { "$name" == "基本内功" || "@char.GetJifaSkill{$name}" == "基本内功" } {
+        hp -neili;
+    };
+} {9.1};
