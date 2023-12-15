@@ -462,7 +462,7 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
 
 #func {map.Room.GetObjByName} {
     #local name  {%1};
-    #local title {%2};
+    #local title {@default{%2;%*}};
 
     #local idx {};
     #foreach {*gMapRoom[objs][]} {idx} {
