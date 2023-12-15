@@ -53,6 +53,7 @@
     { {place}{Bot} {line}{2}    {label}{有利战况}   {name}{ssfu2}    {visibility}{Always}    {cooldown}{60} }
     { {place}{Bot} {line}{2}    {label}{日魂激发}   {name}{rihun}    {visibility}{HideLabel} {cooldown}{60} }
     { {place}{Bot} {line}{2}    {label}{毒免}       {name}{dumian}   {visibility}{HideLabel} {cooldown}{60} }
+    { {place}{Bot} {line}{2}    {label}{松风吹解带} {name}{songfeng} {visibility}{HideLabel} {countdown}{Seconds} {cooldown}{1} }
 
     { {place}{Bot} {line}{3}    {label}{状态}       {name}{status}   {cooldown}{600} }
     { {place}{Bot} {line}{3}    {label}{持续效果}   {name}{persist}  {countdown}{Seconds} }
