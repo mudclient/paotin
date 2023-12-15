@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LANG=zh_CN.UTF8
+export LANG=en_US.UTF8
 export TERM=xterm-256color
 
 export LESS="-r -f"
