@@ -506,14 +506,14 @@ option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定�
     #if { @isTrue{$carefully} } {
         #alias {^%*{|ID=paotin/disable-all-commands}$} {
             #echo {<119>命令已被抑制，可用 <129>#send<119> 强制发送。撤销请用 <129>xtt.UndoDisableAllCommands<119> : <139>%s<299>} {%%0}
-        } {1.001};
+        } {1.002};
     };
     #else {
         #alias {^%*{|ID=paotin/disable-all-commands}$} {
             #echo {%s} {%%0};
             #send %%0;
             #line gag;
-        } {1.001};
+        } {1.002};
     };
 
     #gts {#delay 600 {#ats xtt.UndoDisableAllCommands}};
