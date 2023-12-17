@@ -1,0 +1,6 @@
+#nop 北侠版的 xtt.SendBatch，允许一次性向服务器发送多条命令。;
+#alias {xtt.SendBatch} {
+    #local cmds {%1};
+    #nop TODO: 允许自定义多条命令之间的分隔符。;
+    xtt.Send {#$cmds#};
+};

@@ -155,7 +155,7 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
             };
             #elseif { "$node" == "PATH/{\{.*\}}" } {
                 #replace node {PATH/{\{(.*)\}}} {&2};
-                xtt.SendAtOnce {$node};
+                xtt.SendBatch {$node};
                 sync.Wait {map.WalkNodes.walk-next};
             };
             #else {

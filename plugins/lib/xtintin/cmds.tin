@@ -439,14 +439,17 @@ option.Define {DisableOutput} {Bool} {是否禁止向服务器发送命令} {fal
 };
 
 ///=== {
-// ## xtt.SendAtOnce <分号分隔的命令序列>
+// ## xtt.SendBatch <分号分隔的命令序列>
 //    一次性向服务器发送多条命令。
 //    有的 MUD 服务器专门为这种方式开辟了通道，本方法可以使用这种通道。
+//    如果服务器不支持，则退化为重复调用多次 xtt.Send。
 //    TODO: 需要区分 MUD，需要支持定制的命令分隔符。
 // };
-#alias {xtt.SendAtOnce} {
+#alias {xtt.SendBatch} {
     #local cmds {%1};
-    xtt.Send {#$cmds#};
+    #foreach {$cmds} {cmd} {
+        xtt.Send {$cmd};
+    };
 };
 
 ///=== {
