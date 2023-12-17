@@ -86,7 +86,7 @@ load-lib speedo;
         #foreach {困难;挑战;普通;简单} {level} {
             #if { "${tang-job-list[$level]}" != "" } {
                 #var {tang-job-log[任务难度]} {$level};
-                xtt.Send record ${tang-job-list[$level][1][ID]};
+                xtt.Send {record $tang-job-list[$level][1][ID]};
                 #list {tang-job-list[$level]} delete {1};
                 #return;
             };
@@ -123,7 +123,7 @@ load-lib speedo;
         ask jingzhao shaoyin about 任务信息;
     };
     #else {
-        xtt.Send record $id;
+        xtt.Send {record $id};
     };
 };
 
@@ -157,7 +157,7 @@ load-lib speedo;
         #if { ${tang-inquiry-exit-index} != 0 } {
             #local back {@dir.Reverse{${tang-inquiry-exits[${tang-inquiry-exit-index}]}}};
             #echo 回去吧。;
-            xtt.Send $back;
+            xtt.Send {$back};
         };
         #math tang-inquiry-exit-index {${tang-inquiry-exit-index} + 1};
         #local exit {${tang-inquiry-exits[${tang-inquiry-exit-index}]}};
@@ -168,14 +168,14 @@ load-lib speedo;
         };
         #else {
             #echo 下一个出口;
-            xtt.Send $exit;
+            xtt.Send {$exit};
             #delay 1 {tang.look 1; tang.ask 1};
         };
     };
 
     #class tang.inquiry close;
 
-    xtt.SendAtOnce {$path};
+    xtt.SendBatch {$path};
     tang.look 1; tang.ask 1;
 };
 
@@ -234,7 +234,7 @@ load-lib speedo;
     #class tang.look close;
 
     look luren $id;
-    xtt.Send response R:look-end;
+    xtt.Send {response R:look-end};
 };
 
 #alias {tang.ask} {
@@ -570,7 +570,7 @@ load-lib speedo;
 
     #local place {${tang-all-location[${tang-task-location}]}};
     #local path {@path.Reverse{$place[path]}};
-    xtt.SendAtOnce {$path};
+    xtt.SendBatch {$path};
 
     #class tang.back open;
 
@@ -614,18 +614,18 @@ load-lib speedo;
     };
 
     #action {^你缴纳了一两黄金后，郭隆递给你一面皇城通行令，凭令可以在一天内在皇城内通行无阻。$} {
-        xtt.SendAtOnce {e;n;e;n;n;n;n;e};
+        xtt.SendBatch {e;n;e;n;n;n;n;e};
         #delay 10 {xtt.Send {ask jiangjun about 通行令}};
     };
 
     #action {^你缴纳了二两黄金后，左金吾卫大将军递给你一面皇宫通行令，凭令可以在一天内在太极宫内通行无阻。$} {
-        xtt.SendAtOnce {w;s;e;e;nu;n};
+        xtt.SendBatch {w;s;e;e;nu;n};
         #delay tang.upgrade {xtt.Send {ask libu shangshu about 提升爵位}} 3;
     };
 
     #action {^你将被提升到爵位：〖唐朝爵位〗开国县男，爵位贡献将被清零。$} {
         #class tang.upgrade kill;
-        xtt.SendAtOnce {s;sd;w;w;s;s;s;w;s;w};
+        xtt.SendBatch {s;sd;w;w;s;s;s;w;s;w};
         #delay tang.upgrade {tang.job} 3;
     };
 
