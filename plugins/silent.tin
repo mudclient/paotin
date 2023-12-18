@@ -11,7 +11,7 @@
     nation;         nation*;        ask;            i2;
     buy;            list;           node;           fullme;
     shu;            dang;           verify;         perform;
-    register;
+    register;       check;
 
     amber_alert;    status_me;      set;            unset;
 };
