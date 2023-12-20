@@ -13,6 +13,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {login.auto-login} {
     #class login.auto-login open;
 
+    #delay online.WatchDog {#zap} {180};
+
     #config {IAC GA} {OFF};
 
     #nop 如果角色设置了 GMCP 支持，则积极回应服务器的 GMCP 协商请求。;
