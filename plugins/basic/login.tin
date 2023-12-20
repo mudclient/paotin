@@ -34,16 +34,46 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #showme 登录成功。;
 
-    #if { @isTrue{$login[user][manual]} } {
-        login.write-id-file;
-        login.init-game;
+    #nop 如果角色设置了 MXP 支持，则在建连之后主动向服务器发起 MXP 协商。;
+    #nop 否则需要主动回车以放弃 MXP 协商。;
+    #if { "$user[MXP]" == "true" } {
+        load-lib mxp;
+        #if { @existsAlias{mxp.Enable} } {
+            mxp.Enable;
+        };
+        #else {
+            #cr;
+        };
+    };
+    #else {
+        #cr;
     };
 
+    #if { @isFalse{$login[user][manual]} } {
+        login.online;
+        #return;
+    };
+
+    #line oneshot #action {^%u目前正在连线中。$} {
+        #var login[user][name] {%%1};
+        #delay 0 {
+            login.write-id-file;
+            login.init-game;
+            login.online;
+        };
+    };
+
+    finger $login[user][id];
+};
+
+#alias {login.online} {
     #local handler $login[autoexec];
     #class login.auto-login kill;
     #undelay login.login-success;
     kill-module login;
+
     $handler;
+
     #if { "$user[GMCP]" == "true" } {
         #delay 1 {
             load-module gmcp;
@@ -94,11 +124,19 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return;
     };
 
-    #line quiet #script output {cp ids/$gCurrentMUDLIB $id-file};
-    #line quiet #script output {sed -i.bak 's/^#var user\[id\]       {.*};$/#var user[id]       {$login[user][id]};/' $id-file};
-    #line quiet #script output {sed -i.bak 's/^#var user\[name\]     {.*};$/#var user[name]     {};/' $id-file};
-    #line quiet #script output {sed -i.bak 's/^#var user\[passwd\]   {.*};$/#var user[passwd]   {$login[user][passwd]};/' $id-file};
-    #line quiet #script output {sed -i.bak '/^#nop 上面三处修改完毕之后，请删除下面这行文字：;$/d' $id-file};
-    #line quiet #script output {sed -i.bak '/^#var user\[manual\]   {true};$/d' $id-file};
-    #line quiet #script output {rm ${id-file}.bak};
+    #scan {file} {ids/$gCurrentMUDLIB} {login.write-id-file.do {$id-file} {&1}};
+};
+
+#nop 因为 #scan 命令和 #replace 命令都要用 &1，会存在冲突，因此需要分开两个 #alias 来写。;
+#alias {login.write-id-file.do} {
+    #local file     {%1};
+    #local content  {%2};
+
+    #replace {content} {#var user[id] %s \x7b%*\x7d;}       {#var user[id] &1 {$login[user][id]};};
+    #replace {content} {#var user[name] %s \x7b%*\x7d;}     {#var user[name] &1 {$login[user][name]};};
+    #replace {content} {#var user[passwd] %s \x7b%*\x7d;}   {#var user[passwd] &1 {$login[user][passwd]};};
+    #replace {content} {#nop 上面三处修改完毕之后，请删除下面这行文字：;\n} {};
+    #replace {content} {#var user[manual] %s \x7b%*\x7d;\n} {};
+    #line quiet #log remove $file;
+    #line log $file {$content\};
 };
