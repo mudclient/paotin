@@ -492,6 +492,7 @@ option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定�
 //    注意快捷键并不会被禁止，所以玩家可以通过快捷键来切换状态。
 // };
 #alias {xtt.DisableAllCommands} {
+    #local carefully {@default{%1;true}};
     #class disable-all-commands open;
 
     option.Enable DisableAllCommands;
@@ -499,9 +500,18 @@ option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定�
     warnLog 所有定时器、触发器和事件句柄已被禁用。;
     warnLog 600 秒后自动解除该状态。;
 
-    #alias {^%*{|ID=paotin/disable-all-commands}$} {
-        #echo {<119>命令已被抑制，可用 <129>#send<119> 强制发送。撤销请用 <129>xtt.UndoDisableAllCommands<119> : <139>%s<299>} {%%0}
-    } {1.001};
+    #if { @isTrue{$carefully} } {
+        #alias {^%*{|ID=paotin/disable-all-commands}$} {
+            #echo {<119>命令已被抑制，可用 <129>#send<119> 强制发送。撤销请用 <129>xtt.UndoDisableAllCommands<119> : <139>%s<299>} {%%0}
+        } {1.001};
+    };
+    #else {
+        #alias {^%*{|ID=paotin/disable-all-commands}$} {
+            #echo {%s} {%%0};
+            #send %%0;
+            #line gag;
+        } {1.001};
+    };
 
     #gts {#delay 600 {#ats xtt.UndoDisableAllCommands}};
 
@@ -539,6 +549,32 @@ option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定�
         xtt.DisableAllCommands;
     };
 } {1.000};
+
+///=== {
+// ## xtt.MultiLineEdit
+//    进入多行编辑模式。
+// };
+#alias {xtt.MultiLineEdit} {
+    xtt.DisableAllCommands false;
+    #class multi-edit open;
+    #alias {^x$} {
+        #class multi-edit kill;
+        #echo {%s} {%%0};
+        #send x;
+        #line gag;
+        xtt.UndoDisableAllCommands;
+    } {1.000};
+    #alias {^c$} {
+        #class multi-edit kill;
+        #echo {%s} {%%0};
+        #send c;
+        #line gag;
+        xtt.UndoDisableAllCommands;
+    } {1.000};
+    #class multi-edit close;
+};
+
+#action {^结束离开用 'x'，取消输入用 'c'。$} {xtt.MultiLineEdit};
 
 #func {linkToHelp} {
     #local module   {%1};
