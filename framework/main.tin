@@ -113,9 +113,21 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #func {existsDir} {
     #local dir {%0};
+
+    #class framework.existsDir.catch open;
+
+    #var existsDir.ok 1;
+    #event {SYSTEM ERROR} {#var existsDir.ok 0};
+
     #local output {};
     #line quiet #scan dir {$dir} output;
-    #if { &output[] > 0 } {
+
+    #class framework.existsDir.catch close;
+
+    #local ok {$existsDir.ok};
+    #class framework.existsDir.catch kill;
+
+    #if { $ok } {
         #return 1;
     };
     #else {
