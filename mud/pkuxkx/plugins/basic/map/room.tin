@@ -173,7 +173,7 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
         };
     } {9.9};
 
-    #action {^%s你可以看看(look):%*。$} {
+    #action {^%+4s你可以看看(look):%*。$} {
         #local items {@str.Split{{%%2};{{，|,}}}};
         #var gMapRoom[items] {$items};
 
@@ -189,7 +189,7 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
         };
     };
 
-    #action {^%s你可以获取(get):%*。$} {
+    #action {^%+4s你可以获取(get):%*。$} {
         #local items {@str.Split{{%%2};{{，|,}}}};
         #var gMapRoom[dynItems] {$items};
 
@@ -202,52 +202,81 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
         };
     };
 
-    #action {^%s这里正是{举世闻名|声威赫赫|名震天下}的%*的产业，你可以进店(shop)逛逛。$} {
+    #action {^%+4s这里正是{举世闻名|声威赫赫|名震天下}的%*的产业，你可以进店(shop)逛逛。$} {
         #var gMapRoom[group] {%%3};
         #if { @option.IsEnable{MapDebug} } {
-            #echo {%s} {<171>帮派驻地<299> $gMapRoom[group]，有商店};
+            #echo {%s} {<175>帮派驻地<299> $gMapRoom[group]，有商店};
             #line gag;
         };
     } {3};
 
-    #action {^%s这里正是%*的产业$} {
+    #action {^%+4s这里正是%*的产业$} {
         #var gMapRoom[group] {%%2};
         #if { @option.IsEnable{MapDebug} } {
-            #echo {%s} {<171>帮派驻地<299> $gMapRoom[group]，无商店};
+            #echo {%s} {<175>帮派驻地<299> $gMapRoom[group]，无商店};
             #line gag;
         };
     } {4};
 
-    #action {^%s这里建起了一大片宅子，气势恢宏，不知道主人是谁。$} {
+    #action {^%+4s这里建起了一大片宅子，气势恢宏，不知道主人是谁。$} {
         #var gMapRoom[group] {UNKNOWN};
         #if { @option.IsEnable{MapDebug} } {
-            #echo {%s} {<171>帮派驻地<299> $gMapRoom[group]};
+            #echo {%s} {<175>帮派驻地<299> $gMapRoom[group]};
             #line gag;
         };
     } {4};
 
-    #action {^%s这里是%*通往外界的唯一道路。$} {
-        #var gMapRoom[terrain] {村落};
+    #action {^%+4s这里是%*通往外界的唯一道路。$} {
+        #var gMapRoom[terrain] {村落出口};
         #var gMapRoom[village] {%%2};
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<175>村落出口<299> <599><119>%%2<299>};
+            #line gag;
+        };
     };
 
-    #action {^%s这里是%*的一段城墙。$} {
+    #action {^%+4s这里是%+3..4u的一处%*。} {
+        #var gMapRoom[terrain] {村落内部};
+        #var gMapRoom[village] {%%2};
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<175>村落内部<299> %%2};
+            #line gag;
+        };
+    };
+
+    #action {^%+4s这里是%*的一段城墙。$} {
         #var gMapRoom[terrain] {城墙};
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<175>城    墙<299> %%2};
+            #line gag;
+        };
     };
 
-    #action {^%*这里是一处%*，人迹罕至，也不知道你怎么会来到这里的。$} {
+    #action {^%+4s这里是一处%*，人迹罕至，也不知道你怎么会来到这里的。$} {
         #var gMapRoom[terrain] {随机地图};
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<175>随机地图<299>};
+            #line gag;
+        };
     };
 
-    #action {^%s{长江渡船|黄河渡船|渡船|羊皮筏}停在岸边，随时可以出发。$} {
+    #action {^%+4s这里显然经常有人经过，地上被踩出了路。$} {
+        #var gMapRoom[terrain] {迷宫通道};
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<175>迷宫通道<299> <599><129>发现足迹<299>};
+            #line gag;
+        };
+    };
+
+    #action {^%+4s{长江渡船|黄河渡船|渡船|羊皮筏}停在岸边，随时可以出发。$} {
         map.room.mark-river %2;
     };
 
-    #action {^%s{长江渡船|黄河渡船|渡船|羊皮筏}正在驶回，马上就要靠岸了。$} {
+    #action {^%+4s{长江渡船|黄河渡船|渡船|羊皮筏}正在驶回，马上就要靠岸了。$} {
         map.room.mark-river %2;
     };
 
-    #action {^%s{长江渡船|黄河渡船|渡船|羊皮筏}刚刚离开驶向对岸，需要一些时间才能回来。$} {
+    #action {^%+4s{长江渡船|黄河渡船|渡船|羊皮筏}刚刚离开驶向对岸，需要一些时间才能回来。$} {
         map.room.mark-river %2;
     };
 
@@ -257,9 +286,13 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
             #case {"长江渡船"}                  {#var gMapRoom[river] {长江}};
             #case {"{黄河渡船|渡船|羊皮筏}"}    {#var gMapRoom[river] {黄河}};
         };
+        #if { @option.IsEnable{MapDebug} } {
+            #echo {%s} {<175>大河渡口<299> $gMapRoom[river]};
+            #line gag;
+        };
     };
 
-    #action {^%s{这里(?:明显|所有|唯一)的(?:出口|方向)有|浓雾中你觉得似乎有出口通往} %*$} {
+    #action {^%+4s{这里(?:明显|所有|唯一)的(?:出口|方向)有|浓雾中你觉得似乎有出口通往} %*$} {
         #local desc {%%2};
         #if { "$desc" == "%*浓雾%*" } {
             #var gMapRoom[fog] {true};
@@ -303,7 +336,7 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
         #class map.Room.getInfo.exit close;
     };
 
-    #action {^%s这里没有任何明显的出口。$} {
+    #action {^%+4s这里没有任何明显的出口。$} {
         #class map.Room.getInfo.map kill;
         #class map.Room.getInfo.desc kill;
         #var gMapRoom[existShown] {true};
@@ -314,7 +347,7 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
         };
     };
 
-    #action {^%s「%*」: %*{|ID=map/Room/getInfo/weather}$} {
+    #action {^%+4s「%*」: %*{|ID=map/Room/getInfo/weather}$} {
         #var gMapRoom[season] {%%2};
         #var gMapRoom[weather] {%%3};
 
