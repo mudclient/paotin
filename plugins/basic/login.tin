@@ -54,14 +54,23 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return;
     };
 
-    #line oneshot #action {^%u目前正在连线中。$} {
+    #class login.finger open;
+
+    #action {^%u目前正在连线中。$} {
         #var login[user][name] {%%1};
-        #delay 0 {
-            login.write-id-file;
-            login.init-game;
-            login.online;
-        };
+        #delay login.finger.done {login.finger.done} 0;
     };
+
+    #alias {login.finger.done} {
+        #class login.finger kill;
+        login.write-id-file;
+        login.init-game;
+        login.online;
+    };
+
+    #delay login.finger.fail {login.finger.done} 5;
+
+    #class login.finger close;
 
     finger $login[user][id];
 };
@@ -105,8 +114,6 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     log.Open;
     #screen set title GAME-$user[id];
-
-    NOTE 启动配置文件已生成，下次你可以直接 start $login[user][id] 进入游戏。;
 };
 
 #alias {login.write-id-file} {
@@ -120,11 +127,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local id-file {var/$id-file};
     };
 
-    #if { @existsFile{$id-file} } {
-        #return;
+    #if { !@existsFile{$id-file} } {
+        #scan {file} {ids/$gCurrentMUDLIB} {login.write-id-file.do {$id-file} {&1}};
     };
 
-    #scan {file} {ids/$gCurrentMUDLIB} {login.write-id-file.do {$id-file} {&1}};
+    #if { "@uname{}" == "Windows_NT" } {
+        windows-terminal-setup {$login[user][id]} {$id-file};
+        #local menu {$login[user][id]@$gCurrentMUDLIB};
+        NOTE 菜单已更新，请重启 Windows Terminal 并选择 $menu 进入游戏。交流请加 QQ 群: 951665549 暗号：「PaoTin++ for Windows」。;
+    };
+    #else {
+        NOTE 启动配置文件已生成，下次你可以直接 start $login[user][id] 进入游戏。;
+    };
 };
 
 #nop 因为 #scan 命令和 #replace 命令都要用 &1，会存在冲突，因此需要分开两个 #alias 来写。;
@@ -139,4 +153,33 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #replace {content} {#var user[manual] %s \x7b%*\x7d;\n} {};
     #line quiet #log remove $file;
     #line log $file {$content\};
+};
+
+#alias {windows-terminal-setup} {
+    #local id       {%1};
+    #local id-file  {%2};
+
+    load-config windows;
+
+    #local json {\x7b\r
+\x20\x20"profiles":\r
+\x20\x20{\r
+\x20\x20\x20\x20"defaults": {},\r
+\x20\x20\x20\x20"list": \r
+\x20\x20\x20\x20[\r
+\x20\x20\x20\x20\x20\x20{\r
+\x20\x20\x20\x20\x20\x20\x20\x20"commandline": "$gPaoTinPath/bin/tt++.exe $id-file",\r
+\x20\x20\x20\x20\x20\x20\x20\x20"hidden": false,\r
+\x20\x20\x20\x20\x20\x20\x20\x20"name": "$id@$gCurrentMUDLIB",\r
+\x20\x20\x20\x20\x20\x20\x20\x20"startingDirectory": "$gPaoTinPath"\r
+\x20\x20\x20\x20\x20\x20}\r
+\x20\x20\x20\x20]\r
+\x20\x20}\r
+\x7d\r
+};
+
+    #local appdata {@getenv{LOCALAPPDATA}};
+    #local file {$appdata/Microsoft/Windows Terminal/Fragments/PaoTin++/${id}.json};
+    #line quiet #line remove {$file};
+    #line log {$file} {$json};
 };
