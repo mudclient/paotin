@@ -118,3 +118,24 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     load-file etc/${config}.tin;
 };
+
+#func {getenv} {
+    #local name {%1};
+
+    #info environ save;
+    #return {$info[ENVIRON][$name]};
+};
+
+#func {uname} {
+    #info system save;
+    #if { "$info[SYSTEM][OS]" != "UNKNOWN" } {
+        #return {$info[SYSTEM][OS]};
+    };
+
+    #line quiet #script uname {uname -s};
+    #if { &uname[] == 1 } {
+        #return {$uname[1]};
+    };
+
+    #return {UNKNOWN};
+};
