@@ -91,9 +91,6 @@ Section
     StrCpy $dir "$LocalAppData\Microsoft\Windows Terminal\Fragments\PaoTin++"
     CreateDirectory "$dir"
     CopyFiles /SILENT "$file" "$dir"
-    StrCpy $dir "$LocalAppData\Microsoft\Windows Terminal Preview\Fragments\PaoTin++"
-    CreateDirectory "$dir"
-    CopyFiles /SILENT "$file" "$dir"
 SectionEnd
 
 Section
