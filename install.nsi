@@ -58,14 +58,14 @@ Section
     FileWrite $R3 "            {$\r$\n"
     FileWrite $R3 "                $\"commandline$\": $\"$drive\\paotin\\bin\\tt++.exe ids/tintin$\",$\r$\n"
     FileWrite $R3 "                $\"guid$\": $\"{0b778637-b3ef-410d-b678-3f825e2cdef1}$\",$\r$\n"
-    FileWrite $R3 "                $\"hidden$\": false,$\r$\n"
+    FileWrite $R3 "                $\"hidden$\": true,$\r$\n"
     FileWrite $R3 "                $\"name$\": $\"WinTin++$\",$\r$\n"
     FileWrite $R3 "                $\"startingDirectory$\": $\"$drive\\paotin$\"$\r$\n"
     FileWrite $R3 "            },$\r$\n"
     FileWrite $R3 "            {$\r$\n"
     FileWrite $R3 "                $\"commandline$\": $\"$drive\\paotin\\bin\\tt++.exe ids/paotin$\",$\r$\n"
     FileWrite $R3 "                $\"guid$\": $\"{0b778637-b3ef-410d-b678-3f825e2cdef2}$\",$\r$\n"
-    FileWrite $R3 "                $\"hidden$\": false,$\r$\n"
+    FileWrite $R3 "                $\"hidden$\": true,$\r$\n"
     FileWrite $R3 "                $\"name$\": $\"PaoTin++ for Windows$\",$\r$\n"
     FileWrite $R3 "                $\"startingDirectory$\": $\"$drive\\paotin$\"$\r$\n"
     FileWrite $R3 "            },$\r$\n"
@@ -91,6 +91,7 @@ Section
     StrCpy $dir "$LocalAppData\Microsoft\Windows Terminal\Fragments\PaoTin++"
     CreateDirectory "$dir"
     CopyFiles /SILENT "$file" "$dir"
+    RMDir "$LocalAppData\Microsoft\Windows Terminal Preview\Fragments\PaoTin++"
 SectionEnd
 
 Section
@@ -99,6 +100,12 @@ Section
     SetOutPath "$INSTDIR"
     RMDir "$INSTDIR"
     File /r *
+
+    StrCpy $file "$drive\paotin\etc\windows.tin"
+    FileOpen $R3 $file w
+    FileWrite $R3 "#var gPaoTinPath    {$drive/paotin};$\r$\n"
+    FileWrite $R3 "#var gPaoTinVarPath {$drive/my-paotin};$\r$\n"
+    FileClose $R3
 SectionEnd
 
 !define CreateJunction "!insertmacro CreateJunction"
