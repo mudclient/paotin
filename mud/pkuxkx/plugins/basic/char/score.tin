@@ -168,7 +168,7 @@ event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新}
 
     #action {^╰────────────┴────────────┴────%S────╯{|ID=char.score}$} {
         #class char-score-parser kill;
-        #var char[档案][门派ID] {$char-menpai-id[$char[档案][师承]]};
+        #var char[档案][门派ID] {$char-menpai-id[$char[档案][门派]]};
         event.DelayEmit {char/score};
         event.DelayEmit {char/saving};
     };
