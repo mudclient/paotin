@@ -78,6 +78,8 @@
 load-lib event;
 load-module basic/busy;
 
+VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
+
 #function {bot_fullsk.Init} {
     score;
     skills;
@@ -791,6 +793,10 @@ load-module basic/busy;
         #return;
     };
 
+    #if { "$gCurrentDungeon" == "剑心居" } {
+        #return;
+    };
+
     #if { "$target" == "$fullsk-current-room" } {
         #return;
     };
@@ -822,6 +828,7 @@ load-module basic/busy;
     #if {   $char[HP][食物] <= $fullsk-dine-last-food
         ||  $char[HP][饮水] <= $fullsk-dine-last-water } {
         #if { "$bot_fullsk[config][dine-bot]" != "" } {
+            #alias fullsk.dine.callback {
                 fullsk.goto lw;
                 fullsk.next-skill;
             };
