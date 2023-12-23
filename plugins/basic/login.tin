@@ -30,7 +30,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 #alias {login.login-success} {
-    #local type {%%1};
+    #local type {%1};
+
+    #class login.auto-login kill;
+    #undelay login.login-success;
 
     #showme 登录成功。;
 
@@ -50,7 +53,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { @isFalse{$login[user][manual]} } {
-        login.online;
+        login.online $type;
         #return;
     };
 
@@ -76,9 +79,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 #alias {login.online} {
+    #local type {%1};
     #local handler $login[autoexec];
-    #class login.auto-login kill;
-    #undelay login.login-success;
     kill-module login;
 
     $handler;

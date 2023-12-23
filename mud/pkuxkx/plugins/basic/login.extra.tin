@@ -83,18 +83,6 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         };
     };
 
-    #line oneshot #action {^您要将另一个连线中的相同人物赶出去，取而代之吗？(y/n)$} {
-        xtt.Answer y;
-    };
-
-    #line oneshot #action {^%s欢迎来到北大侠客行！%s$} {
-        #delay {login.login-success} {login.login-success 重新登录} 0;
-    };
-
-    #line oneshot #action {^%s目前权限：(player)%s$} {
-        #delay {login.login-success} {login.login-success} 1;
-    };
-
     #line oneshot #action {^如果同意请用agree %*命令签署确认这些条款。$} {
         #local args {@str.Trim{%%1}};
         #info environ save;
@@ -112,8 +100,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #delay {online.WatchDog} {#zap} {180};
     };
 
+    #line oneshot #action {^%s欢迎来到北大侠客行！%s$} {
+        login.login-success 重新登录;
+    };
+
+    #line oneshot #action {^%s目前权限：(%*)%s$} {
+        #delay login.login-success {login.login-success 重新登录} 3;
+    };
+
+    #line oneshot #action {^您要将另一个连线中的相同人物赶出去，取而代之吗？(y/n)$} {
+        xtt.Answer y;
+    };
+
     #line oneshot #action {^重新连线完毕。$} {
-        #delay {login.login-success} {login.login-success 断线重连} 0;
+        login.login-success 断线重连;
     };
 
     #class login.auto-login close;
