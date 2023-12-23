@@ -73,17 +73,20 @@ event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新}
 #action {^╭───人物详情────────────────────────┬───────╮$} {
     #class char-score-parser open;
 
+    #line oneshot #action {~^%c│%c %* %c%+1..S%c(%+3..S)%c%s%c│%*│%c$} {
+        #local obj {@ParseTitle{@str.Trim{@str.Plain{%%3 %%5(%%7)}}}};
+        #var char[档案][头衔] {$obj[title]};
+        #var char[档案][大名] {$obj[name]};
+        #var char[档案][账号] {$obj[id]};
+        #var char[档案][彩色头衔] {%%3};
+        #var char[档案][彩色大名] {%%4%%5%%6};
+    };
+
     #var char-score-parser-lineNo {0};
     #action {^│%*│%*│$} {
-        #math char-score-parser-lineNo {${char-score-parser-lineNo} + 1};
-        #switch {"${char-score-parser-lineNo}"} {
-            #case {"1"} {
-                #local obj {@ParseTitle{@str.Trim{%%1}}};
-                #var char[档案][头衔] {$obj[title]};
-                #var char[档案][大名] {$obj[name]};
-                #var char[档案][账号] {$obj[id]};
-            };
-            #case {"2"} {
+        #math char-score-parser-lineNo {$char-score-parser-lineNo + 1};
+        #switch {$char-score-parser-lineNo} {
+            #case {1} {
                 #local level {@str.Trim{%%2}};
                 #replace level {%d/%d} {{cur}{&1}{max}{&2}};
                 #local level {$level};
