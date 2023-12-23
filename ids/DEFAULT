@@ -43,6 +43,9 @@ mudlib.Set {pkuxkx};
 #nop 你的账号密码，请在单独的文件里设置，这里只是占个位置;
 #var user[passwd]           123456;
 
+#nop 是否手动登录，默认为否，即自动登录;
+#var user[manual]   {false};
+
 #nop 是否开启 GMCP，默认开启;
 #var user[GMCP]             true;
 
