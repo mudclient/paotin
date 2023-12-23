@@ -1,0 +1,119 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#var basic_char_loyalty[META] {
+    {NAME}      {门忠任务}
+    {DESC}      {解析 loyalty 命令的输出结果，方便玩家使用}
+    {NOTE}      {重载了两个命令，mz 不 gag，loyalty 会 gag，两个命令的结果都会被解析}
+    {AUTHOR}    {担子炮}
+};
+
+event.Define {loyalty} {无参} {$MODULE} {门忠任务查询结果已更新，内容在变量 gLoyalty 中};
+
+VAR {门忠任务查询结果} gLoyalty {};
+
+/*
+loyalty 本来就有两个别名：
+    1. loyalty 长一些，不方便输入，用的较少，因此重定义其行为，默认屏蔽系统输出。
+    2. mz 短一些，平时用的比较多，则不屏蔽系统输出，以免影响玩家使用习惯。
+*/
+#alias {mz list}        {mz.List nogag};
+#alias {loyalty list}   {mz.List gag};
+
+#action {@re.TableHeader{门忠任务列表(共%*项)}} {
+    #var gLoyalty {};
+    mz.parse;
+};
+
+#alias {mz.parse} {
+    #class mz.parse open;
+
+    #alias {mz.parse.desc} {
+        #local last {&gLoyalty[]};
+        #if { $last > 0 } {
+            #switch {"$gLoyalty[$last][类型]/$gLoyalty[$last][描述]"} {
+                #case {"教训/%*"} {#0};
+                #match {"杀死/%*的%*(%*)%s。"} {
+                    #var gLoyalty[$last][房间] {&1};
+                    #var gLoyalty[$last][姓名] {&2};
+                    #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
+                };
+                #match {"找到/%*(%*)%s，送给%*的%*(%*)%s。%*描述大致如下：%*"} {
+                    #var gLoyalty[$last][物品] {&1};
+                    #var gLoyalty[$last][ID]   {@str.ToLower{&2}};
+                    #var gLoyalty[$last][房间] {&4};
+                    #var gLoyalty[$last][姓名] {&5};
+                    #var gLoyalty[$last][NPC]  {@str.ToLower{&6}};
+                    #var gLoyalty[$last][描述] {&9};
+                };
+                #default {
+                    okLog 未知格式。;
+                };
+            };
+        };
+    };
+
+    #action {^│%s%d%s│要求给%*的%*(%*)一点教训。%s│%s%d%s│%*│$} {
+        mz.parse.desc;
+        #var gLoyalty[%%2] {
+            {序号}  {%%2}
+            {类型}  {教训}
+            {位置}  {%%4}
+            {姓名}  {%%5}
+            {NPC}   {@str.ToLower{%%6}}
+            {积分}  {%%9}
+            {描述}  {}
+        };
+    };
+
+    #action {^│%s%d%s│要求{找到|杀死}%*│%s%d%s│%*│$} {
+        mz.parse.desc;
+        #var gLoyalty[%%2] {
+            {序号}  {%%2}
+            {类型}  {%%4}
+            {描述}  {@str.Trim{%%5}}
+            {积分}  {%%7}
+        };
+    };
+
+    #action {^│%s│%*│%s│%s│$} {
+        #local len {&gLoyalty[]};
+        #cat gLoyalty[$len][描述] {@str.Trim{%%2}};
+    };
+
+    #action {^╰─{(─)+}───%S────╯$} {
+        mz.parse.desc;
+    };
+
+    event.ClassHandleOnce GA {basic/char} {basic/char} {
+        #delay 0 {okLog 门忠任务信息已更新。};
+        #class mz.parse kill;
+        #0
+    };
+
+    #class mz.parse close;
+};
+
+#alias {mz.List} {
+    #local gag {@default{%1;nogag}};
+
+    #class mz.parse open;
+
+    #local ID {|ID=basic/char};
+
+    #action {^你找到%*，ask门忠任务就可以接到门忠任务了。{$ID}$} {
+        okLog 尚未接到任何门忠任务。;
+        #class mz.parse kill;
+    };
+
+    #if { "$gag" == "gag" } {#gag {^%*{$ID}$}};
+
+    #class mz.parse close;
+
+    xtt.Send {loyalty list};
+};

@@ -9,6 +9,7 @@ load-module {basic/char/score};
 load-module {basic/char/gmcp};
 load-module {basic/char/jifa};
 load-module {basic/char/special};
+load-module {basic/char/loyalty};
 
 event.HandleOnce {user-online} {char/init} {basic/char} {
     set table_pattern 1;
