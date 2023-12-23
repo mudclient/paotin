@@ -525,9 +525,14 @@ hp -neili 格式：
 };
 
 #alias {char.GetHP2} {
+    #class char.GetHP2 open;
+    #gag {^你关闭了GMCP:Status频道。$};
+    #gag {^你打开了GMCP:Status频道。$};
+    #class char.GetHP2 close;
     tune gmcp status off;
     hpbrief;
     tune gmcp status on;
+    sync.Wait {#class char.GetHP2 kill};
 };
 
 #alias {hp} {
