@@ -344,7 +344,7 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
             #local old {$fullsk-lingwu-times};
 
             #nop 由于某些原因，有效精神可能会超过最大精神，因此领悟时以有效精神为准计算比例;
-            #local percent {@eval{$char[HP][当前精神] * 100 / $char[HP][有效精神]}};
+            #local percent {@math.Eval{$char[HP][当前精神] * 100 / $char[HP][有效精神]}};
 
             #nop 如果剩余精神过多，也不再做精细调整，防止触发 TinTin++ BUG 导致崩溃。;
             #nop 只有精神消耗正常时才动态精细调整;
@@ -356,7 +356,7 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
             };
 
             #nop 无论如何，次数上限为 1000，因为这是 do 10 lingwu xxx 100 的上限。;
-            #var fullsk-lingwu-times {@min{$fullsk-lingwu-times;1000}};
+            #var fullsk-lingwu-times {@math.Min{$fullsk-lingwu-times;1000}};
 
             #if { $old != $fullsk-lingwu-times } {
                 okLog 领悟加速中，因为精神剩余 $char[HP][精神百分比]%，所以次数从 $old 调整到 $fullsk-lingwu-times。;
@@ -502,16 +502,16 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
 
         #local percent {0};
         #if { "$fullsk-lianxi-yun-what" == "recover" } {
-            #local percent {@eval{$char[HP][当前气血] * 100 / $char[HP][有效气血]}};
+            #local percent {@math.Eval{$char[HP][当前气血] * 100 / $char[HP][有效气血]}};
         };
         #else {
-            #local percent {@eval{$char[HP][当前精神] * 100 / $char[HP][有效精神]}};
+            #local percent {@math.Eval{$char[HP][当前精神] * 100 / $char[HP][有效精神]}};
         };
 
         #if { $char[HP][内力百分比] < 20 } {
             #if { $char[HP][内力百分比] > 2 } {
                 #if { $percent > 20 && "$checked" == "true" } {
-                    #var fullsk-lianxi-times {@min{@eval{$fullsk-lianxi-times * 11 / 10};500}};
+                    #var fullsk-lianxi-times {@math.Min{@math.Eval{$fullsk-lianxi-times * 11 / 10};500}};
                 };
                 fullsk.lianxi.do;
             };
@@ -541,7 +541,7 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
             };
 
             #nop 无论如何，次数上限为 500，因为这是 do 10 lian xxx 50 的上限。;
-            #var fullsk-lianxi-times {@min{$fullsk-lianxi-times;500}};
+            #var fullsk-lianxi-times {@math.Min{$fullsk-lianxi-times;500}};
 
             #if { $old != $fullsk-lianxi-times } {
                 okLog 练习加速中，因为气血（也可能是精神）剩余 $percent%，所以次数从 $old 调整到 $fullsk-lianxi-times。;
@@ -590,7 +590,7 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
     #nop 基本功夫 force dodge parry;
     #nop 拳脚 claw unarmed cuff finger hand strike throwing iron-cloth leg;
     #nop 兵器 sword staff dagger blade club hammer axe spear whip halberd;
-    #local allBases {@transform{{$char[Skills][$skillName][jifa-to]};\$char[Skills][VALUE][code]}};
+    #local allBases {@fp.Transform{{$char[Skills][$skillName][jifa-to]};\$char[Skills][VALUE][code]}};
     #local weapon {@sset.Intersection{{$allBases};{sword;staff;dagger;blade;club;hammer;axe;spear;whip;halberd}}};
     #if { @sset.Size{$weapon} == 1 } {
         wield $weapon at right;
@@ -711,17 +711,17 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
 
     #action {^不一会儿，你就进入了梦乡。{|ID=fullsk.sleep}$} {
         #untick fullsk.sleep;
-        #var fullsk-sleep-time {@now{}};
+        #var fullsk-sleep-time {@time.Now{}};
         #delay fullsk-sleep {
             #var fullsk-sleep {0};
         } 60;
     };
 
     #action {^你一觉醒来，精神抖擞地活动了几下手脚。{|ID=fullsk.sleep}$} {
-        #local now {@now{}};
+        #local now {@time.Now{}};
         #local force {@char.SkillJifaLevel{基本内功}};
-        #local scale {@eval{$force / 100}};
-        #local profit {@eval{
+        #local scale {@math.Eval{$force / 100}};
+        #local profit {@math.Eval{
             (   ( $char[HP][最大内力] - $char[HP][当前内力] ) / 2
               + ( $char[HP][最大精神] - $char[HP][当前精神] ) / $scale / 2
               + ( $char[HP][最大气血] - $char[HP][当前气血] ) / $scale
@@ -766,8 +766,8 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
         #local base {};
         #local bases {@char.GetJifaSkill{$skill}};
         #foreach {$bases} {base} {
-            #local baseLevel    {@floor{@char.SkillLevel{$base}}};
-            #local skillLevel   {@floor{@char.SkillLevel{$skill}}};
+            #local baseLevel    {@math.Floor{@char.SkillLevel{$base}}};
+            #local skillLevel   {@math.Floor{@char.SkillLevel{$skill}}};
             #if { "$what" == "领悟" && $char[HP][精神百分比] > 20 && $baseLevel < $skillLevel + 1 } {
                 lingwu $char[Skills][$base][code] 10;
             };
@@ -779,12 +779,6 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
 };
 
 #var fullsk-current-room {lw};
-#var fullsk-jianxinju    {false};
-#action {^你进入了剑心居。{|ID=bot/fullsk}$} {
-    #var fullsk-jianxinju {true};
-    #delay 3 {char.GetHP2};
-};
-
 #alias {fullsk.goto} {
     #local target {%1};
 
@@ -803,7 +797,7 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
 
     #local path {${fullsk-current-room}2$target};
     #local cmds {$bot_fullsk[config][path-$path]};
-    #if { @isTrue{$fullsk-jianxinju} } {
+    #if { "$gCurrentDungeon" == "剑心居" } {
         #nop 什么也不做。;
     };
     #elseif { "$cmds" != "" } {
@@ -827,7 +821,10 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
     #nop 如果身上的东西不能够解决问题，就用 dine 机器人。;
     #if {   $char[HP][食物] <= $fullsk-dine-last-food
         ||  $char[HP][饮水] <= $fullsk-dine-last-water } {
-        #if { "$bot_fullsk[config][dine-bot]" != "" } {
+        #if { "$gCurrentDungeon" == "剑心居" } {
+            fullsk.jxj-dine;
+        };
+        #elseif { "$bot_fullsk[config][dine-bot]" != "" } {
             #alias fullsk.dine.callback {
                 fullsk.goto lw;
                 fullsk.next-skill;
@@ -850,7 +847,7 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
         };
 
         #if { "$food" != "" } {
-            #3 eat $bot_fullsk[config][food];
+            #3 eat $food;
             #local wait {true};
             #var fullsk-dine-last-food {$char[HP][食物]};
         };
@@ -913,7 +910,7 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
     };
 
     #alias {fullsk.jxj-dine.do} {
-        #if { @isTrue{$char[HP][忙]} } {
+        #if { @char.IsBusy{} } {
             #return;
         };
 
@@ -953,8 +950,6 @@ VAR {各门派 fullsk 相关的路径} {fullsk-path} {};
     xtt.Tick fullsk.jxj-dine {fullsk.jxj-dine.do} 3;
 
     #class fullsk.jxj-dine close;
-
-    #var fullsk-jianxinju {true};
 };
 
 #func {fullsk.needDine} {
