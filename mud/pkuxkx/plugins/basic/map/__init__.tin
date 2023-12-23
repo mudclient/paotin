@@ -24,6 +24,7 @@ event.Define {map/walk/failed}   {无参} {$MODULE} {走路机器人运行失败
 event.Define {map/init}          {无参} {$MODULE} {map 模块开始初始化。};
 
 load-file mud/pkuxkx/plugins/basic/map/room.tin;
+load-file mud/pkuxkx/plugins/basic/map/dungeon.tin;
 load-file mud/pkuxkx/plugins/basic/map/gmcp.tin;
 load-file mud/pkuxkx/plugins/basic/map/area.tin;
 load-file mud/pkuxkx/plugins/basic/map/node.tin;

@@ -71,8 +71,6 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 };
 
 #alias {char.gmcp.status} {
-    #local busy     {};
-    #local fight    {};
     #local hasHP1   {0};
     #local hasHP2   {0};
     #local hasScore {0};
@@ -116,11 +114,8 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
                 #local needUpdate[$health]  {true};
             };
             #else {
-                #if { "$name" == "忙" } {
-                    #local busy {$value};
-                };
-                #elseif { "$name" == "战斗中" } {
-                    #local fight {$value};
+                #if { "$name" == "{忙|战斗中}" } {
+					char.set-flag $name $value false;
                 };
             };
 
@@ -180,11 +175,11 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
             };
         };
 
-        #if { "$char.HPSummarize.Echo" == "自动" && $hasHP1 } {
-            char.HPSummarize;
+        #if { $hasHP1 } {
+            char.HPSummarize 自动;
         };
-        #elseif { "$char.HPSummarize.Echo" == "总是" } {
-            char.HPSummarize;
+        #else {
+            char.HPSummarize 总是;
         };
 
         event.Emit char/hpbrief;

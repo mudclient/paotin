@@ -1,0 +1,123 @@
+#nop 房间信息解析模块之副本管理;
+
+VAR {当前副本}      {gCurrentDungeon}    {主站};
+VAR {上一个副本}    {gPrevDungeon}       {主站};
+
+event.Define {map/EnterDungeon}     {无参} {$MODULE} {进入副本，副本的名称在变量 gCurrentDungeon 中。};
+event.Define {map/LeaveDungeon}     {无参} {$MODULE} {离开副本，副本的名称在变量 gPrevDungeon 中。};
+event.Define {map/EnterDungeonIdle} {无参} {$MODULE} {进入副本，且不再 busy，副本的名称在变量 gCurrentDungeon 中。};
+event.Define {map/LeaveDungeonIdle} {无参} {$MODULE} {离开副本，且不再 busy，副本的名称在变量 gPrevDungeon 中。};
+
+event.HandleOnce {map/init} {map/dungeon} {map} {map.Dungeon.Init};
+
+#alias {map.Dungeon.Init} {
+    event.Handle {map/GotRoomInfo}      {map/dungeon} {map} {map.Dungeon.locate};
+    event.Handle {map/EnterDungeon}     {map/dungeon} {map} {map.EnterDungeon.notice};
+    event.Handle {map/LeaveDungeon}     {map/dungeon} {map} {map.LeaveDungeon.notice};
+    event.Handle {map/EnterDungeonIdle} {map/dungeon} {map} {map.EnterDungeon.notice idle};
+    event.Handle {map/LeaveDungeonIdle} {map/dungeon} {map} {map.LeaveDungeon.notice idle};
+};
+
+#alias {map.EnterDungeon.notice} {
+    #if { "%1" == "idle" } {
+        warnLog 你来到了「$gCurrentDungeon」，你不忙。;
+    };
+    #else {
+        warnLog 你来到了「$gCurrentDungeon」。;
+        #tick dungeon.checkbusy {checkbusy} 1;
+        busy.Wait {
+            #untick dungeon.checkbusy;
+            event.Emit map/EnterDungeonIdle;
+        };
+    };
+};
+
+#alias {map.LeaveDungeon.notice} {
+    #if { "%1" == "idle" } {
+        okLog 你离开了「$gPrevDungeon」，你不忙。;
+    };
+    #else {
+        okLog 你离开了「$gPrevDungeon」。;
+        #tick dungeon.checkbusy {checkbusy} 1;
+        busy.Wait {
+            #untick dungeon.checkbusy;
+            event.Emit map/LeaveDungeonIdle;
+        };
+    };
+};
+
+#alias {map.Dungeon.locate} {
+    #if { "$gMapRoom[name]" == "" } {
+        errLog 房间信息解析不正确。;
+        #return;
+    };
+
+    #local dungeon {主站};
+
+    #if { "$gMapRoom[name]" == "%+1..S[%+1..S]" } {
+        #local dungeon {$gMapRoom[name]};
+        #replace dungeon                {%+1..S[%+1..S]} {&2};
+        #replace dungeon {任务副本} {};
+        #replace gMapRoom[name]         {[{[^\[]*}]} {};
+        #replace gMapRoom[colorName]    {[{[^\[]*}]} {};
+    };
+
+    #if { "$dungeon" == "$gCurrentDungeon" } {
+        #return;
+    };
+
+    #var gPrevDungeon       {$gCurrentDungeon};
+    #var gCurrentDungeon    {$dungeon};
+
+    #if { "$dungeon" == "主站" } {
+        event.Emit map/LeaveDungeon;
+    };
+    #else {
+        event.Emit map/EnterDungeon;
+    };
+};
+
+#action {^准备进入%S⏳$E} {
+    map.dungeon.change {%1};
+};
+
+#action {^准备退出%S...$E} {
+    map.dungeon.change {%1};
+};
+
+#alias {map.dungeon.change} {
+    #local dungeon {%1};
+
+    #nop 计有：藏经阁、鄱阳湖、万安塔、保卫襄阳、剿匪、团战、大航海等常规任务副本;
+    #nop 及剑心居、北侠影视城、游侠等三个特别副本;
+    #if { "$dungeon" != "{\[(.*)任务副本\]|北侠影视城|剑心居|游侠}" } {
+        #return;
+    };
+
+    #class map.dungeon.change open;
+
+    #action {^你进入了%1。{|ID=map/dungeon}$} {map.dungeon.change.done};
+    #action {^你退出了%1。{|ID=map/dungeon}$} {map.dungeon.change.done};
+
+    #alias {map.dungeon.change.sync} {
+        #class map.dungeon.change kill;
+        #untick map.dungeon.change.sync;
+        sync.Ignore map.dungeon.change.sync;
+        look;
+    };
+
+    #alias {map.dungeon.change.done} {
+        xtt.Tick {map.dungeon.change.sync} {
+            sync.Ignore map.dungeon.change.sync;
+            sync.Wait {map.dungeon.change.sync} {map.dungeon.change.sync};
+        } 1;
+    };
+
+    #delay {map.dungeon.change.wait} {map.dungeon.change.done} 5;
+
+    #class dungeon.enter.wait close;
+};
+
+#action {^请使用 leave 自己的id 来退出副本。$E} {leave $user[id]; #line gag};
+
+#alias {enter jxj} {enter jianxinju} {5.5};

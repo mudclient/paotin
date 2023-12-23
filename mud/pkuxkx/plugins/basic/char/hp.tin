@@ -311,31 +311,46 @@ hp -neili 格式：
     #var char[HP][当前真元]  {@char.hp.expandBigNumber{%2}};
     #var char[HP][食物]      {@char.hp.expandBigNumber{%3}};
     #var char[HP][饮水]      {@char.hp.expandBigNumber{%4}};
-    #var char[HP][战斗中]    {false};
-    #var char[HP][忙]        {false};
 
     speedo.Set {当前真气}   {$char[HP][当前真气]}   {true} {10};
     speedo.Set {食物}       {$char[HP][食物]}       {true} {10};
     speedo.Set {饮水}       {$char[HP][饮水]}       {true} {10};
 
     #if { "%5" == "1" } {
-        #var char[HP][战斗中] {true};
+        char.set-flag 战斗中 true false;
+    };
+    #else {
+        char.set-flag 战斗中 false false;
     };
 
     #if { "%6" == "1" } {
-        #var char[HP][忙] {true};
+        char.set-flag 忙 true false;
+    };
+    #else {
+        char.set-flag 忙 false false;
     };
 
     event.Emit char/hpbrief;
 
     #unvar char.parsingHP;
 
-    char.HPSummarize;
+    char.HPSummarize 自动;
 
     #line gag;
 } {2.0};
 
+#nop char.HPSummarize.Echo 有三种选择: 从不、自动、总是
 #alias {char.HPSummarize} {
+    #local level {%1};
+
+    #if { "$char.HPSummarize.Echo" == "从不" } {
+        #return;
+    };
+
+    #if { "$char.HPSummarize.Echo" == "自动" && "$level" != "自动" } {
+        #return;
+    };
+
     #local head     {};
     #local tail     {};
     #local safety   {};
@@ -541,6 +556,55 @@ hp -neili 格式：
     };
     #else {
         xtt.Send hp %0;
+    };
+};
+
+///=== {
+// ## char.MarkBusy <布尔值>
+//    设置角色的忙状态。
+// };
+#alias {char.MarkBusy} {char.set-flag 忙 true};
+
+///=== {
+// ## char.UnmarkBusy <布尔值>
+//    取消角色的忙状态。
+// };
+#alias {char.UnmarkBusy} {char.set-flag 忙 false};
+
+///=== {
+// ## char.MarkFight <布尔值>
+//    设置角色的战斗状态。
+// };
+#alias {char.MarkFight} {char.set-flag 战斗中 false};
+
+///=== {
+// ## char.UnmarkFight <布尔值>
+//    取消角色的战斗状态。
+// };
+#alias {char.UnmarkFight} {char.set-flag 战斗中 false};
+
+#alias {char.set-flag} {
+    #local flag  {%1};
+    #local value {%2};
+    #local summ  {@default{%3;true}};
+
+    #if { "$char[HP][$flag]" == "$value" } {
+        #return;
+    };
+
+    #var char[HP][$flag] {$value};
+
+    #switch {"$flag/$value"} {
+        #case {"忙/true"}       {event.Emit char/busy};
+        #case {"忙/false"}      {event.Emit char/nobusy};
+        #case {"战斗中/true"}   {event.Emit char/fight};
+        #case {"战斗中/false"}  {event.Emit char/nofight};
+    };
+
+    event.Emit char/hpbrief;
+
+    #if { "$summ" == "true" } {
+        char.HPSummarize 自动;
     };
 };
 
