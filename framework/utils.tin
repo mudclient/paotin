@@ -139,3 +139,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #return {UNKNOWN};
 };
+
+#func {uptime} {
+    #info session save;
+
+    #local now {0};
+    #format now {%T};
+
+    #local uptime {0};
+    #math uptime {$now - $info[SESSION][CREATED]};
+    #return {$uptime};
+};
