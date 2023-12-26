@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -euxo pipefail
+
+git submodule init
+(cd tintin && git fetch --all --prune)
+git submodule update --remote
+export CFLAGS="${CFLAGS:+$CFLAGS }-I/usr/local/include"
+export CPPFLAGS="${CPPFLAGS:+$CPPFLAGS }-I/usr/local/include"
+export LDFLAGS="${LDFLAGS:+$LDFLAGS }-L/usr/local/lib"
+(cd tintin/src && ./configure && make)
+cp tintin/src/tt++ bin/ || exit
+
+if [ -L var -a -d "$(readlink var)" ]; then
+    mkdir -p var/ids
+    mkdir -p var/etc
+    mkdir -p var/data
+    mkdir -p var/log
+    mkdir -p var/plugins
+else
+    echo 请尽快建立 var 目录，以防止你的数据丢失。;
+    echo 推荐将 var 目录建在别的地方，然后由 ./var 通过符号链接指向它。;
+fi
+
+mkdir -p .config/nvim
+ln -s ../../init.vim .config/nvim/init.vim
+
+mkdir -p .local/share/nvim/site/autoload/
+ln -s ../../plugged/vim-plug/plug.vim .local/share/nvim/site/autoload/plug.vim
+
+mkdir -p .local/share/nvim/plugged
+cd .local/share/nvim/plugged
+
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/junegunn/vim-plug.git
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/dzpao/vim-mbs.git
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/morhetz/gruvbox.git
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/yegappan/mru.git
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/jlanzarotta/BufExplorer.git
+git clone --depth 1 https://mirror.ghproxy.com/https://github.com/mhinz/vim-startify.git
