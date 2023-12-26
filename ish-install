@@ -1,0 +1,63 @@
+#!/usr/bin/env sh
+
+if [ ! -f /ish/version ]; then
+    echo 这是 iSH 环境安装脚本，一般适用于 iOS 用户。
+    echo 看起来你这里不像是 iSH，如果你确认是，请联系开发者。
+    echo 先拜拜了。
+    exit
+fi
+
+ECHO='echo -e'
+
+$ECHO;
+$ECHO "\e[1;32m第一步，升级软件仓库。\e[m";
+$ECHO;
+
+apk update
+
+$ECHO;
+$ECHO "\e[1;32m第二步，安装依赖。\e[m";
+$ECHO;
+
+apk add --no-cache git gcc libc-dev zlib-dev zlib-static pcre-dev make curl
+apk add --no-cache tmux bash ncurses less neovim nano
+
+$ECHO;
+$ECHO "\e[1;32m第三步，设置 GitHub 加速。\e[m";
+$ECHO;
+
+git config --global url."http://chat.unix5.com/mudclient/".insteadOf "https://github.com/mudclient/"
+
+$ECHO;
+$ECHO "\e[1;32m第四步，下载 PaoTin++。\e[m";
+$ECHO;
+
+cd ~
+git clone https://github.com/mudclient/paotin.git --branch beta
+
+$ECHO;
+$ECHO "\e[1;32m第五步，准备本地环境。\e[m";
+$ECHO;
+
+mkdir -p ~/my-paotin/
+ln -s ~/my-paotin/ ~/paotin/var
+[ -f ~/.profile ] && sed -i.bak '/paotin-start/d' ~/.profile
+echo "alias pt='cd ~/paotin && ./paotin-start'" >> ~/.profile
+
+$ECHO;
+$ECHO "\e[1;32m第六步，编译 TinTin++，安装 PaoTin++。\e[m";
+$ECHO;
+
+cd ~/paotin && ./setup || ($ECHO "\e[1;31m安装失败。\e[m" && exit 1) || exit
+cp -f ~/paotin/ids/EXAMPLE ~/my-paotin/ids/
+cp -f ~/paotin/plugins/EXAMPLE.tin ~/my-paotin/plugins/
+
+$ECHO;
+$ECHO "\e[1;32m安装成功。请重启 iSH App，然后输入 pt 即可开始游戏。\e[m";
+$ECHO "\e[1;32m以后每次也只需要输入 pt。\e[m";
+$ECHO;
+$ECHO "\e[1;32m在 iSH 中用 nvim 可以编辑你的个人数据：\e[m";
+$ECHO "\e[1;32m  1，在 ~/my-paotin/ids 目录下存放 ID 启动配置文件；\e[m";
+$ECHO "\e[1;32m  2，在 ~/my-paotin/plugins 目录下存放你的机器脚本；\e[m";
+$ECHO "\e[1;32m  3，从 QQ 群下载逍遥行数据后存放在 ~/my-paotin/data 目录下。\e[m";
+$ECHO;

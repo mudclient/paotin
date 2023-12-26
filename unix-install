@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+if [ -f /ish/version ]; then
+    echo 这不是 iSH 环境安装脚本，iOS 用户请使用 ish-install 脚本。
+    echo 如果你认为判断有误，请联系开发者。
+    echo 先拜拜了。
+    exit
+fi
+
+if [ -d /data/data/com.termux/files/ ]; then
+    echo 这不是 Termunx 环境安装脚本，Android 用户请使用 termux-install 脚本。
+    echo 如果你认为判断有误，请联系开发者。
+    echo 先拜拜了。
+    exit
+fi
+
+ECHO='echo -e'
+if [ "$($ECHO)" = "-e" ]; then
+    ECHO=echo
+fi
+
+$ECHO;
+$ECHO "\e[1;32m第一步，检测系统环境。\e[m";
+$ECHO;
+
+DEPS='bash tmux git gcc make'
+if [ "x$(which clang 2>/dev/null)" != "x" ]; then
+    DEPS='bash tmux git make'
+fi
+
+BAD=0
+for soft in $DEPS; do
+    TMP=$(which $soft)
+    if [ "x$TMP" = "x" ]; then
+        BAD=1
+        $ECHO "\e[1;31mPaoTin++ 安装前需要先安装 $soft。\e[m"
+    fi
+done
+
+if [ "$BAD" = "1" ]; then
+    $ECHO "\e[1;31mRedhat 系发行版请使用 yum 命令安装，Debian 系发行版请使用 apt 命令安装。\e[m"
+    $ECHO "\e[1;31mmacOS 推荐使用 brew 进行安装。\e[m"
+    $ECHO "\e[1;31m其它系统请询问你的系统管理员或参考 README.md 指引进行安装。\e[m"
+    exit
+fi
+
+$ECHO;
+$ECHO "\e[1;32m第二步，设置 GitHub 加速。\e[m";
+$ECHO;
+
+git config --global url."http://chat.unix5.com/mudclient/".insteadOf "https://github.com/mudclient/"
+
+$ECHO;
+$ECHO "\e[1;32m第三步，下载 PaoTin++。\e[m";
+$ECHO;
+
+cd ~
+git clone https://github.com/mudclient/paotin.git --branch beta
+
+$ECHO;
+$ECHO "\e[1;32m第四步，准备本地环境。\e[m";
+$ECHO;
+
+mkdir -p ~/my-paotin/
+ln -s ~/my-paotin/ ~/paotin/var
+
+$ECHO;
+$ECHO "\e[1;32m第六步，编译 TinTin++，安装 PaoTin++。\e[m";
+$ECHO;
+
+cd ~/paotin && ./setup || ($ECHO "\e[1;31m安装失败。\e[m" && exit 1) || exit
+
+cp -f ~/paotin/ids/EXAMPLE ~/my-paotin/ids/
+cp -f ~/paotin/plugins/EXAMPLE.tin ~/my-paotin/plugins/
+
+$ECHO;
+$ECHO "\e[1;32m安装成功。请输入 cd ~/paotin && ./paotin-start 即可开始游戏。\e[m";
+$ECHO "\e[1;32m你也可以将上述命令做成 shell 别名，来简化操作。\e[m";
+$ECHO;
