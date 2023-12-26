@@ -1,0 +1,24 @@
+#alias {prompt.UpdateHP} {
+    prompt.Set {
+        {exp}{$char[HP][经验显示]}
+        {pot}{$char[HP][潜能显示]}
+        {battle}{$char[HP][战斗中]}
+        {busy}{$char[HP][忙]}
+    }
+};
+
+#alias {prompt.UpdateSM} {
+    #local effect {$char[STATUS][持续效果]};
+    #replace effect {秒)} {)};
+
+    prompt.Set {
+        {yunqi}{$char[STATUS][气血恢复]}
+        {status}{$char[STATUS][健康状态]}
+        {persist}{$effect}
+    }
+};
+
+ event.HandleOnce {user-online} {pkuxkx/online} {pkuxkx/online} {
+     event.Handle {char/hpbrief} {prompt} {framework/online} {prompt.UpdateHP};
+     event.Handle {char/status}  {prompt} {framework/online} {prompt.UpdateSM};
+ };

@@ -36,8 +36,3 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         ga.Sync;
     };
 };
-
-event.HandleOnce {user-online} {pkuxkx/online} {pkuxkx/online} {
-    event.Handle {char/hpbrief} {prompt} {framework/online} {prompt.UpdateHP};
-    event.Handle {char/status}  {prompt} {framework/online} {prompt.UpdateSM};
-};
