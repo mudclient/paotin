@@ -418,6 +418,8 @@ hp -neili 格式：
     #else {
         #local 每秒气血变化 {};
     };
+
+    #local 气血 {};
     #format 气血 {$label气血: %s%s/%s}
         {@char.hp.colorit{$char[HP][气血百分比]}} {${每秒气血变化}}
         {@char.hp.colorit{$char[HP][气血健康度]}};
