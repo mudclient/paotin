@@ -128,16 +128,56 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #func {uname} {
     #info system save;
-    #if { "$info[SYSTEM][OS]" != "UNKNOWN" } {
-        #return {$info[SYSTEM][OS]};
+    #local uname {$info[SYSTEM][OS]};
+    #unvar info[SYSTEM];
+
+    #if { "$uname" == "UNKNOWN" } {
+        #line quiet #script uname {uname -s};
+        #if { &uname[] == 1 } {
+            #local uname {$uname[1]};
+        };
+        #else {
+            #local uname {UNKNOWN};
+        };
     };
 
-    #line quiet #script uname {uname -s};
-    #if { &uname[] == 1 } {
-        #return {$uname[1]};
+    #if { "$uname" == "Linux" } {
+        #if { @existsFile{/proc/sys/fs/binfmt_misc/WSLInterop} } {
+            #local uname {WSL};
+        };
+        #elseif { @existsFile{/.dockerenv} } {
+            #local uname {Docker};
+        };
     };
 
-    #return {UNKNOWN};
+    #return {$uname};
+};
+
+#func {osname} {
+    #local uname {@uname{}};
+    #if { "$uname" == "Darwin" } {
+        #return {macOS};
+    };
+
+    #if { "$uname" != "Linux" } {
+        #return {$uname};
+    };
+
+    #local tmp {};
+    #scan file {/etc/os-release} {
+        #regex {&1} {^ID={[^\n]*}\n} {#var tmp {&&1}}
+    };
+    #replace tmp {"} {};
+    #replace tmp {%*{-| }%*} {&1};
+    #switch {"$tmp"} {
+        #case {""}          {#0};
+        #case {"opensuse"}  {#local uname {openSUSE}};
+        #case {"alpine"}    {#local uname {@if{@existsFile{/.dockerenv};Docker;Alpine}}};
+        #default            {#local uname {@str.Capital{$tmp}}};
+    };
+    #unvar tmp;
+
+    #return {$uname};
 };
 
 #var TTYPE {@osname{}};
