@@ -82,14 +82,14 @@
     #if { $count > 0 } {
         #local id {};
         #loop {1} {&info[MACROS][]} {id} {
-            #line sub var #var key      {$info[MACROS][+$id][arg1]};
-            #replace key {\\} {\\};
+            #var key      {$info[MACROS][+$id][arg1]};
             #var action   {$info[MACROS][+$id][arg2]};
             #var class    {$info[MACROS][+$id][class]};
-            #line sub var #var {macro-backup[$key]} {
-                {class}{$class}
+            #list {macro-backup} {add} {{
+                {key}   {$key}
+                {class} {$class}
                 {action}{$action}
-            };
+            }};
         };
     };
 
@@ -103,7 +103,7 @@
     #if { $count > 0 } {
         #local idx {};
         #loop {1} {$count} {idx} {
-            #local key      {*macro-backup[+$idx]};
+            #local key      {$macro-backup[+$idx][key]};
             #local class    {$macro-backup[+$idx][class]};
             #local action   {$macro-backup[+$idx][action]};
             #line sub var #class {$class} {assign} {#macro {$key} {$action}};
