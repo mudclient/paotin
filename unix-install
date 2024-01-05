@@ -68,6 +68,11 @@ $ECHO;
 $ECHO "\e[1;32m第六步，编译 TinTin++，安装 PaoTin++。\e[m";
 $ECHO;
 
+if [ -d /opt/homebrew/include ]; then
+    export CPATH="/opt/homebrew/include:$CPATH"
+    export LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
+fi
+
 cd ~/paotin && ./setup || ($ECHO "\e[1;31m安装失败。\e[m" && exit 1) || exit
 
 cp -f ~/paotin/ids/EXAMPLE ~/my-paotin/ids/
