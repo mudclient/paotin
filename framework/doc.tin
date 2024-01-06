@@ -39,11 +39,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    具体来说，假设文件名是 foo/bar.tin，则本命令会从以下位置按照从上到下的顺序进行查找：
 //
 //      - 1. 玩家自定义位置: var/foo/bar.tin
-//      - 2. MUD定制版位置:  mud/$MUD/foo/bar.tin
+//      - 2. MUD定制版位置:  mud/\$MUD/foo/bar.tin
 //      - 3. 默认脚本位置:   foo/bar.tin
 //
 //    如果前面的某个位置找到了相应的文件，则不再继续查找。
-//    其中 $MUD 代表当前选择的游戏服务器，可通过 #var gCurrentMUDLIB 查看。
+//    其中 \$MUD 代表当前选择的游戏服务器，可通过 #var gCurrentMUDLIB 查看。
 //
 //    这意味着，PaoTin++ 框架下所有的文件 TinTin++ 脚本，都支持重载机制，也就是说允许
 //    用户修改。但是要注意，用户必须在修改之前，将其拷贝一份副本，放置在 var 目录下，
@@ -51,7 +51,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 //    另外，除了文件的覆盖式重载机制之外，PaoTin++ 还提供了一种文件的继承式修改机制。
 //    即：对于 foo/bar.tin 来说，不论最终加载的是前述哪个路径，加载之后，如果发现存在
-//    mud/$MUD/foo/bar.extra.tin，或者 var/foo/bar.extra.tin，则它们将会在 foo/bar.tin
+//    mud/\$MUD/foo/bar.extra.tin，或者 var/foo/bar.extra.tin，则它们将会在 foo/bar.tin
 //    加载后，进行补充式加载。最终加载结果类似于将上述文件的内容合并在一起之后加载。
 //
 // ## load-config <配置文件名>
@@ -59,11 +59,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    也就是说，配置文件 foo/bar 对应的实际物理文件可能是：
 //
 //      - 1. 玩家自定义位置: var/etc/foo/bar.tin
-//      - 2. MUD定制版位置:  mud/$MUD/etc/foo/bar.tin
+//      - 2. MUD定制版位置:  mud/\$MUD/etc/foo/bar.tin
 //      - 3. 默认脚本位置:   etc/foo/bar.tin
 //
 //    如果前面的某个位置找到了相应的文件，则不再继续查找。
-//    其中 $MUD 代表当前选择的游戏服务器，可通过 #var gCurrentMUDLIB 查看。
+//    其中 \$MUD 代表当前选择的游戏服务器，可通过 #var gCurrentMUDLIB 查看。
 //
 // ## VAR <变量中文含义> <变量名> <值>
 //    声明并初始化变量。和 #var 不同，如果该变量已存在，则不会修改它的值。
@@ -243,10 +243,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 //        以下是一些合格的变量名称举例：
 //
-//          * $gCurrentMUDLIB，全局变量，该变量可以从任何地方访问。
-//          * $fullsk.current-skill，模块全局变量，该变量仅供 fullsk 模块内部使用。
-//          * $fullsk.lingwu.skill，定义块全局变量，该变量仅供 fullsk.lingwu 别名及其次级块使用。
-//          * $name 局部变量，可能是什么东西的名字，仅可在代码块内访问，离开该代码块则失效。
+//          * \$gCurrentMUDLIB，全局变量，该变量可以从任何地方访问。
+//          * \$fullsk.current-skill，模块全局变量，该变量仅供 fullsk 模块内部使用。
+//          * \$fullsk.lingwu.skill，定义块全局变量，该变量仅供 fullsk.lingwu 别名及其次级块使用。
+//          * \$name 局部变量，可能是什么东西的名字，仅可在代码块内访问，离开该代码块则失效。
 //
 //     4. #class 命名规范
 //
@@ -277,11 +277,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //        一个 PaoTin++ 模块在磁盘上可以对应一个文件，或者对应一个目录。为了便于用户扩展，PaoTin++ 框架
 //        提供了三个不同的位置来加载模块，它们分别是：
 //
-//        - 默认位置:         $PaoTinRoot/plugins/              优先级最低，由 PaoTin++ 维护
-//        - MUD定制版位置:    $PaoTinRoot/mud/$MUD/plugins/     优先级居中，由 PaoTin++ 维护
-//        - 玩家自定义位置:   $PaoTinRoot/var/plugins/          优先级最高，由用户自行维护
+//        - 默认位置:         \$PaoTinRoot/plugins/              优先级最低，由 PaoTin++ 维护
+//        - MUD定制版位置:    \$PaoTinRoot/mud/\$MUD/plugins/     优先级居中，由 PaoTin++ 维护
+//        - 玩家自定义位置:   \$PaoTinRoot/var/plugins/          优先级最高，由用户自行维护
 //
-//        其中 $PaoTinRoot 代表 PaoTin++ 的安装目录，$MUD 代表 MUDLIB 的类型 ID。
+//        其中 \$PaoTinRoot 代表 PaoTin++ 的安装目录，\$MUD 代表 MUDLIB 的类型 ID。
 //        PaoTin++ 的模块应当存放在以上位置其中之一。模块全限定名的各个部分就相当于一个多级目录结构，
 //        这样所有的 PaoTin++ 模块就会形成三棵目录树，并在加载后从逻辑上来说位于同一个树状名字空间当中。
 //
@@ -304,17 +304,17 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    也就是说，模块 foo/bar 对应的实际物理文件可能是：
 //
 //      - 1. 玩家自定义位置: var/plugins/foo/bar.tin
-//      - 2. MUD定制版位置:  mud/$MUD/plugins/foo/bar.tin
+//      - 2. MUD定制版位置:  mud/\$MUD/plugins/foo/bar.tin
 //      - 3. 默认脚本位置:   plugins/foo/bar.tin
 //      - 4. 玩家自定义位置: var/plugins/foo/bar/__init__.tin
-//      - 5. MUD定制版位置:  mud/$MUD/plugins/foo/bar/__init__.tin
+//      - 5. MUD定制版位置:  mud/\$MUD/plugins/foo/bar/__init__.tin
 //      - 6. 默认脚本位置:   plugins/foo/bar/__init__.tin
 //      - 7. 玩家自定义位置: var/plugins/foo/bar/__main__.tin
-//      - 8. MUD定制版位置:  mud/$MUD/plugins/foo/bar/__main__.tin
+//      - 8. MUD定制版位置:  mud/\$MUD/plugins/foo/bar/__main__.tin
 //      - 9. 默认脚本位置:   plugins/foo/bar/__main__.tin
 //
 //    如果前面的某个位置找到了相应的文件，则不再继续查找。
-//    其中 $MUD 代表当前选择的游戏服务器，可通过 #var gCurrentMUDLIB 查看。
+//    其中 \$MUD 代表当前选择的游戏服务器，可通过 #var gCurrentMUDLIB 查看。
 //
 ///// 日志系统
 /////

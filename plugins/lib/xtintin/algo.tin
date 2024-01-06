@@ -76,10 +76,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //                     |经  英  城  惊  生  轻  嬴  横  名  行  星  明    |
 //                     |。  。  。  。  。  。  。  。  。  。  。  。    |};
 //
-//        #local lines {\@algo.ParseVertLayout{$vert}};
+//        #local lines {\@algo.ParseVertLayout{\$vert}};
 //        #local lineNo {};
 //        #foreach {*lines[]} {lineNo} {
-//            #echo {%s} {$lines[$lineNo]};
+//            #echo {%s} {\$lines[\$lineNo]};
 //        };
 //
 //    OUTPUT:
