@@ -36,9 +36,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    EXAMPLE:
 //      #local list {};
 //      #list list {create} {h;e;l;l;o};
-//      #local set {\@set.FromList{$list}};
+//      #local set {\@set.FromList{\$list}};
 //
-//    ASSERT: {$set} === {{1}{h}{2}{e}{3}{l}{4}{o}}
+//    ASSERT: {\$set} === {{1}{h}{2}{e}{3}{l}{4}{o}}
 // };
 #func {set.FromList} {
     #local list {%0};
@@ -51,9 +51,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 //    EXAMPLE:
 //      #local set {\@set.Create{h;e;l;l;o}};
-//      #local size {\@set.Size{$set}};
+//      #local size {\@set.Size{\$set}};
 //
-//    ASSERT: {$size} === {4}
+//    ASSERT: {\$size} === {4}
 // };
 #func {set.Size} {
     #local set {%0};
@@ -93,15 +93,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 //    EXAMPLE:
 //      #local set {};
-//      #local set {\@set.Add{{$set}; a}};
-//      #local set {\@set.Add{{$set}; b; c}};
+//      #local set {\@set.Add{{\$set}; a}};
+//      #local set {\@set.Add{{\$set}; b; c}};
 //      #nop 注意：因为是集合，所以重复元素不再添加;
-//      #local set {\@set.Add{{$set}; a; b; c}};
-//      #local set {\@set.Add{{$set}; x; y; z}};
+//      #local set {\@set.Add{{\$set}; a; b; c}};
+//      #local set {\@set.Add{{\$set}; x; y; z}};
 //      #nop 注意：这里也有个重复的 l，只会被添加一次;
-//      #local set {\@set.Add{{$set}; h; e; l; l; o}};
+//      #local set {\@set.Add{{\$set}; h; e; l; l; o}};
 //
-//    ASSERT: {$set} === {{1}{a}{2}{b}{3}{c}{4}{x}{5}{y}{6}{z}{7}{h}{8}{e}{9}{l}{10}{o}}
+//    ASSERT: {\$set} === {{1}{a}{2}{b}{3}{c}{4}{x}{5}{y}{6}{z}{7}{h}{8}{e}{9}{l}{10}{o}}
 // };
 #func {set.Add} {
     #info arguments save;
@@ -130,9 +130,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 //    EXAMPLE:
 //      #local set {\@set.Create{a;b;c;d;e}};
-//      #local set {\@set.Remove{{$set};b;c;x;y;x}};
+//      #local set {\@set.Remove{{\$set};b;c;x;y;x}};
 //
-//    ASSERT: {$set} === {{1}{a}{2}{d}{3}{e}}
+//    ASSERT: {\$set} === {{1}{a}{2}{d}{3}{e}}
 // };
 #func {set.Remove} {
     #info arguments save;
@@ -164,12 +164,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    EXAMPLE:
 //      #local set1 {\@set.Create{a;b;c}};
 //      #local set2 {};
-//      #local set2 {\@set.Add{{$set2};a}};
-//      #local set2 {\@set.Add{{$set2};b}};
-//      #local set2 {\@set.Add{{$set2};c}};
-//      #local ok {\@set.Equal{{$set1};{$set2}}};
+//      #local set2 {\@set.Add{{\$set2};a}};
+//      #local set2 {\@set.Add{{\$set2};b}};
+//      #local set2 {\@set.Add{{\$set2};c}};
+//      #local ok {\@set.Equal{{\$set1};{\$set2}}};
 //
-//    ASSERT: {$ok} === {1}
+//    ASSERT: {\$ok} === {1}
 // };
 #func {set.Equal} {
     #local set1  {%1};
@@ -539,15 +539,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 //    EXAMPLE:
 //      #local set {};
-//      #local set {\@sset.Add{{$set}; a}};
-//      #local set {\@sset.Add{{$set}; b; c}};
+//      #local set {\@sset.Add{{\$set}; a}};
+//      #local set {\@sset.Add{{\$set}; b; c}};
 //      #nop 注意：因为是集合，所以重复元素不再添加;
-//      #local set {\@sset.Add{{$set}; a; b; c}};
-//      #local set {\@sset.Add{{$set}; x; y; z}};
+//      #local set {\@sset.Add{{\$set}; a; b; c}};
+//      #local set {\@sset.Add{{\$set}; x; y; z}};
 //      #nop 注意：这里也有个重复的 l，只会被添加一次;
-//      #local set {\@sset.Add{{$set}; h; e; l; l; o}};
+//      #local set {\@sset.Add{{\$set}; h; e; l; l; o}};
 //
-//    ASSERT: {$set} === {a;b;c;x;y;z;h;e;l;o}
+//    ASSERT: {\$set} === {a;b;c;x;y;z;h;e;l;o}
 //
 // } ;
 #func {sset.Add} {
@@ -569,10 +569,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 //    EXAMPLE:
 //      #local set {\@sset.Create{h;e;l;l;o;a;b;c;d}};
-//      #local set {\@sset.Remove{{$set};a;b}};
-//      #local set {\@sset.Remove{{$set};h;l;o}};
-//      #local set {\@sset.Remove{{$set};x;y}};
-//      #if { \@sset.Equal{{$set};{c;d;e}} } {
+//      #local set {\@sset.Remove{{\$set};a;b}};
+//      #local set {\@sset.Remove{{\$set};h;l;o}};
+//      #local set {\@sset.Remove{{\$set};x;y}};
+//      #if { \@sset.Equal{{\$set};{c;d;e}} } {
 //          #echo OK;
 //      };
 //
