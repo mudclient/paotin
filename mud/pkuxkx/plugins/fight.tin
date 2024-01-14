@@ -1,0 +1,1463 @@
+#nop vim: set fdm=marker filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var fight[META] {
+    {NAME}      {战斗系统}
+    {DESC}      {发动战役，准备战斗，侦查敌情，达成目标，清扫战场，战后恢复}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+///=== {
+///// 战斗系统
+/////
+///// 战斗系统概述
+/////   * 战斗
+/////     从服务器推送 GMCP 战斗标志（GMCP.Status is_fighting true/false）期间发生的一切，称之为战斗。
+/////     战斗期间，敌我双方会各自释放绝招，向对方造成伤害，直至达成任务条件或者一方死亡殆尽为止。
+/////
+/////   * 战役
+/////     因为服务器推送的 GMCP 战斗标志可能会晚于 NPC 采取行动，以及有些任务存在需要连续多场战斗的情形。
+/////     为了更早开始战斗准备工作，包括开展对 NPC 的情报工作，因此将囊括多场战斗的过程称之为战役。
+/////     主要有两种类型的战役：一是漂流万安塔这种连续多场战斗，二是慕容萧峰这种 NPC 会逃跑的情形。
+/////     从技术上来讲，提出战役有助于战斗系统在连续多场战斗之间记住一些信息，而不是遗忘它们。
+/////     只有战役结束之后，战斗系统才会重置并清除战斗/战役相关数据。
+/////
+/////   * 敌人
+/////     敌人在战斗系统中用表格型变量来表示，其基本字段有：姓名，ID，UUID，门派，另外还有若干气血相关属性。
+/////     这些信息除门派外，大部分都有服务器通过 GMCP 推送过来的精确值。战斗系统需要采集并管理好它们并灵活运用。
+/////     根据敌人的危险程度，战斗系统会为其设置一个清除优先级，并本着「伤其十指，不如断其一指」的精神，
+/////     按照优先级高低，依次清除。
+/////
+/////   * BUFF
+/////     BUFF 一般是指能够提升角色战斗能力的方法。许多 BUFF 都有「有效时长」的属性，即会在指定的时间之后失效。
+/////     在北侠中，大部分由内功特效造成的 BUFF 都会通过 GMCP.Buff 频道接收到 BUFF 的有效时长。
+/////     战斗系统需要采集并维护好它们。其中一个重要的工作在于，在整个战役持续期间，需要能够「自动续杯」，这样
+/////     可以防止因为失去 BUFF 而置玩家角色于险境。
+/////
+/////   * DEBUFF/BUSY
+/////     和 BUFF 相反，能够降低角色战斗能力的方法，就称之为 DEBUFF。一般而言，存在两个方向的 DEBUFF 需要玩家关心。
+/////     一类是玩家施加给 NPC 的，另一类是 NPC 施加给自己的，后者也可称之为「不利战况」。一方面，玩家要积极地
+/////     给 NPC 加以 DEBUFF 以提高战斗效率，另一方面，也需要及时地祛除不利战况对己方的影响。
+/////     有两类 DEBUFF 比较特殊，一类是 BUSY，另一类是毒。在许多 MUD 中，都有专用的方法来检测角色是否 BUSY，
+/////     在北侠中，GMCP.Status 会及时推送 BUSY 标志。
+/////
+/////   * 内功特效
+/////     内功特效是基本内功或者特殊内功提供的功能，一般用 exert 命令发起，可用来 BUFF 自身，但有些也可用来伤人。
+/////
+/////   * 外功绝招
+/////     外功绝招是特殊武功提供的功能，一般用 perform 命令发起，通常用来打击敌人，但有些可用来增益自身。
+/////
+/////   * 毒
+/////     角色中毒之后，会陷入极度危险的不利战况。需要及时地采取措施解毒，必要时甚至要中止战斗。一般来说，解毒有
+/////     以下几种方法：
+/////       - 通过技能来解毒
+/////       - 吃药
+/////       - 寻找 NPC 疗伤
+/////
+/////   * 武器装备
+// };
+
+#nop 注意这是一个列表，所以实际上 pfm 是有优先级的。;
+#nop 气势和 CD 满足的情况下，从前往后放。;
+#nop TODO: 增加「条件」字段;
+#list fight.perform create {
+    {{名称}{太极剑·缠} {ID}{taiji-jian.chan}           {气势}{8}   {类型}{导致忙乱}                                }
+    {{名称}{太极剑·连} {ID}{taiji-jian.lian}           {气势}{12}  {类型}{单体伤害} {CD}{taiji-jian}   {加力}{2}   }
+    {{名称}{夕阳残照}   {ID}{yingxiong-jianfa.xiyang}   {气势}{26}  {类型}{单体伤害}                    {加力}{10}  }
+};
+
+/*
+    {{名称}{太极拳·震} {ID}{taiji-quan.zhen}           {气势}{8}   {类型}{单体伤害;化学攻击}           }
+    {{名称}{太极刚柔}   {ID}{taiji-quan.gangrou}        {气势}{12}  {类型}{未知}                        }
+    {{名称}{虎爪绝户手} {ID}{huzhao-shou.juehu}         {气势}{12}  {类型}{单体伤害;增益自身;化学攻击}  }
+    {{名称}{附骨缠身}   {ID}{jinshe-zhang.fugu}         {气势}{12}  {类型}{单体伤害}                    }
+
+    {左右互搏}          {{技能}{基本内功}       {命令}{zyhb}             }
+*/
+
+#nop 所用的 BUFF 名称及其对应的补充方法。;
+#nop FIXME: 需要完善 buff 的解锁条件，或者引导玩家配置。;
+#var {fight.buff} {
+    {运气}              {{技能}{基本内功}       {命令}{qi}              }
+    {运精}              {{技能}{基本内功}       {命令}{jing}            }
+    {护体真气}          {{技能}{基本内功}       {命令}{shield}          }
+    {加力}              {{技能}{基本内功}       {命令}{powerup}         }
+    {太极护体}          {{技能}{太极神功}       {命令}{taiji}           }
+    {梯云纵}            {{技能}{梯云纵}         {命令}{zong}            }
+    {松风吹解带}        {{技能}{鹤唳九霄神功}   {命令}{songfeng}        }
+    {山月照弹琴}        {{技能}{鹤唳九霄神功}   {命令}{shanyue}         }
+    {奇门迷阵}          {{技能}{碧海神功}       {命令}{qimen}           }
+    {金刚不坏体神功}    {{技能}{易筋经}         {命令}{jingang}         }
+    {护体神功}          {{技能}{小无相功}       {命令}{huti $user[id]}  }
+    {僵硬}              {{国籍}{大夏}           {命令}{jiangying}       }
+};
+
+VAR {绝招数据库}                        fight.perform.dict      {};
+VAR {BUFF数据库}                        fight.buff.dict         {};
+VAR {是否处于战役当中}                  fight.in-battle         {false};
+VAR {绝招CD值，暂以 name 为 key}        fight.perform-cd        {};
+VAR {敌人预备清单，以 ID 或姓名为 key}  fight.enemy.pool        {};
+VAR {敌人清单，以 UUID 为 key}          fight.enemy.list        {};
+VAR {手动指定的聚焦对象，UUID}          fight.force-obj         {};
+VAR {自动选择的聚焦对象，UUID}          fight.auto-obj          {};
+VAR {下次检测 NPC 时间}                 fight.checknpc-time     {0};
+VAR {平砍 jiali 值}                     fight.jiali             {0};
+
+#func {fight.Init} {
+    storage.Load {pkuxkx-skills} {fight.perform.dict};
+    #return {true};
+};
+
+event.Handle {GMCP.Combat}          {fight} {fight} {fight.gmcp.combat};
+event.Handle {GMCP.Status}          {fight} {fight} {fight.gmcp.status};
+event.Handle {GMCP.Buff}            {fight} {fight} {fight.gmcp.buff};
+
+event.Handle {map/EnterDungeonIdle} {fight} {fight} {fight.prepare};
+event.Handle {map/LeaveDungeonIdle} {fight} {fight} {fight.prepare};
+
+event.Handle {char/fight}           {fight} {fight} {fight.begin};
+event.Handle {char/nofight}         {fight} {fight} {fight.end};
+event.Handle {char/hpbrief}         {fight} {fight} {fight.recover};
+
+#var NPC    {%+2..5u};
+#var PLAYER {%+1..10u};
+
+/*
+************** 战斗准备 **************
+{{{{{{ */
+
+///=== {
+// ## fight.battle.Begin
+//    开始一场战役。
+// };
+#alias {fight.battle.Begin} {
+    #var fight.in-battle {true};
+    fight.prepare;
+};
+
+///=== {
+// ## fight.battle.End
+//    结束战役。
+// };
+#alias {fight.battle.End} {
+    #var fight.in-battle {false};
+};
+
+///=== {
+// #@ fight.InBattle
+//    检查是否在战役当中。
+// };
+#func {fight.InBattle} {
+    #if { @isTrue{$fight.in-battle} } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#nop 准备战斗。;
+#alias {fight.prepare} {
+    wear all;
+    wear mine;
+    unwield left;
+    #if { "$gCurrentDungeon" != "剑心居" } {
+        #if { @isTrue{$char.Special[身轻如燕][enable]} } {sp agile};
+        #if { @isTrue{$char.Special[铜皮铁骨][enable]} } {sp ironskin};
+        #local user-prepare {$user[id].fight.prepare};
+        #if { @existsAlias{$user-prepare} } {
+            $user-prepare;
+        };
+    };
+};
+
+///=== {
+// ## fight.prepare.Perform <绝招列表>
+//    战斗准备，设置战斗中使用的绝招列表
+// };
+#alias {fight.prepare.Perform} {
+    #local pfms {%1};
+    #local todo {};
+    #local pfm {};
+    #foreach {$pfms} {pfm} {
+        #if { "$fight.perform.dict[$pfm]" == "" } {
+        };
+    };
+};
+
+///=== {
+// ## fight.prepare.Buff <BUFF列表>
+//    战斗准备，设置战役中使用的BUFF列表
+// };
+#alias {fight.prepare.Buff} {
+    #0
+};
+
+#nop 战斗开始。;
+#alias {fight.begin} {
+    #tick fight.enemy.select    {fight.enemy.select}    1;
+    #tick fight.perform         {fight.perform}         1;
+};
+
+#nop 战斗结束。;
+#alias {fight.end} {
+    #untick fight.enemy.select;
+    #untick fight.perform;
+
+    #var fight.enemy.pool   {};
+    #var fight.enemy.list   {};
+    #var fight.force-obj    {};
+    #var fight.auto-obj     {};
+
+    #local report {};
+    #local name {};
+    #foreach {*fight.perform-cd[]} {name} {
+        #local cds {$fight.perform-cd[$name][cd]};
+        #local report {@sset.Add{{$report};$name/{$cds}}};
+    };
+
+    fightLog 战斗结束，CD 数据：{$report};
+
+    prompt.Set {
+        {fight.target}          {}
+        {fight.target.priority} {}
+        {fight.target.hp}       {}
+        {fight.target.fantan}   {}
+        {fight.target.damage}   {}
+        {fight.target.recover}  {}
+    };
+
+    #var fight.perform-cd   {};
+};
+
+/*
+╭───太极剑·缠────────────────────────────────────╮
+│绝招明细                                                                                │
+│  基础技能 基本剑法                                                                     │
+│  绝招类型 导致忙乱                                                                     │
+│  内功要求   太极神功(40)                                                               │
+│  技能要求   太极剑法(40)                                                               │
+│  属性要求 内力(400)                                                                    │
+│  气势需求 发动气势：8%，消耗气势：0%，使用后气势停止增加4秒                            │
+│  绝招评价 B+                                                                           │
+│                                                                                        │
+│绝招演示                                                                                │
+│  你手腕灵动运剑成圈，顷刻只见圆转剑意不绝，本本只觉得处处虚招处处实，根本无从下手。    │
+╰───────────────────────────────────北大侠客行────╯
+*/
+#alias {fight.perform.verify} {
+    #class fight.perform.verify open;
+
+    #var fight.perform.verify.demo {false};
+
+    #var fight.perform.verify {
+        {ID}    {%1}
+    };
+
+    #action {^错误！你要查对技能文件已经消失，请通知巫师。$E} {
+        #class fight.perform.verify kill;
+    };
+
+    #action {^{╭|┌}{(─)+}─%S─{(─)+}─{╮|┐}{|ID=bot/fight}$} {
+        #if { "%%2" == "gag" } {#line gag};
+        #var fight.perform.verify[名称] {%%4};
+    };
+
+    #action {^│  %S %s%+1S%* %s │$} {
+        #if { "%%2" == "gag" } {#line gag};
+        #if { @isFalse{$fight.perform.verify.demo} && "%%1" != "" } {
+            #var fight.perform.verify[%%1] {%%3%%4};
+        };
+    };
+
+    #action {^│绝招演示 %s │$} {
+        #if { "%%2" == "gag" } {#line gag};
+        #var fight.perform.verify.demo {true};
+    } {4};
+
+    #action {^│%*│$} {
+        #if { @isTrue{$fight.perform.verify.demo} } {
+            #cat fight.perform.verify[绝招演示] {%%1};
+        };
+    } {5.1};
+
+    #action {^{╰|└}─{(─)+}────%S──{(─)+}─{╯|┘}{|ID=bot/fight}$} {
+        #if { "%%2" == "gag" } {#line gag};
+        #regex {$fight.perform.verify[气势需求]} {发动气势：%d%，消耗气势：%d%，使用后气势停止增加%d秒} {
+            #unvar fight.perform.verify[气势需求];
+            #var fight.perform.verify[发动气势] {&1};
+            #var fight.perform.verify[消耗气势] {&2};
+            #var fight.perform.verify[气势停滞] {&3};
+        };
+
+        #replace fight.perform.verify[属性要求] {、} {;};
+        #replace fight.perform.verify[绝招类型] {、} {;};
+
+        #local demo {@str.Trim{$fight.perform.verify[绝招演示]}};
+        #local idx {0};
+        #list {fight.perform.dict[$fight.perform.verify[ID]][绝招演示]} {find} {$demo} {idx};
+        #if { $idx < 1 } {
+            #list fight.perform.dict[$fight.perform.verify[ID]][绝招演示] {add} {$demo};
+        };
+
+        #var fight.perform.dict[$fight.perform.verify[ID]] {
+            $fight.perform.dict[$fight.perform.verify[ID]]
+            $fight.perform.verify
+        };
+
+        storage.Save {pkuxkx-skills} {fight.perform.dict};
+
+        #class fight.perform.verify kill;
+    };
+
+    xtt.Send {verify $fight.perform.verify[ID]};
+
+    #class fight.perform.verify close;
+};
+
+#alias {verify %S.%S} {fight.perform.verify {%1.%2} {gag}};
+
+/* }}}}}}
+************** GMCP 事件管理 **************
+{{{ */
+
+#nop GMCP.Status 信息处理。;
+#alias {fight.gmcp.status} {fight.enemy.hp};
+
+#nop GMCP.Buff 信息处理。;
+#alias {fight.gmcp.buff} {
+    #local gmcp {$gGMCP[Buff]};
+    #if { @isFalse{$gmcp[效果结束]} && $gmcp[持续时间] > 0 } {
+        fight.buff.on $gmcp[效果名称] $gmcp[持续时间];
+    };
+    #elseif { @isTrue{$gmcp[效果结束]} } {
+        fight.buff.lost $gmcp[效果名称];
+    };
+};
+
+#nop GMCP.Combat 信息处理。;
+#alias {fight.gmcp.combat} {
+    #local gmcp {$gGMCP[Combat]};
+    #if { "$gmcp[敌人加入]" == "1" } {
+        fight.enemy.in;
+    };
+    #elseif { "$gmcp[绝招ID]" != "" } {
+        fight.perform.success;
+    };
+};
+
+/* }}}
+************** 敌人清单管理 **************
+{{{{{{ */
+
+#var fight.MAX-QI {99999999};
+
+///=== {
+// ## fight.enemy.Commit <表格>
+//    主动向战斗模块提供有关敌人的信息。
+//    敌人信息是一个表格，其中应当至少包含姓名，其它可选字段包括:
+//    ID、门派、优先级、是否反弹等字段。
+// };
+#alias {fight.enemy.Commit} {
+    #local enemy {%1};
+    #if { "$enemy[姓名]" != "" } {
+        #var {fight.enemy.pool[$enemy[姓名]]} {
+            $fight.enemy.pool[$enemy[姓名]]
+            $enemy
+        };
+    };
+};
+
+#nop GMCP 报告敌人加入战斗。;
+#alias {fight.enemy.in} {
+    #local gmcp {$gGMCP[Combat]};
+    #local uuid {$gmcp[id]};
+    #if { "$uuid" == "%S %S#%d" } {
+        fight.enemy.add {$gmcp {UUID}{$uuid}};
+    };
+};
+
+#nop 向 fight.enemy.list 添加一个敌人。;
+#nop 如果在 fight.enemy.pool 中存在敌人基本信息，则会剪切过来。;
+#alias {fight.enemy.add} {
+    #local enemy {%1};
+    #local uuid {$enemy[UUID]};
+    #if { "$uuid" != "%S %S#%d" } {
+        #return;
+    };
+
+    #local id {@fight.enemy.UUID2ID{$uuid}};
+
+    #local pool {$fight.enemy.pool[$id]};
+    #unvar {fight.enemy.pool[$id]};
+
+    #if { "$pool" == "" && "$enemy[姓名]" != "" && "$fight.enemy.pool[$enemy[姓名]]" != "" } {
+        #local pool {$fight.enemy.pool[$enemy[姓名]]};
+        #unvar {fight.enemy.pool[$enemy[姓名]]};
+    };
+
+    #local family {@fight.enemy.name2family{$enemy[姓名];$id}};
+
+    #nop 注意这里的覆盖顺序都是精心编排好的，不要随意调整。;
+    #local enemy {
+        {门派}      {$family}
+        {反弹}      {false}
+        {优先级}    {5}
+        {气血}      {$fight.MAX-QI}
+        $enemy
+        {ID}        {$id}
+        $pool
+        {累计伤害}  {0}
+        {累计回复}  {0}
+    };
+
+    #if { "$enemy[门派]" == "" } {
+        look $id;
+    };
+
+    fightLog 新增敌人: {$enemy};
+    #if { "$pool" != "" } {
+        fightLog 已剪切之前提交的敌人信息: {$pool};
+    };
+
+    #var {fight.enemy.list[$uuid]} {$enemy};
+};
+
+///=== {
+// #@ fight.enemy.Query <姓名 或 ID 或 UUID>
+//    查询敌人。返回包含敌人信息的表格。
+// };
+#func {fight.enemy.Query} {
+    #local key {%1};
+
+    #if { "$key" == "" } {
+        #return {};
+    };
+
+    #local enemy {};
+    #if { "$fight.enemy.list[$key][UUID]" != "" } {
+        #local enemy {$fight.enemy.list[$key]};
+    };
+    #else {
+        #local id {};
+        #foreach {*fight.enemy.list[]} {id} {
+            #local npc {$fight.enemy.list[$id]};
+            #if { "$npc[UUID]" == "$key{#[0-9]+|}" || "$npc[姓名]" == "$key" } {
+                #local enemy {$npc};
+                #break;
+            };
+        };
+    };
+
+    #return {$enemy};
+};
+
+///=== {
+// #@ fight.enemy.UUID2ID <UUID>
+//    将形如「zhang san#12345」这样的 UUID 转换成「zhang san」这样的 ID。
+// };
+#func {fight.enemy.UUID2ID} {
+    #local uuid {%1};
+    #replace uuid {%*#%d} {&1};
+    #return {$uuid};
+};
+
+///=== {
+// ## fight.enemy.Leave <姓名 或 ID 或 UUID>
+//    标记敌人离开了战场。
+// };
+#alias {fight.enemy.Leave} {
+    #local name {%1};
+
+    #local enemy {@fight.enemy.Query{$name}};
+    #if { "$enemy" == "" } {
+        #return;
+    };
+
+    #unvar {fight.enemy.list[$enemy[UUID]]};
+
+    #if { "$enemy[UUID]" == "$fight.auto-obj" } {
+        #var fight.auto-obj {};
+    };
+
+    #if { "$enemy[门派]" == "" } {
+        fightLog 至死都不明白 $enemy[姓名] 是什么门派，请详查。;
+    };
+
+    okLog 敌人「【@default{$enemy[门派];未知}】$enemy[姓名]($enemy[UUID])」已被清除。;
+};
+
+///=== {
+// #@ fight.enemy.Count
+//    返回目前剩余的敌人数量。
+// };
+#func {fight.enemy.Count} {#return &fight.enemy.list[]};
+
+///=== {
+// ## fight.enemy.SetPriority <姓名 或 ID 或 UUID> [<优先级>]
+//    设置敌人的清除优先级。群战时会按照优先级从大到小的顺序依次清除。
+//    优先级从 0.000 到 9.999，数字大的优先级最高。
+//    敌人的默认优先级为 5.000，在本 API 中，如果省略优先级，则为 6，意为优先清除。
+// };
+#alias {fight.enemy.SetPriority} {
+    #local name     {%1};
+    #local priority {@defaultNum{%2;6}};
+
+    #if { ! @fight.InBattle{} && ! @char.InCombat{} } {#return};
+
+    #local enemy {@fight.enemy.Query{$name}};
+    #if { "$enemy" == "" } {
+        errLog 发现 BUG: 敌人 {$name} 不存在。;
+        #return;
+    };
+
+    #var fight.enemy.list[$enemy[UUID]][优先级] {$priority};
+
+    okLog 敌人「$enemy[姓名]」的优先级已被标记为 $priority;
+};
+
+///=== {
+// ## fight.enemy.MarkFantan <姓名 或 ID 或 UUID>
+//    标记敌人是否反弹。同等优先级下，会反弹的敌人会被优先清除。
+// };
+#alias {fight.enemy.MarkFantan} {
+    #local name {%1};
+
+    #if { ! @fight.InBattle{} && ! @char.InCombat{} } {#return};
+
+    #local enemy {@fight.enemy.Query{$name}};
+    #if { "$enemy" == "" || @isTrue{$enemy[反弹]} } {
+        #return;
+    };
+
+    #var {fight.enemy.list[$enemy[UUID]][反弹]} {true};
+    warnLog 注意，$name会反弹。;
+};
+
+///=== {
+// ## fight.enemy.SetFamily <姓名 或 ID 或 UUID> <门派>
+//    标记敌人的门派。
+// };
+#alias {fight.enemy.SetFamily} {
+    #local name     {%1};
+    #local family   {%2};
+
+    #if { ! @fight.InBattle{} && ! @char.InCombat{} } {#return};
+
+    #if { "$family" == "" } {
+        xtt.Usage fight.enemy.SetFamily;
+        #return;
+    };
+
+    #local enemy {@fight.enemy.Query{$name}};
+    #if { "$enemy" == "" } {
+        #local key {姓名};
+        #if { "$name" == "{[a-z]+(| [a-z]+)}" } {
+            #local key {ID};
+        };
+        fight.enemy.Commit {
+            {$key}      {$name}
+            {门派}      {$family}
+        };
+        okLog 敌人「$name」的门派已被标记为 $family，稍后处理。;
+        #return;
+    };
+
+    #local current {$fight.enemy.list[$enemy[UUID]][门派]};
+    #if { "$family" != "$current" } {
+        #if { "$current" != "{|$family之名}" } {
+            #if { "$current" == "%*之名" } {
+                warnLog 以「$current」身份出现的敌人「$enemy[姓名]」其真实门派居然是「$family」。;
+            };
+            #else {
+                errLog 敌人「$enemy[姓名]」的门派发生了变化，从「$current」变成了「$family」。;
+            };
+        };
+        #var fight.enemy.list[$enemy[UUID]][门派] {$family};
+        okLog 敌人「$enemy[姓名]」的门派已被标记为 $family;
+    };
+};
+
+#nop GMCP.Status 信息处理。;
+#alias {fight.enemy.hp} {
+    #local gmcp {$gGMCP[Status]};
+    #local uuid {$gmcp[id]};
+
+    #if { "$uuid" == "" || "$uuid" == "$user[id]" } {
+        #return;
+    };
+
+    #if { &fight.enemy.list[$uuid][] == 0 } {
+        fight.enemy.add {$gmcp {UUID}{$uuid}};
+    };
+
+    #if { "$gmcp[气血]" != "" && $fight.enemy.list[$uuid][气血] != $fight.MAX-QI } {
+        #if { $gmcp[气血] < $fight.enemy.list[$uuid][气血] } {
+            #var {fight.enemy.list[$uuid][累计伤害]} {@math.Eval{$fight.enemy.list[$uuid][累计伤害] + $fight.enemy.list[$uuid][气血] - $gmcp[气血]}};
+        };
+        #else {
+            #var {fight.enemy.list[$uuid][累计回复]} {@math.Eval{$fight.enemy.list[$uuid][累计回复] + $gmcp[气血] - $fight.enemy.list[$uuid][气血]}};
+        };
+    };
+
+    #local key {};
+    #foreach {姓名;气血;有效气血} {key} {
+        #if { "$gmcp[$key]" != "" } {
+            #var {fight.enemy.list[$uuid][$key]} {$gmcp[$key]};
+        };
+    };
+};
+
+/*
+   筛选战斗目标。目前实现比较简陋，就是寻找气血最低的进行补刀。
+   对于会反弹的 NPC，留到最后打。
+*/
+#alias {fight.enemy.select} {
+    #if { &fight.enemy.list[] <= 0 } {
+        #var fight.force-obj    {};
+        #var fight.auto-obj     {};
+        #return;
+    };
+
+    #if { "$fight.force-obj" != "" } {
+        #if { &fight.enemy.list[$fight.force-obj][] > 0 } {
+            #nop 用户手动指定的目标还没有被清除，因此先不计算。;
+            #return;
+        };
+    };
+
+    #local qi       {@math.Eval{$fight.MAX-QI + 1}};
+    #local focus    {};
+    #local priority {0};
+    #local fantan   {true};
+    #local uuid     {};
+    #foreach {*fight.enemy.list[]} {uuid} {
+        #local enemy {$fight.enemy.list[$uuid]};
+        fightLog TEST => {$enemy};
+        #nop 都这样了还打？;
+        #if { $enemy[气血] < 0 } {
+            #local id {@fight.enemy.UUID2ID{$uuid}};
+            lead $id;
+            #if { "$id" === "$fight.auto-obj" } {
+                #var fight.checknpc-time {@math.Eval{@time.Now{} + 5}};
+            };
+            #continue;
+        };
+
+        #if { $enemy[优先级] < $priority } {
+            #continue;
+        };
+
+        #nop 优先级相同情况下，先打不会反弹的，会反弹的留到最后打。;
+        #if { $enemy[优先级] == $priority && @isFalse{$fantan} && @isTrue{$enemy[反弹]} } {
+            #continue;
+        };
+
+        #if { $enemy[优先级] > $priority || (@isTrue{$fantan} && @isFalse{$enemy[反弹]}) || $enemy[气血] < $qi } {
+            #local focus    {$uuid};
+            #local qi       {$enemy[气血]};
+            #local priority {$enemy[优先级]};
+        };
+    };
+
+    fight.enemy.focus {$focus};
+};
+
+///=== {
+// ## fight.enemy.Focus <姓名 或 ID 或 UUID>
+//    锁定战斗目标，先打死他再说别的。
+// };
+#alias {fight.enemy.Focus} {
+    #local id {%1};
+
+    #local enemy {@fight.enemy.Query{$id}};
+    #if { "$enemy" == "" } {
+        errLog 未知的敌人「$id」。;
+        #return;
+    };
+
+    #var fight.force-obj {$enemy[UUID]};
+    okLog 敌人「$enemy[姓名]」已设置为当前清除目标。;
+
+    #if { "$fight.auto-obj" != "$enemy[UUID]" } {
+        fight.enemy.focus {$enemy[UUID]};
+    };
+};
+
+/*
+    fight.enemy.focus <UUID>
+    锁定战斗目标，先打死他再说别的。
+*/
+#alias {fight.enemy.focus} {
+    #local uuid {%1};
+
+    #if { "$uuid" == "" } {
+        #var fight.force-obj    {};
+        #var fight.auto-obj     {};
+        prompt.Set {
+            {fight.target}          {}
+            {fight.target.priority} {}
+            {fight.target.hp}       {}
+            {fight.target.fantan}   {}
+            {fight.target.damage}   {}
+            {fight.target.recover}  {}
+        };
+    };
+    #else {
+        #local enemy {$fight.enemy.list[$uuid]};
+        #if { "$uuid" != "$fight.auto-obj" } {
+            #var fight.auto-obj {$uuid};
+            #if { "$char[档案][职业]" == "%*{刺客|朱雀}%*" } {
+                zhuanzhu $enemy[ID];
+            };
+        };
+        prompt.Set {
+            {fight.target}          {$enemy[姓名]($enemy[ID])}
+            {fight.target.priority} {$enemy[优先级]@fp.Transform{{$enemy[门派]};{【VALUE】}}}
+            {fight.target.hp}       {$enemy[气血] / $enemy[有效气血]}
+            {fight.target.fantan}   {$enemy[反弹]}
+            {fight.target.damage}   {$enemy[累计伤害]}
+            {fight.target.recover}  {$enemy[累计回复]}
+        };
+    };
+};
+
+#action {^这里没有{[a-z ]+}。$E} {
+    fight.enemy.Leave {%1};
+};
+
+#action {^你想收谁作弟子？$E} {
+    #if { "$fight.auto-obj" != "" } {
+        fight.enemy.Leave {$fight.auto-obj};
+    };
+};
+
+/* }}}}}}
+************** 敌人门派识别触发组 **************
+{{{{{{ */
+#action {^$NPC的金刚不坏神功自然激发而出，全身如被金钟罩住一般！$E} {
+    fight.enemy.SetFamily {%1} {少林派};
+};
+
+#action {^$PLAYER打在$NPC身上，心下已是一惊，被金刚不坏神功震地通体发麻。$E} {
+    fight.enemy.MarkFantan {%2};
+    fight.enemy.SetFamily {%2} {少林派};
+};
+
+#action {^$NPC的乾坤大挪移自然激发而出，将$PLAYER的攻势反击了回去。$E} {
+    fight.enemy.MarkFantan {%1};
+    fight.enemy.SetFamily {%1} {明教};
+};
+
+#action {^$NPC慷慨长啸，苍冥功陡然运起，周遭尽是磅礴之气，众人觉得甚是悲怀壮烈。$E} {
+    fight.enemy.SetFamily {%1} {天地会};
+};
+
+#action {^$NPC纵身近前，%*陡然弯弯弹出，剑尖直刺$PLAYER，出招之快真乃为任何剑法所不及！$E} {
+    fight.enemy.SetFamily {%1} {天地会};
+};
+
+#action {^$NPC把全身的劲力注入双掌,高高跃起，**凝血神抓**，一抓抓来，势不可挡！$E} {
+    fight.enemy.SetFamily {%1} {天地会};
+};
+
+#action {^$NPC全身有条若隐若现的黑龙游走，伤势逐渐平复。$E} {
+    fight.enemy.SetFamily {%1} {天地会};
+};
+
+#action {^$NPC气沉丹田，运用太极神功来提升自己的战斗力。$E} {
+    fight.enemy.SetFamily {%1} {武当派};
+};
+
+#action {^$NPC突然深吸一口气，一抬腿猛的拔高数丈，升势刚尽，双腿连续踢出，身体又上升丈许，才有如大鸟般盘旋落下！$E} {
+    fight.enemy.SetFamily {%1} {武当派};
+};
+
+#action {^$NPC默运神功，使出「太极拳·震」，企图以内力震伤$PLAYER。$E} {
+    fight.enemy.SetFamily {%1} {武当派};
+};
+
+#action {^$NPC双足一点，施展轻功绝技，纵起丈余，使出「银钩铁划·争」，猛地向下直钩，将%*在半空中疾挥向$PLAYER。$E} {
+    fight.enemy.SetFamily {%1} {武当派};
+};
+
+#action {^$NPC凝神静气，暗运神功，顷刻间碧海神功的内力遍布全身。$E} {
+    fight.enemy.SetFamily {%1} {桃花岛};
+};
+
+#action {^$NPC右手挥出，拇指与食指扣起，余下三指略张，手指如一枝兰花般伸出，拂向$PLAYER，姿势美妙已极。$E} {
+    fight.enemy.SetFamily {%1} {桃花岛};
+};
+
+#action {^$NPC心念一动，浑身力气自然而发，如潮之涨，似雷之动，周而不散，行而不断。$E} {
+    fight.enemy.SetFamily {%1} {少林派};
+};
+
+#action {^$NPC曼声吟其光明圣火歌诀，真气从丹田处绵然不绝地流入四肢百骸。$E} {
+    fight.enemy.SetFamily {%1} {明教};
+};
+
+#action {^$NPC气沉丹田，运用九阴神功来提升自己的战斗力。$E} {
+    fight.enemy.SetFamily {%1} {古墓派};
+};
+
+#action {^$NPC屏气凝神，口中默念「多语则气促，多笑则肝伤」的玉女心法正反要诀。$E} {
+    fight.enemy.SetFamily {%1} {古墓派};
+};
+
+#action {^$NPC心下万念俱灰，没精打采的挥袖卷出，向$PLAYER拍出一掌。$E} {
+    fight.enemy.SetFamily {%1} {古墓派};
+};
+
+#nop 日月也拿轮子，算不得数，但日月一般也拿绣花针，所以如果不是日月，则可能是大轮寺。;
+#action {^$NPC拿起{金|银|铜|铁|铅|风火}轮作武器。$E} {
+    #local name {%1};
+    #local enemy {@fight.enemy.Query{$name}};
+    #if { "$enemy[门派]" == "" } {
+        fight.enemy.SetFamily {$name} {大轮寺};
+    };
+};
+
+#action {^$NPC挥舞着%*顺着$PLAYER向$PLAYER砸了过来。$E} {
+    fight.enemy.SetFamily {%1} {大轮寺};
+};
+
+#action {^$PLAYER眼前一花，但见四面八方都是$NPC的人影，左边踢来一脚，右边击来一拳，前面拍来一掌，后面戳来一指。$E} {
+    fight.enemy.SetFamily {%2} {大轮寺};
+};
+
+#action {^$NPC左手抚胸，右手放在背后，丹田中一股先天真气渐渐涌起，周身百骸均已灌注了内劲。$E} {
+    fight.enemy.SetFamily {%1} {全真派};
+};
+
+#action {^$NPC忽然凌空直上三尺，真可谓惊世骇俗！$E} {
+    fight.enemy.SetFamily {%1} {全真派};
+};
+
+#action {^$NPC左手捏一个剑决，右手握起%*，拼着最后的力气，一式「同归剑法」，驭剑猛烈绝伦地冲向$PLAYER，意图与$PLAYER同归于尽！$E} {
+    fight.enemy.SetFamily {%1} {全真派};
+};
+
+#action {^刷的一声响，$NPC潜运内力将%*一抖。这一下使得剑气纵横，竟然声震山谷。不明其理之人，无不骇异！$E} {
+    fight.enemy.SetFamily {%1} {全真派};
+};
+
+#action {^$NPC微一凝神，运起混天气功，全身骨节发出一阵爆豆般的声响！$E} {
+    fight.enemy.SetFamily {%1} {丐帮};
+};
+
+#action {^$NPC运起紫霞神功，浑身紫色劲气铺天盖地向四周袭来。$E} {
+    fight.enemy.SetFamily {%1} {华山派};
+};
+
+#action {^$NPC运起紫霞神功，脸上紫气{若隐若现绵如云霞|大盛}。$E} {
+    fight.enemy.SetFamily {%1} {华山派};
+};
+
+#action {^突然间$NPC聚集全身功力，长剑挟着风雷之声，嗤嗤嗤向$PLAYER连攻三剑！$E} {
+    fight.enemy.SetFamily {%1} {华山派};
+};
+
+#action {^突然间$NPC身形电闪，瞬间逼近$PLAYER，剑掌交替中向$PLAYER奋力击出三剑两掌！$E} {
+    fight.enemy.SetFamily {%1} {华山派};
+};
+
+#action {^$NPC默念独孤九剑要诀，顺势随手几剑刺出，剑剑不离$PLAYER要害！$PLAYER要害受限，一口真气提不起来，哇的吐出一口鲜血，真气方才顺畅。$E} {
+    fight.enemy.SetFamily {%1} {华山派};
+};
+
+#action {^$NPC手持%*往回一带，真气慢慢在身体流转，感觉身上伤势减轻不少。$E} {
+    fight.enemy.SetFamily {%1} {峨嵋派};
+};
+
+#action {^$NPC嫣然一笑，手中%*拂过%*身前，%*只觉眼前一阵眩晕。$E} {
+    fight.enemy.SetFamily {%1} {峨嵋派};
+};
+
+#action {^$NPC长啸一声，身子似回风而起，右手%*刹那间随风抚向%*。左手截手九式一旋，威力陡然加强！$E} {
+    fight.enemy.SetFamily {%1} {峨嵋派};
+};
+
+#action {^$NPC舌尖一咬，喷出一口紫血，顿时一股内力直贯双臂！$E} {
+    fight.enemy.SetFamily {%1} {神龙教};
+};
+
+#action {^$NPC脚下不停，越走越快，身影渐渐难以被肉眼捕捉！$E} {
+    fight.enemy.SetFamily {%1} {天龙寺};
+};
+
+#action {^$NPC使出六脉神剑的「六脉齐发」, 一时间数条剑气纵横捭阖，冲向$PLAYER。$E} {
+    fight.enemy.SetFamily {%1} {天龙寺};
+};
+
+#action {^$NPC肩膀微微一沉，纵起身来，向$PLAYER连环几脚踢去。$E} {
+    fight.enemy.SetFamily {%1} {青城派};
+};
+
+#action {^$NPC紧跟着又是一脚侧踢，隐含风雷之声向$PLAYER飞去。$E} {
+    fight.enemy.SetFamily {%1} {青城派};
+};
+
+#action {^$NPC阴阴一笑，故意露出破绽，$PLAYER招式用老，被自己劲力反震，受了暗伤！$E} {
+    fight.enemy.SetFamily {%1} {星宿派};
+};
+
+#action {^$NPC「唰」的一声抽出一%+1u%*握在手中。$E} {
+    fight.enemy.SetFamilyByWeapon {%1} {%3};
+};
+
+#action {^$NPC将手中的%*插回鞘中。$E} {
+    fight.enemy.SetFamilyByWeapon {%1} {%2};
+};
+
+#action {^$PLAYER卸除了$NPC的兵器%*。$E} {
+    fight.enemy.SetFamilyByWeapon {%2} {%3};
+};
+
+#alias {fight.enemy.SetFamilyByWeapon} {
+    #local name     {%1};
+    #local weapon   {%2};
+    #local family {@fight.enemy.weapon2family{$weapon}};
+    #if { "$family" != "" } {
+        fight.enemy.SetFamily {$name} {$family};
+    };
+};
+
+#func {fight.enemy.name2family} {
+    #local name     {%1};
+    #local id       {%2};
+    #local family   {};
+
+    #nop 根据姓名猜测门派，出家人和星宿派比较准确；欧阳和慕容可能只是巧合。;
+    #switch {"$name/$id"} {
+        #case {"{渡|玄|澄|慧|道|清|虚|净}%+1u和尚/%S heshang"}  {#local family {少林派之名}};
+        #case {"{本|了}%+1u大师/%S dashi"}                      {#local family {天龙寺之名}};
+        #case {"{静|文}%+1u师太/%S shitai"}                     {#local family {峨嵋派之名}};
+        #case {"%+2u子/%S zi"}                                  {#local family {星宿派之名}};
+        #case {"欧阳%+1..2u/ouyang %S"}                         {#local family {白驼山之名}};
+        #case {"慕容%+1..2u/murong %S"}                         {#local family {姑苏慕容之名}};
+    };
+
+    #return {$family};
+};
+
+#func {fight.enemy.weapon2family} {
+    #local weapon   {%1};
+    #local family   {};
+
+    #switch {"$weapon"} {
+        #case {"{金|银|铜|铁|铅|风火}轮"}   {#local family {大轮寺}};
+        #case {"冰魄杖"}                    {#local family {星宿派}};
+        #case {"玉竹杖"}                    {#local family {丐帮}};
+        #case {"玉箫"}                      {#local family {桃花岛}};
+        #case {"鱼肠刺"}                    {#local family {神龙教}};
+    };
+
+    #return {$family};
+};
+
+/* }}}}}}
+************** BUFF 管理 **************
+{{{{{{ */
+
+/*
+   Buff 开启时执行本回调过程。
+*/
+#alias {fight.buff.on} {
+    #local buff         {%1};
+    #local duration     {%2};
+
+    #if { "$buff" == "" } {#return};
+
+    #if { "$fight.buff[$buff]" == "" } {
+        warnLog 未知 BUFF「$buff」已生效，剩余 $duration 秒。;
+        #return;
+    };
+    #else {
+        okLog BUFF「$buff」已生效，剩余 $duration 秒。;
+    };
+
+    #var fight.buff[$buff][状态] {已开启};
+};
+
+/*
+   Buff 消失时执行本回调过程。
+   知道怎么补就补一下，不知道怎么补就提醒用户。
+*/
+#alias {fight.buff.lost} {
+    #local buff {%1};
+    #if { "$fight.buff[$buff]" == "" } {
+        warnLog 未知 BUFF 「$buff」已到期，请尽快注册接续方法。;
+        #return;
+    };
+
+    #local cmd {@fight.buff.cmd{$buff}};
+    #if { "$cmd" == "" } {
+        warnLog BUFF「$buff」已消失，不知如何补充。;
+    };
+    #else {
+        #if { ! @fight.InBattle{} && ! @char.InCombat{} } {
+            okLog BUFF「$buff」已消失。;
+        };
+        #else {
+            okLog BUFF「$buff」已消失，即将通过 $cmd 进行补充。;
+            #var fight.buff[$buff][状态] {已过期};
+            #if { "$buff" == "{运气|运精}" } {fight.recover {$cmd}};
+            $cmd;
+        };
+    };
+};
+
+/*
+   计算 buff 需要的命令。
+*/
+#func {fight.buff.cmd} {
+    #local buff {%1};
+    #local buff {$fight.buff[$buff]};
+    #if { "$buff" == "" } {
+        #return;
+    };
+
+    #if { "$buff" == "加力" } {
+        #return {yun powerup};
+    };
+
+    #if { "$buff[技能]" !== "" } {
+        #local skill {$buff[技能]};
+        #if { "$skill" == "基本内功" || "@char.GetJifaSkill{$skill}" == "基本内功" } {
+            #return {yun $buff[命令]};
+        };
+        #else {
+            #return {perform $buff[命令]};
+        };
+    };
+
+    #if { "$buff[国籍]" === "$char[档案][国籍]" } {
+        #return {$buff[命令]};
+    };
+};
+
+#nop GMCP.Buff 会发，暂不通过触发处理。;
+#action {^你运起「护体真气」抵御攻击。$E}                   {#0};
+#action {^你的「护体真气」运行完毕，将内力收回丹田。$E}     {#0};
+
+#nop GMCP.Buff 不发，需要通过触发处理。;
+#action {^你运行真气加速自身的气血恢复。$E}                 {fight.buff.on   运气 60};
+#action {^你减缓真气运行，让气血运行恢复正常。$E}           {fight.buff.lost 运气};
+#action {^你已经运行内功加速全身气血恢复。$E}               {#0};
+#action {^你静心凝神，加速自身的精气恢复。$E}               {fight.buff.on   运精 60};
+#action {^你减缓真气运行，让自身恢复正常。$E}               {fight.buff.lost 运精};
+#action {^你已经运行内功凝神加快自身精气恢复。$E}           {#0};
+
+#var zyhb {true};
+
+#alias {zyhb.off} {
+    #var zyhb {false};
+    yun zyhb;
+};
+
+#alias {zyhb.on} {
+    #var zyhb {true};
+    yun zyhb;
+};
+
+#action {^你静气凝神，不再运用「左右互搏」分神出招。$} {
+    #if { @isTrue{$zyhb} } {yun zyhb};
+};
+
+#action {^你运起「左右互搏」。$} {
+    #if { ! @isTrue{$zyhb} } {yun zyhb};
+};
+
+/* }}}}}}
+************** 释放绝招 **************
+{{{{{{ */
+
+/*
+   按照优先级顺序挑选一个 perform 释放。
+   目前实现比较简陋，只考虑了 CD 和气势。如果释放失败，可以继续释放下一个。
+*/
+#alias {fight.perform} {fight.perform.after};
+#alias {fight.perform.after} {
+    #local current {%1};
+
+    #local now @time.Now{};
+
+    #local found 0;
+    #if { "$current" == "" } {
+        #local found 1;
+    };
+
+    #local target {};
+    #if { "$fight.auto-obj" != "" } {
+        #local target {$fight.enemy.list[$fight.auto-obj][ID]};
+        #if { @time.Now{} > $fight.checknpc-time } {
+            #var fight.checknpc-time {@math.Eval{@time.Now{} + 5}};
+            lead $target;
+        };
+    };
+
+    #local idx {};
+    #local note {};
+    #loop {1} {&fight.perform[]} {idx} {
+        #local pfm {$fight.perform[$idx]};
+        #if { !$found } {
+            #if { "$pfm[ID]" == "$current" || "$pfm[名称]" == "$current" } {
+                #local found {1};
+            };
+            #continue;
+        };
+
+        #local next @defaultNum{$fight.perform-cd[$pfm[名称]][next];0};
+        #if { $char[HP][气势] >= $pfm[发动气势] && $now >= $next } {
+            #if { "$pfm[jiali]" == "" } {
+                xtt.Send {perform $pfm[ID] $target};
+            };
+            #else {
+                xtt.Send {#jiali $pfm[加力];perform $pfm[ID] $target;jiali $fight.jiali#};
+            };
+            #return;
+        };
+        #else {
+            #local note {@sset.Add{{$note};{$pfm[名称]/$pfm[发动气势]/@math.Max{0;@math.Eval{$next - $now}}}}};
+        };
+    };
+
+    warnLog 没有可以释放的绝招，当前气势: $char[HP][气势]，候选绝招: {$note}。;
+};
+
+///=== {
+// ## fight.perform.Fail <绝招ID>
+//    标记指定的绝招释放失败，这样战斗模块就会自动释放下一个候选绝招。
+//    因为战斗模块收集的触发可能不全，所以提供此接口方便用户按需使用。
+// };
+#alias {fight.perform.Fail} {
+    #local pfm {%1};
+    #line sub var #delay fight.perform.after {fight.perform.after $pfm} 0;
+};
+
+#nop 绝招发动成功，此时 GMCP.Combat 会包含绝招的 CD 时长。;
+#alias {fight.perform.success} {
+    #local cds {@sset.Add{{$fight.perform-cd[$gmcp[绝招名称]][cd]};$gmcp[CD时长]}};
+    #var fight.perform-cd[$gmcp[绝招名称]] {
+        {CD}    {$cds}
+        {next}  {@math.Eval{@time.Now{} + $gmcp[CD时长]}}
+    };
+
+    #var fight.perform.damage {
+        {绝招名称}  {$gmcp[绝招名称]}
+        {合计}      {{次数} {0}}
+        {反弹}      {{次数} {0}}
+    };
+
+    event.Handle {GMCP.Combat} {fight.perform.gather-damage} {bot/fight} {fight.perform.gather-damage};
+    event.HandleOnce GA {fight.perform.success} {bot/fight} {fight.perform.calc-damage};
+};
+
+#nop 采集绝招伤害数值。;
+#alias {fight.perform.gather-damage} {
+    #local gmcp {$gGMCP[Combat]};
+
+    #if { "$gmcp[气血伤害]$gmcp[气血受损]$gmcp[精血伤害]$gmcp[精血受损]" == "" } {
+        #return;
+    };
+
+    #if { "$gmcp[姓名]" == "" || "$gmcp[id]" == "" } {
+        errLog 发现 BUG: 畸形的 GMCP 数据: {$gmcp};
+        #return;
+    };
+
+    #local field {};
+    #foreach {气血伤害;气血受损;精血伤害;精血受损} {field} {
+        #if { "$gmcp[$field]" != "" } {
+            #if { "$gmcp[id]" == "$user[id]" } {
+                math.Inc {fight.perform.damage[反弹][$field]}       {$gmcp[$field]};
+            };
+            #else {
+                math.Inc {fight.perform.damage[$gmcp[id]][$field]}  {$gmcp[$field]};
+                math.Inc {fight.perform.damage[合计][$field]}       {$gmcp[$field]};
+            };
+        };
+    };
+
+    #foreach {有效精血百分比;有效气血百分比;气血比率;精血百分比} {field} {
+        #if { "$gmcp[$field]" != "" } {
+            #if { "$fight.perform.damage[$gmcp[id]][$field][期初]" == "" } {
+                #var {fight.perform.damage[$gmcp[id]][$field][期初]} {$gmcp[$field]};
+            };
+            #var {fight.perform.damage[$gmcp[id]][$field][期末]} {$gmcp[$field]};
+        };
+    };
+
+    #var {fight.perform.damage[$gmcp[id]][姓名]} {$gmcp[姓名]};
+
+    #if { "$gmcp[id]" == "$user[id]" } {
+        math.Inc {fight.perform.damage[反弹][次数]}      1;
+    };
+    #else {
+        math.Inc {fight.perform.damage[$gmcp[id]][次数]} 1;
+        math.Inc {fight.perform.damage[合计][次数]}      1;
+    };
+};
+
+#nop 统计绝招伤害值。;
+#alias {fight.perform.calc-damage} {
+    #local __unused {%1};
+
+    #local pfm {$fight.perform.damage[绝招名称]};
+    #unvar fight.perform.damage[绝招名称];
+
+    event.UnHandle {GMCP.Status} {fight.perform.gather-damage} {bot/fight};
+
+    #local count @math.Eval{&fight.perform.damage[] - 2};
+    #local hits $fight.perform.damage[合计][次数];
+
+    #local report {};
+    #local field {};
+    #foreach {气血伤害;气血受损;精血伤害;精血受损} {field} {
+        #if { "$fight.perform.damage[合计][$field]" == "{[1-9][0-9]*}" } {
+            #cat report { $field: $fight.perform.damage[合计][$field]};
+        };
+    };
+
+    #if { $hits == 0 } {
+        fightLog 看起来绝招「$pfm」虽然释放成功了，但是并没有对敌人造成任何伤害。;
+    };
+    #else {
+        fightLog 绝招伤害数据 {$fight.perform.damage};
+        fightLog $char[档案][大名]通过绝招「$pfm」向 $count 名目标造成了 $hits 次伤害，累计输出$report;
+    };
+
+    #unvar fight.perform.damage;
+};
+
+#action {^你的对手处于繁忙状态，你不需要再用「太极剑·缠」攻击对方了。$E} {
+    fight.perform.Fail taiji-jian.chan;
+};
+
+#action {^「%*」的作用时间还没过，请过一段时间再施展绝技。$E}   {fight.perform.Fail %1};
+#action {^你手上持有的武器并不能用来发动「%*」。$E}             {fight.perform.Fail %1};
+
+/* }}}}}}
+************** 疗伤疗毒 **************
+{{{{{{ */
+
+#alias {fight.recover} {
+    #local cmd {%1};
+
+    #if { $char[HP][气血健康度] < 70 && "$char[档案][国籍]" == "大夏" } {
+        heal;
+    };
+    #else {
+        #nop TODO: 其它战斗中疗伤的技能。;
+        #nop TODO: 吃金创药。;
+    };
+
+    #if { $char[HP][气血百分比] < 80 && "$fight.buff[运气][状态]" != "{已开启}" } {
+        yun recover;
+    };
+
+    #if { $char[HP][精神健康度] < 90 } {
+        #nop TODO: 其它战斗中疗精的技能。;
+        #nop TODO: 吃养精丹药。;
+    };
+
+    #if { $char[HP][精神百分比] < 80 && "$fight.buff[运精][状态]" != "{已开启}" } {
+        yun regenerate;
+    };
+
+    $cmd;
+};
+
+/* }}}}}}
+************** 武备管理 **************
+{{{{{{ */
+
+#action {^%+2..5u卸除了你的兵器%*之{剑|刀}。$} {
+    #local weapon {sword};
+    #switch {"%3"} {
+        #case {"剑"} {#local weapon {my sword}};
+        #case {"刀"} {#local weapon {my blade}};
+    };
+
+    wield $weapon 1 at right;
+    wield $weapon 2 at right;
+    wield $weapon 3 at right;
+};
+
+#action {^该兵器现在还无法装备。$}                  {#0};
+#action {^你手上的伤还没有好，不能拿兵器。$}        {#0};
+#action {^你正忙着呢，歇会再更换武器。$}            {#0};
+#action {^你手上持有的武器并不能用来发动「%*」。}   {#0};
+
+#alias {chan}   {perform taiji-jian.chan};
+#alias {lian}   {perform taiji-jian.lian};
+#alias {sh}     {perform taiji-jian.sanhuan};
+#alias {sui}    {perform taiji-jian.sui};
+#alias {zhen}   {perform taiji-quan.zhen};
+#alias {gr}     {perform taiji-quan.gangrou};
+
+#nop 僵硬;
+#action {^你之前刚刚用过「%*」，等等再说吧。$E} {
+    #0;
+};
+
+/* }}}}}}
+************** 中毒管理 **************
+{{{{{{ */
+
+#alias {fight.mark-poison} {
+    #local id   {%1};
+    #local name {%2};
+    #local text {%3};
+
+    #local now {};
+    #format {now} {%t} {%H:%M:%S};
+    prompt.SetAwhile $id $name 60;
+    #echo {%s%s} {$text    <199><531>$name<299> $now};
+    #line gag;
+};
+
+#action {~^%c突然你打了个寒战，你中的冰魄寒毒发作了！%c$E}           {fight.mark-poison {bingpo1}  {冰魄寒毒}    {%0};};
+#action {~^%c忽然一阵刺骨的奇寒袭来，你中的星宿毒掌毒发作了！%c$E}   {fight.mark-poison {duzhang1} {星宿毒掌毒}  {%0};};
+#action {~^%c你略一动情，心如刀绞。%c$E}                             {fight.mark-poison {qingdu1}  {情毒}        {%0};};
+#action {~^%c你觉得爪痕一阵巨痛，不由全身一阵抽搐。%c$E}             {fight.mark-poison {zhuadu1}  {凝血神爪毒}  {%0};};
+
+#action {~^%c突然你倒在地上，滚来滚去，双手抓脸，又撕烂了胸口衣服，跟着猛力撕抓胸口，竟似要挖出自己的心肺一般。%c$E} {
+    mark-poison {ssfu1} {生死符} {%0};
+};
+
+#nop 玄冰毒已经成为历史。;
+#action {~^%c你身体一阵颤抖，痛苦地哼了一声。混身经脉疼痛欲裂,扭结成怪异的肉筋.%c$E} {#0};
+
+#action {^你感到此招用意不在伤人，忙凝聚全身功力，却阻挡不住内力飞泄而出！$} {
+    prompt.SetAwhile chousui 星宿抽髓 5;
+};
+
+#action {^你森然一笑，%*似乎对你全无作用。$} {
+    prompt.SetAwhile dumian 免疫%1 5;
+};
+
+/*
+你森然一笑，星宿毒掌毒似乎对你全无作用。
+你森然一笑，星宿火毒似乎对你全无作用。
+你森然一笑，冰魄寒毒似乎对你全无作用。
+你森然一笑，生死符似乎对你全无作用。
+*/
+
+#action {^%*使一股极陰寒的内力，积贮于一点，从圣火令上传来，攻坚而入。$}     {prompt.SetAwhile tougu   明教透骨针 5};
+#action {^突然之间，你胸口一痛，似乎被一枚极细的尖针刺了一下。$}             {prompt.SetAwhile cixue   刺穴   5};
+#action {^这一下刺痛突如其来，直钻入心肺，真气顿时涣散。$}                   {fightLog %0};
+#action {^你的盔甲上淬有剧毒！只见一道绿气迅速延伸到%*的手臂！$}             {prompt.SetAwhile bing2 玄冰激发 5};
+#action {^你被%*击中，内力被送入膻中气海，积贮了起来。$}                     {prompt.SetAwhile rihun 日魂激发 5};
+
+#action {^你的内力不足，无法使用「%*」。$}      {prompt.SetAwhile neili 内力不济 10};
+#action {^你什么也看不清，无法施展特殊功夫!$}   {prompt.SetAwhile cimu  刺目     10};
+
+#action {^你运起［太极神功］，同时使出「太极剑·连」字诀，手中的%*一招连着一招画起圈来，闪电般的击向%*！$E} {
+    #0;
+};
+
+/* }}}}}}
+************** 设计文档 **************
+{{{{{{ */
+
+/*
+战斗模块
+
+* [ ] 战前动员
+    - 技能检查，激发检查，武器检查
+    - 打坐补充内力（及大夏藏真）
+    - [x] 运气、运精、运盾
+    - [x] 运用特技
+    - [x] 加buff
+    - [ ] 是否强发pfm
+    - [ ] 偷袭
+* [ ] 遭遇情形
+    - [ ] 被袭击
+    - [ ] 主动发起
+    - [ ] 任务预期
+* [ ] 战斗准备
+    - [x] 选择战斗目标
+    - [x] 查探战斗目标，门派识别，危险程度
+        - [ ] 太监都是「她」
+        - [ ] 明教圣火令
+        - [ ] □ 手持一只铁轮(Iron falun)   大轮寺 日月
+        - [ ] □ 手持一柄钢刀(Blade)        朝廷 武当
+        - [ ] □ 手持一把玉箫(Yu xiao)      桃花
+    - [ ] 自动跟随目标
+    - [ ] 明确战斗目的
+        * [ ] 是否可以使用叫杀技能
+        * [ ] 战胜指定目标
+        * [ ] 清除指定目标
+            - [ ] 杀死
+            - [ ] 打晕
+        * [ ] 通过该区域（许多 NPC 叫杀后不会立即发生战斗，可以迅速通过）
+* [ ] 战斗过程
+    - [x] 检查是否仍在战斗当中
+    - [x] 主动行为
+        * [x] 寻找奄奄一息的敌人
+        * [x] 血量监视并记录
+        * [x] 朱雀专注，玄武嘲讽
+        * [x] 加 buff
+        * [x] 输出 pfm
+    - [.] 被动行为
+        * [X] 进一步查探战斗目标，门派+气血
+        * [ ] 中毒处理（蟾丹散药，音乐焚情，森然一笑）
+        * [ ] 战斗中疗伤（heal，金创药，楚氏内功，鹤唳九霄神功）
+        * [ ] 被 busy
+        * [ ] 被下武器
+        * [ ] 被刺目/刺腕/抽髓/破气
+    - [ ] 模式切换
+        * [X] 进攻模式
+        * [ ] 防御模式
+        * [ ] 溃败模式
+        * [ ] 避战模式
+        * [X] jiali 值
+    - [ ] 武备维持系统（武器、盾牌、玉石子、铜钱、金花？搜尸体）
+* [ ] 战斗统计
+    - [ ] 战斗时长
+    - [ ] 敌我 DPS，HPS
+    - [X] 敌人气血
+    - [X] pfm CD
+    - [ ] 是否导致叫杀？
+* [ ] 逃跑处理
+    - [ ] 动态设置逃跑阈值
+    - [ ] 选择出口
+    - [ ] 金蝉脱壳
+    - [ ] 神行百变
+* [ ] 战后恢复
+    - [ ] 疗毒
+    - [ ] 气血
+    - [ ] 内力
+* [ ] 打扫战场
+    - [ ] 捡钱，玉石子
+    - [ ] 枭首（投名状，萧峰，韩员外？）
+    - [ ] 战利品鉴定，重大战利品要妥善保管，通常可以延迟到交任务之后
+      但某些情况下可能需要立即保管，以防后续遗失
+        - [ ] 各种玉
+        - [ ] 各种江湖套装
+        - [ ] 传说和3o装备，2o首饰
+        - [ ] 万安塔立即敲锣
+        - [ ] 胡一刀先不找下一个盗宝人
+* [ ] 异常处理
+    - [ ] 禁止战斗
+    - [ ] 玩家释仇
+    - [ ] 破阵战斗
+* [ ] 交互模块
+    - [ ] event
+    - [ ] ui
+    - [ ] char/hp
+    - [ ] char/status
+    - [ ] map/room
+*/
+
+/* }}}}}} */
