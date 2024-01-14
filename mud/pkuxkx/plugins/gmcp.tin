@@ -26,6 +26,7 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
     }
 
     {Status} {
+        {name}                  {姓名}
         {max_qi}                {最大气血}
         {qi}                    {气血}
         {jingli}                {精力}
@@ -66,6 +67,10 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
         {jing_pct}              {精血百分比}
         {jing_damage}           {精血伤害}
         {qi_pct}                {气血比率}
+        {name}                  {姓名}
+        {perform_name}          {绝招名称}
+        {perform_cd}            {CD时长}
+        {perform_id}            {绝招ID}
     }
 
     {Buff} {
@@ -74,6 +79,11 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
         {last_inc}              {效果延时}
         {name}                  {效果名称}
         {effects}               {具体效果}
+        {effect1}               {效果1}
+        {effect2}               {效果2}
+        {effect3}               {效果3}
+        {effect4}               {效果4}
+        {effect5}               {效果5}
         {last_time}             {持续时间}
         {terminated}            {将中止的效果}
     }
@@ -135,6 +145,7 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
     mudLog GMCP.Combat: {%2};
 
     #line sub escapes #var gGMCP[Combat] {%1};
+    #var gGMCP[Combat] {$gGMCP[Combat][1]};
     gmcp.translate-key Combat;
 
     #if { @option.IsEnable{GMCPDebug} } {
