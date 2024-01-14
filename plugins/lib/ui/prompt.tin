@@ -619,6 +619,32 @@ VAR {命令输入提示符} prompt-prompt {Input};
     };
 };
 
+///=== {
+// ## prompt.HotKeys
+//    显示系统已配置的热键清单。
+//    本命令也可写作 HOTKEYS，作用相同。
+// };
+#alias {HOTKEYS} {prompt.HotKeys};
+#alias {prompt.HotKeys} {
+    #echo;
+    #echo {   <128>%-20s %-30s %-40s} {快捷键} {含义} {对应代码};
+    #draw Yellow scroll line 1 1 1 90;
+
+    #local idx {};
+    #foreach {*{global-key-bindings[]}} {idx} {
+        #local key      {${global-key-bindings[$idx][key]}};
+        #local meaning  {${global-key-bindings[$idx][meaning]}};
+        #local code     {${global-key-bindings[$idx][action]}};
+        #replace key {\\c} {Ctrl+};
+        #replace key {Ctrl+%.%+1..*} {Ctrl+&1 &2};
+        #echo {   %-20s %-30s %-40s}
+            {$key} {$meaning} {$code};
+    };
+    #echo;
+    okLog 快捷键中如果存在多个按键序列的，带加号的为一组，需要同时按下，其余依次按下即可。请注意区分大小写。;
+    #echo;
+};
+
 #alias {NOTE} {prompt.Note};
 #alias {prompt.Note} {
     prompt.Set {{note}{%0}};
