@@ -70,16 +70,16 @@
 
 #nop 热键绑定;
 #list global-key-bindings create {
-    {{key}{\cd}     {action}{cli.SmartToggle}}
-    {{key}{\co\cd}  {action}{xtt.ToggleDisableCommands}}
-    {{key}{\cos}    {action}{prompt.ToggleSwitch}}
-    {{key}{\cob}    {action}{beautify.ToggleSwitch}}
-    {{key}{\col}    {action}{option.List}}
-    {{key}{\cod}    {action}{option.Toggle DebugLog}}
-    {{key}{\coD}    {action}{option.Toggle DebugLogEcho}}
-    {{key}{\coe}    {action}{option.Toggle EchoCommand}}
-    {{key}{\com}    {action}{option.Toggle GagMove}}
-    {{key}{\cog}    {action}{option.Toggle GMCPDebug}}
-    {{key}{\coM}    {action}{option.Toggle MapDebug; look}}
-    {{key}{\coV}    {action}{option.Toggle ShowRoomView; look}}
+    {{key}{\cd}     {meaning}{命令行智能切换}                   {action}{cli.SmartToggle}}
+    {{key}{\co\cd}  {meaning}{禁止/允许命令和触发}              {action}{xtt.ToggleDisableCommands}}
+    {{key}{\cos}    {meaning}{禁止/允许状态栏更新}              {action}{prompt.ToggleSwitch}}
+    {{key}{\cob}    {meaning}{禁止/允许界面宽字符美化}          {action}{beautify.ToggleSwitch}}
+    {{key}{\col}    {meaning}{查看选项列表}                     {action}{option.List}}
+    {{key}{\cod}    {meaning}{开启/关闭调试模式}                {action}{option.Toggle DebugLog}}
+    {{key}{\coD}    {meaning}{开启/关闭调试日志}                {action}{option.Toggle DebugLogEcho}}
+    {{key}{\coe}    {meaning}{开启/关闭命令发送回显}            {action}{option.Toggle EchoCommand}}
+    {{key}{\com}    {meaning}{禁止/允许屏蔽他人移动信息}        {action}{option.Toggle GagMove}}
+    {{key}{\cog}    {meaning}{开启/关闭 GMCP 调试信息}          {action}{option.Toggle GMCPDebug}}
+    {{key}{\coM}    {meaning}{开启/关闭地图调试模式}            {action}{option.Toggle MapDebug; look}}
+    {{key}{\coV}    {meaning}{开启/禁止显示房间风景图}          {action}{option.Toggle ShowRoomView; look}}
 };
