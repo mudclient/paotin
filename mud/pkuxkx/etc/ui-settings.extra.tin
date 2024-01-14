@@ -55,6 +55,13 @@
     { {place}{Bot} {line}{2}    {label}{毒免}       {name}{dumian}   {visibility}{HideLabel} {cooldown}{60} }
     { {place}{Bot} {line}{2}    {label}{松风吹解带} {name}{songfeng} {visibility}{HideLabel} {countdown}{Seconds} {cooldown}{1} }
 
+    { {place}{Bot} {line}{2}    {label}{战斗目标}   {name}{fight.target}            }
+    { {place}{Bot} {line}{2}    {label}{优先级}     {name}{fight.target.priority}   }
+    { {place}{Bot} {line}{2}    {label}{气血}       {name}{fight.target.hp}         }
+    { {place}{Bot} {line}{2}    {label}{反弹}       {name}{fight.target.fantan}     }
+    { {place}{Bot} {line}{2}    {label}{累计伤害}   {name}{fight.target.damage}     }
+    { {place}{Bot} {line}{2}    {label}{累计回复}   {name}{fight.target.recover}    }
+
     { {place}{Bot} {line}{3}    {label}{状态}       {name}{status}   {cooldown}{600} }
     { {place}{Bot} {line}{3}    {label}{持续效果}   {name}{persist}  {countdown}{Seconds} }
 
