@@ -154,6 +154,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 ///=== {
+// ## math.Inc <变量名> [<增量值>]
+//    将增量值叠加到变量原来的值之上。若变量值为空，则视同为 0。如增量值省略，则视同为 1。
+// };
+#alias {math.Inc} {
+    #local math.local.var   {%1};
+    #local value            {@defaultNum{%2;1}};
+    #math {$math.local.var} {@defaultNum{${$math.local.var};0} + $value};
+};
+
+///=== {
 // #@ math.ParseCN <中文数字串>
 //    将中文数字串转换成十进制整数。
 //    本函数也可以简写为 c2d，两个名称用途和用法完全相同。
