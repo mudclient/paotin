@@ -228,36 +228,46 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 #alias {char.Skbrief} {
     #local id   {%1};
 
-    #line oneshot #action {^系统回馈：R:skbrief-begin$} {
-        #class char-skbrief-parse-output open;
-        #line oneshot #action {^#%d/%d{|ID=char/skbrief}$} {
-            #local skill {};
-            #foreach {*char[Skills][]} {skill} {
-                #if { "$char[Skills][$skill][code]" == "%1" } {
-                    #var char[Skills][$skill][lvl]      {%%%1};
-                    #var char[Skills][$skill][point]    {%%%2};
-                    event.Emit {char/skbrief};
-                    #break;
-                };
-            };
-            #local gag {@default{%2;gag}};
-            #if { "$gag" == "gag" } {
-                #line gag;
-            };
-        };
-        #line oneshot #action {^系统回馈：R:skbrief-end$} {
-            #line gag;
-            #class char-skbrief-parse-output kill;
-        };
-        #class char-skbrief-parse-output close;
-        #line gag;
-    };
-
     #if { "$id" == "" } {
+        errLog 用法: skbrief <技能ID>;
         #return;
     };
 
-    xtt.Send {#response R:skbrief-begin;skbrief $id;response R:skbrief-end#};
+    #alias {char.Skbrief.parse} {
+        #line oneshot #action {^系统回馈：R:skbrief-begin-%%1$} {
+            #class char-skbrief-parse-output-%%1 open;
+            #line oneshot #action {^#%d/%d{|ID=char/skbrief-%%1}$} {
+                #local skill {};
+                #foreach {*char[Skills][]} {skill} {
+                    #if { "$char[Skills][$skill][code]" == "%%2" } {
+                        #var char[Skills][$skill][lvl]      {%%%%1};
+                        #var char[Skills][$skill][point]    {%%%%2};
+                        #local level {};
+                        #math level {
+                                $char[Skills][$skill][lvl]*1.00
+                            +   $char[Skills][$skill][point]*1.00 / ($char[Skills][$skill][lvl] ** 2)};
+                        #var char[Skills][$skill][level]    {$level};
+                        event.Emit {char/skbrief};
+                        #break;
+                    };
+                };
+                #local gag {@default{%2;gag}};
+                #if { "$gag" == "gag" } {
+                    #line gag;
+                };
+            };
+            #line oneshot #action {^系统回馈：R:skbrief-end-%%1$} {
+                #line gag;
+                #class char-skbrief-parse-output-%%1 kill;
+            };
+            #class char-skbrief-parse-output-%%1 close;
+            #line gag;
+        };
+    };
+
+    #local uuid {@uuid{}};
+    char.Skbrief.parse $uuid $id;
+    xtt.Send {#response R:skbrief-begin-$uuid;skbrief $id;response R:skbrief-end-$uuid#};
 };
 
 ///=== {
