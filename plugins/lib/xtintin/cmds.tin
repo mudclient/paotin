@@ -438,15 +438,15 @@ option.Define {DisableOutput} {Bool} {是否禁止向服务器发送命令} {fal
 
 ///=== {
 // ## xtt.Send <命令> [<参数> ...]
-//    向服务器发送命令。如果命令拦截总开关被打开，则不会真的向服务器发送。
+//    企图向服务器发送命令。但是否真的发送要受命令队列的控制。
 // };
 #alias {xtt.Send} {
     #if { @option.IsEnable{DisableOutput} } {
-        #echo {<169>命令已被抑制: <429>%p<299>} {%0};
+        #echo {<169>命令已被抑制: <429>%p<299>} {%1};
         #return;
     };
 
-    #send %0;
+    mbs.Submit {%1};
 };
 
 ///=== {

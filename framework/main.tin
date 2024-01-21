@@ -190,6 +190,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #nop 提供 TinTin++ 命令行自动补全功能。;
     load-lib tab-completion;
 
+    #nop MBS --- Mud Bot Script Language, dzp 的 MUD 机器人脚本引擎;
+    load-module basic/mbs;
+
     #nop 默认的用户环境配置;
     load-file ids/DEFAULT;
 };
