@@ -1,0 +1,487 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var basic_mbs[META] {
+    {NAME}      {MBS}
+    {DESC}      {Mud Bot Script Language}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {}
+    {CONFIG}    {}
+};
+
+///=== {
+///// MBS --- Mud Bot Script Language, dzp 的 MUD 机器人脚本引擎
+/////
+///// * MBS 的基础是命令队列，所有的命令都必须经过命令队列才能真正发送出去。
+///// * MBS 将全面接管命令的发送，原则上不允许用户再用 #send 命令。
+///// * 命令队列有好多个，每个 Bot 都有一个自己的专属队列。
+///// * 为了简化编程，构造编程范式，提出「机器(Bot)」概念。
+///// * 默认的队列叫做 GLOBAL，所有没有特殊归属的命令都在 GLOBAL 排队。
+///// * 从语义上来讲，bot.Begin 和 bot.End 框定了机器代码的边界。
+///// * 从实质上来讲，bot.Begin 创建命令队列，bot.End 则回到之前的命令队列。
+///// * 机器有三种状态，MAKING/NORMAL/PENDING，只有 NORMAL 状态下，命令才会发送。
+///// * bot.Begin 之后机器处于 MAKING（制作中）状态，直到遇到 bot.End 时才转为 NORMAL（正常）状态。
+///// * 在 bot.Begin 和 bot.End 之间的所有代码，如果导致发送了命令，则命令不会真正发送，而是在命令队列缓存。
+///// * 机器所属的命令队列执行完毕并不等于机器执行完毕，因为可能在后续还会产生新的命令。
+///// * 要想结束机器运行，必须使用 bot.Return 命令。
+///// * bot.Return 将结束当前机器执行，销毁机器相关资料，并将发起调用的机器从 PENDING 转为 NORMAL 状态。
+///// * bot.Call 将导致当前机器进入 PENDING（等待）状态，等待被调用的机器执行完毕后，才会继续执行。
+///// * bot.Call 不是调用机器的唯一方式，你也可以不通过 bot.Call 而是直接调用。两者的区别是，bot.Call 会阻塞。
+///// * bot.Return 结束机器运行时，如果存在被调用的机器，则自动释放被调用的机器。
+///// };
+
+VAR {最大在途命令数}    mbs.MAX-UNDERWAY-CMDS   {10};
+VAR {在途命令}          mbs.underway-cmds       {0};
+
+VAR {所有机器人}        mbs.bots                {};
+VAR {当前机器人（栈）}  mbs.current-bot         {};
+VAR {发起调用的机器人}  mbs.call-bot-base       {};
+VAR {机器人的命令队列}  mbs.cmd-queue           {};
+
+load-lib event;
+
+event.Define {bot/success}  {无参}  {$MODULE}   {MBS 机器人执行成功};
+event.Define {bot/failed}   {无参}  {$MODULE}   {MBS 机器人执行失败};
+
+#func {basic_mbs.Init} {
+    event.Handle {GA} {mbs.ga} {basic/mbs} {mbs.ga-confirm};
+    mbs.Reset;
+    #return {true};
+};
+
+///=== {
+// ## bot.Begin
+//    标记新机器开始，后续命令会落到新机器。
+// };
+#alias {bot.Begin} {
+    #local name {%1};
+
+    #if { "$name" == "" } {
+        xtt.Usage bot.Begin;
+        #return;
+    };
+
+    dbgLog MBS bot.Begin $name;
+
+    #if { &mbs.bots[ALL][$name][] > 0 } {
+        errLog 已经存在名为「$name」的机器人。;
+        #return;
+    };
+
+    #local queue {@uuid{}};
+    #var mbs.cmd-queue[$queue] {};
+
+    #local bot {
+        {name}  {$name}
+        {done}  {false}
+        {queue} {$queue}
+        {state} {MAKING}
+        {child} {}
+        {base}  {$mbs.call-bot-base}
+    };
+
+    #var mbs.bots[ALL][$name]    {$bot};
+    #var mbs.bots[MAKING][$name] {$name};
+
+    #if { "$mbs.call-bot-base" != "" } {
+        #var mbs.bots[ALL][$mbs.call-bot-base][child] {$name};
+    };
+
+    queue.Push mbs.current-bot {$name};
+
+    #class $name open;
+};
+
+///=== {
+// ## bot.End
+//    标记机器结束，后续命令会落到之前的机器。
+//    和 bot.Done 的区别是命令执行完毕之后不会自动调用 bot.Return。
+// };
+#alias {bot.End} {bot.end false};
+
+///=== {
+// ## bot.Done
+//    标记机器结束，后续命令会落到之前的机器。
+//    和 bot.End 的区别是命令执行完毕之后会自动调用 bot.Return。
+// };
+#alias {bot.Done} {bot.end true};
+
+#alias {bot.end} {
+    #local done {@default{%1;false}};
+
+    #local current {@queue.Last{mbs.current-bot}};
+    #if { "$current" == "" } {
+        errLog 语法错误: bot.Begin 和 bot.End 不配对。;
+        #return;
+    };
+
+    queue.Pop mbs.current-bot;
+
+    #if { &mbs.bots[ALL][$current][] == 0 } {
+        errLog 发现 BUG: bot.End 时机器人已不存在。;
+        #return;
+    };
+
+    dbgLog MBS bot.End $current;
+
+    #class $current close;
+
+    #local state $mbs.bots[ALL][$current][state];
+    #var mbs.bots[ALL][$current][state] {NORMAL};
+    #var mbs.bots[ALL][$current][done] {$done};
+    #unvar mbs.bots[$state][$current];
+    #var mbs.bots[NORMAL][$current] {$current};
+
+    mbs.mainLoop;
+};
+
+///=== {
+// ## mbs.Submit <命令> [<机器名>]
+//    在栈底帧的末尾追加命令，会按照提交顺序依次执行。
+// };
+#alias {mbs.Submit} {
+    #local cmd  {%1};
+
+    #local bot  {};
+    #if { ! @queue.IsEmpty{mbs.current-bot} } {
+        #local bot {@queue.Last{mbs.current-bot}};
+    };
+    #else {
+        #local bot {GLOBAL};
+    };
+
+    #if { &mbs.bots[ALL][$bot][] == 0 } {
+        errLog 发现 BUG: 机器「$bot」不存在。;
+        #return;
+    };
+
+    dbgLog MBS mbs.Submit {$cmd} to $bot;
+
+    #local queue {$mbs.bots[ALL][$bot][queue]};
+    queue.Push mbs.cmd-queue[$queue] {$cmd};
+
+    mbs.mainLoop;
+};
+
+///=== {
+// ## bot.Return <机器名称>
+//    结束指定的机器运行，回到上一层，继续执行。
+// };
+#alias {bot.Return} {
+    #local bot {%1};
+
+    #if { "$bot" == "" } {
+        xtt.Usage bot.Return;
+        #return;
+    };
+
+    #if { &mbs.bots[ALL][$bot][] == 0 } {
+        errLog 发现 BUG: 机器「$bot」不存在。;
+        #return;
+    };
+
+    #local bot {$mbs.bots[ALL][$bot]};
+    #if { "$bot[state]" == "MAKING" } {
+        errLog 语法错误: 你不能在 bot.End 之前就调用 bot.Return;
+        #return;
+    };
+
+    #if { "$bot[state]" == "PENDING" } {
+        #if { "$bot[child]" != "" } {
+            dbgLog MBS 由于 BOT $bot[name] 已经结束运行，因此提前终止 BOT $bot[child] 的运行。;
+            bot.Return $bot[child];
+        };
+    };
+
+    #unvar mbs.bots[$bot[state]][$bot[name]];
+    #unvar mbs.bots[ALL][$bot[name]];
+    #unvar mbs.cmd-queue[$bot[queue]];
+
+    #if { "$bot[base]" != "" } {
+        #local state {$mbs.bots[ALL][$bot[base]][state]};
+        #var mbs.bots[ALL][$bot[base]][state] {NORMAL};
+        #unvar mbs.bots[$state][$bot[base]];
+        #var mbs.bots[NORMAL][$bot[base]] {$bot[base]};
+    };
+
+    #class $bot[name] kill;
+
+    dbgLog MBS BOT $bot[name] 已运行完毕。;
+    dbgLog MBS bot.Return $bot[name];
+
+    mbs.mainLoop;
+};
+
+///=== {
+// ## bot.Call <被调用机器名> <机器参数> [<所在机器名>]
+//    调用另一个机器人。如果省略第三个参数，则自动推定当前所处的机器。
+//    调用机器将导致当前机器开始阻塞，后续的命令将暂时缓存而不是发往服务器。
+//    等到被调用的机器执行完毕之后，才会继续执行后续命令。
+// };
+#alias {bot.Call} {
+    bot.push-call {%1} {%2} {%3} {Bot};
+};
+
+#alias {bot.push-call} {
+    #local child {%1};
+    #local args  {%2};
+    #local base  {@default{%3;@queue.Last{mbs.current-bot}}};
+    #local type  {%4};
+
+    #if { "$child" == "" } {
+        xtt.Usage bot.Call;
+        #return;
+    };
+
+    #if { &mbs.bots[ALL][$child][] > 0 } {
+        errLog 发现 BUG：机器「$child」已经存在。;
+        #return;
+    };
+
+    #if { ! @existsAlias{$child} } {
+        errLog 发现 BUG：找不到机器「$child」的代码。;
+        #return;
+    };
+
+    #if { "$base" == "" } {
+        errLog 语法错误：无法确定 bot.Call 的调用来源。;
+        #return;
+    };
+
+    #if { &mbs.bots[ALL][$base][] == 0 } {
+        errLog 发现 BUG：机器「$base」不存在。;
+        #return;
+    };
+
+    mbs.Submit {$type $child {$args}};
+};
+
+/*
+    检查所有机器，发送命令。
+*/
+#alias {mbs.mainLoop} {
+    #nop 如果已经发送的够多了，就暂停发送。;
+    #if { &mbs.underway-cmds[] >= $mbs.MAX-UNDERWAY-CMDS } {
+        #return;
+    };
+
+    #nop 没有更多的可发送的命令了。;
+    #if { &mbs.bots[] == 0 } {
+        #return;
+    };
+
+    dbgLog MBS mainLoop;
+
+    #local quota {@math.Eval{$mbs.MAX-UNDERWAY-CMDS - &mbs.underway-cmds[]}};
+    #local count {0};
+    #local remain {0};
+
+    #nop 检查所有机器，发送命令。;
+    #local idx {};
+    #loop {1} {&mbs.bots[NORMAL][]} {idx} {
+        #local name {$mbs.bots[NORMAL][+$idx]};
+        #local queue {$mbs.bots[ALL][$name][queue]};
+        #if { @queue.IsEmpty{mbs.cmd-queue[$queue]} } {
+            #if { @isTrue{$mbs.bots[ALL][$name][done]} } {
+                bot.Return $name;
+                #continue;
+            };
+            #else {
+                #continue;
+            };
+        };
+
+        #local size @queue.Size{mbs.cmd-queue[$queue]};
+        #local cmd {};
+        #loop {1} {$size} {cmd} {
+            #local cmd {@queue.First{mbs.cmd-queue[$queue]}};
+            #if { "$cmd" == "Wait %*" } {
+                queue.Shift mbs.cmd-queue[$queue];
+                #replace cmd {^Wait %S \x7b%*\x7d$} {{bot}{&1}{args}{&2}};
+                mbs.call-bot {$name} {$cmd};
+                #break;
+            };
+
+            #if { $quota <= 0 } {
+                #break;
+            };
+
+            #if { "$cmd" == "Bot %*" } {
+                #if { &mbs.underway-cmds[] == 0 } {
+                    queue.Shift mbs.cmd-queue[$queue];
+                    #replace cmd {^Bot %S \x7b%*\x7d$} {{bot}{&1}{args}{&2}};
+                    mbs.call-bot {$name} {$cmd};
+                };
+                #break;
+            };
+            #else {
+                queue.Shift mbs.cmd-queue[$queue];
+                math.Inc quota -1;
+                math.Inc count 1;
+                mbs.send {$cmd};
+            };
+        };
+    };
+
+    dbgLog MBS count = $count, quota = $quota, bots = &mbs.bots[NORMAL][], pending = &mbs.bots[PENDING][];
+};
+
+#alias {mbs.call-bot} {
+    #local base {%1};
+    #local bot  {%2};
+
+    dbgLog MBS 机器「$base」已暂停，转为调用机器 $bot[bot]，参数为 「$bot[args]」。;
+
+    #var mbs.bots[ALL][$base][state] {PENDING};
+    #var mbs.bots[ALL][$base][child] {$bot[bot]};
+    #unvar mbs.bots[NORMAL][$base];
+    #var mbs.bots[PENDING][$base] {$base};
+    #var mbs.call-bot-base {$base};
+    $bot[bot] $bot[args];
+    #var mbs.call-bot-base {};
+};
+
+#alias {mbs.send} {
+    #local code {%1};
+    #list {mbs.underway-cmds} add {{$code}};
+    dbgLog MBS {$code} 已发送。;
+    #send {$code};
+};
+
+#alias {mbs.ga-confirm} {
+    #local __unused {%0};
+
+    #if { &mbs.underway-cmds[] == 0 } {
+        errLog 发现 BUG: 不知来历的 GA。;
+        #return;
+    };
+
+    dbgLog MBS {$mbs.underway-cmds[1]} 已确认。;
+
+    #list {mbs.underway-cmds} delete {1};
+
+    #delay mbs.engine.push {mbs.mainLoop} 0;
+};
+
+#alias {mbs.Reset} {
+    #var mbs.MAX-UNDERWAY-CMDS   {10};
+    #var mbs.underway-cmds       {0};
+
+    #var mbs.bots                {};
+    #var mbs.bots[ALL]           {};
+    #var mbs.bots[MAKING]        {};
+    #var mbs.bots[NORMAL]        {};
+    #var mbs.bots[PENDING]       {};
+    #var mbs.current-bot         {};
+    #var mbs.cmd-queue           {};
+
+    bot.Begin GLOBAL;
+    bot.End;
+};
+
+///=== {
+// ## mbs.Sync
+//    同步
+// };
+#alias {mbs.Sync} {bot.Call mbs.bot.sync {} {} {Bot}};
+
+#alias {mbs.bot.sync} {
+    #local bot {mbs.Sync/@uuid{}};
+    bot.Begin $bot;
+    sync.Wait {bot.Return $bot};
+    bot.End;
+};
+
+///=== {
+// ## mbs.Wait <时间长度（秒）>
+//    等待若干秒，然后继续。
+// };
+#alias {mbs.Wait} {bot.push-call mbs.bot.wait {%1} {} {Wait}};
+
+#alias {mbs.bot.wait} {
+    #local seconds {@defaultNum{%1;1}};
+
+    #local bot {mbs.Wait/@uuid{}};
+    bot.Begin $bot;
+
+    #line sub var #delay $bot {bot.Return $bot} $seconds;
+
+    bot.End;
+};
+
+///=== {
+// ## mbs.WaitFor <正则表达式> [<超时时间（秒）>]
+//    等待指定的正则表达式，然后继续。可选的超时用来防止无限期阻塞。
+// };
+#alias {mbs.WaitFor} {bot.push-call mbs.bot.waitFor {%1 %2} {} {Wait}};
+
+#alias {mbs.bot.waitFor} {
+    #local regex    {@default{{%1};{%*}}};
+    #local timeout  {@defaultNum{%2;0}};
+
+    #local bot {mbs.WaitFor/@uuid{}};
+    bot.Begin $bot;
+
+    #line sub var #action {$regex{|ID=$bot}} {bot.Return $bot};
+    #if { $timeout > 0 } {
+        #line sub var #delay $bot {bot.Return $bot} $timeout;
+    };
+
+    bot.End;
+};
+
+///=== {
+// ## mbs.WaitLine <整行文本> [<超时时间（秒）>]
+//    等待指定的文本，然后继续。可选的超时用来防止无限期阻塞。
+// };
+#alias {mbs.WaitLine} {bot.push-call mbs.bot.waitLine {%1 %2} {} {Wait}};
+
+#alias {mbs.bot.waitLine} {
+    #local regex    {@default{{%1};{%*}}};
+    #local timeout  {@defaultNum{%2;0}};
+
+    #local bot {mbs.WaitLine/@uuid{}};
+    bot.Begin $bot;
+
+    #line sub var #action {^$regex{ID=$bot}$} {bot.Return $bot};
+    #if { $timeout > 0 } {
+        #line sub var #delay $bot {bot.Return $bot} $timeout;
+    };
+
+    bot.End;
+};
+
+///=== {
+// ## mbs.WaitEvent <事件> [<超时时间（秒）>]
+//    等待指定的事件，然后继续。可选的超时用来防止无限期阻塞。
+// };
+#alias {mbs.WaitEvent} {bot.push-call mbs.bot.waitEvent {%1 %2} {} {Wait}};
+
+#alias {mbs.bot.waitEvent} {
+    #local event    {%1};
+    #local timeout  {@defaultNum{%2;0}};
+
+    #if { "$event" == "" } {
+        xtt.Usage mbs.WaitEvent;
+        #return;
+    };
+
+    #local bot {mbs.WaitEvent/@uuid{}};
+    bot.Begin $bot;
+
+    event.HandleOnce {$event} {$bot} {mbs} {bot.Return $bot};
+    #if { $timeout > 0 } {
+        #line sub var #delay $bot {
+            event.UnHandle {$event} {$bot} {mbs};
+            bot.Return $bot;
+        } $timeout;
+    };
+    bot.End;
+};
