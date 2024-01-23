@@ -47,7 +47,7 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local id {%0};
 
     #if { "$id" == "" } {
-        xtt.Send jiancha;
+        xtt.Send {jiancha};
         #return;
     };
 
@@ -66,7 +66,7 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         char.sachet.parse.output;
     };
 
-    xtt.Send jiancha $id;
+    xtt.Send {jiancha $id};
 };
 
 #alias {char.sachet.parse.output} {

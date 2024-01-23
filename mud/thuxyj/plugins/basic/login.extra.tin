@@ -34,7 +34,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #line oneshot #action {^您是否是中小学学生或年龄更小？(yes/no)$} {
-        #delay 0 #send no;
+        #delay 0 {xtt.Send no};
     };
 
     #line oneshot #action {^您的英文名字：（新玩家请键入 new 注册）$} {

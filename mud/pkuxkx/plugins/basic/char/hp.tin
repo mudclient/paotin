@@ -557,7 +557,7 @@ hp -neili 格式：
         char.GetHP %0;
     };
     #else {
-        xtt.Send hp %0;
+        xtt.Send {hp %0};
     };
 };
 

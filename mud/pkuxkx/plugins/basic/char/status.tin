@@ -167,7 +167,7 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
 
     #class char.GetStatusMe close;
 
-    xtt.Send status_me %2;
+    xtt.Send {status_me %2};
 };
 
 #alias {status_me}  {char.GetStatusMe gag   {%0}};

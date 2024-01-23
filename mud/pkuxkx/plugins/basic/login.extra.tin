@@ -40,7 +40,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #line oneshot #action {^您的英文名字（要注册新人物请输入new。）：$} {
         #if { "$session[UTF8]" == "false" } {
-            #delay 0 #send {2};
+            #delay 0 {xtt.Send {2}};
         };
 
         #config {charset} {UTF-8};
@@ -87,7 +87,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local args {@str.Trim{%%1}};
         #info environ save;
         #if { @isTrue{$info[ENVIRON][PKUXKX_AUTO_AGREE]} } {
-            #send {agree $args};
+            xtt.Send {agree $args};
         };
         #else {
             #undelay {login.login-success};

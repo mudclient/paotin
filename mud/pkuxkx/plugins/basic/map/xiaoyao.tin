@@ -167,7 +167,7 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     #local args  {%2};
 
     #if { "$args" != "" } {
-        xtt.Send map $args;
+        xtt.Send {map $args};
         #return;
     };
 
@@ -185,7 +185,7 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
 
     #local here {@xiaoyao.locate{}};
     #if { "$here" == "" } {
-        xtt.Send map;
+        xtt.Send {map};
         #return;
     };
 
@@ -209,7 +209,7 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
         };
         #else {
             errLog 缺少 data/map.txt 文件。;
-            xtt.Send map;
+            xtt.Send {map};
         };
     };
 

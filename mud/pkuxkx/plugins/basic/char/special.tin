@@ -73,7 +73,7 @@ VAR {角色特技列表，表格} {char.Special} {};
 
     #class char.Special close;
 
-    xtt.Send special;
+    xtt.Send {special};
 };
 
 #alias {special}    {char.Special gag {%0}};
