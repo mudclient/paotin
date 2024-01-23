@@ -89,7 +89,7 @@ event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
     #local args {%2};
 
     #if { "$args" != "" } {
-        xtt.Send localmaps $args;
+        xtt.Send {localmaps $args};
         #return;
     };
 
@@ -122,7 +122,7 @@ event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
 
     #class map.Localmaps close;
 
-    xtt.Send localmaps;
+    xtt.Send {localmaps};
 
     sync.Wait {
         #class map.Localmaps kill;

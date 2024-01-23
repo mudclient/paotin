@@ -71,7 +71,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
         };
     };
 
-    xtt.Send skills %0;
+    xtt.Send {skills %0};
 };
 
 #alias {char.skills.parse.output} {

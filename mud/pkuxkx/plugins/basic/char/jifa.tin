@@ -55,7 +55,7 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
 
     #class char.Jifa close;
 
-    xtt.Send jifa;
+    xtt.Send {jifa};
 };
 
 #alias {char.jifa.parse.output} {
