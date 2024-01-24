@@ -30,9 +30,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #nop 开启 wordwrap 常常导致折行的文本显示为乱码，因此要关掉它;
 #config {wordwrap} {off};
 
+#var TTYPE {TinTin++};
+
 #nop 两处 oneshot 处理都是故意为之，目的是为了不影响 TinTin++ 内部状态。;
 #line oneshot #event {IAC SB TTYPE} {
-    #send {\xFF\xFA\x18\x00\x50\x61\x6f\x54\x69\x6e\x2b\x2b\xFF\xF0\};
+    #send {\xFF\xFA\x18\x00\x50\x61\x6f\x54\x69\x6e\x2b\x2b/$TTYPE\xFF\xF0\};
     #line oneshot #event {CATCH SEND OUTPUT} {#0};
 };
 
