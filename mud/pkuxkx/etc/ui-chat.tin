@@ -4,7 +4,8 @@
     {{pattern}{%!{闲聊|副本|谣言}}          {action}{chatLog}   {gag}{true}}
     {{pattern}{%!{江湖|任务|交易}}          {action}{jhLog}     {gag}{true}}
     {{pattern}{%!{队伍|门派|本地|区域}}     {action}{bdLog}     {gag}{true}}
-    {{pattern}{%!{表决|答问如流|醒目}}      {action}{chatLog}   {gag}{false}}
+    {{pattern}{%!{表决|醒目}}               {action}{chatLog}   {gag}{false}}
+    {{pattern}{%!{答问如流|备选答案}}       {action}{answerLog} {gag}{false}}
     {{pattern}{私聊}                        {action}{tellLog}   {gag}{false}}
     {{pattern}{%*}                          {action}{groupLog}  {gag}{true}}
 };
