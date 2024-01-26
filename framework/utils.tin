@@ -142,11 +142,27 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { "$uname" == "Linux" } {
-        #if { @existsFile{/proc/sys/fs/binfmt_misc/WSLInterop} } {
-            #local uname {WSL};
-        };
-        #elseif { @existsFile{/.dockerenv} } {
+        #if { @existsFile{/.dockerenv} } {
             #local uname {Docker};
+        };
+        #elseif { @existsDir{/data/data/com.termux/files} } {
+            #local uname {Android};
+        };
+        #elseif { @existsFile{/ish/version} } {
+            #local uname {iOS};
+        };
+        #elseif { @existsFile{/proc/sys/fs/binfmt_misc/WSLInterop} } {
+            #line quiet #script uname {uname -r};
+            #local uname {$uname[1]};
+            #if { "$uname" == "%*Microsoft%*" } {
+                #local uname {WSL1};
+            };
+            #elseif { "$uname" == "%*microsoft%*" } {
+                #local uname {WSL2};
+            };
+            #else {
+                #local uname {WSL};
+            };
         };
     };
 
@@ -164,7 +180,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #local tmp {};
-    #scan file {/etc/os-release} {
+    #line quiet #scan file {/etc/os-release} {
         #regex {&1} {^ID={[^\n]*}\n} {#var tmp {&&1}}
     };
     #replace tmp {"} {};
