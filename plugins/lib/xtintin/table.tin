@@ -1,0 +1,65 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#nop 本文件是 xtintin 的一部分，实现了一些表格处理函数;
+
+///=== {
+///// 表格处理函数：
+//
+// #@ table.Keys <表格变量名> [<键名通配符>]
+//    提取表格中所有符合通配符的键名，结果以 slist 格式返回。
+// };
+#func {table.Keys} {
+    #local table.local.table    {%1};
+    #local table.local.pattern  {@default{%2;%*}};
+
+    #local len {&{${table.local.table}[]}};
+    #if { $len == 0 } {
+        #return {};
+    };
+
+    #local keys {};
+
+    #loop 1 {&{${table.local.table}[]}} {idx} {
+        #local key {*{${table.local.table}[+$idx]}};
+        #if { "$key" == "$table.local.pattern" } {
+            #cat keys {*{${table.local.table}[+$idx]};};
+        };
+    };
+
+    #replace {keys} {;$} {};
+
+    #return {$keys};
+};
+
+///=== {
+// #@ table.Values <表格变量名> [<值的通配符>]
+//    提取表格中所有符合通配符的值，结果以 slist 格式返回。
+// };
+#func {table.Values} {
+    #local table.local.table    {%1};
+    #local table.local.pattern  {@default{%2;%*}};
+
+    #local len {&{${table.local.table}[]}};
+    #if { $len == 0 } {
+        #return {};
+    };
+
+    #local values {};
+
+    #loop 1 {&{${table.local.table}[]}} {idx} {
+        #local value {${${table.local.table}[+$idx]}};
+        #if { "$value" == "$table.local.pattern" } {
+            #cat values {${${table.local.table}[+$idx]};};
+        };
+    };
+
+    #replace {values} {;$} {};
+
+    #return {$values};
+};
