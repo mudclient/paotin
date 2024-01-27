@@ -126,8 +126,6 @@ load-lib sync;
     i-all;
 };
 
-#alias {pp} {chat.TuneOn helpme; helpme; helpme find %0};
-
 #alias {cgem} {do 3 pickgem %1; combine gem; pack gem};
 #alias jd jianding;
 
