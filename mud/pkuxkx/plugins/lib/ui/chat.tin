@@ -22,22 +22,27 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {{pattern}{求助}                        {action}{helpmeLog}     {gag}{true}}
     {{pattern}{北侠QQ群}                    {action}{qqLog}         {gag}{true}}
     {{pattern}{%!{闲聊|副本|谣言}}          {action}{chatLog}       {gag}{true}}
+    {{pattern}{%!{门派|帮派|队伍}}          {action}{chatLog}       {gag}{true}}
     {{pattern}{%!{江湖|任务|交易}}          {action}{jhLog}         {gag}{true}}
-    {{pattern}{%!{队伍|门派|本地|区域}}     {action}{bdLog}         {gag}{true}}
+    {{pattern}{%!{本地|区域|亡灵}}          {action}{bdLog}         {gag}{true}}
     {{pattern}{私聊}                        {action}{tellLog}       {gag}{false}}
-    {{pattern}{%*}                          {action}{groupLog}      {gag}{true}}
 };
+
+VAR {五绝名号} chat-wujue-title {};
+VAR {帮派名称} chat-group-name {};
 
 load-lib storage;
 load-lib alert;
 
 #func {lib_ui_chat.Init} {
     load-file {etc/ui-chat.tin};
+    #var chat-wujue-title {@storage.GetGlobal{五绝名号}};
+    #var chat-group-name  {@storage.GetGlobal{帮派名称}};
     #return true;
 };
 
 #nop 普通聊天信息;
-#action {~^%c【%+2..5u】%c%*%+1..10u%c({[a-z A-Z]+})%c: %*$E} {
+#action {~^%c【%+2..5u%c】%c%*%+1..10u%c({[a-z A-Z]+})%c: %*$E} {
     chat.log {%2} {%0};
 } {4.994};
 
@@ -54,6 +59,33 @@ load-lib alert;
 #alias {chat.log} {
     #local type {%1};
     #local text {%2};
+
+    #if { "$type/$text" == "江湖/%*据闻如今的五绝是%*" } {
+        #local wujue {@str.Plain{%2}};
+        #replace wujue {%*【江湖】据闻如今的五绝是: %*} {&2};
+        #replace wujue {、} {;};
+        #var chat-wujue-title {};
+        #local title {};
+        #foreach {$wujue} {title} {
+            #replace {title} {{*UTF8}{东.|西.|南.|北.|中..|}%*} {&1};
+            #if { "$title" != "" } {
+                #var chat-wujue-title {@sset.Add{{$chat-wujue-title};$title}};
+            };
+        };
+        storage.SetGlobal 五绝名号 {$chat-wujue-title};
+    };
+
+    #if { @sset.Contains{{$chat-wujue-title};$type} } {
+        #local type 闲聊;
+    };
+
+    #if { @sset.Contains{{$chat-group-name};$type} } {
+        #local type 帮派;
+    };
+
+    #if { "$char-menpai-id[$type]" != "" } {
+        #local type 门派;
+    };
 
     #local id {};
     #loop {1} {&chat-channel[]} {id} {
