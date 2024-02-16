@@ -35,9 +35,8 @@ load-lib storage;
 load-lib alert;
 
 #func {lib_ui_chat.Init} {
-    load-file {etc/ui-chat.tin};
     #var chat-wujue-title {@storage.GetGlobal{五绝名号}};
-    #var chat-group-name  {@storage.GetGlobal{帮派名称}};
+    load-file {etc/ui-chat.tin};
     #return true;
 };
 
