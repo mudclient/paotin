@@ -5,9 +5,16 @@ set -euxo pipefail
 git submodule init
 (cd tintin && git fetch --all --prune)
 git submodule update --remote
-export CFLAGS="${CFLAGS:+$CFLAGS }-I/usr/local/include"
-export CPPFLAGS="${CPPFLAGS:+$CPPFLAGS }-I/usr/local/include"
-export LDFLAGS="${LDFLAGS:+$LDFLAGS }-L/usr/local/lib"
+
+paths='/usr/local /opt/homebrew /usr/pkg'
+for path in $paths; do
+    if [ -d $path/include ]; then
+        export CFLAGS="${CFLAGS:+$CFLAGS }-I$path/include"
+        export CPPFLAGS="${CPPFLAGS:+$CPPFLAGS }-I$path/include"
+        export LDFLAGS="${LDFLAGS:+$LDFLAGS }-L$path/lib"
+    fi
+done
+
 (cd tintin/src && ./configure && make)
 cp tintin/src/tt++ bin/ || exit
 
