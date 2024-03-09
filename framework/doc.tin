@@ -355,4 +355,44 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 /////      你也可以自定义自己的日志，任何以 Log 结尾的别名调用都会导致产生一个相应的 log 文件，
 /////      无需提前声明。例如，你在你的模块中使用 myjobLog，将会导致产生一个 myjob.log 文件。
 /////      类似的，xxxLog 将会产生 xxx.log。
+//
+// #= NEWBIE
+//
+//    新人必读的文档索引：
+//
+//    - 新手必知必会
+//      - 是什么:  PaoTin++ 是 TinTin++ 的衍生物，所有的 TinTin++ 命令和脚本在 PaoTin++ 中都可以使用。
+//      - 不是什么:  PaoTin++ 不提供违背服务器管理政策的机器人，许多时候你得自己做。
+//      - 优势: 更新及时，合法合规，开源共享，社区成熟
+//      - 特色: PaoTin++ 是唯一一款可以搭配全功能终端模拟器使用的跨平台主流客户端，这意味着它在任何平台上的渲染都是最漂亮的。
+//    - 常用 HELP 关键字
+//      - 新人必读: HELP NEWBIE
+//      - 基本介绍: HELP paotin
+//      - 常用函数: HELP xtintin
+//      - 代码风格: HELP STYLE
+//      - 代码注释: HELP Doc
+//      - 数据类型: HELP DataType
+//    - 常用 PaoTin++ 命令介绍
+//      - 查看模块列表: MODS 或 list-modules，其中模块名称可以点击。
+//      - 查看模块详情: MOD <模块名称> 或 look-module <模块名称>，名称可以通过 MODS 查看。
+//      - 加载模块: LM <模块名称> 或 load-module <模块名称>，参见 HELP load-module。
+//      - 卸载模块: KM <模块名称> 或 kill-module <模块名称>，参见 HELP kill-module。
+//      - 重新加载: RLM <模块名称> 或 reload-module <模块名称>，参见 HELP reload-module。
+//      - 日志工具: okLog errLog warnLog infoLog fullskLog jobLog
+//      - 查看变量/别名/函数/定时器/快捷键: VARS ALIS FUNCS TICKS HOTKEYS
+//      - TinTin++文档: #help INDEX
+//    - 特色模块
+//      - 自定义界面: HELP prompt
+//      - 事件驱动编程: HELP event
+//      - 把数据存起来，重启后还能用: HELP storage
+//    - 逍遥行
+//      - 这是什么: 可以让你在整个游戏地图中进行远距离移动，比如一口气从北京移动到云南，自动过河。
+//      - 安装方法: 逍遥行插件已内置，但数据文件需要单独下载，入 QQ 群查看群文件「PaoTin++ 新手必备」。
+//    - 社区
+//        - GitHub: https://github.com/mudclient/paotin/
+//        - 墙内镜像: http://chat.unix5.com/mudclient/paotin/
+//        - Wiki: https://pkuxkx.net/wiki/tools/paotin/
+//        - 入门级教程: https://pkuxkx.net/forum/thread-48458-1-1.html
+//        - 实用技巧: https://pkuxkx.net/wiki/tools/paotin/tips
+//        - QQ交流群: 951665549，入群暗号：「PaoTin++ 新人前来报到」
 // };
