@@ -20,12 +20,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {setup} {
     #line quiet #port init null 0;
     #untick {KeepAlive};
-    #alias {^%*$} {log.sendLog %%0} {9.999};
+    load-lib event;
+    load-lib ui;
 };
 
 #alias {greeting} {
     okLog 欢迎使用 PaoTin++！;
-    okLog 输入 HELP paotin 和 HELP xtintin 可以开始了解 PaoTin++。;
+    okLog 输入 <134>HELP paotin<129> 和 <134>HELP xtintin<129> 可以开始了解 PaoTin++。;
+    okLog 更多学习资料和社区资源可以查看 <134>HELP NEWBIE<129>。<131>所有命令注意区分大小写<129>。;
 };
 
 #alias {test} {
