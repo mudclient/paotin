@@ -99,11 +99,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #func {existsFile} {
     #local file {%0};
-    #var tmpSize {0};
+    #var tmpSize {-1};
     #line quiet #scan file {$file} {#var tmpSize &2};
     #local tmp {$tmpSize};
     #unvar tmpSize;
-    #if { $tmp > 0 } {
+    #if { $tmp > -1 } {
         #return 1;
     };
     #else {
