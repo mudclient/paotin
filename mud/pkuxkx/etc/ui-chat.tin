@@ -1,12 +1,12 @@
 #list chat-channel create {
     {{pattern}{求助}                    {action}{helpmeLog} {gag}{true}}
     {{pattern}{北侠QQ群}                {action}{qqLog}     {gag}{true}}
-    {{pattern}{%!{闲聊|副本|谣言}}      {action}{chatLog}   {gag}{true}}
-    {{pattern}{%!{门派|帮派|队伍}}      {action}{chatLog}   {gag}{true}}
-    {{pattern}{%!{江湖|任务|交易}}      {action}{jhLog}     {gag}{true}}
-    {{pattern}{%!{本地|区域|亡灵}}      {action}{bdLog}     {gag}{true}}
-    {{pattern}{%!{表决|醒目}}           {action}{chatLog}   {gag}{false}}
-    {{pattern}{%!{答问如流|备选答案}}   {action}{answerLog} {gag}{false}}
+    {{pattern}{{闲聊|副本|谣言}}        {action}{chatLog}   {gag}{true}}
+    {{pattern}{{门派|帮派|队伍}}        {action}{chatLog}   {gag}{true}}
+    {{pattern}{{江湖|任务|交易}}        {action}{jhLog}     {gag}{true}}
+    {{pattern}{{本地|区域|亡灵}}        {action}{bdLog}     {gag}{true}}
+    {{pattern}{{表决|醒目}}             {action}{chatLog}   {gag}{false}}
+    {{pattern}{{答问如流|备选答案}}     {action}{answerLog} {gag}{false}}
     {{pattern}{私聊}                    {action}{tellLog}   {gag}{false}}
 };
 
