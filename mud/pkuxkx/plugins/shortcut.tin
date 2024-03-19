@@ -143,7 +143,7 @@ load-lib sync;
 	#line oneshot #alias {^%*{|ID=xiang}$} {#send %%0; xtt.UndoDisableAllCommands} {1.001};
 };
 
-#gag {^%s$};
+#gag {~^%c%s%c$};
 #action {^>%s$} {#line gag};
 #gag {^├{(─|┼)+}┤$};
 
