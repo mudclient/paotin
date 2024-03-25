@@ -5,7 +5,7 @@
 模块说明：本文件属于框架代码的一部分，不建议修改。如有需求请在 GitHub 发 issue 或者 PR
 版权声明：本文件属于 PaoTin++ 的一部分
 ===========
-PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 ===========
 */
@@ -33,16 +33,16 @@ class.open module-loader;
     #replace prefix {/} {_};
     #if { "${${prefix}-loaded}" == "true" } {
         infoLog 模块 $moduleName 已载入。;
-        #if { "${xtt-modConfig[$moduleName][ENABLE]}" == "false" } {
+        #if { "$xtt-modConfig[$moduleName][ENABLE]" == "false" } {
             infoLog 但是该模块已经被禁用，如果你想要重新启用，请使用「<129>enable-module %1<299>」。;
         };
         #return;
     };
 
-    #local path {};
-    #foreach {$moduleName;$moduleName/__init__;$moduleName/__main__} {path} {
+    #local modulePath {};
+    #foreach {$moduleName;$moduleName/__init__;$moduleName/__main__} {modulePath} {
         class.open {load-module-$moduleName};
-        #line sub var #action {^#READ {{plugins/($path)\.tin}}: FILE NOT FOUND.$} {
+        #line sub var #action {^#READ {{plugins/($modulePath)\.tin}}: FILE NOT FOUND.$} {
             class.kill {load-module-$moduleName};
             #var {${prefix}-loaded} {false};
             #line gag;
@@ -54,29 +54,29 @@ class.open module-loader;
         class.close module-loader;
 
         class.open {$moduleName};
-        #var {${prefix}} {};
+        #var {$prefix} {};
         class.close {$moduleName};
 
-        #format path {plugins/%s.tin} {$path};
+        #format modulePath {plugins/%s.tin} {$modulePath};
         #line local {
             #nop 模块名称;
             #local MODULE {$moduleName};
             #nop 模块路径;
-            #local PATH {$path};
+            #local PATH {$modulePath};
             #nop 模块中触发器的默认 ID;
-            #local ID     {%!{(?:|id=${moduleName})}};
+            #local ID     {%!{(?:|id=$moduleName)}};
             #nop 文本开始;
             #local {B}    {^{[> ]*}};
             #nop 文本结束;
-            #local {E}    {%!{(?:|id=${moduleName})}$};
+            #local {E}    {%!{(?:|id=$moduleName)}$};
             #nop 颜色触发中的文本结束;
             #local {CE}   {%!c$E};
-            class.read {$moduleName} {$path};
+            class.read {$moduleName} {$modulePath};
         };
 
         #if { "${${prefix}-loaded}" == "true" } {
             class.kill {load-module-$moduleName};
-            init-module {$moduleName} {$path} {$moduleConfig};
+            init-module {$moduleName} {$modulePath} {$moduleConfig};
             #return;
         };
     };
@@ -99,7 +99,7 @@ class.open module-loader;
     };
 
     #nop 检查有没有初始化过;
-    #if { "${xtt-modules[$moduleName]}" != "" } {
+    #if { "$xtt-modules[$moduleName]" != "" } {
         #return;
     };
 
@@ -126,7 +126,7 @@ class.open module-loader;
         #if { "$metaInfo[CONFIG]" != "" } {
             #foreach {*metaInfo[CONFIG][]} {key} {
                 class.open {$moduleName};
-                #var ${prefix}[config][$key] {$modConfig[$key]};
+                #var {${prefix}[config][$key]} {$modConfig[$key]};
                 class.close {$moduleName};
                 class.open module-loader;
                 #var xtt-modConfig[$moduleName][$key] {$modConfig[$key]};
@@ -152,7 +152,7 @@ class.open module-loader;
     #if { "$metaInfo[TYPE]" == "纯模块" } {
         okLog 本模块是纯模块，请使用 ${moduleName}.Start/Stop 来控制启动停止。;
 
-        #if { "${xtt-modConfig[$moduleName][ENABLE]}" == "" } {
+        #if { "$xtt-modConfig[$moduleName][ENABLE]" == "" } {
             disable-module {$moduleName} {true};
         };
 
@@ -172,7 +172,7 @@ class.open module-loader;
     #local modules {};
     #foreach {*{xtt-modules[]}} {name} {
         #if { "$name" != "$moduleName" } {
-            #format modules {%s%s} {$modules} {{$name}{${xtt-modules[$name]}}};
+            #format modules {%s%s} {$modules} {{$name}{$xtt-modules[$name]}};
         };
     };
     #var {xtt-modules} {$modules};
@@ -202,7 +202,7 @@ class.open module-loader;
     #local moduleName   {%1};
     #local dontCallStop {%2};
 
-    #if { "${xtt-modules[$moduleName][TYPE]}" == "纯模块" && "$dontCallStop" != "true" } {
+    #if { "$xtt-modules[$moduleName][TYPE]" == "纯模块" && "$dontCallStop" != "true" } {
         ${moduleName}.Stop;
         #return;
     };
@@ -212,12 +212,12 @@ class.open module-loader;
         #return;
     };
 
-    #if { "${xtt-modules[$moduleName]}" == "" } {
+    #if { "$xtt-modules[$moduleName]" == "" } {
         errLog 模块 $moduleName 尚未加载模块。;
         #return;
     };
 
-    #if { "${xtt-modConfig[$moduleName][ENABLE]}" == "false" } {
+    #if { "$xtt-modConfig[$moduleName][ENABLE]" == "false" } {
         warnLog 模块 $moduleName 已经禁用。;
         #return;
     };
@@ -233,7 +233,7 @@ class.open module-loader;
     #local moduleName       {%1};
     #local dontCallStart    {%2};
 
-    #if { "${xtt-modules[$moduleName][TYPE]}" == "纯模块" && "$dontCallStart" != "true" } {
+    #if { "$xtt-modules[$moduleName][TYPE]" == "纯模块" && "$dontCallStart" != "true" } {
         ${moduleName}.Start;
         #return;
     };
@@ -243,12 +243,12 @@ class.open module-loader;
         #return;
     };
 
-    #if { "${xtt-modules[$moduleName]}" == "" } {
+    #if { "$xtt-modules[$moduleName]" == "" } {
         errLog 模块 $moduleName 尚未加载模块。;
         #return;
     };
 
-    #if { "${xtt-modConfig[$moduleName][ENABLE]}" == "true" } {
+    #if { "$xtt-modConfig[$moduleName][ENABLE]" == "true" } {
         warnLog 模块 $moduleName 已经启用。;
         #return;
     };
@@ -263,15 +263,15 @@ class.open module-loader;
 #alias {MODS} {list-modules};
 #alias {list-modules} {
     #local _ {%0};
-    #local format {  %c%-30s %-8s %-8s %-4s %-6s %-6s %s};
+    #local format {  %c%-40s %-8s %-8s %-4s %-6s %-6s %s};
     #echo {%c%h}    {cyan} { 已加载模块 -- 请用 MOD <模块名> 来查看详细内容 };
     #echo {$format} {cyan} {模块名称} {作者} {类型} {状态} {事件} {配置项} {说明};
-    #echo {$format} {cyan} {------------} {-------} {-------} {----} {----} {----} {------------------------------------};
+    #echo {$format} {cyan} {-----------------} {-------} {-------} {----} {----} {----} {------------------------------------};
     #local name {};
     #local count {0};
     #foreach {*{xtt-modules[]}} {name} {
         #math count {$count + 1};
-        #local metaInfo {${xtt-modules[$name]}};
+        #local metaInfo {$xtt-modules[$name]};
         #local cnName   {$metaInfo[NAME]};
         #local author   {$metaInfo[AUTHOR]};
         #local type     {$metaInfo[TYPE]};
@@ -297,7 +297,7 @@ class.open module-loader;
             #local type {<139>混合模块<299>};
         };
 
-        #if { "${xtt-modConfig[$moduleName][ENABLE]}" == "false" } {
+        #if { "$xtt-modConfig[$name][ENABLE]" == "false" } {
             #local enable {<119>禁用<299>};
         };
 
@@ -310,11 +310,11 @@ class.open module-loader;
 #alias {MOD} {look-module %0; #buffer end};
 #alias {look-module} {
     #local moduleName   {%1};
-    #local metaInfo     {${xtt-modules[$moduleName]}};
+    #local metaInfo     {$xtt-modules[$moduleName]};
     #local cnName       {$metaInfo[NAME]};
     #local path         {$metaInfo[PATH]};
     #local type         {$metaInfo[TYPE]};
-    #local enable       {${xtt-modConfig[$moduleName][ENABLE]}};
+    #local enable       {$xtt-modConfig[$moduleName][ENABLE]};
     #local desc         {$metaInfo[DESC]};
     #local author       {$metaInfo[AUTHOR]};
     #local note         {$metaInfo[NOTE]};
@@ -325,7 +325,7 @@ class.open module-loader;
         #return;
     };
 
-    #if { "${xtt-modules[$moduleName]}" == "" } {
+    #if { "$xtt-modules[$moduleName]" == "" } {
         errLog 模块 $moduleName 尚未加载。;
         #return;
     };
@@ -381,7 +381,7 @@ class.open module-loader;
     #local key {};
     #foreach {*config[]} {key} {
         #math count {$count + 1};
-        #local value ${xtt-modConfig[$moduleName][$key]};
+        #local value {$xtt-modConfig[$moduleName][$key]};
         #local desc  {$config[$key]};
         #local prefix {$moduleName};
         #replace prefix {/} {_};
@@ -399,7 +399,7 @@ class.open module-loader;
 
     #tab {%1.Start};
     #alias {%1.Start} {
-        #if { "${xtt-modConfig[%1][ENABLE]}" == "false" } {
+        #if { "$xtt-modConfig[%1][ENABLE]" == "false" } {
             enable-module {%1} {true};
         };
 
@@ -412,7 +412,7 @@ class.open module-loader;
             class.close {%1};
         };
 
-        #format xtt-modConfig {%s%s} {${xtt-modConfig}} {{%1}{${%2[config]}}};
+        #format xtt-modConfig {%s%s} {$xtt-modConfig} {{%1}{${%2[config]}}};
 
         class.do {%1} %1.Run;
     };
@@ -431,7 +431,7 @@ class.open module-loader;
             %1.Pause;
         };
 
-        #if { "${xtt-modConfig[%1][ENABLE]}" == "true" } {
+        #if { "$xtt-modConfig[%1][ENABLE]" == "true" } {
             disable-module {%1} {true};
         };
     };
