@@ -110,8 +110,10 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
             #elseif { "$name" == "最大{气血|精神|内力|精力}" } {
                 #local pctName {@str.Replace{$name;最大%*;&1百分比}};
                 #local needUpdate[$pctName] {true};
-                #local health  {@str.Replace{$name;最大%*;&1健康度}};
-                #local needUpdate[$health]  {true};
+                #if { "$name" == "最大{气血|精神}" } {
+                    #local health  {@str.Replace{$name;最大%*;&1健康度}};
+                    #local needUpdate[$health]  {true};
+                };
             };
             #else {
                 #if { "$name" == "{忙|战斗中}" } {
