@@ -343,7 +343,7 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
 
     okLog 计算结果: {$target[path]};
     #replace {target[route]} {(%*)} {};
-    okLog 途经节点 $target[route];
+    okLog 途经节点: $target[route];
 
     map.WalkNodes {$target[path]} {$hook};
 };
@@ -476,4 +476,80 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     };
 };
 
-#alias {xy} {xiaoyao.Goto};
+#func {xiaoyao.locateByName} {
+    #local name {%1};
+
+    #if { "$name" == "" } {
+        #return {};
+    };
+
+    #local nodes {@table.Keys{map.xiaoyao.map;%*$name%*}};
+    #local best {};
+    #local normal {};
+    #local node {};
+    #foreach {$nodes} {node} {
+        #if { "$node" == "$name(%*)" } {
+            #return {$node};
+        };
+        #if { "$node" == "$name%*($name的%*)" && "$node" != "%*{津|渡|渡口})" } {
+            #local best {$node};
+        };
+        #elseif { "$node" == "%*(%*$name%*)" } {
+            #local normal {$node};
+        };
+    };
+
+    #if { "$best" != "" } {
+        #return {$best};
+    };
+    #else {
+        #return {$normal};
+    };
+};
+
+///=== {
+// ## xiaoyao.Query <出发节点> <目的节点>
+//    计算逍遥行路径。
+//    出发节点和目的节点都支持模糊查询。
+//
+//    本别名也可简写为 <139>xyq<299>。
+// };
+#alias {xiaoyao.Query} {
+    #local begin {@str.Format{%U}};
+
+    #local origin   {@xiaoyao.locateByName{%1}};
+    #local target   {@xiaoyao.locateByName{%2}};
+
+    #if { "$origin" == "" || "$target" == "" } {
+        xtt.Usage xiaoyao.Query {<169>这里是 PaoTin++ 逍遥行路径查询工具};
+        #return;
+    };
+
+    infoLog 计算从<129>$origin<299>到<139>$target<299>的路径。;
+    #local target {@xiaoyao.findPath{$origin;"NODE" == "%*$target%*"}};
+    #if { "$target" == "" } {
+        errLog 找不到路径。;
+        #return;
+    };
+
+    #if { "$target[path]" == "" } {
+        okLog 你已经来到了 $target[room];
+        #return;
+    };
+
+    #local end {@str.Format{%U}};
+    #local elapsed {@math.Eval{($end * 1.000 - $begin * 1.000) / 1000.000}};
+
+    okLog 计算结果: {$target[path]};
+    #replace {target[route]} {(%*)} {};
+    okLog 途经节点: $target[route];
+    infoLog 计算耗时: $elapsed 毫秒。;
+
+    infoLog;
+    infoLog PaoTin++ 用户使用 <120>xy %2<299> 即可完成行走，支持自动坐船过河。;
+    infoLog 下载地址: <488><149>https://pkuxkx.net/wiki/tools/paotin<299>;
+    infoLog;
+};
+
+#alias {xy}     {xiaoyao.Goto};
+#alias {xyq}    {xiaoyao.Query};
