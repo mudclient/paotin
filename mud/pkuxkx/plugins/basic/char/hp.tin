@@ -560,7 +560,7 @@ hp -neili 格式：
 #func {char.hp.colorit} {
     #local percent {@math.Int{@defaultNum{%1;0}}};
     #local color {@default{{$char.HPSummarize.Theme[色卡]};{<218>;15;<118>;30;<238>;60;<138>;90;<128>;101;<168>}}};
-    #return {@util.Grade{$percent;$color}$percent%%<298>};
+    #return {@util.Grade{$percent;$color}$percent%<298>};
 };
 
 #alias {char.GetHP} {
