@@ -280,11 +280,11 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
 //    关于 walk 命令的细节可以参考 help walk。
 // };
 #alias {xiaoyao.Goto} {
-    #local target   {%1};
+    #local target   {@xiaoyao.locateByName{%1}};
     #local hook     {%2};
     #local retry    {@defaultNum{%3;0}};
 
-    #if { "%1" == "" } {
+    #if { "$target" == "" } {
         xtt.Usage xiaoyao.Goto {<169>这里是 PaoTin++ 逍遥行};
         #return;
     };
@@ -481,6 +481,10 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
 
     #if { "$name" == "" } {
         #return {};
+    };
+
+    #if { &map.xiaoyao.map[=$name] > 0 } {
+        #return {$name};
     };
 
     #local nodes {@table.Keys{map.xiaoyao.map;%*$name%*}};
