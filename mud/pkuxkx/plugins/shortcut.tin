@@ -143,6 +143,23 @@ load-lib sync;
 	#line oneshot #alias {^%*{|ID=xiang}$} {#send %%0; xtt.UndoDisableAllCommands} {1.001};
 };
 
+#action {^播放短视频%*……$E} {
+    #class short-video open;
+    #var short-video.hp {$char.HPSummarize.Echo};
+    #var char.HPSummarize.Echo {从不};
+    #line quiet #ignore tickers on;
+    #action {^%*{|id/short-video}$} {
+        #if { "%%1" == "{停止播放视频。|视频播放完毕。.*}" } {
+            #var char.HPSummarize.Echo {$short-video.hp};
+            #line quiet #ignore tickers off;
+            #class short-video kill;
+        };
+    } {1.100};
+    #class short-video close;
+};
+
+#alias {^short_video{| .*}$} {#send short_video%1};
+
 #gag {~^%c%s%c$};
 #action {^>%s$} {#line gag};
 #gag {^├{(─|┼)+}┤$};
