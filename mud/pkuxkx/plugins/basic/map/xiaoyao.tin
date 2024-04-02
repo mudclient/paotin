@@ -178,7 +178,7 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
         ||  &gMapRoom[area][] == 0
         || "$gMapRoom[area][RESOLVED]" == "" )
     } {
-        event.HandleOnce map/GotArea {xiaoyao/Map} {map} {xiaoyao.Map {@math.Eval{$retry + 1}} $args};
+        #line sub {func;var} event.HandleOnce map/GotArea {xiaoyao/Map} {map} {xiaoyao.Map {@math.Eval{$retry + 1}} $args};
         map.Here;
         #return;
     };
@@ -309,7 +309,7 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
         ||  &gMapRoom[area][] == 0
         || "$gMapRoom[area][RESOLVED]" == ""
     } {
-        event.HandleOnce map/GotArea {xiaoyao/Goto} {xiaoyao} {xiaoyao.Goto {$target} {$hook} {@math.Eval{$retry + 1}}};
+        #line sub {func;var} event.HandleOnce map/GotArea {xiaoyao/Goto} {xiaoyao} {xiaoyao.Goto {$target} {$hook} {@math.Eval{$retry + 1}}};
         #var map.Locate.mode {CarefulOnce};
         look;
         #return;
