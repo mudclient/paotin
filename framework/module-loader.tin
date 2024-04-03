@@ -262,7 +262,8 @@ class.open module-loader;
 #nop 列出所有已加载模块以及它们的开关状态、配置参数;
 #alias {MODS} {list-modules};
 #alias {list-modules} {
-    #local _ {%0};
+    #local pattern {%1};
+
     #local format {  %c%-40s %-8s %-8s %-4s %-6s %-6s %s};
     #echo {%c%h}    {cyan} { 已加载模块 -- 请用 MOD <模块名> 来查看详细内容 };
     #echo {$format} {cyan} {模块名称} {作者} {类型} {状态} {事件} {配置项} {说明};
@@ -270,7 +271,6 @@ class.open module-loader;
     #local name {};
     #local count {0};
     #foreach {*{xtt-modules[]}} {name} {
-        #math count {$count + 1};
         #local metaInfo {$xtt-modules[$name]};
         #local cnName   {$metaInfo[NAME]};
         #local author   {$metaInfo[AUTHOR]};
@@ -280,6 +280,18 @@ class.open module-loader;
         #local enable   {<129>开启<299>};
         #local hasConfig {有};
         #local hasEvents {无};
+
+        #if { "$pattern" != "" } {
+            #if {   "$name" != "%*$pattern%*"
+                &&  "$cnName" != "%*$pattern%*"
+                &&  "$author" != "%*$pattern%*"
+                &&  "$desc" != "%*$pattern%*"
+            } {
+                #continue;
+            };
+        };
+
+        #math count {$count + 1};
 
         #if { "$config" == "" } {
             #local hasConfig {无};
@@ -303,7 +315,13 @@ class.open module-loader;
 
         #echo {$format} {white} {@genModuleLink{$name;MOD}} {$author} {$type} {$enable} {$hasEvents} {$hasConfig} {$desc};
     };
-    #echo {%c%h} {cyan} { 共列出 $count 项模块信息 };
+
+    #if { $count > 10 } {
+        #echo {%c%h} {cyan} { 共列出 $count 项模块信息，若嫌内容过多，你可以用 MOD <关键字> 来模糊查询以缩小范围 };
+    };
+    #else {
+        #echo {%c%h} {cyan} { 共列出 $count 项模块信息 };
+    };
 };
 
 #nop 列出所有已加载模块以及它们的开关状态、配置参数;
