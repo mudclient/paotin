@@ -38,5 +38,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #line oneshot #event {CATCH SEND OUTPUT} {#0};
 };
 
+#config {extra action args} on;
+#config {extra alias args} on;
+
 #nop 切分出专门的文字输入区。;
 #split;
