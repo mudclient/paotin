@@ -68,7 +68,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #alias {xtt.ListTicker} {
     #info tickers save;
 
-    #echo {<128>   %-30s %+20s %+10s %+20s} {所属模块} {定时器名称} {执行周期} {距离下次执行(s)};
+    #echo {<128>   %-30s %+20s %+10s %+20s} {所属模块} {定时器名称} {执行周期(s)} {距离下次执行(s)};
 
     #draw Yellow scroll line 1 1 1 90;
 
@@ -126,12 +126,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #list {aliasTable[$class]} sort {$name};
     };
 
-    #local format {    %-30s %-40s %-10s};
+    #local format {    %-35s %-40s %-10s};
     #echo {<128>$format} {class} {别名} {类型};
 
     #draw Yellow scroll line 1 1 1 90;
 
-    #local classList {@list.Sort{*aliasTable[]}};
+    #local classList {@slist.Sort{*aliasTable[]}};
     #local class {};
     #foreach {$classList} {class} {
         #local name {};
@@ -140,6 +140,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
             #if { "$name" == "%*.{[A-Z][a-zA-Z0-9]+}" } {
                 #local type {<129>开放API<299>};
+            };
+
+            #if { "$name" == "{[a-z]+}" } {
+                #local type {<159>伪装的服务器命令<299>};
             };
 
             #if { "$class" == "module-loader" } {
@@ -300,12 +304,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #list {funcsTable[$class]} sort {$name};
     };
 
-    #local format {    %-30s %-40s %-10s};
+    #local format {    %-35s %-40s %-10s};
     #echo {<128>$format} {class} {函数} {类型};
 
     #draw Yellow scroll line 1 1 1 90;
 
-    #local classList {@list.Sort{*funcsTable[]}};
+    #local classList {@slist.Sort{*funcsTable[]}};
     #local class {};
     #foreach {$classList} {class} {
         #local name {};
@@ -353,6 +357,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #loop {1} {&info[ACTIONS][]} {index} {
         #local name     {$info[ACTIONS][+$index][arg1]};
         #local class    {$info[ACTIONS][+$index][class]};
+        #local priority {$info[ACTIONS][+$index][arg3]};
 
         #if { "$class" == "" && "$pattern" != "all" } {
             #continue;
@@ -366,21 +371,26 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             #continue;
         };
 
-        #list {actionTable[$class]} sort {$name};
+        #list {actionTable[$class]} add {{{name}{$name}{priority}{$priority}}};
     };
 
-    #local format {    %-30s %-40s %-10s};
-    #echo {<128>$format} {class} {文本触发};
+    #local format {    %-35s %-5s %-40s %-10s};
+    #echo {<128>$format} {class} {优先级} {文本触发};
 
     #draw Yellow scroll line 1 1 1 90;
 
-    #local classList {@list.Sort{*actionTable[]}};
+    #local classList {@slist.Sort{*actionTable[]}};
     #local class {};
     #foreach {$classList} {class} {
-        #local name {};
-        #foreach {${actionTable[$class][]}} {name} {
+        #list {actionTable[$class]} indexate {name};
+        #list {actionTable[$class]} sort;
+        #local act {};
+        #foreach {${actionTable[$class][]}} {act} {
+            #local name     {$act[name]};
+            #local priority {$act[priority]};
             #echo {<060>$format}
                 {@genModuleLink{$class;MOD}<060>}
+                {$priority}
                 {@mslp.Exec{{xtt.delTrigger action {$name}};<119>✗<269>;false} $name}
         };
     };
