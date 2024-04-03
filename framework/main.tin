@@ -184,6 +184,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #nop 为 TinTin 赋能，自行实现的扩展语法和实用函数集。;
     load-lib xtintin;
 
+    #nop 一些预置的常量;
+    load-lib constant;
+
     #nop 提供 TinTin++ 命令行自动补全功能。;
     load-lib tab-completion;
 

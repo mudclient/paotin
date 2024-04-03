@@ -164,7 +164,7 @@ load-lib sync;
 #action {^>%s$} {#line gag};
 #gag {^├{(─|┼)+}┤$};
 
-#action {^%*给你一枚%*{☆|★|◎}%*。$E} {
+#action {^$PLAYER给你一{颗|枚}{地|山|水|风|雷|火|泽|天}{☆|★|◎}%+2..3u。$E} {
     pack gem;
 } {9.999};
 
