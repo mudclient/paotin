@@ -387,26 +387,34 @@ class.open module-loader;
         };
     };
 
-    #if { &config[] <= 0 } {
+    #if { &config[] > 0 } {
         #echo {%c%h} {cyan} {};
-        #return;
+
+        #local count {0};
+        #echo {%s}      {    <269>配置参数表:<299>};
+        #echo {$format} {cyan} {配置项} {当前值} {作用};
+        #echo {$format} {cyan} {--------------------} {--------------------} {------------------------------};
+        #local key {};
+        #foreach {*config[]} {key} {
+            #math count {$count + 1};
+            #local value {$xtt-modConfig[$moduleName][$key]};
+            #local desc  {$config[$key]};
+            #local prefix {$moduleName};
+            #replace prefix {/} {_};
+            #echo {$format} {light cyan} {$key} {{$value}} {$desc};
+        };
+
+        #echo {%c%h} {cyan} { 共列出 $count 项配置信息 };
     };
 
-    #local count {0};
-    #echo {%s}      {    <269>配置参数表:<299>};
-    #echo {$format} {cyan} {配置项} {当前值} {作用};
-    #echo {$format} {cyan} {--------------------} {--------------------} {------------------------------};
-    #local key {};
-    #foreach {*config[]} {key} {
-        #math count {$count + 1};
-        #local value {$xtt-modConfig[$moduleName][$key]};
-        #local desc  {$config[$key]};
-        #local prefix {$moduleName};
-        #replace prefix {/} {_};
-        #echo {$format} {light cyan} {$key} {{$value}} {$desc};
-    };
+    #echo {};
+    #echo {%c%h} {cyan} { <169>接下来进一步调查该模块的变量、别名和触发情况<069> };
+    #echo {};
 
-    #echo {%c%h} {cyan} { 共列出 $count 项配置信息 };
+    xtt.ListVar $moduleName; #echo {};
+    xtt.ListFunc $moduleName; #echo {};
+    xtt.ListAlias $moduleName; #echo {};
+    xtt.ListAction $moduleName; #echo {};
 };
 
 #alias {make-starter} {
