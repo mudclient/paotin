@@ -12,9 +12,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {AUTHOR}    {担子炮}
 };
 
-VAR {普通订单}      pp-svip-order       {};
 VAR {VIP 订单}      pp-vip-order        {};
-VAR {SVIP 订单}     pp-public-order     {};
+VAR {SVIP 订单}     pp-svip-order       {};
+VAR {普通订单}      pp-public-order     {};
 
 VAR {VIP 清单}      pp-vip-list         {};
 VAR {SVIP 清单}     pp-svip-list        {};
