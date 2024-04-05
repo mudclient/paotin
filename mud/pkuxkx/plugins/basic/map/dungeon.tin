@@ -21,6 +21,8 @@ event.HandleOnce {map/init} {map/dungeon} {map} {map.Dungeon.Init};
 #alias {map.EnterDungeon.notice} {
     #if { "%1" == "idle" } {
         warnLog 你来到了「$gCurrentDungeon」，你不忙。;
+        #nop 万安塔进入的时候会丢失 GMCP 战斗标志。;
+        #if { "$gCurrentDungeon" == "万安塔" } {char.MarkFight};
     };
     #else {
         warnLog 你来到了「$gCurrentDungeon」。;

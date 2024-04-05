@@ -187,13 +187,7 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
         event.Emit char/hpbrief;
     };
 
-    #if     { $hasScore }           {event.Emit char/score};
-
-    #if     { "$busy" == "true" }   {event.Emit char/busy};
-    #elseif { "$busy" == "false" }  {event.Emit char/nobusy};
-
-    #if     { "$fight" == "true" }  {event.Emit char/fight};
-    #elseif { "$fight" == "false" } {event.Emit char/nofight};
+    #if { $hasScore } {event.Emit char/score};
 };
 
 #action {^GMCP 频道收听汇总：$E} {

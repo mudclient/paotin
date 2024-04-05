@@ -633,7 +633,7 @@ hp -neili 格式：
 // ## char.MarkFight <布尔值>
 //    设置角色的战斗状态。
 // };
-#alias {char.MarkFight} {char.set-flag 战斗中 false};
+#alias {char.MarkFight} {char.set-flag 战斗中 true};
 
 ///=== {
 // ## char.UnmarkFight <布尔值>
