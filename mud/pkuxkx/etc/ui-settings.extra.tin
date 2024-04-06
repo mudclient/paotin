@@ -9,6 +9,8 @@
 #list prompt-fields create {
     { {place}{MidSepBar}        {label}{重启}       {name}{reboot}   {countdown}{Auto} }
     { {place}{MidSepBar}        {label}{经验转化率} {name}{pot/exp}  }
+    { {place}{MidSepBar}        {label}{周}         {name}{week}     {visibility}{HideLabel} {countdown}{Auto} }
+
     { {place}{MidSepBar}        {label}{签到}       {name}{sign}     }
     { {place}{MidSepBar}        {label}{铜雀台}     {name}{tqt}      }
 
