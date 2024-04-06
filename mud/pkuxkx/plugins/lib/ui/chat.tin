@@ -74,16 +74,16 @@ load-lib alert;
         storage.SetGlobal 五绝名号 {$chat-wujue-title};
     };
 
-    #if { @sset.Contains{{$chat-wujue-title};$type} } {
-        #local type 闲聊;
-    };
-
-    #if { @sset.Contains{{$chat-group-name};$type} } {
-        #local type 帮派;
-    };
-
-    #if { "$char-menpai-id[$type]" != "" } {
-        #local type 门派;
+    #if { "$type" != "{求助|北侠QQ群|闲聊|副本|谣言|门派|帮派|队伍|江湖|任务|交易|本地|区域|亡灵|表决|醒目|答问如流|备选答案|私聊}" } {
+        #if { @sset.Contains{{$chat-wujue-title};$type} } {
+            #local type 闲聊;
+        };
+        #elseif { @sset.Contains{{$chat-group-name};$type} } {
+            #local type 帮派;
+        };
+        #elseif { "$char-menpai-id[$type]" != "" } {
+            #local type 门派;
+        };
     };
 
     #local id {};
