@@ -1,0 +1,89 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var lib_hzk12[META] {
+    {NAME}      {点阵字库}
+    {DESC}      {点阵字库处理，提供 API}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+#func {lib_hzk12.Init} {
+    #return {true};
+};
+
+#alias {hzk12.Beautify} {
+    #local word {%1};
+
+    #local lines {};
+    #local line {0};
+    #loop 1 12 {line} {
+        #replace word {|%+16*|%*} {
+            {left}  {&1}
+            {right} {&2}
+        };
+        #local word {$word};
+        #local line {$word[left]};
+        #replace line {%+1S} {1};
+        #replace line {%+1s} {0};
+        #list lines add {{$line}};
+        #local word {$word[right]};
+    };
+
+    hzk12.draw-block {$lines};
+};
+
+#alias {hzk12.draw-block} {
+    #local lines {%1};
+
+    #local code {};
+    #local n {};
+    #loop {1} {6} {n} {
+        #local first    {@math.Eval{$n * 2 - 1}};
+        #local first    {$lines[$first]};
+        #list first     {tokenize} {$first};
+
+        #local second   {@math.Eval{$n * 2}};
+        #local second   {$lines[$second]};
+        #list second    {tokenize} {$second};
+
+        #local i {};
+        #local line {};
+        #loop {1} {16} {i} {
+            #local point {$first[$i]$second[$i]};
+            #switch {"$point"} {
+                #case {"11"} {#cat line {█}};
+                #case {"00"} {#cat line { }};
+                #case {"10"} {#cat line {▀}};
+                #case {"01"} {#cat line {▄}};
+            };
+        };
+        #echo {%s} {$line};
+    };
+};
+
+#alias {hzk12.test} {
+    #local word {
+        |  *   *         |
+        |  *   *   *     |
+        |  *  *******    |
+        |* * **    *     |
+        |* ** **** *     |
+        |* *  *  * *     |
+        |* *  *  * *     |
+        |  *  **** *     |
+        | * * *   **     |
+        | *  **     *    |
+        |*    *     *    |
+        |      ******    |
+    };
+
+    hzk12.Beautify {$word};
+};
