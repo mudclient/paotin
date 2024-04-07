@@ -1,0 +1,37 @@
+#action {^这时就在不远处的%*，似乎有人放烟花回应，你寻思着这大约就是接头口令了。$} {
+    diebao.password;
+};
+
+#action {^如果你没记错的话，接头人名唤%*。$} {
+    diebao.password;
+};
+
+#alias {diebao.password} {
+    #class diebao.password open;
+
+    #var diebao-password-word  {};
+    #var diebao-password-count {0};
+
+    #line multishot 3 #action {^{|ID=diebao/password}$} {
+        okLog -------------;
+        #var diebao-password-word  {};
+        #var diebao-password-count {0};
+        #line multishot 12 #action {^%+12*    {|ID=diebao/password}$} {
+            #line gag;
+            #cat diebao-password-word {|%%%0|};
+            math.Inc diebao-password-count;
+            #if { $diebao-password-count == 12 } {
+                hzk12.Beautify {$diebao-password-word};
+                okLog -------------;
+            };
+        };
+    };
+
+    #delay diebao-password-timeout {
+        #class diebao.password kill;
+    } 8;
+
+    #class diebao.password close;
+};
+
+load-lib hzk12;
