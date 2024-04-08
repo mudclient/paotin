@@ -126,6 +126,155 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {dec2hex}         {#return {@str.DecToHex{%0}}};
 
 ///=== {
+// #@ str.BinToHex <二进制数字串>
+//    二进制转十六进制
+//
+//  EXAMPLE: \@str.BinToHex{0}
+//  RESULT:  {0}
+//
+//  EXAMPLE: \@str.BinToHex{1}
+//  RESULT:  {1}
+//
+//  EXAMPLE: \@str.BinToHex{10}
+//  RESULT:  {2}
+//
+//  EXAMPLE: \@str.BinToHex{0111}
+//  RESULT:  {7}
+//
+//  EXAMPLE: \@str.BinToHex{1000}
+//  RESULT:  {8}
+//
+//  EXAMPLE: \@str.BinToHex{1111}
+//  RESULT:  {F}
+//
+//  EXAMPLE: \@str.BinToHex{01011}
+//  RESULT:  {0B}
+//
+//  EXAMPLE: \@str.BinToHex{0000010010001101001010101111001101}
+//  RESULT:  {01234ABCD}
+// };
+#func {str.BinToHex} {
+    #local bin {%1};
+    #local hex {};
+
+    #if { "$bin" == "" } {
+        #return {};
+    };
+
+    #local len {@str.Len{$bin}};
+
+    #switch {$len % 4} {
+        #case {0}   {#0};
+        #case {1}   {#local bin {000$bin}};
+        #case {2}   {#local bin {00$bin}};
+        #case {3}   {#local bin {0$bin}};
+    };
+
+    #math len {(($len - 1) % 4 + 1) * 4};
+
+    #while {1} {
+        #if { @str.Len{$bin} < 1 } {
+            #return {$hex};
+        };
+        #local parts {$bin};
+        #replace parts {^%+4S%*$} {
+            {left}  {&1}
+            {right} {&2}
+        };
+        #local parts {$parts};
+        #switch {"$parts[left]"} {
+            #case {"0000"} {#cat hex {0}};
+            #case {"0001"} {#cat hex {1}};
+            #case {"0010"} {#cat hex {2}};
+            #case {"0011"} {#cat hex {3}};
+            #case {"0100"} {#cat hex {4}};
+            #case {"0101"} {#cat hex {5}};
+            #case {"0110"} {#cat hex {6}};
+            #case {"0111"} {#cat hex {7}};
+            #case {"1000"} {#cat hex {8}};
+            #case {"1001"} {#cat hex {9}};
+            #case {"1010"} {#cat hex {A}};
+            #case {"1011"} {#cat hex {B}};
+            #case {"1100"} {#cat hex {C}};
+            #case {"1101"} {#cat hex {D}};
+            #case {"1110"} {#cat hex {E}};
+            #case {"1111"} {#cat hex {F}};
+        };
+        #local bin {$parts[right]};
+    };
+};
+
+///=== {
+// #@ str.HexToBin <十六进制数字串>
+//    十六进制转二进制
+//
+//  EXAMPLE: \@str.HexToBin{0}
+//  RESULT:  {0000}
+//
+//  EXAMPLE: \@str.HexToBin{1}
+//  RESULT:  {0001}
+//
+//  EXAMPLE: \@str.HexToBin{2}
+//  RESULT:  {0010}
+//
+//  EXAMPLE: \@str.HexToBin{7}
+//  RESULT:  {0111}
+//
+//  EXAMPLE: \@str.HexToBin{8}
+//  RESULT:  {1000}
+//
+//  EXAMPLE: \@str.HexToBin{F}
+//  RESULT:  {1111}
+//
+//  EXAMPLE: \@str.HexToBin{f}
+//  RESULT:  {1111}
+//
+//  EXAMPLE: \@str.HexToBin{0B}
+//  RESULT:  {00001011}
+//
+//  EXAMPLE: \@str.HexToBin{01234ABCD}
+//  RESULT:  {000000010010001101001010101111001101}
+// };
+#func {str.HexToBin} {
+    #local hex {%1};
+    #local bin {};
+
+    #while {1} {
+        #local parts {$hex};
+        #if { @str.Len{$hex} < 1 } {
+            #return {$bin};
+        };
+        #replace parts {^%+1S%*$} {
+            {left}  {&1}
+            {right} {&2}
+        };
+        #local parts {$parts};
+        #local hex {$parts[right]};
+        #switch {"$parts[left]"} {
+            #case {"0"}     {#cat bin {0000}};
+            #case {"1"}     {#cat bin {0001}};
+            #case {"2"}     {#cat bin {0010}};
+            #case {"3"}     {#cat bin {0011}};
+            #case {"4"}     {#cat bin {0100}};
+            #case {"5"}     {#cat bin {0101}};
+            #case {"6"}     {#cat bin {0110}};
+            #case {"7"}     {#cat bin {0111}};
+            #case {"8"}     {#cat bin {1000}};
+            #case {"9"}     {#cat bin {1001}};
+            #case {"{A|a}"} {#cat bin {1010}};
+            #case {"{B|b}"} {#cat bin {1011}};
+            #case {"{C|c}"} {#cat bin {1100}};
+            #case {"{D|d}"} {#cat bin {1101}};
+            #case {"{E|e}"} {#cat bin {1110}};
+            #case {"{F|f}"} {#cat bin {1111}};
+        };
+    };
+};
+
+#func {bin2hex} {#return {@str.BinToHex{%0}}};
+#func {hex2bin} {#return {@str.HexToBin{%0}}};
+
+///=== {
 // #@ str.Format <格式> <参数>
 //    执行 #format result <格式> <参数> 操作。
 //    本函数也可以简写为 format，两个名称用途和用法完全相同。
