@@ -56,8 +56,53 @@ event.Define {bot/failed}   {无参}  {$MODULE}   {MBS 机器人执行失败};
     #return {true};
 };
 
+#alias {bot.Define} {
+    #local name {%1};
+    #local code {%22};
+
+    #line sub {escapes;var} #alias $name {
+        #if { @bot.Exists{$name} } {
+            errLog 机器 $name 已经正在运行，暂不支持重入，请耐心等待其运行结束。;
+            #return;
+        };
+        bot.Begin $name;
+        $code;
+        bot.End;
+    };
+};
+
+#alias {BOT} {
+    #local name {%1};
+    #local code {%22};
+
+    #line sub {escapes;var} #alias $name {
+        #if { @bot.Exists{$name} } {
+            errLog 机器 $name 已经正在运行，暂不支持重入，请耐心等待其运行结束。;
+            #return;
+        };
+        bot.Begin $name;
+        $code;
+        bot.Done;
+    };
+};
+
 ///=== {
-// ## bot.Begin
+// #@ bot.Exists <机器名称>
+//    检查机器是否存在。
+// };
+#func {bot.Exists} {
+    #local name {%1};
+
+    #if { &mbs.bots[ALL][$name][] > 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// ## bot.Begin <机器名称>
 //    标记新机器开始，后续命令会落到新机器。
 // };
 #alias {bot.Begin} {
@@ -70,7 +115,7 @@ event.Define {bot/failed}   {无参}  {$MODULE}   {MBS 机器人执行失败};
 
     dbgLog MBS bot.Begin $name;
 
-    #if { &mbs.bots[ALL][$name][] > 0 } {
+    #if { @bot.Exists{$name} } {
         errLog 已经存在名为「$name」的机器人。;
         #return;
     };
@@ -450,7 +495,7 @@ event.Define {bot/failed}   {无参}  {$MODULE}   {MBS 机器人执行失败};
     #local bot {mbs.WaitLine/@uuid{}};
     bot.Begin $bot;
 
-    #line sub var #action {^$regex{ID=$bot}$} {bot.Return $bot};
+    #line sub var #action {^$regex{|ID=$bot}$} {bot.Return $bot};
     #if { $timeout > 0 } {
         #line sub var #delay $bot {bot.Return $bot} $timeout;
     };
