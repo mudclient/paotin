@@ -24,14 +24,15 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///// * 命令队列有好多个，每个 Bot 都有一个自己的专属队列。
 ///// * 为了简化编程，构造编程范式，提出「机器(Bot)」概念。
 ///// * 默认的队列叫做 GLOBAL，所有没有特殊归属的命令都在 GLOBAL 排队。
-///// * 从语义上来讲，bot.Begin 和 bot.End 框定了机器代码的边界。
-///// * 从实质上来讲，bot.Begin 创建命令队列，bot.End 则回到之前的命令队列。
+///// * 从语义上来讲，bot.Begin 和 bot.End（或 bot.Done）框定了机器代码的边界。
+///// * 从实质上来讲，bot.Begin 创建命令队列，bot.End/bot.Done 则回到之前的命令队列。
 ///// * 机器有三种状态，MAKING/NORMAL/PENDING，只有 NORMAL 状态下，命令才会发送。
-///// * bot.Begin 之后机器处于 MAKING（制作中）状态，直到遇到 bot.End 时才转为 NORMAL（正常）状态。
-///// * 在 bot.Begin 和 bot.End 之间的所有代码，如果导致发送了命令，则命令不会真正发送，而是在命令队列缓存。
-///// * 机器所属的命令队列执行完毕并不等于机器执行完毕，因为可能在后续还会产生新的命令。
+///// * bot.Begin 之后机器处于 MAKING（制作中）状态，直到遇到 bot.End/bot.Done 时才转为 NORMAL（正常）状态。
+///// * 在 bot.Begin 和 bot.End/bot.Done 之间的所有代码，如果导致发送了命令，则命令不会真正发送，而是在命令队列缓存。
+///// * 如果机器以 bot.End 结尾，则机器所属的命令队列执行完毕并不等于机器执行完毕，因为可能在后续还会产生新的命令。
 ///// * 要想结束机器运行，必须使用 bot.Return 命令。
 ///// * bot.Return 将结束当前机器执行，销毁机器相关资料，并将发起调用的机器从 PENDING 转为 NORMAL 状态。
+///// * 如果机器以 bot.Done 结尾，则机器所属的命令队列执行完毕就视同为机器执行完毕（也就是说不需要 bot.Return 命令）。
 ///// * bot.Call 将导致当前机器进入 PENDING（等待）状态，等待被调用的机器执行完毕后，才会继续执行。
 ///// * bot.Call 不是调用机器的唯一方式，你也可以不通过 bot.Call 而是直接调用。两者的区别是，bot.Call 会阻塞。
 ///// * bot.Return 结束机器运行时，如果存在被调用的机器，则自动释放被调用的机器。
@@ -296,7 +297,7 @@ event.Define {bot/failed}   {无参}  {$MODULE}   {MBS 机器人执行失败};
     };
 
     #if { "$base" == "" } {
-        errLog 语法错误：无法确定 bot.Call 的调用来源。;
+        #local base {GLOBAL};
         #return;
     };
 
@@ -529,4 +530,29 @@ event.Define {bot/failed}   {无参}  {$MODULE}   {MBS 机器人执行失败};
         } $timeout;
     };
     bot.End;
+};
+
+///=== {
+// ## mbs.Exec <单行代码>
+//    同步执行单行代码。
+// };
+#alias {mbs.Exec} {
+    bot.Call mbs.bot.exec {{%20}};
+};
+
+///=== {
+// ## mbs.Run <脚本（代码块）>
+//    同步执行代码块。
+// };
+#alias {mbs.Run} {bot.Call mbs.bot.exec {{%21}}};
+
+#alias {mbs.bot.exec} {
+    #local code {%1};
+
+    #local bot {mbs.Exec/@uuid{}};
+    bot.Begin $bot;
+
+    #line sub {escapes;var} $code;
+
+    bot.Done;
 };
