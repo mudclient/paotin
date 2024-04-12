@@ -25,7 +25,7 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
 
     #class map.Room.Watch open;
 
-    #action {^%* -{$nation}{$terrain}{$save}{$store}{$group}{$mark}{$undef}%s{?:房间名颜色代码: ([0-9;]+)|}$} {
+    #action {{*UTF8}{?:^}{.{1,9}\S} -{$nation}{$terrain}{$save}{$store}{$group}{$mark}{$undef}$} {
         #local ret {@map.GMCP.Confirm{}};
 
         #local keep {};
