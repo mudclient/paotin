@@ -15,6 +15,7 @@ event.Define {map/ArriveCoachPark}  {无参} {$MODULE} {已经抵达马车行};
 event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
 
 #alias {map.Room.Watch} {
+    #local dungeon  {?:\[(\S{3,10})\]|};
     #local nation   {?:[ ]+\[(大宋|大元|大理|大夏)国\]|};
     #local terrain  {?:[ ]+\[(都城|城市|城内|村镇|野外|门派|帮派|阴间|(\S+)势力范围)\]|};
     #local save     {?:[ ]+\[(存盘点)\]|};
@@ -25,7 +26,7 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
 
     #class map.Room.Watch open;
 
-    #action {{*UTF8}{?:^}{.{1,9}\S} -{$nation}{$terrain}{$save}{$store}{$group}{$mark}{$undef}$} {
+    #action {{*UTF8}{?:^}{.{1,9}?\S}{$dungeon} -{$nation}{$terrain}{$save}{$store}{$group}{$mark}{$undef}$} {
         #local ret {@map.GMCP.Confirm{}};
 
         #local keep {};
@@ -52,12 +53,13 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
 
         #local room {
             {name}{%%1}
-            {nation}{%%2}
-            {terrain}{%%3}
-            {save}{@if{{"%%5" == "存盘点"};true;false}}
-            {store}{@if{{"%%6" == "玩家储物柜"};true;false}}
-            {group}{%%7}
-            {mark}{@str.Split{{%%8};{{ +}};{;}}}
+            {dungeon}{%%2}
+            {nation}{%%3}
+            {terrain}{%%4}
+            {save}{@if{{"%%6" == "存盘点"};true;false}}
+            {store}{@if{{"%%7" == "玩家储物柜"};true;false}}
+            {group}{%%8}
+            {mark}{@str.Split{{%%9};{{ +}};{;}}}
             {cmd}{$ret[cmd]}
             {look}{$ret[exit]}
             {gmcp}{$ret[gmcp]}
@@ -81,6 +83,7 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #var gMapRoom[id]           {};                 #nop 房间ID;
     #var gMapRoom[name]         {$args[name]};      #nop 房间名称;
     #var gMapRoom[colorName]    {};                 #nop 带颜色的房间名称;
+    #var gMapRoom[dungeon]      {$args[dungeon]};   #nop 房间名称;
     #var gMapRoom[nation]       {$args[nation]};    #nop 房间国家，大宋/大理/大元/大夏;
     #var gMapRoom[terrain]      {$args[terrain]};   #nop 房间地段，包含村落和城墙;
     #var gMapRoom[save]         {$args[save]};      #nop 是否为存盘点;
@@ -122,6 +125,7 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #local color {@buffer.RawLine{}};
     #replace color {%S - %*$} {&1};
     #replace color {\e[2;37;0m} {};
+    #replace color {%S[%u]}   {&1};
     #var gMapRoom[colorName] {$color};
 
     #if { @option.IsEnable{MapDebug} } {

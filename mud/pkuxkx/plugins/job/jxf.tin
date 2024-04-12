@@ -1,0 +1,61 @@
+#nop vim: set filetype=tt:;
+
+VAR {纪晓芙任务的行动口令} jxf.Password {};
+VAR {纪晓芙任务的对话记录} jxf.Talk     {};
+
+#alias {jxf.parse} {
+    #class jxf.parse open;
+
+    #action {┌─{(─)*}─┐$}  {jxf.parse.left}    {4};
+    #action {^ ┌─{(─)*}─┐} {jxf.parse.right}   {4};
+
+    #class jxf.parse close;
+};
+
+#alias {jxf.parse.left} {
+    #class jxf.parse.one open;
+
+    #var jxf.parse.line {};
+
+    #action {＜%*│$} {#cat jxf.parse.line {%%1}} {4};
+    #action {│%*│$} {#cat jxf.parse.line {%%1}} {4};
+
+    #action {└─{(─)*}─┘$} {
+        #list jxf.Talk add {甲: <139>@str.Trim{$jxf.parse.line}<299>};
+        #class jxf.parse.one kill;
+    } {4};
+
+    #class jxf.parse.one close;
+};
+
+#alias {jxf.parse.right} {
+    #class jxf.parse.one open;
+
+    #var jxf.parse.line {};
+
+    #action {^ │%*＞} {#cat jxf.parse.line {%%1}} {4};
+    #action {^ │%*│} {#cat jxf.parse.line {%%1}} {4};
+
+    #action {^ └─{(─)*}─┘} {
+        #list jxf.Talk add {乙: <139>@str.Trim{$jxf.parse.line}<299>};
+        #class jxf.parse.one kill;
+    } {4};
+
+    #class jxf.parse.one close;
+};
+
+#action {^你刚刚把自己藏起来，立刻听到了脚步声。$E} {
+    #var jxf.Talk {};
+    jxf.parse;
+};
+
+#action {^[%S]$NPC和$NPC转身离去。$E} {
+    #class jxf.parse kill;
+    okLog 他俩的对话记录如下：;
+    #local idx {};
+    #loop 1 &jxf.Talk[] {idx} {
+        #local line {$jxf.Talk[$idx]};
+        infoLog $line;
+    };
+    okLog 你觉得哪一句更像是口令呢？;
+};

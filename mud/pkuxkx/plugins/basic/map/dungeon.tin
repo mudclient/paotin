@@ -63,6 +63,9 @@ event.HandleOnce {map/init} {map/dungeon} {map} {map.Dungeon.Init};
         #replace gMapRoom[name]         {[{[^\[]*}]} {};
         #replace gMapRoom[colorName]    {[{[^\[]*}]} {};
     };
+    #elseif { "$gMapRoom[dungeon]" != "" } {
+        #local dungeon {$gMapRoom[dungeon]};
+    };
 
     #if { "$dungeon" == "$gCurrentDungeon" } {
         #return;
