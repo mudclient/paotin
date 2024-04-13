@@ -82,7 +82,7 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
 //    列出所有已定义的事件，以及目前已注册在这些事件上面的钩子。
 // };
 #alias {event.List} {
-    #local event {};
+    #local pattern {@default{{%1};%*}};
 
     #if { &gValidEvent[] <= 0 } {
         infoLog 尚未定义任何事件。;
@@ -94,15 +94,30 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
     #echo {%-30s %-5s %-40s %s} {事件/已注册的钩子} {类型} {模块} {说明/代码};
     #echo {%-30s %-5s %-40s %s} {@str.Repeat{30;-}} {----} {@str.Repeat{40;-}} {------------};
 
+    #local event {};
     #foreach {*gValidEvent[]} {event} {
         #local type {有参};
         #if { "$gValidEvent[$event][type]" == "{无参|}" } {
             #local type {无参};
         };
 
-        #echo {%-30s %-5s %-40s %s}{$event} {$type}
-            {@genModuleLink{$gValidEvent[$event][module];MOD}}
-            {$gValidEvent[$event][desc]};
+        #local module {$gValidEvent[$event][module]};
+        #local desc {$gValidEvent[$event][desc]};
+
+        #local event-line {};
+        #format {event-line} {%-30s %-5s %-40s %s} {$event} {$type}
+            {@genModuleLink{$module;MOD}} {$desc};
+
+        #local eventShown {0};
+        #local hookPattern {$pattern};
+
+        #if { "$event/$module/$desc" == "%*$pattern%*" } {
+            #local eventShown {1};
+            #echo {%s} {$event-line};
+            #local hookPattern {%*};
+        };
+
+        #local hookHiden {0};
         #local classCount {0};
         #local class {};
         #foreach {*gEventHandlers[$event][]} {class} {
@@ -110,6 +125,18 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
             #math classCount {$classCount + 1};
             #local hookCount {0};
             #foreach {*gEventHandlers[$event][$class][]} {hook} {
+                #local module {$gEventHandlers[$event][$class][$hook][module]};
+
+                #if { "$class/$module/$hook" != "%*$hookPattern%*" } {
+                    #math hookHiden {$hookHiden + 1};
+                    #continue;
+                };
+
+                #if { ! $eventShown } {
+                    #local eventShown {1};
+                    #echo {%s} {$event-line};
+                };
+
                 #math hookCount {$hookCount + 1};
 
                 #local lead {├};
@@ -122,13 +149,17 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
                 #format len {%L} {$hook};
                 #math len {26 - $len};
                 #echo { $lead@str.Repeat{$len;─} %s        %-40s %s}{$hook}
-                    {@genModuleLink{$gEventHandlers[$event][$class][$hook][module];MOD}}
+                    {@genModuleLink{$module;MOD}}
                     {$gEventHandlers[$event][$class][$hook][code]};
             };
         };
+
+        #if { $eventShown && $hookHiden > 0 } {
+            #echo { ╰@str.Repeat{5;─} %s        %-40s %s}{以及其它 $hookHiden 项};
+        };
     };
 
-    #echo {%h};
+    #echo {%h} { <868>你可以用 event.List <838><正则表达式><868> 来进行模糊查询<898> };
 };
 
 ///=== {
