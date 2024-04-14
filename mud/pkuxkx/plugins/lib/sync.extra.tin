@@ -1,0 +1,28 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#alias {sync.send} {
+    #local uuid {%1};
+
+    xtt.Send {response R:sync-$uuid};
+};
+
+#nop 根据服务器返回的信息，调用相应的回调代码。;
+#action {^系统回馈：R:sync-%*$E} {
+    #local uuid {%1};
+
+    ga.Confirm {response R:sync-$uuid};
+
+    #local callback {$gSyncHandlers[$uuid]};
+    #unvar {gSyncHandlers[$uuid]};
+    #if { {$callback} != {} } {
+        #line sub {escapes;var;func} $callback;
+    };
+
+    #line gag;
+} {4.5};

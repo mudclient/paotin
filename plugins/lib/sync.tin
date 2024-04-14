@@ -45,7 +45,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //       本参数为可选值，如果省略，则无法通过 sync.Ignore 取消回调
 // };
 #alias {sync.Wait} {
-    #local callback {%1};
+    #local callback {%21};
     #local uuid     {%2};
 
     #if { {$callback} == {} } {
@@ -63,8 +63,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     sync.handle {$uuid} {$callback};
-
-    xtt.Send {set public sync-$uuid};
+    sync.send {$uuid};
 };
 
 ///=== {
@@ -83,13 +82,66 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local uuid {};
     #format uuid {%U};
 
-    sync.Wait {$callback} {$uuid};
+    #line sub var sync.Wait {$callback} {$uuid};
 
     #return {$uuid};
 };
 
-#nop 这里保存同步符号和回调代码的对应关系。;
-#var gSyncHandlers {};
+///=== {
+// ## sync.ClassWait <回调代码> [<同步符号>]
+//    类似于 sync.Wait，但会在 #class 消亡时自动忽略，不需要手动 sync.Ignore，提高易用性。
+// };
+#alias {sync.ClassWait} {
+    #local callback {%21};
+    #local uuid     {%2};
+
+    #if { {$callback} == {} } {
+        xtt.Usage sync.ClassWait 回调代码不能为空;
+        #return;
+    };
+
+    #if { {$uuid} == {%*{[^a-zA-Z0-9_./-]}%*} } {
+        xtt.Usage sync.ClassWait 同步符号不能这么写;
+        #return;
+    };
+
+    #if { "$uuid" == "" } {
+        #format uuid {%U};
+    };
+
+    #info session save;
+    #local class {$info[SESSION][CLASS]};
+    #unvar info[SESSION];
+    #if { "$class" != "" } {
+        #line sub var ttevent.HandleOnce {CLASS DESTROYED $class} {event} {event} {sync.Ignore $uuid};
+    };
+
+    sync.handle {$uuid} {$callback};
+    sync.send {$uuid};
+};
+
+///=== {
+// #@ sync.ClassWait <回调代码>
+//    函数版的 sync.ClassWait 相比别名版的 sync.ClassWait，省略了同步符号参数要求，
+//    改由 sync 模块自行生成，并作为返回值返回给用户。
+// };
+#func {sync.ClassWait} {
+    #local callback {%1};
+
+    #if { {$callback} == {} } {
+        xtt.Usage sync.ClassWait 回调代码不能为空;
+        #return;
+    };
+
+    #local uuid {};
+    #format uuid {%U};
+
+    #line sub var sync.ClassWait {$callback} {$uuid};
+
+    #return {$uuid};
+};
+
+VAR {同步符号对应的回调代码} gSyncHandlers {};
 
 #alias {sync.handle} {
     #local uuid     {%1};
@@ -100,23 +152,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ///=== {
 // ## sync.Ignore <同步符号>
 //    忽略指定的同步信息，将不会再触发回调代码。
+//    根据设计，大部分情况下你不需要手动 sync.Ignore，参见 sync.ClassWait。
 // };
 #alias {sync.Ignore} {
     #local uuid {%1};
     #unvar {gSyncHandlers[$uuid]};
 };
 
-#nop 根据服务器返回的信息，调用相应的回调代码。;
-#action {^设定环境变数：public = "sync-%S"$E} {
-    #local uuid {%1};
-
-    ga.Confirm {set public sync-$uuid};
-
-    #local callback {$gSyncHandlers[$uuid]};
-    #unvar {gSyncHandlers[$uuid]};
-    #if { {$callback} != {} } {
-        $callback;
-    };
-
-    #line gag;
+#alias {sync.send} {
+    errLog BUG: 待实现。;
+    #return;
 };
