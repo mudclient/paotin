@@ -29,7 +29,7 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
 
 #func {__xtt_event_name_is_valid__} {
     #local event {%1};
-    #if { "$event" == "{[_a-zA-Z]([./_a-zA-Z0-9-]*[a-zA-Z0-9])?}" } {
+    #if { "$event" == "{[_a-zA-Z]([./_a-z A-Z0-9-]*[a-zA-Z0-9])?}" } {
         #return {true};
     };
 
@@ -206,10 +206,10 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
                 #unvar {gEventHandlers[$event][$class][$hook]};
             };
             #if { "$args" == "" || "$gValidEvent[$event][type]" == "无参" } {
-                $code;
+                #line sub {escapes;var;func} $code;
             };
             #else {
-                $code {$args};
+                #line sub {escapes;var;func} $code {$args};
             };
         };
     };
@@ -254,6 +254,9 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
     };
 
     #local class {@default{$options[class];ANY_CLASS}};
+    #if { "$class" != "ANY_CLASS" } {
+        ttevent.HandleOnce {CLASS DESTROYED $class} {event} {event} {event.on-class-kill};
+    };
 
     #var {gEventHandlers[$event][$class][$hook]} {
         {options}{$options}
@@ -272,7 +275,7 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
 //        - 回调代码: 用来指明钩子被回调时要执行的代码。
 // };
 #alias {event.Handle} {
-    event.handle {%1} {%2} {%3} {%4} {event.Handle} {};
+    event.handle {%1} {%2} {%3} {%24} {event.Handle} {};
 };
 
 ///=== {
@@ -280,7 +283,7 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
 //    同 event.Handle，但是本钩子只会被执行一次，然后会自动注销。
 // };
 #alias {event.HandleOnce} {
-    event.handle {%1} {%2} {%3} {%4} {event.HandleOnce} {{justOnce}{true}};
+    event.handle {%1} {%2} {%3} {%24} {event.HandleOnce} {{justOnce}{true}};
 };
 
 ///=== {
@@ -289,7 +292,9 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
 // };
 #alias {event.ClassHandle} {
     #info session save;
-    event.handle {%1} {%2} {%3} {%4} {event.ClassHandle} {{class}{$info[SESSION][CLASS]}};
+    #local class {$info[SESSION][CLASS]};
+    #unvar info[SESSION];
+    event.handle {%1} {%2} {%3} {%24} {event.ClassHandle} {{class}{$class}};
 };
 
 ///=== {
@@ -298,7 +303,9 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
 // };
 #alias {event.ClassHandleOnce} {
     #info session save;
-    event.handle {%1} {%2} {%3} {%4} {event.ClassHandleOnce} {{justOnce}{true}{class}{$info[SESSION][CLASS]}};
+    #local class {$info[SESSION][CLASS]};
+    #unvar info[SESSION];
+    event.handle {%1} {%2} {%3} {%24} {event.ClassHandleOnce} {{justOnce}{true}{class}{$class}};
 };
 
 ///=== {
@@ -349,15 +356,17 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
 
     #local class {@default{$options[class];ANY_CLASS}};
     #if { "$class" != "ANY_CLASS" } {
-        ttevent.HandleOnce {CLASS CLEAR $class} {event} {event} {event.on-class-kill};
+        ttevent.HandleOnce {CLASS DESTROYED $class} {event} {event} {event.on-class-kill};
     };
 
     #if { &gTTEventHandlers[$event][$class][] == 0 } {
+        #class data/lib/event open;
         #line quiet #line sub var #event {$event} {
             #var gTTEventName       {$event}; 
             #var gTTEventArgZero    {%%0};
-            ttevent.emit
+            ttevent.emit;
         };
+        #class data/lib/event close;
     };
 
     #var {gTTEventHandlers[$event][$class][$hook]} {
@@ -368,6 +377,7 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
 };
 
 #alias {ttevent.emit} {
+    #local _ {%0};
     #local event {$gTTEventName};
 
     #local count {0};
@@ -394,8 +404,7 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
                     };
                 };
             };
-            #nop XXX: 注意这里不能加分号，一定要注意。;
-            $code
+            #line sub {escapes;var;func} $code;
         };
     };
 
@@ -417,7 +426,7 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
 //        - 回调代码: 用来指明钩子被回调时要执行的代码。
 // };
 #alias {ttevent.Handle} {
-    ttevent.handle {%1} {%2} {%3} {%4} {ttevent.Handle} {};
+    ttevent.handle {%1} {%2} {%3} {%24} {ttevent.Handle} {};
 };
 
 ///=== {
@@ -425,7 +434,7 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
 //    同 ttevent.Handle，但是本钩子只会被执行一次，然后会自动注销。
 // };
 #alias {ttevent.HandleOnce} {
-    event.handle {%1} {%2} {%3} {%4} {event.ClassHandleOnce} {{justOnce}{true}};
+    ttevent.handle {%1} {%2} {%3} {%24} {ttevent.HandleOnce} {{justOnce}{true}};
 };
 
 ///=== {
@@ -434,7 +443,9 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
 // };
 #alias {ttevent.ClassHandle} {
     #info session save;
-    event.handle {%1} {%2} {%3} {%4} {event.ClassHandleOnce} {{class}{$info[SESSION][CLASS]}};
+    #local class {$info[SESSION][CLASS]};
+    #unvar info[SESSION];
+    ttevent.handle {%1} {%2} {%3} {%24} {ttevent.ClassHandle} {{class}{$class}};
 };
 
 ///=== {
@@ -443,7 +454,9 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
 // };
 #alias {ttevent.ClassHandleOnce} {
     #info session save;
-    event.handle {%1} {%2} {%3} {%4} {event.ClassHandleOnce} {{justOnce}{true}{class}{$info[SESSION][CLASS]}};
+    #local class {$info[SESSION][CLASS]};
+    #unvar info[SESSION];
+    ttevent.handle {%1} {%2} {%3} {%24} {ttevent.ClassHandleOnce} {{justOnce}{true}{class}{$class}};
 };
 
 ///=== {
