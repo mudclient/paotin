@@ -14,7 +14,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #kill all;
 
-#event {PROGRAM START} {
+#line oneshot #event {PROGRAM START} {
     #if { "$user[manual]" == "true" } {
         #var user[id]       {};
         #var user[name]     {};
@@ -43,7 +43,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     auto-login;
 };
 
-#event {PROGRAM TERMINATION} {
+#line oneshot #event {PROGRAM TERMINATION} {
     #screen set title {NONE};
 };
 
@@ -62,7 +62,6 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #%0 {
         log.Open;
-        load-module lib/event;
         event.Define {user-online} {无参} {framework} {已经登录到服务器，所有命令都可以正常使用了。};
         load-module lib/ui;
         #if { "$user[manual]" != "true" } {
@@ -186,6 +185,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #nop 一些预置的常量;
     load-lib constant;
+
+    #nop 事件驱动编程框架;
+    load-module lib/event;
 
     #nop 提供 TinTin++ 命令行自动补全功能。;
     load-lib tab-completion;

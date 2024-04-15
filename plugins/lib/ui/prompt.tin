@@ -153,6 +153,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
     prompt.Set {};
     prompt.bindKey;
     prompt.Enable;
+    ttevent.Handle {SCREEN RESIZE} {prompt} {lib/ui} {prompt.resize};
 
     #return true;
 };
@@ -592,7 +593,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
     };
 };
 
-#event {SCREEN RESIZE} {
+#alias {prompt.resize} {
     #var prompt-top-max-line {0};
     #var prompt-bot-max-line {0};
     #var prompt-screen-width {0};

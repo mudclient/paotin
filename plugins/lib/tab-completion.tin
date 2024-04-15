@@ -6,9 +6,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
-#event {READ FILE} {
-    refresh-tab-completion;
-};
+ttevent.Handle {READ FILE} {refresh-tab-completion} {lib/tab-completion} {refresh-tab-completion};
 
 #alias {refresh-tab-completion} {
     #info {ALIASES} save;
@@ -32,6 +30,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             #continue;
         };
     };
+    #unvar info[ALIASES];
 };
 
 #tab #action;

@@ -95,7 +95,18 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
-#event {RECEIVED INPUT} {
+#alias {log.Open} {
+    #if { "$gLog[initialled]" != "true" } {#return};
+    #config {LOG} {RAW};
+    #config {LOG LEVEL} {HIGH};
+    #log timestamp {%Y-%m-%d %H:%M:%S };
+    #log append {$gLog[PATH]/$gLog[buffer]};
+    ttevent.Handle {RECEIVED INPUT} {log} {framework/log} {log.input};
+    ttevent.Handle {RECEIVED LINE}  {log} {framework/log} {mudLog $gTTEventArgZero};
+    ttevent.Handle {SEND OUTPUT}    {log} {framework/log} {log.sendLog};
+};
+
+#alias {log.input} {
     #if { "$gLog[initialled]" != "true" } {#return};
 
     #local needEcho {false};
@@ -104,7 +115,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local needEcho {true};
     };
     #else {
-        #line sub escape #var tmp {%0};
+        #line sub escape #var tmp {$gTTEventArgZero};
         #local cmds {};
         #list cmds create {$tmp};
         #if { &cmds[] > 1 } {
@@ -113,24 +124,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { "$needEcho" == "true" } {
-        #local input {%0};
+        #local input {$gTTEventArgZero};
         #replace input {<} {\<};
         #echo {<029>%t INPUT: <429>%s<099>} {%Y-%m-%d %H:%M:%S} {$input};
     };
 };
 
-#alias {log.Open} {
-    #if { "$gLog[initialled]" != "true" } {#return};
-    #config {LOG} {RAW};
-    #config {LOG LEVEL} {HIGH};
-    #log timestamp {%Y-%m-%d %H:%M:%S };
-    #log append {$gLog[PATH]/$gLog[buffer]};
-    #event {RECEIVED LINE}  {mudLog %%0};
-    #event {SEND OUTPUT}    {log.sendLog %%0};
-};
-
 #alias {log.sendLog} {
-    #local text {%0};
+    #local text {$gTTEventArgZero};
     #replace text {<} {\<};
     #format text {<029>SEND: <429>%p<099>} {$text};
     mudLog $text;

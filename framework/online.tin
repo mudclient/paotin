@@ -29,7 +29,7 @@ event.Emit user-online;
 #nop 提供给用户的自动执行函数;
 user-online;
 
-#event {RECEIVED OUTPUT} {
+ttevent.Handle {RECEIVED OUTPUT} {online.KeepAlive} {framework/online} {
     #undelay online.WatchDog;
     #delay online.WatchDog {#zap} 180;
 };

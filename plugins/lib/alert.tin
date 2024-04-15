@@ -128,7 +128,7 @@ load-lib storage;
     #if { &alert-items[] == 0 } {
         #var alert-focus {0};
         #undelay alert.check;
-        #unevent {RECEIVED KEYPRESS};
+        ttevent.UnHandle {RECEIVED KEYPRESS} {alert.perform};
         prompt.Set {{alert}{}};
         #return;
     };
@@ -139,7 +139,7 @@ load-lib storage;
     #local interval {$alert-items[1][interval]};
     xtt.Tick alert.beep {alert.beep} $interval;
 
-    #event {RECEIVED KEYPRESS} {#var alert-focus {@time.Now{}}};
+    ttevent.Handle {RECEIVED KEYPRESS} {alert.perform} {lib/alert} {#var alert-focus {@time.Now{}}};
 
     #list alert-items indexate {begin};
     #list alert-items order;

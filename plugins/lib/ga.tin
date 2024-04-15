@@ -22,6 +22,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #list gXttPipeLine create {};
     #class data/lib/ga close;
 
+    ttevent.Handle {SENT OUTPUT}        {lib/ga} {lib/ga} {ga.send-output};
+    ttevent.Handle {RECEIVED PROMPT}    {lib/ga} {lib/ga} {ga.received-prompt};
+
     #return true;
 };
 
@@ -30,17 +33,16 @@ load-lib event;
 
 event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参数为造成本次输出的命令};
 
-#event {SENT OUTPUT} {
-    #local cmd {%0};
+#alias {ga.send-output} {
+    #local cmd {$gTTEventArgZero};
     #replace cmd {{$TELNET[CR]?}$TELNET[LF]} {};
     #if { "$cmd" != "" } {
         #list gXttPipeLine add {$cmd};
     };
 };
 
-#event {RECEIVED PROMPT} {
-    #local rawLine  {%0};
-    #local line     {%1};
+#alias {ga.received-prompt} {
+    #local line     {$gTTEventArgv[1]};
     #if { "$line" == "== 未完继续 %*== (%*继续下一页%*)%*" } {
         #line gag;
         #cr;
