@@ -125,8 +125,8 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
                 #local obj {@map.Room.GetObjByID{shan xiao}};
                 #if { "$obj[name]" == "山魈" } {
                     give 1 coin to shan xiao;
-                    busy.Wait walk;
                 };
+                busy.Wait walk;
             };
             #default {
                 tuna max;
