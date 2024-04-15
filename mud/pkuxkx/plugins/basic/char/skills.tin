@@ -173,8 +173,6 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
     #alias {char.skills.parse.done} {
         #local __unused {%%0};
 
-        event.UnHandle GA {char.skills};
-
         #local nameList {$char[Skills][nameList]};
         #local count    {$char[Skills][count]};
 
@@ -202,7 +200,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
         event.Emit {char/skills};
     };
 
-    event.HandleOnce GA {char.skills} {char} {char.skills.parse.done};
+    event.ClassHandleOnce GA {char.skills} {char} {char.skills.parse.done};
 
     #class {ParseSkills} close;
 };

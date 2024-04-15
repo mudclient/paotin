@@ -128,12 +128,11 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
     #alias {char.status_me.parse.done} {
         #class char-parse-status-me kill;
         #class char.GetStatusMe kill;
-        event.UnHandle GA {char.status_me};
         #delay 0 {okLog 人物状态信息已更新。};
         event.Emit char/status;
     };
 
-    event.HandleOnce GA {char.status_me} {char} {
+    event.ClassHandleOnce GA {char.status_me} {char} {
         char.status_me.parse.done;
         #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
     };

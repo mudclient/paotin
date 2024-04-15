@@ -156,10 +156,9 @@ hp 有两种格式，非战斗状态：
     #alias {char.hp.parse.done} {
         #class char-hp-parse-hp kill;
         #class char.GetHP kill;
-        event.UnHandle GA {char.hp};
     };
 
-    event.HandleOnce GA {char.hp} {char} {
+    event.ClassHandleOnce GA {char.hp} {char} {
         char.hp.parse.done;
         #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
     };
@@ -245,11 +244,10 @@ hp -neili 格式：
         #local __unused {%%0};
         #class char-hp-parse-hp-neili kill;
         #class char.GetHP kill;
-        event.UnHandle GA {char.hp-neili};
         event.DelayEmit char/hpneili;
     };
 
-    event.HandleOnce GA {char.hp-neili} {char} {char.hp-neili.parse.done};
+    event.ClassHandleOnce GA {char.hp-neili} {char} {char.hp-neili.parse.done};
 
     #class char-hp-parse-hp-neili close;
 };

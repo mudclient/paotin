@@ -96,11 +96,10 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
 
     #alias {char.jifa.done} {
         #class char.Jifa kill;
-        event.UnHandle {GA} {jifa.parser};
         event.Emit {char/jifa};
     };
 
-    event.HandleOnce {GA} {jifa.parser} {char/jifa} {char.jifa.done};
+    event.ClassHandleOnce {GA} {jifa.parser} {char/jifa} {char.jifa.done};
 
     #class char.Jifa close;
 };
