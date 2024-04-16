@@ -85,6 +85,7 @@ VAR {各种武器常见的备用 ID}     {fullsk.weapon.replacements}    {};
     score;
     skills;
     jifa;
+    i2;
 
     load-file {etc/fullsk.tin};
 
@@ -589,12 +590,18 @@ VAR {各种武器常见的备用 ID}     {fullsk.weapon.replacements}    {};
     #local allBases {@fp.Transform{{$char[Skills][$skillName][jifa-to]};\$char[Skills][VALUE][code]}};
     #local weapon {@sset.Intersection{{$allBases};{sword;staff;dagger;blade;club;hammer;axe;spear;whip;halberd}}};
     #if { @sset.Size{$weapon} == 1 } {
-        wield $weapon at right;
-        #local others {$fullsk-weapons[$char[档案][门派]][$weapon]};
+        #local others {$fullsk.weapon.replacements[$weapon]};
         #if { "$others" != "" } {
-            #foreach {$others} {code} {
-                wield $code at right;
-            };
+            #cat weapon {;$others};
+        };
+
+        #replace weapon {;} {|};
+
+        #local items {@char.backpack.Query{Item;{{$weapon}}}};
+        #if { @sset.Size{$items} > 0 } {
+            #local weapon {@slist.Get{{$items};1}};
+            #local weapon {$char.Item[$weapon][id]};
+            wield $weapon at right;
         };
     };
 
