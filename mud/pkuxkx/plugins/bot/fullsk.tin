@@ -75,7 +75,6 @@
 * 武功升级时可能导致后续的练功次数失败，从而影响练习测速
 */
 
-load-lib event;
 load-module basic/busy;
 
 VAR {各门派 fullsk 相关的路径}  {fullsk.path}                   {};
@@ -111,7 +110,7 @@ VAR {各种武器常见的备用 ID}     {fullsk.weapon.replacements}    {};
         };
     };
 
-    event.HandleOnce {char/jifa} {fullsk/init} {bot/fullsk} {fullsk.init};
+    event.HandleOnce {char/i2} {fullsk/init} {bot/fullsk} {fullsk.init};
 
     #return true;
 };
@@ -188,7 +187,7 @@ VAR {各种武器常见的备用 ID}     {fullsk.weapon.replacements}    {};
     #delay 0 {
         okLog fullsk 初始化完成。;
         okLog 下面是本插件的设置情况。如果设置有误请重新加载。;
-        look-module bot/fullsk;
+        #var bot_fullsk[config];
         okLog 本机器要求在领悟房间开始运行，请确认你现在是否站在领悟房间，如果是，请输入 fullsk.qnod。;
         okLog 否则你现在还来得及前往领悟房间，抵达后输入 fullsk.qnod 即可开始。;
 

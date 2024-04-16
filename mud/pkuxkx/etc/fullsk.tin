@@ -1,3 +1,16 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#nop fullsk 常用参数;
+
+#nop 各门派常用路径;
 #var fullsk.path {
     {武当派}    {{lw2lx}{}  {lw2sleep}{e;e;s;e;e}   {lx2sleep}{e;e;s;e;e}   }
     {星宿派}    {{lw2lx}{}  {lw2sleep}{w;s}         {lx2sleep}{w;s}         }
@@ -7,8 +20,9 @@
     {帮派驻地}  {{lw2lx}{}  {lw2sleep}{e;n;n;w}     {lx2sleep}{e;n;n;w}     }
 };
 
+#nop 各技能常用兵器;
 #var fullsk.weapon.replacements {
-    {sword} {flute;wushi dao;yu xiao}
+    {sword} {flute;wushi dao;yu xiao;changjian}
     {blade} {hook}
     {staff} {bingpo zhang;po zhang;zhang}
 };
