@@ -303,7 +303,7 @@ event.Define {char/bag}         {无参} {$MODULE} {look bag 命令运行完毕�
         };
 
         #if { "$uuid" != "" } {
-            #var {char.Autoload[$type/$uuid]} {
+            #var {char.Autoload[$name/$uuid/$type]} {
                 {name}  {$name}
                 {type}  {$type}
                 {uuid}  {$uuid}
@@ -516,7 +516,8 @@ event.Define {char/bag}         {无参} {$MODULE} {look bag 命令运行完毕�
     #class char.backpack.DropAll close;
 };
 
-#action {^你放下手中的%*。$E}           {#var char.backpack.IsDirty 1};
-#action {^你举起%*之盾遮护自身。$E}     {#var char.backpack.IsDirty 1};
-#action {^你装备%*做武器。$E}           {#var char.backpack.IsDirty 1};
-#action {^你打开盲盒，发现了%*。$E}     {#var char.backpack.IsDirty 1};
+#action {^你放下手中的%*。$E}               {#var char.backpack.IsDirty 1};
+#action {^你举起%*之盾遮护自身。$E}         {#var char.backpack.IsDirty 1};
+#action {^你装备%*做武器。$E}               {#var char.backpack.IsDirty 1};
+#action {^你打开盲盒，发现了%*。$E}         {#var char.backpack.IsDirty 1};
+#action {^你重新加载了%*等%*件装备。$E}     {#var char.backpack.IsDirty 1};
