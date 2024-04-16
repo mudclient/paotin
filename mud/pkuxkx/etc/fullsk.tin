@@ -8,7 +8,7 @@
 };
 
 #var fullsk.weapon.replacements {
-    {sword} {flute;wushi dao}
+    {sword} {flute;wushi dao;yu xiao}
     {blade} {hook}
     {staff} {bingpo zhang;po zhang;zhang}
 };
