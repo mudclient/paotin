@@ -40,7 +40,6 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #var gLog[PATH]         {$gLog[PATH]/$path};
     #var gLog[initialled]   {true};
 
-    load-lib option;
     option.Define {DebugLog}        {Bool}  {是否开启调试日志}          {false};
     option.Define {DebugLogEcho}    {Bool}  {是否显示调试日志}          {false};
     option.Define {DebugTags}       {Slist} {记录调试日志的 tag 列表}   {};

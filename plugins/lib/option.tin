@@ -16,6 +16,8 @@ VAR {全局选项字典}  gOptions    {};
 
 load-lib storage;
 
+event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只会唤醒和选项名称相对应的钩子};
+
 #func {lib_option.Init} {
     #var gOptions {@storage.GetGlobal{global-options}};
     #return {true};
@@ -130,8 +132,11 @@ load-lib storage;
         #return {};
     };
 
-    #var {gOptions[$option][value]} {$value};
-    storage.SetGlobal {global-options} {$gOptions};
+    #if { "$old[value]" !== "$value" } {
+        #var {gOptions[$option][value]} {$value};
+        storage.SetGlobal {global-options} {$gOptions};
+        event.Emit {option/changed} {option/changed/$option};
+    };
 
     #return {$old[value]};
 };
