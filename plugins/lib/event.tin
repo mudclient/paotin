@@ -364,6 +364,10 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
         #line quiet #line sub var #event {$event} {
             #var gTTEventName       {$event}; 
             #var gTTEventArgZero    {%%0};
+            #var gTTEventArgv {
+                {1} {%%1} {2} {%%2} {3} {%%3} {4} {%%4} {5} {%%5}
+                {6} {%%6} {7} {%%7} {8} {%%8} {9} {%%9}
+            };
             ttevent.emit;
         };
         #class data/lib/event close;
@@ -377,7 +381,6 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
 };
 
 #alias {ttevent.emit} {
-    #local _ {%0};
     #local event {$gTTEventName};
 
     #local count {0};
