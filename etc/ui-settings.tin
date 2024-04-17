@@ -34,26 +34,73 @@ VAR {命令提示符，默认为空} prompt-prompt {};
 
 #nop 热键绑定;
 #list global-key-bindings create {
-    {{key}{\cd}     {meaning}{命令行智能切换}           {action}{cli.SmartToggle}}
-    {{key}{\co\cd}  {meaning}{禁止/允许命令和触发}      {action}{xtt.ToggleDisableCommands}}
-    {{key}{\cos}    {meaning}{禁止/允许状态栏更新}      {action}{prompt.ToggleSwitch}}
-    {{key}{\cob}    {meaning}{禁止/允许界面宽字符美化}  {action}{beautify.ToggleSwitch}}
-    {{key}{\col}    {meaning}{查看选项列表}             {action}{option.List}}
-    {{key}{\cod}    {meaning}{开启/关闭调试模式}        {action}{option.Toggle DebugLog}}
-    {{key}{\coD}    {meaning}{开启/关闭调试日志}        {action}{option.Toggle DebugLogEcho}}
-    {{key}{\coe}    {meaning}{开启/关闭命令发送回显}    {action}{option.Toggle EchoCommand}}
-    {{key}{\cok}    {meaning}{开启/关闭小键盘走路}      {action}{option.Toggle KeypadWalk}}
+    {{key}{\cd}     {meaning}{命令行智能切换}               {action}{cli.SmartToggle}}
+    {{key}{\co\cd}  {meaning}{禁止/允许命令和触发}          {action}{xtt.ToggleDisableCommands}}
+    {{key}{\cos}    {meaning}{禁止/允许状态栏更新}          {action}{prompt.ToggleSwitch}}
+    {{key}{\cob}    {meaning}{禁止/允许界面宽字符美化}      {action}{beautify.ToggleSwitch}}
+    {{key}{\col}    {meaning}{查看选项列表}                 {action}{option.List}}
+    {{key}{\cod}    {meaning}{开启/关闭调试模式}            {action}{option.Toggle DebugLog}}
+    {{key}{\coD}    {meaning}{开启/关闭调试日志}            {action}{option.Toggle DebugLogEcho}}
+    {{key}{\coe}    {meaning}{开启/关闭命令发送回显}        {action}{option.Toggle EchoCommand}}
+    {{key}{\cok}    {meaning}{开启/关闭小键盘走路}          {action}{option.Toggle KeypadWalk}}
+    {{key}{\coK}    {meaning}{开启/关闭屏幕虚拟键盘走路}    {action}{option.Toggle ScreenKeypad}}
 };
 
-VAR {小键盘走路的键盘扫描码} {global-keypad-walking} {
-    {north}         {\e[A}
-    {south}         {\e[B}
-    {east}          {\e[C}
-    {west}          {\e[D}
-    {northeast}     {\e[5~}
-    {southeast}     {\e[6~}
-    {northwest}     {\e[H}
-    {southwest}     {\e[F}
+VAR {小键盘走路的键盘扫描码} {global-keypad-code} {
+    {Home}          {\e[H}
+    {End}           {\e[F}
+    {Up}            {\e[A}
+    {Down}          {\e[B}
+    {Left}          {\e[D}
+    {Right}         {\e[C}
+    {Center}        {\e[G}
+    {PageUp}        {\e[5~}
+    {PageDown}      {\e[6~}
+    {Enter}         {\n}
+    {ShiftHome}     {\e[1;2H}
+    {ShiftEnd}      {\e[1;2F}
+    {ShiftUp}       {\e[1;2A}
+    {ShiftDown}     {\e[1;2B}
+    {ShiftLeft}     {\e[1;2D}
+    {ShiftRight}    {\e[1;2C}
+    {ShiftCenter}   {\e[1;2G}
+    {ShiftPageUp}   {\e[5;2~}
+    {ShiftPageDown} {\e[6;2~}
+    {KeyH}          {h}
+    {KeyJ}          {j}
+    {KeyK}          {k}
+    {KeyL}          {l}
+    {ShiftKeyH}     {H}
+    {ShiftKeyJ}     {J}
+    {ShiftKeyK}     {K}
+    {ShiftKeyL}     {L}
+};
+
+VAR {小键盘走路的功能映射表} {global-keypad-walking} {};
+
+#list {global-keypad-walking} create {
+    {{key}{Up}          {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
+    {{key}{Down}        {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
+    {{key}{Left}        {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
+    {{key}{Right}       {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
+    {{key}{Home}        {type}{dir}     {args}{northwest;westup;northup}}
+    {{key}{End}         {type}{dir}     {args}{southwest;westdown;southup}}
+    {{key}{PageUp}      {type}{dir}     {args}{northeast;eastup;northdown}}
+    {{key}{PageDown}    {type}{dir}     {args}{southeast;eastdown;southdown}}
+    {{key}{ShiftUp}     {type}{dir}     {args}{northup;north}}
+    {{key}{ShiftDown}   {type}{dir}     {args}{southup;south}}
+    {{key}{ShiftLeft}   {type}{dir}     {args}{westup;west}}
+    {{key}{ShiftRight}  {type}{dir}     {args}{eastup;east}}
+    {{key}{Enter}       {type}{cmd}     {args}{get all}}
+    {{key}{Center}      {type}{cmd}     {args}{look}}
+    {{key}{KeyK}        {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
+    {{key}{KeyJ}        {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
+    {{key}{KeyH}        {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
+    {{key}{KeyL}        {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
+    {{key}{ShiftKeyK}   {type}{dir}     {args}{northup;north}}
+    {{key}{ShiftKeyJ}   {type}{dir}     {args}{southup;south}}
+    {{key}{ShiftKeyH}   {type}{dir}     {args}{westup;west}}
+    {{key}{ShiftKeyL}   {type}{dir}     {args}{eastup;east}}
 };
 
 VAR {HP摘要刷新时机，三选一：{总是|从不|自动}} char.HPSummarize.Echo {自动};

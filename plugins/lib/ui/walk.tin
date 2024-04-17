@@ -7,32 +7,36 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 */
 
 ///=== {
-///// 触屏走路模块允许玩家通过点击屏幕上的不同区域来控制角色向不同方向移动。
-///// 本模块对手机用户可能有一些帮助。
+///// 小键盘和触屏走路模块允许玩家通过小键盘，或者点击屏幕上的不同区域来控制角色向不同方向移动。
+///// 本模块对手机用户可能有一些帮助，也可满足喜欢小键盘的玩家诉求。
 /////
-///// 首次使用的用户可能需要先通过 ui.walk.Guide 别名来学习虚拟按键的方位布局。
+///// 对于手机用户来说，建议先通过 ui.walk.Guide 别名来学习虚拟按键的方位布局。
 /////
-///// 需要特别说明的是，本模块会自动和地图系统进行集成。通过监测房间出口，会对
-///// 键位做细微的调整。
+///// 需要特别说明的是，本模块会自动和地图系统进行集成。通过监测房间出口，会对键位做细微的调整。
 ///// 举例来说，如果东方只有一个 eastup 出口，那么 east/eastup/eastdown 三个键位
 ///// 的作用就都是 eastup，如果只有一个 eastdown 也一样。南、北、西三个方向同理。
 /////
-///// 本模块加载后立即生效，如果你需要暂时禁用，可以用 ui.walk.Disable 别名。
-///// 稍后可以通过 ui.walk.Enable 重新启用。
+///// 本模块加载后默认并不启用，你需要通过开启 PaoTin++ 全局选项来开启对应功能。
+///// 目前有两个功能：
+/////    - KeypadWalk:   小键盘走路，默认已绑定到快捷键 <ctrl+o> <k>
+/////    - ScreenKeypad: 屏幕虚拟键盘走路，默认已绑定到快捷键 <ctrl+o> <K>
+/////
+///// 你也可以在脚本中通过 option 标准方法 option.Toggle/Enable/Disable 来开启或关闭它们。
+///// 请查阅 HELP option
 // };
 
 #var lib_ui_walk[META] {
-    {NAME}      {触屏走路}
+    {NAME}      {触屏和小键盘走路}
     {DESC}      {支持鼠标和触摸屏操作，点击屏幕不同区域，可以进入不同出口}
     {AUTHOR}    {担子炮}
 };
 
 option.Define {KeypadWalk} {Bool} {是否开启小键盘走路} {false};
+option.Define {ScreenKeypad} {Bool} {是否开启屏幕虚拟键盘} {false};
 
 #func {lib_ui_walk.Init} {
-    ui.walk.Enable;
-    event.Handle {option/changed} {option/changed/KeypadWalk} {lib/ui/walk} {ui.walk.keypad.Toggle};
-    option.Disable KeypadWalk;
+    event.Handle {option/changed} {option/changed/KeypadWalk} {lib/ui/walk} {ui.walk.Keypad.Toggle};
+    event.Handle {option/changed} {option/changed/ScreenKeypad} {lib/ui/walk} {ui.walk.ScreenKeypad.Toggle};
     #return {true};
 };
 
@@ -59,21 +63,19 @@ option.Define {KeypadWalk} {Bool} {是否开启小键盘走路} {false};
 };
 
 ///=== {
-// ## ui.walk.Enable
-//    开启触屏走路。
+// ## ui.walk.ScreenKeypad.Toggle
+//    开启/关闭屏幕虚拟键盘走路。
 //    本别名没有参数。
 // };
-#alias {ui.walk.Enable} {
-    ui.walk.setup;
-};
-
-///=== {
-// ## ui.walk.Disable
-//    禁用触屏走路。
-//    本别名没有参数。
-// };
-#alias {ui.walk.Disable} {
-    #class ui.walk.mouse kill;
+#alias {ui.walk.ScreenKeypad.Toggle} {
+    #if { @option.IsDisable{ScreenKeypad} } {
+        #class ui.walk.mouse kill;
+        errLog 屏幕虚拟键盘走路已关闭。;
+    };
+    #else {
+        ui.walk.setup;
+        okLog 屏幕虚拟键盘走路已开启。;
+    };
 };
 
 ///=== {
@@ -218,19 +220,55 @@ VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
     $ui.walk.cmd $dir;
 };
 
-#alias {ui.walk.keypad.Toggle} {
+#alias {ui.walk.Keypad.Toggle} {
     #if { @option.IsDisable{KeypadWalk} } {
-        okLog 小键盘走路已关闭。;
         #class ui.walk.Keypad kill;
+        errLog 小键盘走路已关闭。;
     };
     #else {
-        okLog 小键盘走路已开启。;
         #class ui.walk.Keypad open;
-        #local dir {};
-        #foreach {*global-keypad-walking[]} {dir} {
-            #local code {$global-keypad-walking[$dir]};
-            #line sub var #macro {$code} {ui.walk.go $dir};
+        #local idx {};
+        #foreach {*global-keypad-walking[]} {idx} {
+            #local entry {$global-keypad-walking[$idx]};
+            #local name {$entry[key]};
+            #local type {$entry[type]};
+            #local args {$entry[args]};
+            #if { &global-keypad-code[$name] == 0 } {
+                #continue;
+            };
+            #local code {$global-keypad-code[$name]};
+            #line sub var #macro {$code} {ui.walk.keypad.do $name $type {$args}};
         };
         #class ui.walk.Keypad close;
+        okLog 小键盘走路已开启。;
+    };
+};
+
+#alias {ui.walk.keypad.do} {
+    #local key  {%1};
+    #local type {%2};
+    #local args {%3};
+
+    #if { "$key" == "Enter" } {
+        #local input {};
+        #cursor get input;
+        #if { {$input} !== {} } {
+            #cursor clear;
+            $input;
+            #return;
+        };
+    };
+
+    #if { "$type" == "cmd" } {
+        $args;
+        #return;
+    };
+
+    #local dir {};
+    #foreach {$args} {dir} {
+        #if { @sset.Contains{{$gMapRoom[exits]};$dir} } {
+            ui.walk.go $dir;
+            #return;
+        };
     };
 };

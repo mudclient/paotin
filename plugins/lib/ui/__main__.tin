@@ -4,6 +4,7 @@ load-module lib/ui/tmux;
 load-module lib/ui/prompt;
 load-module lib/ui/beautify;
 load-module lib/ui/keyboard;
+load-module lib/ui/walk;
 
 /*
 鼠标支持尚不完善，和 tmux 相比还很弱，
