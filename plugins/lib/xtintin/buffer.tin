@@ -16,7 +16,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // };
 #alias {buffer.RawLine} {
     #line quiet #info output save;
-    #echo {%s} {$info[OUTPUT][LINE]};
+    #local line {$info[OUTPUT][LINE]};
+    #unvar info[OUTPUT];
+    #echo {%s} {$line};
 };
 
 ///=== {
@@ -25,7 +27,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // };
 #alias {buffer.PlainLine} {
     #line quiet #info output save;
-    #echo {%s} {@str.Plain{$info[OUTPUT][LINE]}};
+    #local line {$info[OUTPUT][LINE]};
+    #unvar info[OUTPUT];
+    #echo {%s} {@str.Plain{$line}};
 };
 
 ///=== {
@@ -34,7 +38,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // };
 #func {buffer.RawLine} {
     #line quiet #info output save;
-    #return {$info[OUTPUT][LINE]};
+    #local line {$info[OUTPUT][LINE]};
+    #unvar info[OUTPUT];
+    #return {$line};
 };
 
 ///=== {
@@ -44,6 +50,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {buffer.PlainLine} {
     #line quiet #info output save;
     #local line {$info[OUTPUT][LINE]};
+    #unvar info[OUTPUT];
     #return {@str.Plain{$line}};
 };
 
