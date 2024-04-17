@@ -42,6 +42,18 @@ VAR {命令提示符，默认为空} prompt-prompt {};
     {{key}{\cod}    {meaning}{开启/关闭调试模式}        {action}{option.Toggle DebugLog}}
     {{key}{\coD}    {meaning}{开启/关闭调试日志}        {action}{option.Toggle DebugLogEcho}}
     {{key}{\coe}    {meaning}{开启/关闭命令发送回显}    {action}{option.Toggle EchoCommand}}
+    {{key}{\cok}    {meaning}{开启/关闭小键盘走路}      {action}{option.Toggle KeypadWalk}}
+};
+
+VAR {小键盘走路的键盘扫描码} {global-keypad-walking} {
+    {north}         {\e[A}
+    {south}         {\e[B}
+    {east}          {\e[C}
+    {west}          {\e[D}
+    {northeast}     {\e[5~}
+    {southeast}     {\e[6~}
+    {northwest}     {\e[H}
+    {southwest}     {\e[F}
 };
 
 VAR {HP摘要刷新时机，三选一：{总是|从不|自动}} char.HPSummarize.Echo {自动};

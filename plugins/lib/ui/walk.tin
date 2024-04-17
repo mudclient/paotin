@@ -27,8 +27,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {AUTHOR}    {担子炮}
 };
 
+option.Define {KeypadWalk} {Bool} {是否开启小键盘走路} {false};
+
 #func {lib_ui_walk.Init} {
     ui.walk.Enable;
+    event.Handle {option/changed} {option/changed/KeypadWalk} {lib/ui/walk} {ui.walk.keypad.Toggle};
+    option.Disable KeypadWalk;
     #return {true};
 };
 
@@ -212,4 +216,21 @@ VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
 #alias {ui.walk.go} {
     #local dir {%1};
     $ui.walk.cmd $dir;
+};
+
+#alias {ui.walk.keypad.Toggle} {
+    #if { @option.IsDisable{KeypadWalk} } {
+        okLog 小键盘走路已关闭。;
+        #class ui.walk.Keypad kill;
+    };
+    #else {
+        okLog 小键盘走路已开启。;
+        #class ui.walk.Keypad open;
+        #local dir {};
+        #foreach {*global-keypad-walking[]} {dir} {
+            #local code {$global-keypad-walking[$dir]};
+            #line sub var #macro {$code} {ui.walk.go $dir};
+        };
+        #class ui.walk.Keypad close;
+    };
 };
