@@ -143,19 +143,22 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return;
     };
 
-    #if { @existsFile{var/$file} } {
-        #read var/$file;
-        #return;
-    };
-
-    #if { "$gCurrentMUDLIB" != "" } {
-        #if { @existsFile{mud/$gCurrentMUDLIB/$file} } {
-            #read mud/$gCurrentMUDLIB/$file;
-            #return;
+    #while {1} {
+        #if { @existsFile{var/$file} } {
+            #read var/$file;
+            #break;
         };
-    };
 
-    #read $file;
+        #if { "$gCurrentMUDLIB" != "" } {
+            #if { @existsFile{mud/$gCurrentMUDLIB/$file} } {
+                #read mud/$gCurrentMUDLIB/$file;
+                #break;
+            };
+        };
+
+        #read $file;
+        #break;
+    };
 
     #replace file {.tin$} {.extra.tin};
 
