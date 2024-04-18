@@ -257,6 +257,14 @@ VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
             $input;
             #return;
         };
+        #elseif { "$gMapRoom[dock]" == "dock" } {
+            map.YellBoat;
+            #return;
+        };
+        #elseif { "$gMapRoom[dock]" == "ride" } {
+            map.Ride;
+            #return;
+        };
     };
 
     #if { "$type" == "cmd" } {
