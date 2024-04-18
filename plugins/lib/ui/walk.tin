@@ -74,9 +74,11 @@ option.Define {ScreenKeypad} {Bool} {是否开启屏幕虚拟键盘} {false};
 #alias {ui.walk.ScreenKeypad.Setup} {
     #if { @option.IsDisable{ScreenKeypad} } {
         #class ui.walk.mouse kill;
+        prompt.Set {{screenKeypad}{}};
         errLog 屏幕虚拟键盘走路已关闭。;
     };
     #else {
+        prompt.Set {{screenKeypad}{<129>已开启<299>}};
         ui.walk.setup;
         okLog 屏幕虚拟键盘走路已开启。;
     };
@@ -227,6 +229,7 @@ VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
 #alias {ui.walk.Keypad.Setup} {
     #if { @option.IsDisable{KeypadWalk} } {
         #class ui.walk.Keypad kill;
+        prompt.Set {{keypad}{}};
         errLog 小键盘走路已关闭。;
     };
     #else {
@@ -245,6 +248,7 @@ VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
         };
         #class ui.walk.Keypad close;
         okLog 小键盘走路已开启。;
+        prompt.Set {{keypad}{<129>已开启<299>}};
     };
 };
 

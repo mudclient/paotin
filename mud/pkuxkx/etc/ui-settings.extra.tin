@@ -59,6 +59,8 @@
     { {place}{Bot} {line}{99}   {label}{<119>警报}  {name}{alert}   }
     { {place}{Bot} {line}{99}   {label}{随手记}     {name}{note}     {color}{<134>}}
 
+    { {place}{BotSepBar}        {label}{小键盘走路} {name}{keypad}          }
+    { {place}{BotSepBar}        {label}{触摸屏走路} {name}{screenKeypad}    }
     { {place}{BotSepBar}        {label}{搜索条件}   {name}{search}  }
     { {place}{BotSepBar}        {label}{屏幕美化}   {name}{beautify} {cooldown}{600} {visibility}{HideCool} }
     { {place}{BotSepBar}        {label}{状态栏更新} {name}{disable}  {visibility}{HideLabel} }
