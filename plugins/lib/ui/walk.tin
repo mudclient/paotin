@@ -35,8 +35,12 @@ option.Define {KeypadWalk} {Bool} {是否开启小键盘走路} {false};
 option.Define {ScreenKeypad} {Bool} {是否开启屏幕虚拟键盘} {false};
 
 #func {lib_ui_walk.Init} {
-    event.Handle {option/changed} {option/changed/KeypadWalk} {lib/ui/walk} {ui.walk.Keypad.Toggle};
-    event.Handle {option/changed} {option/changed/ScreenKeypad} {lib/ui/walk} {ui.walk.ScreenKeypad.Toggle};
+    event.Handle {option/changed} {option/changed/KeypadWalk} {lib/ui/walk} {ui.walk.Keypad.Setup};
+    event.Handle {option/changed} {option/changed/ScreenKeypad} {lib/ui/walk} {ui.walk.ScreenKeypad.Setup};
+    event.HandleOnce {user-online} {ui/walk/setup} {pkuxkx/online} {
+        ui.walk.Keypad.Setup;
+        ui.walk.ScreenKeypad.Setup;
+    };
     #return {true};
 };
 
@@ -63,11 +67,11 @@ option.Define {ScreenKeypad} {Bool} {是否开启屏幕虚拟键盘} {false};
 };
 
 ///=== {
-// ## ui.walk.ScreenKeypad.Toggle
+// ## ui.walk.ScreenKeypad.Setup
 //    开启/关闭屏幕虚拟键盘走路。
 //    本别名没有参数。
 // };
-#alias {ui.walk.ScreenKeypad.Toggle} {
+#alias {ui.walk.ScreenKeypad.Setup} {
     #if { @option.IsDisable{ScreenKeypad} } {
         #class ui.walk.mouse kill;
         errLog 屏幕虚拟键盘走路已关闭。;
@@ -220,7 +224,7 @@ VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
     $ui.walk.cmd $dir;
 };
 
-#alias {ui.walk.Keypad.Toggle} {
+#alias {ui.walk.Keypad.Setup} {
     #if { @option.IsDisable{KeypadWalk} } {
         #class ui.walk.Keypad kill;
         errLog 小键盘走路已关闭。;
@@ -241,6 +245,82 @@ VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
         };
         #class ui.walk.Keypad close;
         okLog 小键盘走路已开启。;
+    };
+};
+
+///=== {
+// ## ui.walk.Keypad.Bind <键名> <功能类型> <参数>
+//    为快捷键绑定功能。
+//    参数说明：
+//    键名：注意这里用的是键名，完整的键名列表可以通过 #var global-keypad-code 查看。
+//    功能类型目前就两种：
+//      - dir:  方向指令。方向指令会根据当前行走模式转换成不同的命令。默认模式是 go，
+//              护镖或其它任务需要自行设置，请参考 HELP ui.walk.SetCmd
+//      - cmd:  普通命令。可以是本地别名，或者服务器指令。
+//    参数：如果是方向指令，则应该是英文的方向全称。允许指定多个候选，以分号分隔。
+//          如果是普通命令，则只允许一条命令，如果功能复杂建议单独设置一个别名，在这里写别名名称。
+// };
+#alias {ui.walk.Keypad.Bind} {
+    #local name {%1};
+    #local type {%2};
+    #local args {%3};
+
+    #if { "$name" == "" || "$type" != "{dir|cmd}" || "$args" == "" } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    #if { &global-keypad-code[$name] == 0 } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    #list global-keypad-walking {indexate} key;
+    #local idx {};
+    #list global-keypad-walking {find} {$name} idx;
+
+    #if { $idx == 0 } {
+        #list global-keypad-walking {add} {{
+            {key}   {$name}
+            {type}  {$type}
+            {args}  {$args}
+        }};
+    };
+    #else {
+        #var {global-keypad-walking[$idx]} {
+            {key}   {$name}
+            {type}  {$type}
+            {args}  {$args}
+        };
+    };
+
+    okLog 已绑定快捷键 $name 为 {$type} {$args};
+};
+
+///=== {
+// ## ui.walk.Keypad.UnBind <键名>
+//    删除快捷键绑定的功能。
+// };
+#alias {ui.walk.Keypad.UnBind} {
+    #local name {%1};
+
+    #if { "$name" == "" } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    #if { &global-keypad-code[$name] == 0 } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    #list global-keypad-walking {indexate} key;
+    #local idx {};
+    #list global-keypad-walking {find} {$name} idx;
+
+    #if { $idx > 0 } {
+        #list global-keypad-walking {delete} {$idx};
+        okLog 快捷键 $name 功能已删除。;
     };
 };
 

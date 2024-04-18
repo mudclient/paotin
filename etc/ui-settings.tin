@@ -66,14 +66,58 @@ VAR {小键盘走路的键盘扫描码} {global-keypad-code} {
     {ShiftCenter}   {\e[1;2G}
     {ShiftPageUp}   {\e[5;2~}
     {ShiftPageDown} {\e[6;2~}
+    {KeyA}          {a}
+    {KeyB}          {b}
+    {KeyC}          {c}
+    {KeyD}          {d}
+    {KeyE}          {e}
+    {KeyF}          {f}
+    {KeyG}          {g}
     {KeyH}          {h}
+    {KeyI}          {i}
     {KeyJ}          {j}
     {KeyK}          {k}
     {KeyL}          {l}
+    {KeyM}          {m}
+    {KeyN}          {n}
+    {KeyO}          {o}
+    {KeyP}          {p}
+    {KeyQ}          {q}
+    {KeyR}          {r}
+    {KeyS}          {s}
+    {KeyT}          {t}
+    {KeyU}          {u}
+    {KeyV}          {v}
+    {KeyW}          {w}
+    {KeyX}          {x}
+    {KeyY}          {y}
+    {KeyZ}          {z}
+    {ShiftKeyA}     {A}
+    {ShiftKeyB}     {B}
+    {ShiftKeyC}     {C}
+    {ShiftKeyD}     {D}
+    {ShiftKeyE}     {E}
+    {ShiftKeyF}     {F}
+    {ShiftKeyG}     {G}
     {ShiftKeyH}     {H}
+    {ShiftKeyI}     {I}
     {ShiftKeyJ}     {J}
     {ShiftKeyK}     {K}
     {ShiftKeyL}     {L}
+    {ShiftKeyM}     {M}
+    {ShiftKeyN}     {N}
+    {ShiftKeyO}     {O}
+    {ShiftKeyP}     {P}
+    {ShiftKeyQ}     {Q}
+    {ShiftKeyR}     {R}
+    {ShiftKeyS}     {S}
+    {ShiftKeyT}     {T}
+    {ShiftKeyU}     {U}
+    {ShiftKeyV}     {V}
+    {ShiftKeyW}     {W}
+    {ShiftKeyX}     {X}
+    {ShiftKeyY}     {Y}
+    {ShiftKeyZ}     {Z}
 };
 
 VAR {小键盘走路的功能映射表} {global-keypad-walking} {};
@@ -91,12 +135,13 @@ VAR {小键盘走路的功能映射表} {global-keypad-walking} {};
     {{key}{ShiftDown}   {type}{dir}     {args}{southup;south}}
     {{key}{ShiftLeft}   {type}{dir}     {args}{westup;west}}
     {{key}{ShiftRight}  {type}{dir}     {args}{eastup;east}}
-    {{key}{Enter}       {type}{cmd}     {args}{get all}}
+    {{key}{Enter}       {type}{cmd}     {args}{get-all}}
     {{key}{Center}      {type}{cmd}     {args}{look}}
     {{key}{KeyK}        {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
     {{key}{KeyJ}        {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
     {{key}{KeyH}        {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
     {{key}{KeyL}        {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
+    {{key}{KeyO}        {type}{cmd}     {args}{look}}
     {{key}{ShiftKeyK}   {type}{dir}     {args}{northup;north}}
     {{key}{ShiftKeyJ}   {type}{dir}     {args}{southup;south}}
     {{key}{ShiftKeyH}   {type}{dir}     {args}{westup;west}}

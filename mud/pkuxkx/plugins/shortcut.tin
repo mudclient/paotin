@@ -277,6 +277,26 @@ VAR 服务器重启时间 gServerRebootTime {0};
     };
 };
 
+#alias {get-all} {
+    #local idc {};
+    #local idx {};
+    #foreach {*gMapRoom[objs][]} {idx} {
+        #local id {$gMapRoom[objs][$idx][id]};
+        math.Inc idc[$id];
+        #if { "$id" == "{corpse|skeleton}" } {
+            get gold from $id $idc[$id];
+            get silver from $id $idc[$id];
+            get gem from $id $idc[$id];
+        };
+        #elseif { "$id" == "{cash|gold|silver}" } {
+            get $id;
+        };
+        #elseif { "$id" == "({tian|ze|huo|lei|feng|shui|shan|di} {jin|mu|bing|jing|sui|ri|yue|gu|yu|jiao|jia})" } {
+            get $id;
+        };
+    };
+};
+
 #alias {%S_%S} {node walk %0} 9;
 
 load-lib sync;
