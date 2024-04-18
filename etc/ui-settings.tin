@@ -118,34 +118,37 @@ VAR {小键盘走路的键盘扫描码} {global-keypad-code} {
     {ShiftKeyX}     {X}
     {ShiftKeyY}     {Y}
     {ShiftKeyZ}     {Z}
+    {KeySemicolon}  {;}
+    {KeyColon}      {:}
+    {KeyDot}        {.}
 };
 
 VAR {小键盘走路的功能映射表} {global-keypad-walking} {};
 
 #list {global-keypad-walking} create {
-    {{key}{Up}          {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
-    {{key}{Down}        {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
-    {{key}{Left}        {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
-    {{key}{Right}       {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
-    {{key}{Home}        {type}{dir}     {args}{northwest;westup;northup}}
-    {{key}{End}         {type}{dir}     {args}{southwest;westdown;southup}}
-    {{key}{PageUp}      {type}{dir}     {args}{northeast;eastup;northdown}}
-    {{key}{PageDown}    {type}{dir}     {args}{southeast;eastdown;southdown}}
-    {{key}{ShiftUp}     {type}{dir}     {args}{northup;north}}
-    {{key}{ShiftDown}   {type}{dir}     {args}{southup;south}}
-    {{key}{ShiftLeft}   {type}{dir}     {args}{westup;west}}
-    {{key}{ShiftRight}  {type}{dir}     {args}{eastup;east}}
-    {{key}{Enter}       {type}{cmd}     {args}{get-all}}
-    {{key}{Center}      {type}{cmd}     {args}{look}}
-    {{key}{KeyK}        {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
-    {{key}{KeyJ}        {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
-    {{key}{KeyH}        {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
-    {{key}{KeyL}        {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
-    {{key}{KeyO}        {type}{cmd}     {args}{look}}
-    {{key}{ShiftKeyK}   {type}{dir}     {args}{northup;north}}
-    {{key}{ShiftKeyJ}   {type}{dir}     {args}{southup;south}}
-    {{key}{ShiftKeyH}   {type}{dir}     {args}{westup;west}}
-    {{key}{ShiftKeyL}   {type}{dir}     {args}{eastup;east}}
+    {{key}{Up}              {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
+    {{key}{Down}            {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
+    {{key}{Left}            {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
+    {{key}{Right}           {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
+    {{key}{Home}            {type}{dir}     {args}{northwest;westup;northup}}
+    {{key}{End}             {type}{dir}     {args}{southwest;westdown;southup}}
+    {{key}{PageUp}          {type}{dir}     {args}{northeast;eastup;northdown}}
+    {{key}{PageDown}        {type}{dir}     {args}{southeast;eastdown;southdown}}
+    {{key}{ShiftUp}         {type}{dir}     {args}{northup;north}}
+    {{key}{ShiftDown}       {type}{dir}     {args}{southup;south}}
+    {{key}{ShiftLeft}       {type}{dir}     {args}{westup;west}}
+    {{key}{ShiftRight}      {type}{dir}     {args}{eastup;east}}
+    {{key}{Enter}           {type}{cmd}     {args}{get-all}}
+    {{key}{Center}          {type}{cmd}     {args}{look}}
+    {{key}{KeyK}            {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
+    {{key}{KeyJ}            {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
+    {{key}{KeyH}            {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
+    {{key}{KeyL}            {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
+    {{key}{KeyO}            {type}{cmd}     {args}{look}}
+    {{key}{ShiftKeyK}       {type}{dir}     {args}{northup;north}}
+    {{key}{ShiftKeyJ}       {type}{dir}     {args}{southup;south}}
+    {{key}{ShiftKeyH}       {type}{dir}     {args}{westup;west}}
+    {{key}{ShiftKeyL}       {type}{dir}     {args}{eastup;east}}
 };
 
 VAR {HP摘要刷新时机，三选一：{总是|从不|自动}} char.HPSummarize.Echo {自动};

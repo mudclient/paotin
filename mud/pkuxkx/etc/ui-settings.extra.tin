@@ -77,3 +77,10 @@
     {{key}{\coM}    {meaning}{开启/关闭地图调试模式}            {action}{option.Toggle MapDebug; look}}
     {{key}{\coV}    {meaning}{开启/禁止显示房间风景图}          {action}{option.Toggle ShowRoomView; look}}
 };
+
+event.HandleOnce {user-online} {myui/walk/setup} {pkuxkx/online} {
+    ui.walk.Keypad.Bind {KeySemicolon}  {cmd} {lm part};
+    ui.walk.Keypad.Bind {KeyColon}      {cmd} {localmaps};
+    ui.walk.Keypad.Bind {KeyDot}        {cmd} {map};
+    ui.walk.Keypad.Bind {ShiftKeyI}     {cmd} {killall};
+};
