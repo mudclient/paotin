@@ -144,7 +144,7 @@ VAR {小键盘走路的功能映射表} {global-keypad-walking} {};
     {{key}{KeyJ}            {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
     {{key}{KeyH}            {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
     {{key}{KeyL}            {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
-    {{key}{KeyO}            {type}{cmd}     {args}{look}}
+    {{key}{ShiftKeyO}       {type}{cmd}     {args}{look}}
     {{key}{ShiftKeyK}       {type}{dir}     {args}{northup;north}}
     {{key}{ShiftKeyJ}       {type}{dir}     {args}{southup;south}}
     {{key}{ShiftKeyH}       {type}{dir}     {args}{westup;west}}
