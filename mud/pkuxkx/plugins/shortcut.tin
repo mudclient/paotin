@@ -280,6 +280,7 @@ VAR 服务器重启时间 gServerRebootTime {0};
 #alias {get-all} {
     #local idc {};
     #local idx {};
+    #local nop {1};
     #foreach {*gMapRoom[objs][]} {idx} {
         #local id {$gMapRoom[objs][$idx][id]};
         math.Inc idc[$id];
@@ -287,13 +288,20 @@ VAR 服务器重启时间 gServerRebootTime {0};
             get gold from $id $idc[$id];
             get silver from $id $idc[$id];
             get gem from $id $idc[$id];
+            #local nop {0};
         };
         #elseif { "$id" == "{cash|gold|silver}" } {
             get $id;
+            #local nop {0};
         };
-        #elseif { "$id" == "({tian|ze|huo|lei|feng|shui|shan|di} {jin|mu|bing|jing|sui|ri|yue|gu|yu|jiao|jia})" } {
+        #elseif { "$id" == "{tian|ze|huo|lei|feng|shui|shan|di} {jin|mu|bing|jing|sui|ri|yue|gu|yu|jiao|jia}" } {
             get $id;
+            #local nop {0};
         };
+    };
+
+    #if { $nop } {
+        warnLog 没发现什么值钱的东西。;
     };
 };
 
@@ -313,6 +321,7 @@ VAR {要寻找的 NPC 的特征，表格} {gFocusNPC} {};
     };
 
     #if { "$gFocusNPC" != "" && "$obj" == "" } {
+        warnLog 你想要杀谁？;
         #return;
     };
 
