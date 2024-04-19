@@ -135,7 +135,7 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
     #if { "$old[value]" !== "$value" } {
         #var {gOptions[$option][value]} {$value};
         storage.SetGlobal {global-options} {$gOptions};
-        event.Emit {option/changed} {option/changed/$option};
+        event.Emit {option/changed} {opt/$option/%*};
     };
 
     #return {$old[value]};
