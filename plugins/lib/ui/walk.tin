@@ -35,9 +35,9 @@ option.Define {KeypadWalk} {Bool} {是否开启小键盘走路} {false};
 option.Define {ScreenKeypad} {Bool} {是否开启屏幕虚拟键盘} {false};
 
 #func {lib_ui_walk.Init} {
-    event.Handle {option/changed} {option/changed/KeypadWalk} {lib/ui/walk} {ui.walk.Keypad.Setup};
-    event.Handle {option/changed} {option/changed/ScreenKeypad} {lib/ui/walk} {ui.walk.ScreenKeypad.Setup};
-    event.HandleOnce {user-online} {ui/walk/setup} {pkuxkx/online} {
+    event.Handle {option/changed} {opt/KeypadWalk/main}     {lib/ui/walk} {ui.walk.Keypad.Setup};
+    event.Handle {option/changed} {opt/ScreenKeypad/main}   {lib/ui/walk} {ui.walk.ScreenKeypad.Setup};
+    event.HandleOnce {user-online} {ui/walk/setup} {online} {
         ui.walk.Keypad.Setup;
         ui.walk.ScreenKeypad.Setup;
     };
@@ -210,11 +210,11 @@ option.Define {ScreenKeypad} {Bool} {是否开启屏幕虚拟键盘} {false};
     #return {$dir};
 };
 
-VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
+VAR {触屏和小键盘走路插件的走路命令，默认为 go} ui.walk.cmd {go};
 
 ///=== {
 // ## ui.walk.SetCmd <触屏走路命令>
-//    设置触屏走路时所用的命令，默认为 go。
+//    设置触屏走路和小键盘走路时所用的命令，默认为 go。
 //    例如，推车任务时你可以设置为: ui.walk.SetCmd {gan che to} 来表示推车所用的命令。
 // };
 #alias {ui.walk.SetCmd} {
@@ -339,6 +339,7 @@ VAR {触屏走路插件的走路命令，默认为 go} ui.walk.cmd {go};
         #if { {$input} !== {} } {
             #cursor clear;
             $input;
+            #line sub var #history insert {$input};
             #return;
         };
         #elseif { "$gMapRoom[dock]" == "dock" } {

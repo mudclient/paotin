@@ -32,21 +32,7 @@ VAR {自定义图标} prompt-icon {
 
 VAR {命令提示符，默认为空} prompt-prompt {};
 
-#nop 热键绑定;
-#list global-key-bindings create {
-    {{key}{\cd}     {meaning}{命令行智能切换}               {action}{cli.SmartToggle}}
-    {{key}{\co\cd}  {meaning}{禁止/允许命令和触发}          {action}{xtt.ToggleDisableCommands}}
-    {{key}{\cos}    {meaning}{禁止/允许状态栏更新}          {action}{prompt.ToggleSwitch}}
-    {{key}{\cob}    {meaning}{禁止/允许界面宽字符美化}      {action}{beautify.ToggleSwitch}}
-    {{key}{\col}    {meaning}{查看选项列表}                 {action}{option.List}}
-    {{key}{\cod}    {meaning}{开启/关闭调试模式}            {action}{option.Toggle DebugLog}}
-    {{key}{\coD}    {meaning}{开启/关闭调试日志}            {action}{option.Toggle DebugLogEcho}}
-    {{key}{\coe}    {meaning}{开启/关闭命令发送回显}        {action}{option.Toggle EchoCommand}}
-    {{key}{\cok}    {meaning}{开启/关闭小键盘走路}          {action}{option.Toggle KeypadWalk}}
-    {{key}{\coK}    {meaning}{开启/关闭屏幕虚拟键盘走路}    {action}{option.Toggle ScreenKeypad}}
-};
-
-VAR {小键盘走路的键盘扫描码} {global-keypad-code} {
+VAR {键盘扫描码} {global-keypad-code} {
     {Home}          {\e[H}
     {End}           {\e[F}
     {Up}            {\e[A}
@@ -62,10 +48,22 @@ VAR {小键盘走路的键盘扫描码} {global-keypad-code} {
     {ShiftUp}       {\e[1;2A}
     {ShiftDown}     {\e[1;2B}
     {ShiftLeft}     {\e[1;2D}
-    {ShiftRight}    {\e[1;2C}
-    {ShiftCenter}   {\e[1;2G}
     {ShiftPageUp}   {\e[5;2~}
     {ShiftPageDown} {\e[6;2~}
+    {F1}            {\eOP}
+    {F2}            {\eOQ}
+    {F3}            {\eOR}
+    {F4}            {\eOS}
+    {F5}            {\e[15~}
+    {F6}            {\e[17~}
+    {F7}            {\e[18~}
+    {F8}            {\e[19~}
+    {F9}            {\e[20~}
+    {F10}           {\e[21~}
+    {F11}           {\e[23~}
+    {F12}           {\e[24~}
+    {Insert}        {\e[2~}
+    {Delete}        {\e[3~}
     {KeyA}          {a}
     {KeyB}          {b}
     {KeyC}          {c}
@@ -121,34 +119,53 @@ VAR {小键盘走路的键盘扫描码} {global-keypad-code} {
     {KeySemicolon}  {;}
     {KeyColon}      {:}
     {KeyDot}        {.}
+    {KeyAdd}        {+}
+    {KeySub}        {-}
+    {KeyMul}        {*}
+    {KeyDiv}        {/}
+    {KeyNum0}       {0}
+    {KeyNum1}       {1}
+    {KeyNum2}       {2}
+    {KeyNum3}       {3}
+    {KeyNum4}       {4}
+    {KeyNum5}       {5}
+    {KeyNum6}       {6}
+    {KeyNum7}       {7}
+    {KeyNum8}       {8}
+    {KeyNum9}       {9}
+};
+
+#nop 热键绑定;
+#list global-key-bindings create {
+    {{key}{\cd}     {meaning}{命令行智能切换}               {action}{cli.SmartToggle}}
+    {{key}{\co\cd}  {meaning}{禁止/允许命令和触发}          {action}{xtt.ToggleDisableCommands}}
+    {{key}{\cos}    {meaning}{禁止/允许状态栏更新}          {action}{prompt.ToggleSwitch}}
+    {{key}{\cob}    {meaning}{禁止/允许界面宽字符美化}      {action}{beautify.ToggleSwitch}}
+    {{key}{\col}    {meaning}{查看选项列表}                 {action}{option.List}}
+    {{key}{\cod}    {meaning}{开启/关闭调试模式}            {action}{option.Toggle DebugLog}}
+    {{key}{\coD}    {meaning}{开启/关闭调试日志}            {action}{option.Toggle DebugLogEcho}}
+    {{key}{\coe}    {meaning}{开启/关闭命令发送回显}        {action}{option.Toggle EchoCommand}}
+    {{key}{\cok}    {meaning}{开启/关闭小键盘走路}          {action}{option.Toggle KeypadWalk}}
+    {{key}{\coK}    {meaning}{开启/关闭屏幕虚拟键盘走路}    {action}{option.Toggle ScreenKeypad}}
 };
 
 VAR {小键盘走路的功能映射表} {global-keypad-walking} {};
 
 #list {global-keypad-walking} create {
-    {{key}{Up}              {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
-    {{key}{Down}            {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
-    {{key}{Left}            {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
-    {{key}{Right}           {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
-    {{key}{Home}            {type}{dir}     {args}{northwest;westup;northup}}
-    {{key}{End}             {type}{dir}     {args}{southwest;westdown;southup}}
-    {{key}{PageUp}          {type}{dir}     {args}{northeast;eastup;northdown}}
-    {{key}{PageDown}        {type}{dir}     {args}{southeast;eastdown;southdown}}
-    {{key}{ShiftUp}         {type}{dir}     {args}{northup;north}}
-    {{key}{ShiftDown}       {type}{dir}     {args}{southup;south}}
-    {{key}{ShiftLeft}       {type}{dir}     {args}{westup;west}}
-    {{key}{ShiftRight}      {type}{dir}     {args}{eastup;east}}
-    {{key}{Enter}           {type}{cmd}     {args}{get-all}}
-    {{key}{Center}          {type}{cmd}     {args}{look}}
-    {{key}{KeyK}            {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
-    {{key}{KeyJ}            {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
-    {{key}{KeyH}            {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
-    {{key}{KeyL}            {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
-    {{key}{ShiftKeyO}       {type}{cmd}     {args}{look}}
-    {{key}{ShiftKeyK}       {type}{dir}     {args}{northup;north}}
-    {{key}{ShiftKeyJ}       {type}{dir}     {args}{southup;south}}
-    {{key}{ShiftKeyH}       {type}{dir}     {args}{westup;west}}
-    {{key}{ShiftKeyL}       {type}{dir}     {args}{eastup;east}}
+    {{key}{Up}              {meaning}{向北，尽量靠下/上}    {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
+    {{key}{Down}            {meaning}{向南，尽量靠下/下}    {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
+    {{key}{Left}            {meaning}{向西，尽量靠下/出}    {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
+    {{key}{Right}           {meaning}{向东，尽量靠下/入}    {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
+    {{key}{ShiftUp}         {meaning}{向北，尽量靠上}       {type}{dir}     {args}{northup;north}}
+    {{key}{ShiftDown}       {meaning}{向南，尽量靠上}       {type}{dir}     {args}{southup;south}}
+    {{key}{ShiftLeft}       {meaning}{向西，尽量靠上}       {type}{dir}     {args}{westup;west}}
+    {{key}{ShiftRight}      {meaning}{向东，尽量靠上}       {type}{dir}     {args}{eastup;east}}
+    {{key}{Home}            {meaning}{向西北/西上/北上}     {type}{dir}     {args}{northwest;westup;northup}}
+    {{key}{End}             {meaning}{向西南/西下/南上}     {type}{dir}     {args}{southwest;westdown;southup}}
+    {{key}{PageUp}          {meaning}{向东北/东上/北下}     {type}{dir}     {args}{northeast;eastup;northdown}}
+    {{key}{PageDown}        {meaning}{向东南/东下/南下}     {type}{dir}     {args}{southeast;eastdown;southdown}}
+    {{key}{Enter}           {meaning}{智能交互，搜尸/过河}  {type}{cmd}     {args}{get all}}
+    {{key}{Center}          {meaning}{查看房间}             {type}{cmd}     {args}{look}}
 };
 
 VAR {HP摘要刷新时机，三选一：{总是|从不|自动}} char.HPSummarize.Echo {自动};

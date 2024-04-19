@@ -1,0 +1,45 @@
+#alias {ui.walk.go} {
+    #local dir {%1};
+
+    #if { @char.IsBusy{} || @char.InCombat{} } {
+        halt;
+    };
+
+    $ui.walk.cmd $dir;
+};
+
+option.Define {GancheMode} {Bool} {是否开启运镖模式} {false};
+
+#alias {ui.walk.Ganche.Setup} {
+    #if { @option.IsDisable{GancheMode} } {
+        #class ui.walk.ganche.mode kill;
+        errLog 运镖模式已关闭。;
+        #if { @option.IsEnable{KeypadWalk} || @option.IsEnable{ScreenKeypad} } {
+            prompt.Set {{ganche}{@mslp.Exec{option.Toggle GancheMode;<119>已关闭<299>}（点击开启）}};
+        };
+        #else {
+            prompt.Set {{ganche}{}};
+        };
+        #var ui.walk.cmd {go};
+    };
+    #else {
+        #class ui.walk.ganche.mode open;
+        #local short {};
+        #foreach {n;w;e;s;u;d;ne;nw;se;sw;enter;out} {short} {
+            #local long {@dir.Long{$short}};
+            #line sub var #alias {$short}   {ui.walk.go $long};
+            #line sub var #alias {$long}    {ui.walk.go $long};
+        };
+        #class ui.walk.ganche.mode close;
+        okLog 运镖模式已开启。;
+        prompt.Set {{ganche}{@mslp.Exec{option.Toggle GancheMode;<129>已开启<299>}（点击关闭）}};
+        #var ui.walk.cmd {gan che to};
+    };
+};
+
+event.HandleOnce {user-online} {ui/walk/ganche} {pkuxkx/online} {
+    event.Handle {option/changed} {opt/GancheMode/pkuxkx}   {lib/ui/walk/pkuxkx} {ui.walk.Ganche.Setup};
+    event.Handle {option/changed} {opt/KeypadWalk/pkuxkx}   {lib/ui/walk/pkuxkx} {ui.walk.Ganche.Setup};
+    event.Handle {option/changed} {opt/ScreenKeypad/pkuxkx} {lib/ui/walk/pkuxkx} {ui.walk.Ganche.Setup};
+    ui.walk.Ganche.Setup;
+};

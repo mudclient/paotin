@@ -297,6 +297,35 @@ VAR 服务器重启时间 gServerRebootTime {0};
     };
 };
 
+VAR {要寻找的 NPC 的特征，表格} {gFocusNPC} {};
+
+#alias {kill-npc} {
+    #local obj {};
+
+    #if { "$gFocusNPC[id]" != "" } {
+        #local obj {@map.Room.GetObjByID{{$gFocusNPC[id]}}};
+    };
+    #elseif { "$gFocusNPC[name]" != "" } {
+        #local obj {@map.Room.GetObjByName{{$gFocusNPC[name]}}};
+    };
+    #elseif { "$gFocusNPC[title]" != "" } {
+        #local obj {@map.Room.GetObjByName{{%*};{$gFocusNPC[title]}}};
+    };
+
+    #if { "$gFocusNPC" != "" && "$obj" == "" } {
+        #return;
+    };
+
+    #if {  ( "$gFocusNPC[id]" == "" || "$obj[id]" == "$gFocusNPC[id]" )
+        && ( "$gFocusNPC[name]" == "" || "$obj[name]" == "$gFocusNPC[name]" )
+        && ( "$gFocusNPC[title]" == "" || "$obj[title]" == "$gFocusNPC[title]" ) } {
+        killall $obj[id];
+    };
+    #else {
+        killall;
+    };
+};
+
 #alias {%S_%S} {node walk %0} 9;
 
 load-lib sync;

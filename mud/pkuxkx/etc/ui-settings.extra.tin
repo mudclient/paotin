@@ -61,6 +61,7 @@
 
     { {place}{BotSepBar}        {label}{小键盘走路} {name}{keypad}          }
     { {place}{BotSepBar}        {label}{触摸屏走路} {name}{screenKeypad}    }
+    { {place}{BotSepBar}        {label}{运镖模式}   {name}{ganche}          }
     { {place}{BotSepBar}        {label}{搜索条件}   {name}{search}  }
     { {place}{BotSepBar}        {label}{屏幕美化}   {name}{beautify} {cooldown}{600} {visibility}{HideCool} }
     { {place}{BotSepBar}        {label}{状态栏更新} {name}{disable}  {visibility}{HideLabel} }
@@ -80,9 +81,10 @@
     {{key}{\coV}    {meaning}{开启/禁止显示房间风景图}          {action}{option.Toggle ShowRoomView; look}}
 };
 
-event.HandleOnce {user-online} {myui/walk/setup} {pkuxkx/online} {
-    ui.walk.Keypad.Bind {KeySemicolon}  {cmd} {lm part};
-    ui.walk.Keypad.Bind {KeyColon}      {cmd} {localmaps};
-    ui.walk.Keypad.Bind {KeyDot}        {cmd} {map};
-    ui.walk.Keypad.Bind {ShiftKeyI}     {cmd} {killall};
+event.HandleOnce {user-online} {ui/walk/setup/pkuxkx} {pkuxkx/online} {
+    ui.walk.Keypad.Bind {KeyDiv}        {cmd} {lm part};
+    ui.walk.Keypad.Bind {KeyMul}        {cmd} {lm};
+    ui.walk.Keypad.Bind {KeySub}        {cmd} {map};
+    ui.walk.Keypad.Bind {KeyAdd}        {cmd} {kill-npc};
+    ui.walk.Keypad.Bind {Enter}         {cmd} {get-all};
 };
