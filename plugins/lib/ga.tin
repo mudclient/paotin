@@ -29,24 +29,19 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 load-lib telnet;
-load-lib event;
 
 event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参数为造成本次输出的命令};
 
 #alias {ga.send-output} {
     #local cmd {$gTTEventArgZero};
     #replace cmd {{$TELNET[CR]?}$TELNET[LF]} {};
-    #if { "$cmd" != "" } {
-        #list gXttPipeLine add {$cmd};
-    };
+    #list gXttPipeLine add {$cmd};
 };
 
 #alias {ga.received-prompt} {
     #local line     {$gTTEventArgv[1]};
     #if { "$line" == "== 未完继续 %*== (%*继续下一页%*)%*" } {
-        #line gag;
-        #cr;
-        #return;
+        #line gag; #cr; #return;
     };
 };
 
@@ -84,7 +79,11 @@ event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参�
 #alias {ga.Confirm} {
     #local cmd {%1};
 
+    #if { &gXttPipeLine[] > 0 && {$gXttPipeLine[1]} !== {$cmd} } {
+        dbgLog GA => GA 状态已失步，现在开始同步。;
+    };
     #while { &gXttPipeLine[] > 0 && {$gXttPipeLine[1]} !== {$cmd} } {
+        dbgLog GA => drop $gXttPipeLine[1];
         #list gXttPipeLine delete {1};
     };
 };

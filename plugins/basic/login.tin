@@ -37,20 +37,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
     #showme 登录成功。;
 
-    #nop 如果角色设置了 MXP 支持，则在建连之后主动向服务器发起 MXP 协商。;
-    #nop 否则需要主动回车以放弃 MXP 协商。;
-    #if { "$user[MXP]" == "true" } {
-        load-lib mxp;
-        #if { @existsAlias{mxp.Enable} } {
-            mxp.Enable;
-        };
-        #else {
-            #cr;
-        };
-    };
-    #else {
-        #cr;
-    };
+    load-lib ga;
+    load-lib sync;
+    ga.Sync;
 
     #if { @isFalse{$login[user][manual]} } {
         login.online $type;

@@ -23,6 +23,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         gmcp.Enable;
     };
 
+    #nop 如果角色设置了 MXP 支持，则在建连之后主动向服务器发起 MXP 协商。;
+    #nop 否则需要主动回车以放弃 MXP 协商。;
+    #if { "$user[MXP]" == "true" } {
+        load-lib mxp;
+        #if { @existsAlias{mxp.Enable} } {
+            mxp.Enable;
+        };
+    };
+
     #if { "$session[UTF8]" == "true" } {
         #config {charset} {UTF-8};
     };
@@ -101,7 +110,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #line oneshot #action {^%s欢迎来到北大侠客行！%s$} {
-        login.login-success 重新登录;
+        #delay login.login-success {login.login-success 重新登录} 3;
     };
 
     #line oneshot #action {^%s目前权限：(%*)%s$} {
@@ -113,7 +122,16 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #line oneshot #action {^重新连线完毕。$} {
-        login.login-success 断线重连;
+        #delay login.login-success {login.login-success 断线重连} 3;
+    };
+
+    #line oneshot #action {^即将开始检测你的客户端对MXP的支持程度。如果5s中之内没有反应，代表你使用的客户端完全不支持MXP,请按回车进入普通模式。$} {
+        #if { @existsAlias{mxp.Enable} } {
+            #delay login.login-success {login.login-success 断线重连} 1;
+        };
+        #else {
+            #delay login.login-success {login.login-success 断线重连} 0;
+        };
     };
 
     #class login.auto-login close;
