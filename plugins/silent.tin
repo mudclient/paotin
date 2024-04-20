@@ -77,7 +77,7 @@
 
     #nop 参数不允许有特殊字符;
     #var silent-check-retcode {};
-    #regex {$cmd[args]} {{*UTF8}{^([a-z0-9. -]|\p{Han})*$}} {
+    #regex {$cmd[args]} {{*UTF8}{^([a-z0-9'. -]|\p{Han})*$}} {
         #var silent-check-retcode {1};
     } {
         #var silent-check-retcode {0};
