@@ -48,7 +48,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #return 1;
 };
 
-#alias {mudLog}     {log.write {$gLog[socket]} {%0}};
+#alias {mudLog} {
+    #if { "%0" == "%c> {$TELNET[GA]|$TELNET[EOR]}" } {
+        #local cmd {@str.Trim{$gXttPipeLine[1]}};
+        #if { &gXttPipeLine[] <= 1 } {
+            log.write {$gLog[socket]} {%0(<259>$cmd<299>)(<239>EMPTY<299>)};
+        };
+        #else {
+            log.write {$gLog[socket]} {%0(<259>$cmd<299>)};
+        };
+    };
+    #else {
+        log.write {$gLog[socket]} {%0};
+    };
+};
 
 #alias {okLog}      {log.write {$gLog[ok]}     {<129>%0}   {ECHO}};
 #alias {warnLog}    {log.write {$gLog[warn]}   {<139>%0}   {ECHO}};
