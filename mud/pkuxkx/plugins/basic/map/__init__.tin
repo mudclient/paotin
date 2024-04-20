@@ -32,6 +32,8 @@ load-file mud/pkuxkx/plugins/basic/map/xiaoyao.tin;
 load-file mud/pkuxkx/plugins/basic/map/helper.tin;
 load-file mud/pkuxkx/plugins/basic/map/tab.tin;
 
+load-file mud/pkuxkx/plugins/basic/map/utils.tin;
+
 #func {basic_map.Init} {
     event.Emit map/init;
     set localmap;

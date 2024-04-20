@@ -1,0 +1,93 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+VAR {要寻找的 NPC 的特征，表格} {gFocusNPC} {};
+
+///=== {
+// ## map.FocusNPC <NPC 特征> <行为类型> <行为>
+//    关注指定特征的 NPC，并当发现它时，呼叫相应的行为。
+//    特征由一系列字段来描述，目前支持的字段有：
+//      - id:     ID
+//      - name:   名字
+//      - title:  称号
+//      - nick:   昵称
+//    行为有两种类型：
+//      - command: 指明行为是一个命令，例如 follow 或者 kill 之类，那么将以 NPC ID 为参数调用它。
+//      - alias:   指明行为是一个别名，表明要做的事情比较复杂，那么将以 NPC 对象为参数调用它。
+//
+//    如果省略所有参数，则不再关注任何 NPC。
+// };
+#alias {map.FocusNPC} {
+    #local npc      {%1};
+    #local cbType   {%2};
+    #local callback {%3};
+
+    #if { "%0" == "" } {
+        #var gFocusNPC {};
+        #return;
+    };
+
+    #if { "$npc" == "" } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    #if { "$cbType" != "{command|alias}" } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    #if { "$callback" == "" } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    #local bad {1};
+    #local new {};
+    #local key {};
+    #foreach {id;name;title;nick;desc} {key} {
+        #if { "$npc[$key]" != "" } {
+            #local bad {0};
+            #local {new[$key]} {$npc[$key]};
+        };
+    };
+
+    #if { $bad } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    okLog 好的，已经为你关注 NPC: {$new}，如果遇到它，将会调用 {$callback}。;
+
+    #var gFocusNPC {$new};
+    #var gFocusNPC[cbType] {$cbType};
+    #var gFocusNPC[callback] {$callback};
+
+    event.Handle {map/GotRoomInfo} {map/utils} {map} {map.check-npc};
+};
+
+#alias {map.check-npc} {
+    #local idx {};
+    #foreach {*gMapRoom[objs][]} {idx} {
+        #local obj {$gMapRoom[objs][$idx]};
+        #if {  ( "$gFocusNPC[id]" == "" || "$obj[id]" == "$gFocusNPC[id]" )
+            && ( "$gFocusNPC[name]" == "" || "$obj[name]" == "$gFocusNPC[name]" )
+            && ( "$gFocusNPC[title]" == "" || "$obj[title]" == "$gFocusNPC[title]" )
+            && ( "$gFocusNPC[nick]" == "" || "$obj[nick]" == "$gFocusNPC[nick]" ) } {
+            okLog 发现目标 $obj[name] / $obj[id];
+            #if { "$gFocusNPC[cbType]" == "command" } {
+                #line sub var #delay 0 {$gFocusNPC[callback] $obj[id]};
+            };
+            #else {
+                #line sub var #delay 0 {$gFocusNPC[callback] {$obj}};
+            };
+        };
+    };
+};
