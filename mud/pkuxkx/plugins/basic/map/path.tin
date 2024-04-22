@@ -1,0 +1,476 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#pathdir {n} {s} {1};
+#pathdir {e} {w} {2};
+#pathdir {s} {n} {4};
+#pathdir {w} {e} {8};
+#pathdir {u} {d} {16};
+#pathdir {d} {u} {32};
+
+#pathdir {ne} {sw} {3};
+#pathdir {nw} {se} {9};
+#pathdir {se} {nw} {6};
+#pathdir {sw} {ne} {12};
+
+#pathdir {nu} {sd} {17};
+#pathdir {eu} {wd} {18};
+#pathdir {su} {nd} {20};
+#pathdir {wu} {ed} {24};
+#pathdir {nd} {su} {33};
+#pathdir {ed} {wu} {34};
+#pathdir {sd} {nu} {36};
+#pathdir {wd} {eu} {40};
+
+#pathdir {out} {enter} {19};
+#pathdir {enter} {out} {44};
+
+VAR {当前路径} path-current {};
+
+event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
+
+#alias {map.path.Init} {
+    event.Handle {map/GotRoomInfo} {path.Hint} {map/path} {path.Hint};
+    storage.Load path path-list;
+};
+
+///=== {
+// ## path.Trace
+//    开始为本房间录制路径。
+// };
+#alias {path.Trace} {
+    #local area {@map.GetArea{}};
+
+    #if { "$area" == "" } {
+        event.HandleOnce {map/GotArea} {path.Trace} {map/path} {path.Trace};
+        #delay map.Trace.retry {map.GetArea} 1;
+        #return;
+    };
+
+    #if { @path.isTracing{} } {
+        errLog 录制路径工作正在进行中。;
+        #return;
+    };
+
+    #var path-current {
+        {from}  {@map.Room.CID{}}
+        {to}    {}
+    };
+
+    event.Handle {GMCP.Move} {path.Trace} {map/path} {path.response};
+    #path create;
+    path.message 开始录制路径。;
+    option.Enable KeypadWalk;
+    ui.walk.SetCmd path.ui.move;
+};
+
+#alias {path.ui.move} {
+    #local dir {%1};
+    #local short {@dir.Short{%1}};
+    #path insert {$short};
+    go $dir;
+};
+
+#alias {path.response} {
+    #local cmd {@ga.ThisCmd{}};
+
+    #if { @isFalse{$gGMCP[Move][成功]} } {
+        #if { "$cmd" == "go %+" } {
+            #path delete;
+        };
+        #return;
+    };
+
+    #if { @dir.IsDir{$cmd} } {
+        #local short {@dir.Short{$cmd}};
+        #if { "$cmd" !== "$short" } {
+            #path insert {$cmd};
+        };
+    };
+    #elseif { "$cmd" != "go %*" } {
+        warnLog 未知的移动方式，无法识别，请手动维护路径。;
+        path.Mark {$gMapRoom[name]/$cmd};
+        #return;
+    };
+
+    #local length {};
+    #path get length length;
+    path.message 路径录制中，{<139>$cmd<159>} 已添加，目前长度: $length;
+};
+
+///=== {
+// ## path.BotStep <机器人名称> [<机器人参数> ...]
+//    插入一个机器人行走步骤。
+//    接到本指令时，PaoTin++ 会进行如下处理：
+//      - 1: 暂停路径录制；
+//      - 2: 在路径中插入一个机器人步骤；
+//      - 3: 自动调用机器人行走；
+//      - 4: 机器人行走完成后，自动恢复录制。
+//    按照约定，符合本规范的机器人必须发射以下事件之一：
+//      - map/walk/continue: 代表机器人成功结束运行，通过该区域
+//      - map/walk/failed:   代表机器人遇到了无法逾越的障碍，放弃行走
+//    本命令会监听以上事件并做相应处理。
+// };
+#alias {path.BotStep} {
+    #local bot  {%0};
+    #local name {%1};
+
+    #if { ! @path.isTracing{} } {
+        errLog 路径录制尚未开始。;
+        #return;
+    };
+
+    #if { !@existsAlias{map.$name} } {
+        errLog 不存在机器人 $name，请检查是否拼写错误。;
+        #return;
+    };
+
+    #local cancel {@mslp.Exec{path.Cancel;path.Cacnel}};
+    #local finish {@mslp.Exec{path.Finish;path.Finish}};
+
+    #class path.BotStep open;
+
+    #alias {path.BotStep.done} {
+        path.BotStep.end;
+        path.message 机器人运行完成，继续录制路径。;
+    };
+
+    #line sub var #alias {path.BotStep.failed} {
+        path.BotStep.end;
+        errLog 机器人运行出错，姑且继续录制。如果想要取消录制请使用 $cancel;
+    };
+
+    #line sub var #alias {path.BotStep.end} {
+        #class path.BotStep kill;
+        event.UnHandle {map/walk/continue} {path.BotStep};
+        event.UnHandle {map/walk/failed}   {path.BotStep};
+        #path start;
+        event.Handle {GMCP.Move} {path.Trace} {pathdir} {path.response};
+        path.message <129>录制路径中…… <299>取消录制请点击【<119>$cancel<299>】结束录制请点击【<129>$finish<299>】;
+    };
+
+    #class path.BotStep close;
+
+    event.HandleOnce {map/walk/continue} {path.BotStep} {pathdir} {path.BotStep.done};
+    event.HandleOnce {map/walk/failed}   {path.BotStep} {pathdir} {path.BotStep.failed};
+
+    event.UnHandle {GMCP.Move} {path.Trace} {pathdir};
+
+    path.message <139>录制路径已暂停<299>取消录制请点击【<119>$cancel<299>】结束录制请点击【<129>$finish<299>】;
+    #path stop;
+    #path insert {$bot} {$bot};
+    path.message 已经暂停路径录制，将会在机器人运行结束后自动继续。;
+    map.$bot;
+};
+
+///=== {
+// ## path.Mark [<记号>]
+//    在录制路径的过程中，插入一个记号，方便将来手动编辑路径。
+//    如果省略记号，默认为当前房间名。
+// };
+#alias {path.Mark} {
+    #local mark {@default{%1;$gMapRoom[name]}};
+
+    #if { ! @path.isTracing{} } {
+        errLog 路径录制尚未开始。;
+        #return;
+    };
+
+    #path insert {Mark/$mark} {Mark/$mark};
+};
+
+#alias {map.Mark} {
+    #local mark {%1};
+
+    okLog 这里有一个记号：「$mark」。;
+
+    map.BotReturn map.Mark;
+};
+
+///=== {
+// ## path.Cancel
+//    取消当前正在进行的录制路径工作。
+// };
+#alias {path.Cancel} {
+    #if { ! @path.isTracing{} } {
+        errLog 路径录制尚未开始。;
+        #return;
+    };
+
+    #var path-current {};
+    #path destroy;
+    event.UnHandle {GMCP.Move} {path.Trace};
+
+    path.message 放弃了本次路径录制工作。;
+};
+
+///=== {
+// ## path.Finish
+//    完成录制。
+// };
+#alias {path.Finish} {
+    #local area {@map.GetArea{}};
+
+    #if { "$area" == "" } {
+        event.HandleOnce {map/GotArea} {path.Finish} {map/path} {path.Finish};
+        #delay map.Finish.retry {map.GetArea} 1;
+        #return;
+    };
+
+    #local here {@map.Room.CID{}};
+    #var path-current[to] {$here};
+
+    #path stop;
+
+    event.UnHandle {GMCP.Move} {path.Trace};
+
+    #local fpath {};
+    #path save forward fpath;
+    #local bpath {};
+    #path save backward bpath;
+
+    #if { "$path-current[from]" == "$path-current[to]" } {
+        okLog 检测到遍历路径。;
+        #local length {};
+        #path get length length;
+        #local pathName {${here}-遍历${area}-$length};
+        #var path-list[$pathName] {$fpath};
+    };
+    #else {
+        #local fpath {@path.Simplify{$fpath}};
+        okLog 正向路径: {#$fpath#};
+        #local pathName {${path-current[from]}-${path-current[to]}};
+        #var path-list[$pathName] {$fpath};
+        #local bpath {@path.Simplify{$bpath}};
+        okLog 反向路径: {#$bpath#};
+        #local pathName {${path-current[to]}-${path-current[from]}};
+        #var path-list[$pathName] {$bpath};
+    };
+
+    #var path-current {};
+    #path destroy;
+
+    path.message 路径录制结束。你可以使用 {@mslp.Exec{path.List;path.List}} 命令查看本房间的关联路径。;
+
+    storage.Save path path-list;
+};
+
+///=== {
+// ## path.Hint
+//    如果此处有路径，则提醒玩家。
+// };
+#alias {path.Hint} {
+    #nop 录制路径的过程中，提示以录制为主。;
+    #if { @path.isTracing{} } {
+        #return;
+    };
+
+    #local area {@map.GetArea{}};
+
+    #if { "$area" == "" } {
+        #local here {@xiaoyao.Locate{}};
+        #if { "$here" == "" } {
+            path.hint;
+            #return;
+        };
+    };
+
+    #local here {@map.Room.CID{}};
+    #local path {@table.Keys{path-list; {${here}-%*}}};
+    #local count {@slist.Size{$path}};
+    #if { $count > 0 } {
+        #local path {@fp.Transform{{$path};\@str.Replace{VALUE;{%*-%*};{&2}}}};
+        #local path {@fp.Transform{{$path};\@mslp.Exec{{path.Walk ${here}-VALUE};<139>VALUE<299>}} };
+        path.hint $path;
+    };
+    #else {
+        path.hint;
+    };
+};
+
+///=== {
+// ## path.List
+//    查看本房间都有哪些关联路径，类似于北侠 node 或者 walk 命令。
+// };
+#alias {path.List} {
+    #local area {@map.GetArea{}};
+
+    #if { "$area" == "" } {
+        event.HandleOnce {map/GotArea} {path.List} {map/path} {path.List};
+        #delay map.List.retry {map.GetArea} 1;
+        #return;
+    };
+
+    #local here {@map.Room.CID{}};
+
+    #local count {0};
+    #local name {};
+    #foreach {*path-list[]} {name} {
+        #if { "$name" == "${here}-%*" } {
+            #local path {$path-list[$name]};
+            #local size {@slist.Size{$path}};
+            #echo {%s(<129>$size<299>): %s} {@mslp.Exec{{path.Walk $name};<139>$name<299>}} {<169>$path<099>};
+            #math count {$count + 1};
+        };
+    };
+
+    #if { $count > 0 } {
+        okLog 共列出 $count 条关联路径。;
+    };
+    #else {
+        warnLog 尚未找到本房间的关联路径。;
+    };
+
+    path.message 为本房间录制更多路径请使用 {@mslp.Exec{path.Trace;path.Trace}}。;
+};
+
+///=== {
+// #@ path.Get <路径名称>
+//    查询并返回路径。
+// };
+#func {path.Get} {
+    #local name {%0};
+
+    #if { "$name" == "" } {
+        #return {};
+    };
+
+    #return {$path-list[$name]};
+};
+
+///=== {
+// ## path.Walk <路径名称> [<回调代码>]
+//    沿着指定的路径名称执行行走任务。行走完成后，执行回调代码。
+// };
+#alias {path.Walk} {
+    #local name     {%1};
+    #local callback {%2};
+    #local path {$path-list[$name]};
+
+    path.WalkSteps {$path} {$callback};
+};
+
+///=== {
+// ## path.WalkSteps <路径> [<回调代码>]
+//    走一个自定义路径。行走完成后，执行回调代码。
+// };
+#alias {path.WalkSteps} {
+    #local path     {%1};
+    #local callback {%2};
+
+    #local len {@slist.Size{$path}};
+    #local path {@fp.Transform{{$path};path.step {VALUE}}};
+
+    #if { $len > 1 } {
+        env.Set brief 3;
+        #local path {@slist.Insert{{$path};$len;path.last-step}};
+    };
+
+    #if { "$callback" == "" } {
+        #path load {$path;path.end};
+    };
+    #else {
+        #path load {$path;path.end;$callback};
+    };
+
+    sync.Wait {#path walk};
+};
+
+#alias {path.step} {
+    #class path.step open;
+
+    #local cmd {@dir.Long{%1}};
+
+    event.HandleOnce {map/walk/continue}    {map/step} {map/path} {path.step.next};
+    event.HandleOnce {map/walk/failed}      {map/step} {map/path} {#path destroy; path.last-step};
+
+    map.step.Try {} {$cmd} {};
+};
+
+VAR {停止走路标志} path.walk.stop {0};
+
+#alias {path.Walk.Stop} {
+    #var path.walk.stop 1;
+};
+
+#alias {path.Walk.Resume} {
+    #var path.walk.stop 0;
+};
+
+#alias {path.Walk.Reset} {
+    #var path.walk.stop 0;
+    #path destroy;
+};
+
+#alias {path.step.next} {
+    #if { ! $path.walk.stop } {
+        #path walk;
+    };
+};
+
+#alias {path.last-step} {
+    env.UnSet brief;
+    #path walk;
+};
+
+#alias {path.end} {
+    okLog 行走完成。;
+
+    #local path {};
+    #path get info {path};
+    #if { $path[position] <= $path[length] } {
+        sync.Wait {
+            #path run;
+        };
+    };
+
+    event.HandleOnce {map/GotArea} {path/end} {map/path} {path.Hint};
+    map.GetArea;
+};
+
+#func {path.isTracing} {
+    #if { &path-current[] > 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#alias {path.message} {
+    #local msg {%0};
+    infoLog <159>$msg<299>;
+    path.hint %0;
+};
+
+VAR {map/path 模块提醒内容} {path-hint} {NOTHING};
+
+#alias {path.hint} {
+    #local hint {%0};
+
+    #if { "$path-hint" == "$hint" } {
+        #return;
+    };
+
+    #var path-hint {$hint};
+
+    #local trace  {【@mslp.Exec{path.Trace;<159>开始录制<299>}】};
+    #local cancel {【@mslp.Exec{path.Cancel;<119>取消录制<299>}】};
+    #local finish {【@mslp.Exec{path.Finish;<129>完成录制<299>}】};
+
+    #if { @path.isTracing{} } {
+        #local hint {$finish $cancel <159>$hint<299>};
+    };
+    #else {
+        #local hint {$trace <159>$hint<299>};
+    };
+
+    prompt.Set {{path}{$hint}};
+};
