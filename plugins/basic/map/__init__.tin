@@ -23,6 +23,7 @@ event.Define {map/walk/continue} {无参} {$MODULE} {走路机器人结束运行
 event.Define {map/walk/failed}   {无参} {$MODULE} {走路机器人运行失败时，可以发射本事件以通知调用方。};
 event.Define {map/init}          {无参} {$MODULE} {map 模块开始初始化。};
 
+#nop 大众版;
 load-file plugins/basic/map/room.tin;
 load-file plugins/basic/map/dungeon.tin;
 load-file plugins/basic/map/gmcp.tin;
@@ -31,12 +32,9 @@ load-file plugins/basic/map/node.tin;
 load-file plugins/basic/map/xiaoyao.tin;
 load-file plugins/basic/map/helper.tin;
 load-file plugins/basic/map/tab.tin;
-
 load-file plugins/basic/map/utils.tin;
 
 #func {basic_map.Init} {
     event.Emit map/init;
-    set localmap;
-    set area_detail;
     #return true;
 };

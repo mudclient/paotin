@@ -21,6 +21,7 @@ event.Define {map/GotLocalmaps} {无参} {$MODULE} {已经解析 localmaps 命�
 event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
 
 #alias {map.area.Init} {
+    set localmap;
     storage.Load {map-area} {map.area.dict};
     event.Handle {map/GotRoomInfo} {map/area} {map} {map.GetArea};
 };
