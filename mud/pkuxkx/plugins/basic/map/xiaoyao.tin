@@ -11,15 +11,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 VAR {逍遥行地图数据} map.xiaoyao.map    {};
 VAR {逍遥行房间数据} map.xiaoyao.room   {};
 
-load-lib storage;
-load-lib event;
-
 load-module basic/busy;
 
 event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
 
 #alias {xiaoyao.Init} {
-    event.Handle map/walk/continue {xiaoyao.walk-end} {xiaoyao} {xiaoyao.walk-end};
+    event.Handle {map/GotRoomInfo} {xiaoyao.try-locate} {map/xiaoyao} {xiaoyao.try-locate};
     storage.Load {map-xiaoyao} {map.xiaoyao.map;map.xiaoyao.room};
 };
 
@@ -28,15 +25,15 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     #local areaMap {};
     #foreach {*map.xiaoyao.map[]} {node} {
         #local next {};
-        #if { &map.xiaoyao.map[$node][] == 1 && "$map.xiaoyao.map[$node][+1][link]" == "DOCK" } {
+        #if { &map.xiaoyao.map[$node][] == 1 && "$map.xiaoyao.map[$node][DOCK]" != "" } {
             warnLog 这是个纯粹的码头 => $node;
         };
         #foreach {*map.xiaoyao.map[$node][]} {next} {
             #regex {$node} {%*(%*的%*)} {
                 #format {areaMap[&2][$node]} {true};
             };
-            #local link {$map.xiaoyao.map[$node][$next][link]};
-            #if { "$link" == "" } {
+            #local link {$map.xiaoyao.map[$node][$next]};
+            #if { "$next" == "DOCK" || "$link" == "TODO" } {
                 errLog $node => $next 尚未联通。;
             };
         };
@@ -176,14 +173,14 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     #if { $retry == 0 &&
         (  "$gMapRoom[node]$gMapRoom[dock]" == ""
         ||  &gMapRoom[area][] == 0
-        || "$gMapRoom[area][RESOLVED]" == "" )
+        || "@map.GetArea{}" == "" )
     } {
-        #line sub {func;var} event.HandleOnce map/GotArea {xiaoyao/Map} {map} {xiaoyao.Map {@math.Eval{$retry + 1}} $args};
-        map.Here;
+        #line sub {func;var} event.HandleOnce {map/GotArea} {xiaoyao/Map} {map} {xiaoyao.Map {@math.Eval{$retry + 1}} $args};
+        map.GetArea;
         #return;
     };
 
-    #local here {@xiaoyao.locate{}};
+    #local here {@xiaoyao.Locate{}};
     #if { "$here" == "" } {
         xtt.Send {map};
         #return;
@@ -275,55 +272,123 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
 //    目的地暂时仅支持中文，但允许模糊查询。举例来说，假如你想前往「全真派(全真教的宫门)」，
 //    那么你输入「全真派」、「全真教」、「宫门」、「全真」、甚至「教的宫」都是可以的。
 //
-//    本别名也可简写为 <139>xy<299>。许多用户可能喜欢重设为 <139>gt<299>，请自行设定。
+//    本别名存在三个变体，你可以用 HELP 进一步了解：
+//       - xiaoyao.GotoThen: 允许调用者在行走完成之后，执行一段代码。
+//       - xiaoyao.GotoEmit: 允许调用者在行走完成之后，发射一个事件。
+//       - xy: 专供命令行使用并为此做过特别优化的别名，不要在脚本中使用它。
 //
 //    关于 walk 命令的细节可以参考 help walk。
 // };
 #alias {xiaoyao.Goto} {
-    #local target   {@xiaoyao.locateByName{%1}};
+    xiaoyao.goto {%1} {%2} {xiaoyao.Goto};
+};
+
+///=== {
+// ## xy <目的地> [<回调代码>]
+//    通过逍遥行前往目的地。如果指定了回调代码，那么到达目的地之后，会执行它。
+//    参见 HELP xiaoyao.Goto。
+// };
+#alias {xy} {
+    #local target   {%1};
+    #local callback {%22};
+    #info arguments save;
+    #local count &info[ARGUMENTS][];
+    #unvar info[ARGUMENTS];
+
+    #if { $count == 1 } {
+        xtt.Usage xiaoyao.Goto {<169>这里是 PaoTin++ 逍遥行};
+        #return;
+    };
+
+    #if { $count > 3 } {
+        #local callback {%20};
+        #local old {%20};
+        #replace {callback} {^$target } {};
+        #if { "$callback" === "$old" } {
+            #replace {callback} {^\\x7B$target\\x7D } {};
+        };
+    };
+
+    #line sub {escapes;var} xiaoyao.GotoThen {$target} {$callback};
+};
+
+///=== {
+// ## xiaoyao.GotoThen <目的地> [<回调代码>]
+//    通过逍遥行前往目的地。如果指定了回调代码，那么到达目的地之后，会执行它。
+//    参见 HELP xiaoyao.Goto。
+// };
+#alias {xiaoyao.GotoThen} {
+    #local target   {%1};
+    #local callback {%22};
+
+    #if { "$callback" == "" } {
+        #local callback {#0};
+    };
+
+    #local hook {map/xiaoyao/@uuid{}};
+    #line sub {escapes;var} event.HandleOnce {map/walk/continue} {$hook} {map/xiaoyao} {$callback};
+
+    xiaoyao.goto {$target} {$hook} {xiaoyao.GotoThen};
+};
+
+///=== {
+// ## xiaoyao.GotoEmit <目的地> [<回调钩子名称>]
+//    通过逍遥行前往目的地。
+//    如果你事先注册了指定名称的回调钩子在事件 map/walk/continue 上，那么到达目的地之后，会唤醒它。
+//    参见 HELP xiaoyao.Goto。
+// };
+#alias {xiaoyao.GotoEmit} {
+    #local target   {%1};
     #local hook     {%2};
-    #local retry    {@defaultNum{%3;0}};
+
+    xiaoyao.goto {$target} {$hook} {xiaoyao.GotoEmit};
+};
+
+#alias {xiaoyao.goto} {
+    #local target   {%1};
+    #local hook     {@default{%2;xiaoyao/goto/end}};
+    #local name     {@default{%3;xiaoyao.GotoEmit}};
+    #local retry    {@defaultNum{%4;0}};
 
     #if { "$target" == "" } {
-        xtt.Usage xiaoyao.Goto {<169>这里是 PaoTin++ 逍遥行};
+        xtt.Usage $name {<169>这里是 PaoTin++ 逍遥行};
+        xiaoyao.goto.cancel {$hook};
         #return;
     };
 
     #if { &map.xiaoyao.map[] == 0 } {
         errLog 加载逍遥行节点数据文件失败。;
         okLog 请确保逍遥行数据文件 var/data/map-xiaoyao.tin 或 data/map-xiaoyao.tin 正确无误。;
+        xiaoyao.goto.cancel {$hook};
         #return;
     };
 
     #if { $retry > 1 } {
         errLog 请先前往逍遥行节点。所有的码头、walk 节点均为逍遥行节点。;
+        xiaoyao.goto.cancel {$hook};
         #return;
     };
 
-    #if { "$hook" == "" } {
-        event.HandleOnce map/walk/continue {xiaoyao.walk-end}  {xiaoyao} {xiaoyao.walk-end};
-        #local hook {xiaoyao.walk-end};
-    };
-
-    #if {   "$gMapRoom[node]$gMapRoom[dock]" == ""
+    #if {  "$gMapRoom[node]$gMapRoom[dock]" == ""
         ||  &gMapRoom[area][] == 0
-        || "$gMapRoom[area][RESOLVED]" == ""
+        || "@map.GetArea{}" == ""
     } {
-        #line sub {func;var} event.HandleOnce map/GotArea {xiaoyao/Goto} {xiaoyao} {xiaoyao.Goto {$target} {$hook} {@math.Eval{$retry + 1}}};
-        #var map.Locate.mode {CarefulOnce};
-        look;
+        #line sub {func;var} event.HandleOnce map/GotArea {xiaoyao/goto} {xiaoyao} {xiaoyao.goto {$target} {$hook} {@math.Eval{$retry + 1}}};
+        map.GetArea;
         #return;
     };
 
-    #local here {@xiaoyao.locate{}};
+    #local here {@xiaoyao.Locate{}};
 
     #if { "$here" == "" } {
         errLog 请先前往逍遥行节点。所有的码头、walk 节点均为逍遥行节点。;
+        xiaoyao.goto.cancel {$hook};
         #return;
     };
 
-    #if { "$here" == "$target" } {
+    #if { "$here" == "%*$target%*" } {
         #if { "$hook" != "" } {
+            okLog 你已经来到了 $here;
             event.DelayEmit map/walk/continue {$hook};
         };
         #return;
@@ -333,11 +398,13 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     #local target {@xiaoyao.findPath{$here;"NODE" == "%*$target%*"}};
     #if { "$target" == "" } {
         errLog 找不到路径。;
+        xiaoyao.goto.cancel {$hook};
         #return;
     };
 
     #if { "$target[path]" == "" } {
-        okLog 你已经来到了 $target[room];
+        errLog 找不到路径，似乎安装出错了，请联系开发者。;
+        xiaoyao.goto.cancel {$hook};
         #return;
     };
 
@@ -345,48 +412,127 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     #replace {target[route]} {(%*)} {};
     okLog 途经节点: $target[route];
 
-    map.WalkNodes {$target[path]} {$hook};
+    prompt.Set {{walk}{<139>正在前往 <129>$target[room]<139>...<299>}};
+
+    #line sub var event.HandleOnce map/walk/continue {xiaoyao/goto} {map/xiaoyao} {xiaoyao.walk-end $hook};
+    map.WalkNodes {$target[path]} {xiaoyao/goto};
+};
+
+#alias {xiaoyao.goto.cancel} {
+    #local hook {%1};
+    event.UnHandle {map/walk/continue} {$hook} {map/xiaoyao};
 };
 
 #alias {xiaoyao.walk-end} {
+    #local hook {%1};
     okLog 行走完成。;
-    map.Here;
+
+    #if { "$hook" != "" } {
+        event.DelayEmit map/walk/continue {$hook};
+    };
+
+    #nop 配合 try-locate 进行定位。;
+    look;
 };
 
-#func {xiaoyao.locate} {
+#alias {xiaoyao.try-locate} {
+    #nop 移动中，位置随时会变。;
+    #if { ! @ga.AllDone{} } {
+        #return;
+    };
+
+    #nop 探索中，数据内容不全。 ;
+    #if { @isTrue{$xiaoyao.explore} } {
+        #return;
+    };
+
+    #nop 光看房间名就就不像是节点。;
+    #local nodes {$map.xiaoyao.room[$gMapRoom[name]]};
+    #if { "$nodes" == "" } {
+        #if { &map.xiaoyao.map[] > 0 } {
+            prompt.Set {{walk}{<139>逍遥行已启动，可识别 &map.xiaoyao.map[] 个节点，目前工作正常。<299>}};
+        };
+        #return;
+    };
+
+    #nop 空闲，没有移动，可能是节点，那么就具体调查一下。;
+    event.HandleOnce {map/GotArea} {xiaoyao.locate} {map/xiaoyao} {xiaoyao.locate};
+    map.GetArea;
+};
+
+#alias {xiaoyao.locate} {
+    #local here {@xiaoyao.Locate{}};
+    #if { "$here" == "" } {
+        #return;
+    };
+
+    okLog 这里是 $here;
+
+    #local links {@table.Keys{map.xiaoyao.map[$here];%*}};
+    #local buttons {};
+    #local link {};
+    #foreach {$links} {link} {
+        #local short {@str.Replace{$link;{%*(%*的%*)};{&1}}};
+        #local button {【@mslp.Exec{{xiaoyao.Goto $link};<139>$short<299>}】};
+        #cat buttons {$button};
+    };
+
+    prompt.Set {{walk}{$buttons}};
+};
+
+#func {xiaoyao.Locate} {
     #local room     {$gMapRoom[name]};
-    #local area     {@default{$gMapRoom[area][RESOLVED];%*}};
-    #local node     {@default{$gMapRoom[node];%*}};
+    #local area     {@map.GetArea{}};
+    #local node     {$gMapRoom[node]};
     #local dock     {$gMapRoom[dock]};
-    #local location {};
+    #local pattern  {$area的$room};
+
+    #nop 光看名字就长得不像，那肯定不是了。;
+    #local nodes {$map.xiaoyao.room[$room]};
+    #if { "$nodes" == "" } {
+        #return {};
+    };
+
+    #if { "$area" == "" } {
+        #local pattern {%*的$room};
+    };
 
     #if { @slist.Contains{{$gMapRoom[lookable]};{<node>}} } {
         #nop 节点以 walk 节点名称标记;
-        #local location {$node($area的$room)};
+        #local pattern {@default{$node;%*}($pattern)};
     };
     #elseif { "$dock" != "" } {
         #nop 没有节点的码头以区域名称加码头标记。;
-        errLog 这是个码头，但没有设置 walk 节点。;
-        #local location {$area码头($area的$room)};
+        #local pattern {@default{$area;%*}码头($pattern)};
+    };
+    #elseif { "$area" != "" && "@sset.Intersection{{$gMapRoom[mark]};{★;☆}}" != "" } {
+        #nop 既不是节点，又不是码头，那么如果有地域信息大概也是可以的。;
+        #local pattern {%*($pattern)};
     };
     #else {
-        errLog 此处既非码头，也非节点，逍遥行无法定位。;
         #return {};
     };
 
-    #nop 如果已经有区域信息，则不用查数据库。;
-    #if { "$gMapRoom[area][RESOLVED]" != "" } {
-        #return {$location};
+    #if { "$pattern" != "%*\%*%*" } {
+        #return {$pattern};
     };
 
     #nop 否则参考数据库来确定，当且仅当数据库中只有一条匹配记录时，才能断定;
-    #if { &map.xiaoyao.map[$location][] != 1 } {
+    #if { &map.xiaoyao.map[$pattern][] != 1 } {
         #return {};
     };
 
-    #foreach {*map.xiaoyao.map[$location]} {location} {
-        #return {$location};
+    #local location @table.Keys{map.xiaoyao.map;{$pattern}};
+
+    #nop 如果房间名和节点名已经获得，那么可以据此更新地区名;
+    #if { "$area" == "" && "$node" != "" } {
+        #local area {$location};
+        #replace area {%*(%*的%*)} {&2};
+        #var gMapRoom[area][RESOLVED] {$area};
+        event.Emit map/GotArea;
     };
+
+    #return {$location};
 };
 
 #nop 计算路径;
@@ -429,8 +575,8 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
                     #continue;
                 };
 
-                #local link {$map.xiaoyao.map[$node][$next][link]};
-                #if { "$link" == "" } {
+                #local link {$map.xiaoyao.map[$node][$next]};
+                #if { "$link" == "TODO" } {
                     #nop BUG: 不完整的连接。;
                     #continue;
                 };
@@ -449,21 +595,17 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     #local path     {};
     #local node     {$dst};
     #while { "$node" != "$src" } {
-        #local prev     {$routeMap[$node]};
-        #local link     {$map.xiaoyao.map[$prev][$node][link]};
-        #local action   {$map.xiaoyao.map[$prev][$node][action]};
-        #local node     {$prev};
+        #local prev {$routeMap[$node]};
+        #local link {$map.xiaoyao.map[$prev][$node]};
+        #local node {$prev};
 
         #format route   {%s-%s} {$node} {$route};
 
-        #if { "$link" == "WALK" } {
-            #list path insert 1 {$action};
-        };
-        #elseif { "$link" == "PATH" } {
+        #if { "$link" == "PATH" } {
             #list path insert 1 {PATH/{$action}};
         };
-        #elseif { "$link" == "DOCK" } {
-            #list path insert 1 {DOCK/$action};
+        #else {
+            #list path insert 1 {$link};
         };
     };
 
@@ -562,5 +704,13 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     infoLog;
 };
 
-#alias {xy}     {xiaoyao.Goto};
 #alias {xyq}    {xiaoyao.Query};
+
+///=== {
+// ## xiaoyao.LoadData
+//    加载逍遥行依赖的数据文件。
+// };
+#alias {xiaoyao.LoadData} {
+    storage.Load {map-xiaoyao} {map.xiaoyao.map;map.xiaoyao.room};
+    storage.Load {map-area} {map.area.dict};
+};
