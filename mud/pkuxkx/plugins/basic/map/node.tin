@@ -8,8 +8,6 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ===========
 */
 
-load-lib event;
-
 event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息，并更新到 gMapRoom 全局变量。};
 
 /*
@@ -37,33 +35,38 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
 //        2. 当前节点所联通的节点列表，是个表格，储存在 \$gMapRoom[nodeLinks];
 // };
 #alias {map.GetNodeInfo} {
-    #if { "$gMapRoom[node]" != "" } {
-        #return;
-    };
+    #local gag {%1};
 
     #class map.GetNodeInfo open;
 
     #alias {map.GetNodeInfo.done} {
-        #var gMapRoom[area][WALK] {@default{%%1;$gMapRoom[area][WALK]}};
-        #line gag;
         #class map.GetNodeInfo kill;
 
         #if { &gMapRoom[nodeLinks][] > 0 } {
+            #local links {@table.Keys{gMapRoom[nodeLinks]}};
+            #var gMapRoom[area][LINK] {$gMapRoom[node]/$links};
             #delay 0 okLog 节点信息已识别。;
         };
 
         event.DelayEmit map/GotNodeInfo;
     };
 
-    #gag {^%*{|ID=map/getnode}$};
+    #local {E} {{?:|id=map/getnode}$};
 
-    #action {{*UTF8}{^}╭─{(─)*}─{\p{Han}+}─{(─|┬)*}──╮{|ID=map/getnode}$} {
+    #if { "$gag" == "gag" } {
+        #gag {^%*{|ID=map/getnode}$E};
+    };
+
+    #action {^│目的地%s│拼音名称%s│$E} {
+        #if { "%1" == "gag" } {#line gag};
+    } {4.999};
+
+    #action {{*UTF8}{^}╭─{(─)*}─{\p{Han}+}─{(─|┬)*}──╮$E} {
         #var gMapRoom[node]         {%%4};
         #var gMapRoom[nodeLinks]    {};
 
         #class map.GetNodeInfo open;
 
-        #action {^│目的地%s│拼音名称%s│$} {#line gag} {4.999};
         #action {^│%S%s│%S%s│{|ID=map/getnode}$} {
             #var {gMapRoom[nodeLinks][%%%3]} {%%%1};
         };
@@ -71,26 +74,54 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
         #class map.GetNodeInfo close;
     };
 
-    #action {^%*内的系统内建路径出发点在：%*，请查询localmaps获得具体方位。{|ID=map/getnode}$} {
+    #action {^%*内的系统内建路径出发点在：%*，请查询localmaps获得具体方位。$E} {
+        #var gMapRoom[area][WALK] {%%1/%%2};
+    };
+
+    #action {^%*内共有一处内建玩家路径起点，在%*。$E} {
+        #var gMapRoom[area][NODE] {%%1/%%2};
+    };
+
+    #action {^%*内共有%d处内建玩家路径起点，分别在%*。$E} {
+        #var gMapRoom[area][NODE] {%%1/%%3};
+    };
+
+    #action {^当前区域的系统内建路径出发点在：%*，请查询localmaps获得具体方位。$E} {
         #var gMapRoom[area][WALK] {%%1};
     };
 
-    #action {^%*内共有一处内建玩家路径起点，在%*。{|ID=map/getnode}$} {
-        #var gMapRoom[area][WALK] {%%1};
+    #action {^当前区域共有%d处内建玩家路径起点，分别在%*。$E} {
+        #var gMapRoom[area][NODE] {%%2};
     };
 
-    #action {^%*内共有%d处内建玩家路径起点，分别在%*。{|ID=map/getnode}$} {
-        #var gMapRoom[area][WALK] {%%1};
+    #action {^当前区域共有一处内建玩家路径起点，在%*。$E} {
+        #var gMapRoom[area][NODE] {%%1};
     };
 
-    #action {^%*当前区域没有任何内建玩家路径起点。} {
-        #var gMapRoom[area][WALK] {%%1};
+    #action {^当前区域的内建路径出发点暂时不明确。$E} {
+        #var gMapRoom[area][WALK] {NOTHING};
+    };
+
+    #action {^当前区域没有任何内建玩家路径起点。$E} {
+        #var gMapRoom[area][NODE] {NOTHING};
     };
 
     #class map.GetNodeInfo close;
 
-    walk -c;
+    xtt.Send {walk -c};
     sync.Wait {map.GetNodeInfo.done} {map/GetNodeInfo};
+};
+
+#alias {walk} {
+    #if { "%1" == "-c" && "%2" == "{gag|nogag|}" } {
+        map.GetNodeInfo {%2};
+    };
+    #elseif { "%1" == "{[a-z0-9;]+}" } {
+        map.WalkNodes {%1} {%2};
+    };
+    #else {
+        xtt.Send {walk %0};
+    };
 };
 
 ///=== {
@@ -109,7 +140,6 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
     #local ID {|ID=map/WalkNodes};
 
     #action {^你开始往%*方向飞奔过去……{$ID}$} {
-        #nop prompt.Set {{nodeLinks}{<120>正在前往【%%1】，赶路中…}};
         #var map.WalkNodes.delay   {3};
     };
 
@@ -143,23 +173,19 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
     #alias {map.WalkNodes.walk-next} {
         #if { &map.WalkNodes.nodes[] > 0 } {
             #local node {$map.WalkNodes.nodes[1]};
+            #local node {@str.Replace{{$map.WalkNodes.nodes[1]};{^%+{|/(.+)}$};{{step}{&1}{args}{&3}}}};
             #list map.WalkNodes.nodes delete 1;
-            #if { "$node" == "DOCK/dock" } {
-                event.HandleOnce map/walk/continue {map.shaogong} {map} {map.WalkNodes.walk-next};
-                map.YellBoat;
-            };
-            #elseif { "$node" == "DOCK/ride{| \S+}" } {
-                #replace node {DOCK/ride} {};
-                event.HandleOnce map/walk/continue {map.Ride} {map} {map.WalkNodes.walk-next};
-                map.Ride $node;
-            };
-            #elseif { "$node" == "PATH/{\{.*\}}" } {
-                #replace node {PATH/{\{(.*)\}}} {&2};
-                xtt.SendBatch {$node};
+            #if { "$node[step]" == "PATH" } {
+                xtt.SendBatch {$node[args]};
                 sync.Wait {map.WalkNodes.walk-next};
             };
+            #elseif { "$node[step]" == "{[A-Z][A-Za-z0-9]+}" } {
+                #local bot {$node[step]};
+                event.HandleOnce map/walk/continue {map.$bot} {map} {map.WalkNodes.walk-next};
+                map.$bot $node[args];
+            };
             #else {
-                xtt.Send {walk $node};
+                xtt.Send {walk $node[step]};
             };
         };
         #else {
