@@ -1,0 +1,735 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+event.HandleOnce {map/init} {map/step} {map} {map.step.Init};
+
+#alias {map.step.Init} {
+    #0;
+};
+
+VAR {走路命令，默认为 go，推车时请改为 gan che to}	map.step.go.cmd		{go};
+VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
+
+#alias {map.step.SetCmd} {
+    #local cmd {@default{%0;go}};
+    #var map.step.go.cmd {$cmd};
+};
+
+#alias {map.step.SetCrushCmd} {
+    #local cmd {@default{%0;attack}};
+    #var map.step.crush.cmd {$cmd};
+};
+
+///=== {
+// #= map.step 走路概述
+//
+//    本文阐述一个好的走路机器人应当如何去做好一件最基本的事情：移动到相邻房间。
+//    这小小的一步移动看似简单，其实涉及到许多游戏底层的机制，要想做好并不容易。
+//
+//    在展开讨论之前，为了方便叙述，先引入一些概念：
+//      - Exit（出口）: 出口是房间的一个基本属性，大多数房间可以通过出口移动到相邻房间。
+//      - Link（连接）: 连接是房间之间的拓扑关系，通过连接，可以从一个房间移动到另一个。
+//      - Step（单步）: 一个具体的行走命令。一般来说，如果行走成功，会触发 GMCP.Move。
+//
+//    上面三个概念大体相同，但又有区别。举例来说，有的房间的出口其实是假的（成都的锦江），
+//    并不通向任何房间。所以出口不一定是一个有用的连接。
+//    假的出口有用吗？有的人可能会认为没用，但实际上它也是服务器给出的规范信息，可以用来
+//    区分同名房间，所以实际上也是有用的。
+//
+//    而连接也不一定是出口，比如有些机关陷阱，也就是说房间之间移动不一定要通过出口来完成。
+//    最常见的一类连接是迷宫，迷宫不能用普通的方法进行移动，只能用专门的机器人，那么对于
+//    想要通过迷宫的调用者来说，迷宫就像是一个从迷宫入口到迷宫出口的连接。
+//
+//    至于单步，大体上和连接是一个意思，但是含义侧重点不同。连接强调的是房间和房间的拓扑
+//    关系，而单步则强调的是在一个长的路径当中，一个具体的步骤。
+//
+//    总的来说，Link 强调拓扑细节，Step 强调它在路径中的地位，而 Exit 则是房间的固有属性。
+//
+//    接下来正式讨论。走路首先要关心的是走路目的，就是说你为什么走这个路：
+//      - 探路: 对周围的世界充满了好奇心，充满了未知，但也遵循谨慎原则。
+//      - 赶路: 即 P2P，以通过该房间为目的。
+//      - 遍历: 遍历某个区域，以尽可能访问更多的房间为目的。
+//
+//    不同的走路目的，就会产生不同的走路模式：
+//      - Try（对应探索）: 谨慎地走一步，尽可能走，但如果走不通就放弃并记录失败原因。
+//      - Must（对应P2P）: 执着地走一步，一定要走成功，如果不成功就反复尝试。
+//      - Should（对应遍历）: 武断地走一步，行不行就这一下，也不做过多地尝试。
+//
+//    除了走路模式，走路机器还应该知道当前位置是哪里，计划走哪个出口，以及下一步通往哪里。
+//    1. 对于探路目的来说，只知道出口，不知道下一步通往哪里。
+//    2. 对于遍历和赶路目的来说，由于存在非标准出口，可能只知道连接到哪里，无法对应出口。
+//    3. 对于特殊房间来说，除了必须的移动命令，还需要额外的其它命令，来创造移动的条件。
+//
+//    以上这些就算是走路的前置条件（参数）了，每走一步路之前，都应该想清楚这些问题。
+//    注意这里只阐述一个单步的逻辑，并不负责整条路径的生成和行走策略。
+//    实际运用中，只有机器人可以坚实地走好每一单步，然后才可以沿着路径长途跋涉，走得更远。
+//
+//    说完参数，再说说返回值。按照设计，map 系统的每个组件无论大小，只要涉及到移动，则无论
+//    远近都需要发送以下两个标准事件：
+//      - map/walk/continue: 机器人执行成功，调用者可以按照计划继续执行后续动作。
+//      - map/walk/failed:   机器人执行失败，调用者应当取消后续动作，或进行补救措施。
+//    因为所有的 map 机器人会共享以上事件，因此只有钩子名称相互匹配的事件句柄才会被唤醒。
+//    请仔细核对你所订阅的事件对应的钩子名称。
+//
+//    一旦明确参数和返回值之后，接下来首先要做的事，就是搞清楚每个 Step 的细节，主要分两类：
+//      - 出口相关: 通过出口离开本房间，这也是大多数普通房间之间连接的方式。
+//      - 出口无关: 不通过任何出口，而是通过机器离开本房间，常见的比如渡口，马车行，爬山等。
+//
+//    走路机器人需要根据具体情况，通过分析每个 Step 的描述，来获知需要使用的命令，然后判断
+//    属于出口有关还是出口无关。
+//    对于出口有关的命令，PaoTin++ 将出口分为四类，同时为了便于书写，发明了以下记法用以区分：
+//      - 出口类型              记录的命令      格式
+//      - Normal:   标准出口    north           方向名全称
+//      - Dynamic:  动态出口    North           首字母大写
+//      - Hidden:   隐藏出口    NORTH           全部大写
+//      - Denied:   禁止出口    nortH           尾字母大写
+//
+//    以上是四类出口相关的命令。下面还有一些出口无关的命令：
+//      - 连接类型              记录的命令          含义
+//      - GuoJiang: 渡过长江    GuoJiang            过江机器人
+//      - GuoHe:    渡过长江    GuoHe               过河机器人
+//      - Ride:     自驾小船    Ride/north          自驾小船，向北前进
+//      - LxcEnter: 进凌霄城    LxcEnter            进凌霄城机器人
+//      - Maze:     迷宫走路    Maze/云海进         按照云海进入走法穿越迷宫
+//      - Path:     连续走路    Path/{n;w;e;s}      连续走好几个步骤，视同为一个 Step
+//      - Bot:      机器走路    Foo/bar             机器名为 Foo，并需要 bar 参数
+//
+//    这些走路方式因为其特殊性，已经基本上无法通过出口来完成了，因此要用专门的机器人来走路。
+//    如果不同的房间存在于类似的行走方式，典型的比如渡口，那么机器人就具有一定的通用性。
+//    否则机器人基本上是为某房间定制的。这里统一用 Bot 方式来表示，不再区分。规则是：
+//
+//      - 凡是大骆驼格式打头的命令，则一律当成机器走路来处理。后面用斜杠提供参数，
+//        如果存在多个参数，以大括号包裹的字符串列表形式表示。
+//
+//    还有一大类常见情况就是各类关卡(Gate)，关卡大多都有一个对应的出口，但需要在行走之前或
+//    之后，执行一些额外的修饰命令。常见的情形有：
+//      - 修饰命令              记录的命令                      含义
+//      - Give:     贿赂命令    Give/1 coin/shan xiao/north     给 shan xiao 一文铜板，然后往北
+//      - Answer:   回答口令    Answer/自立为王/north           回答自立为王，然后往北
+//      - Ask:      征得许可    Ask/shiwei/通传/east            向侍卫请求通传，然后向东
+//      - Unwield:  卸下武器    Unwield/east                    卸下武器，然后向东
+//    对于无法归类的关卡，可以用以下两个通用的方式来解决：
+//      - Prepare:  前置动作    Prepare/yell bridge/north       执行命令 yell bridge，然后向北
+//      - Postpare: 后置动作    Postpare/sheng bridge/north     向北离开之后，执行命令 sheng bridge
+//
+//    这些修饰命令本身并不属于完整的行走命令，因此不能单独使用，需要和前述两类行走命令联合使用。
+//
+//    除此之外，还有一些连接存在限制条件，也会影响连接的可用性，它们有：
+//      - 限制条件              记录的命令              含义
+//      - Fee:      收费连接    Fee/50/*                该连接需要收取费用，可以在选路时参考
+//      - Cash:     收费连接    Cash/50 gold/*          该连接需要收取费用，需要提前准备好现金
+//      - Weighted: 加权连接    WGT/80/*                连续权重（1~100）
+//      - Cond:     通用条件出口，格式为 Cond/检查器(参数)/方向
+//      -           经验条件    Cond/EXP(>10M)/*            经验大于 10M
+//      -           等级条件    Cond/LVL(>60)/*             角色等级大于 50 级
+//      -           轻功条件    Cond/DOG(>100)/*            轻功大于 100 级
+//      -           道具条件    Cond/ITEM(...)/*            携带有指定 ID 的物品
+//      -           解密条件    Cond/QUEST(...)/*           已完成指定解密
+//      -           变量条件    Cond/VAR(变量;表达式)/*     检查变量和表达式的关系
+//      -           逻辑条件    Cond/EXPR(表达式)/*         检查表达式是否成立
+//      -           其它条件    Cond/FOO(...)/*             通过检查器 FOO 来校验
+//      -           联合条件    Cond/EXP(>10M),ITEM(yaoqing han)/*
+//
+//    接下来重点说说 Normal/Gate/Dynamic/Hidden 这四大类出口。
+//
+//    首先说说标准出口(Normal)。标准出口顾名思义，就是最朴素的出口，它必须满足全部以下公理：
+//      - 1. 标准名称:          它拥有标准的名称，即 20 个标准方向名称之一。
+//      - 2. 标准显示方式:      在 look 和 GMCP.Move 数据流中，可以看到此出口信息。
+//      - 3. 标准的行走命令:    都可以用 go 命令行走。
+//      - 4. GMCP:              通过 go 命令都可以接收到 GMCP.Move 事件，无论成功失败。
+//
+//    很显然，大多数房间的每个出口都满足这些公理，但也有一些例外。首先比较常见的一种例外就是动态出口。
+//    动态出口(Dynamic)是指那些某些时候不会出现而某些时候又会出现的出口，典型的比如一扇门。动态出口
+//    除了这一点（即违背了前述公理2）之外，别的方面均与标准出口(Normal)完全相同。因此在走路机器人中，
+//    动态出口的处理也和标准出口完全相同。动态出口仅仅只影响 GPS 定位和 P2P 寻路。
+//
+//    还有一种特殊情形就是隐藏出口(Hidden)，隐藏出口可能会被人误以为只是一个看不见的标准出口。但实
+//    际上它和标准出口有非常大的区别。它主要有以下特点：
+//      - 1. 不支持短名称:  虽然大多数隐藏出口有一个类似与标准出口的名称，但实际上它不能像标准出口
+//                          一样，用短名称来代替。这是因为短名称实际上是一个系统内置的 go 命令别名，
+//                          即 n = go north
+//      - 2. 不予显示:      隐藏出口通常都是不显示的，不论是 look、GMCP.Move，都看不到它们。
+//      - 3. 非标准行走:    如果用 go 命令来行走隐藏出口，将会失败。隐藏出口实际上是新的命令。
+//      - 4. GMCP反馈:      由于无法通过 go 命令来行走，所以仅当出口正确时才会有 GMCP 成功反馈。如
+//                          果不存在该出口，则无法通过 GMCP 获得失败反馈。
+//    从各方面来看，隐藏出口更像是一般的命令，而不是出口。只不过该命令在成功时会移动玩家，仅此而已。
+//
+//    有鉴于此，Normal/Dynamic/Gate 采用 GMCP 进行确认，而 Hidden 则依赖于 GMCP + 房间信息 + sync.Wait。
+//    对于 Normal/Dynamic/Gate 来说，走之前先注册 GMCP.Move 事件钩子，然后根据 GMCP.Move 事件的反馈，
+//    就知道是否走成功。
+// };
+
+#alias {map.pl.helper} {
+    #var step       {%1};
+
+    #if { "%2" != "" } {
+        #var link[type] {%2};
+    };
+
+    #if { "%3" != "" } {
+        #var link[%3]   {%4};
+    };
+};
+
+///=== {
+// #@ map.ParseLink <link 命令>
+//    解析 link 命令，将 DSL 文本解析成结构体。
+// };
+#func {map.ParseLink} {
+    #local step {%0};
+
+    #local link {};
+    #while {"$step" != ""} {
+        #switch {"$step"} {
+            #match {"Give/%+/%+/%+"}    {map.pl.helper {&3} {}  {gate} { {type}{give}   {what}{&1}{who}{&2} }   };
+            #match {"Answer/%+/%+"}     {map.pl.helper {&2} {}  {gate} { {type}{answer} {words}{&1}         }   };
+            #match {"Ask/%+/%+/%+"}     {map.pl.helper {&3} {}  {gate} { {type}{ask}    {who}{&1}{what}     }   };
+            #match {"Unwield/%+"}       {map.pl.helper {&1} {}  {gate} { {type}{unwield}                    }   };
+            #match {"Prepare/%+/%+"}    {map.pl.helper {&2} {}  {gate} { {prepare}  {&1}                    }   };
+            #match {"Postpare/%+/%+"}   {map.pl.helper {&2} {}  {gate} { {postpare} {&1}                    }   };
+
+            #match {"Fee/%d/%+"}        {map.pl.helper {&2} {}  {fee}       {&1}                                };
+            #match {"Cash/%d %+/%+"}    {map.pl.helper {&3} {}  {cash}      {{amount}{&1}{unit}{&2}}            };
+            #match {"WGT/%d/%+"}        {map.pl.helper {&2} {}  {weighted}  {&1}                                };
+
+            #match {"GuoJiang"}         {map.pl.helper {} {GuoJiang}                                            };
+            #match {"GuoHe"}            {map.pl.helper {} {GuoHe}                                               };
+            #match {"Ride"}             {map.pl.helper {} {Ride}                                                };
+            #match {"Ride/%+"}          {map.pl.helper {} {Ride}    {dir}   {&1};                               };
+            #match {"Maze/%+"}          {map.pl.helper {} {Maze}    {name}  {&2};                               };
+
+            #match {"Cond/%+/%+"} {
+                #var step {&2};
+                #local parts {&1};
+                #list parts {explode} {,};
+                #local part {};
+                #foreach {*parts[]} {part} {
+                    #local part {$parts[$part]};
+                    #local part {@str.Replace{{$part};{%+(%+)};{{checker}{&&1}{args}{&&2}}}};
+                    #var link[cond][$part[checker]] {$part[args]};
+                };
+            };
+
+            #match {"{[A-Z][^/]*}/%+"}  {map.pl.helper {} {Bot}     {name}  {&1}; #var link[args] {&2}          };
+
+            #match {"{[A-Z]+}"} {
+                #if { @dir.IsDir{@str.ToLower{$step}} } {
+                    #var link[type] {Hidden};
+                    #local exit {@str.ToLower{$step}};
+                    #var link[exit] {$exit};
+                    #var link[cmd]  {$exit};
+                };
+                #else {
+                    #var link[type] {Bot};
+                    #var link[name] {$step};
+                };
+                #var step {};
+            };
+            #match {"{[A-Z][a-z]+}"} {
+                #if { @dir.IsDir{@str.ToLower{$step}} } {
+                    #var link[type] {Dynamic};
+                    #local exit {@str.ToLower{$step}};
+                    #var link[exit] {$exit};
+                    #var link[cmd]  {$map.step.go.cmd $exit};
+                };
+                #else {
+                    #var link[type] {Bot};
+                    #var link[name] {$step};
+                };
+                #var step {};
+            };
+            #default {
+                #if { @dir.IsDir{$step} } {
+                    #var link[type] {Normal};
+                    #var link[exit] {$step};
+                    #var link[cmd]  {$map.step.go.cmd $step};
+                };
+                #else {
+                    #var link[type] {Command};
+                    #var link[cmd]  {$step};
+                };
+                #var step {};
+            };
+        };
+    };
+
+    #return {$link};
+};
+
+#alias {map.step.Try} {
+    map.step.Try.do try {%1} {%2} {%3};
+};
+
+#alias {map.step.Must} {
+    map.step.Try.do must {%1} {%2} {%3};
+};
+
+#alias {map.step.Should} {
+    map.step.Try.do should {%1} {%2} {%3};
+};
+
+#alias {map.step.Try.do} {
+    #var map-step-context {
+        {mode}      {%1}
+        {room}      {%2}
+        {step}      {%3}
+        {next}      {%4}
+    };
+
+    #local link {@map.ParseLink{$map-step-context[step]}};
+    #var map-step-context[link] {$link};
+
+    #if { "$link[cond]" != "" } {
+        #local checker {};
+        #foreach {*link[cond][]} {checker} {
+            #local args {$link[cond][$checker]};
+            #local func {map.step.Cond.checker.$checker};
+            #if { @existsFunction{$func} } {
+                #local ok @$func{$args};
+                #if { ! $ok } {
+                    errLog 条件「$checker($args)」不满足，无法继续行走。;
+                    map.step.Try.fail;
+                    #return;
+                };
+            };
+        };
+        dbgLog map => 所有条件（$link[cond]）检查无误，可以继续行走。;
+    };
+
+    #if { "$link[gate]" != "" } {
+        map.step.open-gate;
+    };
+
+    #switch {"$link[type]"} {
+        #case {"Denied"} {
+            errLog 这里不能去。;
+            map.step.Try.fail;
+            #return;
+        };
+
+        #case {"{Normal|Dynamic}"} {
+            event.HandleOnce GMCP.Move {map/step/try} {map} {map.step.Try.result};
+            xtt.Send {$link[cmd]};
+        };
+
+        #case {"Hidden"} {
+            #local token {@sync.UUID{}};
+            #line sub var sync.Wait {
+                event.HandleOnce GMCP.Move {map/step/try} {map} {
+                    sync.Ignore $token;
+                    map.step.Try.ok;
+                };
+                xtt.Send {$link[cmd]};
+                sync.Wait {
+                    event.UnHandle GMCP.Move {map/step/try} {map};
+                    map.step.Try.fail;
+                } {$token};
+            };
+        };
+
+        #case {"{GuoJiang|GuoHe|Shalou|Ride}"} {
+            #local bot {$link[type]};
+            event.HandleOnce map/walk/continue  {map.$bot} {map.step.Try.do} {map.step.Try.ok};
+            event.HandleOnce map/walk/failed    {map.$bot} {map.step.Try.do} {map.step.Try.fail};
+            map.$bot;
+        };
+
+        #case {"Bot"} {
+            #local bot {$link[name]};
+
+            #if { ! @existsAlias{map.$bot} } {
+                errLog 未知的机器: {$bot};
+                map.step.Try.fail;
+                #return;
+            };
+
+            event.HandleOnce map/walk/continue  {map.$bot} {map.step.Try.do} {map.step.Try.ok};
+            event.HandleOnce map/walk/failed    {map.$bot} {map.step.Try.do} {map.step.Try.fail};
+
+            #if { "$link[args]" == "" } {
+                map.$bot;
+            };
+            #else {
+                map.$bot $link[args];
+            };
+        };
+
+        #case {"Maze"} {
+            #local maze {$link[name]};
+            event.HandleOnce map/walk/continue  {map.Maze $maze} {map.explore.try-go} {map.step.Try.ok};
+            event.HandleOnce map/walk/failed    {map.Maze $maze} {map.explore.try-go} {map.step.Try.fail};
+            map.Maze $maze;
+        };
+
+        #default {
+            errLog TODO: 未知的特殊出口: {$link}。;
+            map.step.Try.fail;
+            #return;
+        };
+    };
+};
+
+#alias {map.step.open-gate} {
+    #local gate {$map-step-context[link][gate]};
+    #switch {"$gate[type]"} {
+        #case {"give"} {
+            give $gate[what] to $gate[who];
+        };
+        #case {"answer"} {
+            answer $gate[words];
+        };
+        #case {"ask"} {
+            ask $gate[who] about $gate[what];
+        };
+        #case {"unwield"} {
+            unwield all;
+        };
+    };
+    #if { "$gate[prepare]" != "" } {
+        $gate[prepare];
+    };
+};
+
+#alias {map.step.Try.ok} {
+    event.Emit map/walk/continue map/step;
+};
+
+#alias {map.step.Try.fail} {
+    errLog 行走失败。;
+    event.Emit map/walk/failed map/step;
+};
+
+#alias {map.step.Try.result} {
+    #nop 公理: 行走成功时一定会反馈房间信息。;
+    #if { @isTrue{$gGMCP[Move][成功]} } {
+        #if { "$map-step-context[link][gate][postpare]" != "" } {
+            $map-step-context[link][gate][postpare];
+        };
+        event.HandleOnce {map/GotRoomInfo} {map/step/Try} {map} {map.step.Try.ok};
+        #return;
+    };
+
+    map.step.Try.failed.reason {$map-step-context};
+};
+
+#alias {map.step.Try.failed.reason} {
+    #local cmd {$map-step-context[link][cmd]};
+    #if { "$cmd" == "" } {
+        #return;
+    };
+
+    #if { "$cmd" != "@ga.ThisCmd{}" } {
+        event.HandleOnce GA {map/step/Try} {map} {map.step.Try.failed.reason};
+        #return;
+    };
+
+    #class map.step.Try.failed.reason open;
+
+    #var map-go-failed-context {$map-step-context};
+
+    #nop 行走失败时，分情况进行处理。总体而言，分三种情况：;
+    #nop 1，retry-简单重试；2，crush-清除门卫；3，abandon-放弃该方向。;
+
+    #nop 战斗中;
+    #action {^你逃跑失败。{|ID=map/step/Try}$}                                  {map.step.Try.retry};
+    #nop busy 中;
+    #action {^你的动作还没有完成，不能移动。$}                                  {map.step.Try.retry};
+    #nop 随机绊倒;
+    #action {^你不小心被什么东西绊了一下，差点摔个大跟头。$}                    {map.step.Try.retry};
+    #nop 徐州的巷尾;
+    #action {^地痞对你恶狠狠说道：“小贱人，不给大爷上供也想跑？”$}            {map.step.Try.retry};
+    #nop 大轮寺的入幽口;
+    #action {^宝象突然跳到你面前，拦住了去路。$}                                {map.step.Try.retry};
+    #nop 襄阳的城东小路;
+    #action {^此去往东是荒郊野岭，盗贼猛兽出没之地，我劝%*$}                    {map.step.Try.retry};
+    #nop 武当山的断恩岭;
+    #action {^那条路不知深浅，还是不要去了。$}                                  {map.step.Try.retry};
+    #nop 秦州的小路;
+    #action {^你在小路中仔细对照，寻找往前的路径。$ }                           {map.step.Try.retry};
+
+    #action {^青海湖畔美不胜收，你不由停下脚步，欣赏起了风景。$}                {map.step.Try.retry};
+
+    #nop {西南地绵绵群山|滇北群山|藏边群山|六盘山};
+    #action {^你还在山中跋涉，一时半会恐怕走不出这%*山！$}                      {map.step.Try.retry};
+
+    #nop 成都的金牛道;
+    #action {^你小心翼翼往前挪动，遇到艰险难行处，只好放慢脚步。$}              {map.step.Try.retry};
+    #nop 雁荡山的山路;
+    #action {^你小心翼翼往前挪动，生怕一不在意就跌落山下。$}                    {map.step.Try.retry};
+    #nop 武当山的沼泽;
+    #action {^你走着走着就陷进了一处沼泽当中，艰难地从沼泽中拔出来。$}          {map.step.Try.retry};
+    #nop 建宁府的山间路;
+    #action {^这里山路崎岖，不小心就会滑落，实在不太好走，你不得不放慢脚步。$}  {map.step.Try.retry};
+    #nop 湟中的沙漠中;
+    #action {^{荒路|沙石地|沙漠中}几乎没有路了，你走不了那么快。$}              {map.step.Try.retry};
+    #nop 苗疆山路;
+    #action {^%+1..8u在大雨的冲刷下，愈加难行！$}                               {map.step.Try.retry};
+    #nop 苗疆山路;
+    #action {^山路崎岖，你不得不停下来歇歇脚。$}                                {map.step.Try.retry};
+    #nop 汉口镇的双峰山;
+    #action {^走路太快，你没在意脚下，被杂草绊了一下。$}                        {map.step.Try.retry};
+
+    #nop 凌霄城的城门;
+    #action {^吊桥还没有升起来，你就这样走了，可能会给外敌可乘之机的。$}        {map.step.Try.retry};
+
+    #nop 襄阳的蒙古营门;
+    #action {^守将大声喝到:干什么的?(answer)$}                     {answer 送信; map.step.Try.retry};
+    #nop 都统制府的大门;
+    #action {^没有经过通传，任何人等不得擅闯都统治府。$} {ask shiwei about 通传; map.step.Try.retry};
+    #nop 北京的各大城门;
+    #action {^官兵拦住你说道：站住，把%*留下再说！$}             {unwield right; map.step.Try.retry};
+    #nop 北京的各大城门，同上，空手可进;
+    #action {^官兵拦住了你。$} {#0};
+    #nop 襄阳的南门;
+    #action {^守军拦住了你的去路，大声喝到：干什么的？要想通过先问问我们守将大人！$} {
+        ask shou jiang about 投军; map.step.Try.retry;
+    };
+
+    #nop 北京的鳌府后院，不吃神行千里，杀人可进;
+    #action {^女管家挡住了你。$}                                       {map.step.Try.crush {guan jia}};
+    #nop 扬州的财主后院，不吃神行千里，杀人可进;
+    #action {^崔员外挡住了你。$}                                    {map.step.Try.crush {cui yuanwai}};
+
+    #nop 扬州的衙门大门;
+    #action {^衙役喝道：「威……武……」$}                                {map.step.Try.crush {ya yi}};
+    #nop 扬州的兵营大门;
+    #action {^官兵们拦住了你的去路{|。}$}                                       {map.step.Try.abandon};
+    #nop 北京的校场;
+    #action {^门边的侍卫伸手把你给拦住了。“想混吃混喝不成？...”$}             {map.step.Try.abandon};
+    #nop 大同的神机府;
+    #action {^神机营士兵挡住了你的去路。$}                                      {map.step.Try.abandon};
+    #nop 襄阳的吕家内宅;
+    #action {^亲兵拦住了你的去路,大声喝到:敢闯吕大人的家,你不想活了?$}          {map.step.Try.abandon};
+    #nop 全真派的更衣室;
+    #action {^你不是全真派的,还想去白洗澡?!$}                                   {map.step.Try.abandon};
+    #nop 武当山的小路，接了武当新手任务可进;
+    #action {^前面的小树林中不时发出几声惨叫声，还是不要再往里走了！$}          {map.step.Try.abandon};
+    #nop 襄阳的雪峰脚下，解密村姑可进;
+    #action {^你抬头向上一望，我的妈呀，这么高怎么爬呀？该找个本地人问问。$}    {map.step.Try.abandon};
+    #nop 大理的厢房;
+    #action {^那是{女|男}子的厢房！$}                                           {map.step.Try.abandon};
+    #nop 杀手帮的大道;
+    #action {^嘿，那边可是{女|男}浴室啊，你进去干什么？唉....$}                 {map.step.Try.abandon};
+    #nop 扬州的浴室走廊;
+    #action {^看清楚些，那里可是{女|男}浴室耶！难道你想闯入(breakin)吗?$}       {map.step.Try.abandon};
+    #nop 各酒楼的宴客厅门厅;
+    #action {^别老来浑水摸鱼了。$}                                              {map.step.Try.abandon};
+    #action {^此时宴客厅并无宴会，大门紧闭着。$}                                {map.step.Try.abandon};
+    #nop 扬州的中央广场;
+    #action {^绿萼白了你一眼道：「都那么大了还来白吃，不害羞。」$}              {map.step.Try.abandon};
+    #nop 洛阳的洛阳西门;
+    #action {^既然已经退隐江湖，就不要在关注那些风风雨雨。$}                    {map.step.Try.abandon};
+    #nop 各地的宠物竞技场;
+    #action {^只有宠物可以上台参赛(join)。$}                                    {map.step.Try.abandon};
+    #nop 河北的官道;
+    #action {^商家堡区域暂未开放。$}                                            {map.step.Try.abandon};
+    #nop 扬州的巫师会客室;
+    #action {^巫师的房间还是不进为好！$}                                        {map.step.Try.abandon};
+    #nop 扬州的武庙;
+    #action {^这里通向神的世界，只有神和神的创造物才可以下去。$}                {map.step.Try.abandon};
+    #nop 各地药炉;
+    #action {^你要租药炉需要跟药铺老板打招呼了。$}                              {map.step.Try.abandon};
+    #nop 成都的假出口;
+    #action {^锦江看看就好了，难道你真要投河自尽吗？$}                          {map.step.Try.abandon};
+    #nop 峨嵋的神灯阁二楼，有峨嵋邀请函可进;
+    #action {^东面传来一个淡淡的声音，不是掌门邀请，就不要过来了。$}            {map.step.Try.abandon};
+    #nop 峨嵋的蛇窟入口;
+    #action {^从黑暗中走出一个老妇人挡住你，说：“你%*不能进蛇窟。”$}          {map.step.Try.abandon};
+
+    #nop 大轮寺的日木伦殿;
+    #action {^护法喇嘛拦住你道：那里是本寺{女|男}弟子休息的居所}                {map.step.Try.abandon};
+    #action {^护法喇嘛拦住你说道:最近寺内伙食紧张}                              {map.step.Try.abandon};
+
+    #nop TODO: 云冈石窟的土路，需要炸开巨岩就可以过去;
+    #action {^巨岩横亘在路当中，你没法通过。$}                                  {map.step.Try.abandon};
+    #nop TODO: 威海卫的临海楼，可以爬上去;
+    #action {^上面已经塌了，你还上去干什么？$}                                  {map.step.Try.abandon};
+    #nop TODO: 康亲王府的石屋，可以从房顶爬过去;
+    #action {^侍卫伸手拦住你说道：里面没什么好看的，马上离开这里....！$}        {map.step.Try.abandon};
+    #nop TODO: 北京的刑部府衙大门，可以从房顶爬过去;
+    #action {^侍卫伸手拦住你朗声说道：里面没什么好看的，马上离开这里....！$}    {map.step.Try.abandon};
+
+    #nop 没有出口;
+    #action {^这个方向没有出路。$}                                              {map.step.Try.abandon};
+    #action {^哎哟，你一头撞在墙上，才发现这个方向没有出路。$}                  {map.step.Try.abandon};
+
+    #nop 长江黄河粘鼠板;
+    #action {^你一脚深一脚浅地沿着%*走去，虽然不快，但离目标越来越近了。$}      {map.step.Try.hard};
+    #action {^你一脚深一脚浅地沿着%*走去，跌跌撞撞，几乎在原地打转。$}          {map.step.Try.hard};
+
+    #nop 通缉时的城门守将。;
+    #action {^武将拦住了你的去路。$}                                            {map.step.Try.abandon};
+
+    #nop 这是被通缉了。;
+    #action {^看起来武将想杀死你！武将看了看通缉告示，又看了看你，一脸狞笑，自己送上门来啊。$} {
+        map.step.Try.abandon;
+    };
+
+    #action {^%*$} {#cat map-go-failed-context[reason] {%%0}} {5.5};
+
+    #alias {map.step.Try.retry} {
+        event.UnHandle GA {map/step/Try} {map};
+
+        #if { @char.InCombat{} } {
+            event.HandleOnce {char/nofight} {map/step/Try} {map} {map.step.Try.retry};
+            #return;
+        };
+
+        #if { @char.IsBusy{} } {
+            event.HandleOnce {char/nobusy} {map/step/Try} {map} {map.step.Try.retry};
+            busy.Halt;
+            #return;
+        };
+
+        #class map.step.Try.failed.reason kill;
+
+        #delay map.step.Try.retry {
+            #local ctx {$map-step-context};
+            map.step.Try.do $ctx[mode] {$ctx[room]} {$ctx[step]} {$ctx[next]};
+        } 1;
+    };
+
+    #alias {map.step.Try.crush} {
+        event.UnHandle GA {map/step/Try} {map};
+        $map.step.crush.cmd %%1;
+        event.HandleOnce {char/nofight} {map/step/Try} {map} {map.step.Try.retry};
+    };
+
+    #alias {map.step.Try.abandon} {
+        event.UnHandle GA {map/step/Try} {map};
+
+        #nop 有关卡的地方总是需要重试，不要轻易放弃。;
+        #if { "$map-step-context[link][gate]" != "" } {
+            #delay map.step.Try.retry {map.step.Try.retry} 1;
+            #return;
+        };
+
+        #class map.step.Try.failed.reason kill;
+        map.step.Try.fail;
+    };
+
+    #alias {map.step.Try.hard} {
+        event.UnHandle GA {map/step/Try} {map};
+        #if { "$map-step-context[mode]" == "must" } {
+            #delay map.step.Try.retry {map.step.Try.retry} 1;
+        };
+        #else {
+            errLog TODO: 长江黄河粘鼠板暂时不处理。;
+            #class map.step.Try.failed.reason kill;
+            map.step.Try.fail;
+        };
+    };
+
+    #alias {map.step.Try.do.fail} {
+        #local __unused {%%0};
+        #local ctx {$map-go-failed-context};
+        #class map.explore.gather-go-failed-reason kill;
+
+        #class map.step.Try.failed.reason kill;
+
+        #if { "$ctx[reason]" != "" } {
+            errLog 未知原因引起的行走失败：{$ctx[reason]};
+        };
+
+        #nop 有关卡的地方总是需要重试，不要轻易放弃。;
+        #if { "$map-step-context[link][gate]" != "" } {
+            #delay map.step.Try.retry {map.step.Try.retry} 1;
+            #return;
+        };
+
+        map.step.Try.fail;
+    };
+
+    event.ClassHandleOnce GA {map/step/Try} {map} {map.step.Try.do.fail};
+
+    #class map.step.Try.failed.reason open;
+};
+
+#func {map.step.Cond.checker.EXP} {
+    #local cond {%0};
+    #if { $char[HP][经验] $cond } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#func {map.step.Cond.checker.LVL} {
+    #local cond {%0};
+    #if { $char[档案][人物等级] $cond } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#func {map.step.Cond.checker.DOG} {
+    #local cond {%0};
+    #if { @char.SkillLevel{基本轻功} $cond } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#func {map.step.Cond.checker.EDOG} {
+    #local cond {%0};
+    #if { @char.SkillJifaLevel{基本轻功} $cond } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#func {map.step.Cond.checker.ITEM} {
+    #local cond {%0};
+    #if { @char.backpack.Has{ITEM;$cond} } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#func {map.step.Cond.checker.VAR} {
+    #local cond {%0};
+    #local cond {@str.Replace{{$cond};{%*;%*};{{var}{&1}{expr}{&2}}}};
+    #local cond[var] {\$$cond[var]};
+
+    #local bool {};
+    #line sub {escapes;var} #math {bool} {$cond[var] $cond[expr]};
+    #if { $bool } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#func {map.step.Cond.checker.EXPR} {
+    #local cond {%0};
+
+    #local bool {};
+    #line sub {escapes;var} #math {bool} {$cond};
+    #if { $bool } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+#alias {map.ui.step} {
+    map.step.Try {@map.RID{$gMapRoom}} {%1};
+};

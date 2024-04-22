@@ -29,6 +29,7 @@ load-file plugins/basic/map/dungeon.tin;
 load-file plugins/basic/map/gmcp.tin;
 load-file plugins/basic/map/area.tin;
 load-file plugins/basic/map/node.tin;
+load-file plugins/basic/map/step.tin;
 load-file plugins/basic/map/xiaoyao.tin;
 load-file plugins/basic/map/helper.tin;
 load-file plugins/basic/map/tab.tin;
