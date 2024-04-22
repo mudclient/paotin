@@ -1,0 +1,217 @@
+#nop 房间信息解析模块;
+
+VAR {当前房间信息}  gMapRoom    {};
+
+option.Define {ShowRoomView}    {Bool} {是否显示房间风景}       {false};
+option.Define {MapDebug}        {Bool} {房间信息解析调试开关}   {false};
+option.Define {DrawRoomMap}     {Bool} {是否自行绘制房间地图}   {false};
+
+event.Handle {option/changed} {opt/ShowRoomView/main}   {map/room} {look};
+event.Handle {option/changed} {opt/MapDebug/main}       {map/room} {look};
+event.Handle {option/changed} {opt/DrawRoomMap/main}    {map/room} {look};
+
+event.Define {map/GotRoomInfo}      {无参} {$MODULE} {已经获取到房间信息，并储存到 gMapRoom 全局变量。};
+
+event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
+
+///=== {
+// ## map.Room.Watch
+//    睁眼看世界，注册相关触发，开始捕获房间信息。
+// };
+#alias {map.Room.Watch} {
+    #class map.Room.Watch open;
+    errLog 待实现;
+    #class map.Room.Watch close;
+};
+
+///=== {
+// ## map.Room.StopWatch
+//    闭上眼睛，不再关心房间信息。
+// };
+#alias {map.Room.StopWatch} {
+    #class map.Room.Watch kill;
+};
+
+#alias {map.Room.ShowView} {
+    #if { @option.IsDisable{ShowRoomView} } {
+        #line gag;
+    };
+    #elseif { @option.IsEnable{MapDebug} } {
+        #echo {%s} {<174>房间风景<299> @Beautify{{%1}}};
+        #line gag;
+    };
+};
+
+#alias {map.Room.ShowMap} {
+    #local room {@default{{%1};{$gMapRoom}}};
+    #local map {$room[map]};
+    #replace map {|$} {};
+    #replace map {||} {;|};
+
+    #local line {};
+    #foreach {$map} {line} {
+        #replace line {^|} {};
+        #echo {%s} {$line};
+    };
+};
+
+#alias {map.Room.DrawMap} {
+    #local room {%1};
+    #if { &room[] == 0 || &room[exitHint][] == 0 || "$gMapRoom[drawMap]" == "done" } {
+        #return;
+    };
+
+    #var gMapRoom[drawMap] {done};
+
+    #local hint {$room[exitHint]};
+
+    #local lnw {@if{{"$hint[northwest]" != ""};{＼}}};
+    #local lne {@if{{"$hint[northeast]" != ""};{／}}};
+    #local lse {@if{{"$hint[southeast]" != ""};{＼}}};
+    #local lsw {@if{{"$hint[southwest]" != ""};{／}}};
+
+    #local lnu {@if{{"$hint[northup]"   != ""};{↑}}};
+    #local ln  {@if{{"$hint[north]"     != ""};{｜}}};
+    #local lnd {@if{{"$hint[northdown]" != ""};{↓}}};
+
+    #local leu {@if{{"$hint[eastup]"    != ""};{ →}}};
+    #local le  {@if{{"$hint[east]"      != ""};{ --}}};
+    #local led {@if{{"$hint[eastdown]"  != ""};{ ←}}};
+
+    #local lsu {@if{{"$hint[southup]"   != ""};{↓}}};
+    #local ls  {@if{{"$hint[south]"     != ""};{｜}}};
+    #local lsd {@if{{"$hint[southdown]" != ""};{↑}}};
+
+    #local lwu {@if{{"$hint[westup]"    != ""};{← }}};
+    #local lw  {@if{{"$hint[west]"      != ""};{--}}};
+    #local lwd {@if{{"$hint[westdown]"  != ""};{→ }}};
+
+    #local name {@str.AlignCenter{$gMapRoom[name];32}};
+
+    #local nName {};
+    #format nName {%+10s %+10s %+10s}
+        {@str.AlignCenter{$hint[northup];10}}
+        {@str.AlignCenter{$hint[north];10}}
+        {@str.AlignCenter{$hint[northdown];10}};
+    #local nName {@str.Left{{$nName};32}};
+
+    #local lnn {};
+    #format lnn {%+10s %+10s %+10s}
+        {@str.AlignCenter{$lnu;10}}
+        {@str.AlignCenter{$ln;10}}
+        {@str.AlignCenter{$lnd;10}};
+
+    #local sName {};
+    #format sName {%+10s %+10s %+10s}
+        {@str.AlignCenter{$hint[southup];10}}
+        {@str.AlignCenter{$hint[south];10}}
+        {@str.AlignCenter{$hint[southdown];10}};
+    #local sName {@str.Left{{$sName};32}};
+
+    #local lss {};
+    #format lss {%+10s %+10s %+10s}
+        {@str.AlignCenter{$lsu;10}}
+        {@str.AlignCenter{$ls;10}}
+        {@str.AlignCenter{$lsd;10}};
+
+    #local nw {@str.AlignRight{$hint[northwest];12}};
+    #local sw {@str.AlignRight{$hint[southwest];12}};
+    #local ne {@str.AlignLeft{$hint[northeast];12}};
+    #local se {@str.AlignLeft{$hint[southeast];12}};
+
+    #local space  {@str.Space{12}};
+    #local space6 {@str.Space{6}};
+    #local space4 {@str.Space{4}};
+
+    #local nameN {};
+    #local nameS {};
+    #format nameN {%-10s %+10s %+10s}
+        {@str.AlignLeft{$lnw;10}} {} {@str.AlignRight{$lne;10}};
+    #format nameS {%-10s %+10s %+10s}
+        {@str.AlignLeft{$lsw;10}} {} {@str.AlignRight{$lse;10}};
+
+    #local up    {@str.AlignRight{$hint[up];10}};
+    #local down  {@str.AlignRight{$hint[down];10}};
+    #local enter {@str.AlignLeft{$hint[enter];10}};
+    #local out   {@str.AlignLeft{$hint[out];10}};
+
+    #local wu    {$hint[westup]};
+    #local ww    {$hint[west]};
+    #local wd    {$hint[westdown]};
+
+    #local eu    {$hint[eastup]};
+    #local ee    {$hint[east]};
+    #local ed    {$hint[eastdown]};
+
+    #local format1 {%-10s %+12s %+4s %-32s %-4s %-12s %+10s};
+    #local format2 {%-10s %+4s %+12s %-32s %-12s %-4s %+10s};
+    #echo {$format1} {<G01>} {} {} {} {} {} {};
+    #echo {$format1} {<G01>}        {<G03>$space}   {}      {<G01>$nName}   {<G03>}     {$space<G01>}   {};
+    #echo {$format1} {<G01>$up}     {<G03>$space}   {}      {<G01>$space}   {<G03>}     {$space<G01>}   {$enter};
+    #echo {$format2} {<G01>}        {<G03>$space4}  {$nw}   {<G01>$lnn}     {<G03>$ne}  {$space4<G01>}  {};
+    #echo {$format1} {<G01>}        {<G01>$wu}      {$lwu}  {<G03>$nameN}   {<G01>$leu} {$eu<G01>}      {};
+    #echo {$format1} {<G01>}        {<G01>$ww}      {$lw}   {<G03>$name}    {<G01>$le}  {$ee<G01>}      {};
+    #echo {$format1} {<G01>}        {<G01>$wd}      {$lwd}  {<G03>$nameS}   {<G01>$led} {$ed<G01>}      {};
+    #echo {$format2} {<G01>}        {<G03>$space4}  {$sw}   {<G01>$lss}     {<G03>$se}  {$space4<G01>}  {};
+    #echo {$format1} {<G01>$down}   {<G03>$space}   {}      {<G01>$space}   {<G03>}     {$space<G01>}   {$out};
+    #echo {$format1} {<G01>}        {<G03>$space}   {}      {<G01>$sName}   {<G03>}     {$space<G01>}   {};
+    #echo {$format1} {<G01>} {} {} {} {} {} {};
+};
+
+#func {map.Room.GetObjByName} {
+    #local name  {%1};
+    #local title {@default{%2;%*}};
+
+    #local idx {};
+    #foreach {*gMapRoom[objs][]} {idx} {
+        #if { "$gMapRoom[objs][$idx][title]" == "$title" && "$gMapRoom[objs][$idx][name]" == "$name" } {
+            #return {$gMapRoom[objs][$idx]};
+        };
+    };
+
+    #return {};
+};
+
+#func {map.Room.GetObjByID} {
+    #local id  {%1};
+
+    #local idx {};
+    #foreach {*gMapRoom[objs][]} {idx} {
+        #if { "$gMapRoom[objs][$idx][id]" == "$id" } {
+            #return {$gMapRoom[objs][$idx]};
+        };
+    };
+
+    #return {};
+};
+
+#func {map.Room.GetNpcByName} {
+    #local name  {%1};
+    #local title {%2};
+
+    #local idx {};
+    #foreach {*gMapRoom[npcs][]} {idx} {
+        #if { "$gMapRoom[npcs][$idx][title]" == "$title" && "$gMapRoom[npcs][$idx][name]" == "$name" } {
+            #return {$gMapRoom[npcs][$idx]};
+        };
+    };
+
+    #return {};
+};
+
+#func {map.Room.GetNpcByID} {
+    #local id  {%1};
+
+    #local idx {};
+    #foreach {*gMapRoom[npcs][]} {idx} {
+        #if { "$gMapRoom[npcs][$idx][id]" == "$id" } {
+            #return {$gMapRoom[npcs][$idx]};
+        };
+    };
+
+    #return {};
+};
+
+#func {map.Here} {
+    #return {0};
+};
