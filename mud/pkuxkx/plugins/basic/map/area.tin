@@ -8,83 +8,77 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ===========
 */
 
-load-module bot/pp;
+///=== {
+///// map/area --- 大众版区域信息获取模块
+/////
+///// 本模块主要使用 walk 和 localmaps 两个常用命令。
+///// };
 
 VAR {全局区域对照表} {map.area.dict} {};
-
-#nop Careless(随便查查)、Careful（仔细查查）、CarefulOnce（仔细查一次）三选一;
-VAR {定位模式} map.Locate.mode {Careless};
 
 event.Define {map/GotArea}      {无参} {$MODULE} {已经获取到区域信息，并更新到 gMapRoom 全局变量。};
 event.Define {map/GotLocalmaps} {无参} {$MODULE} {已经解析 localmaps 命令。};
 
-event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
+event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
 
-#alias {map.area.Init} {
+#alias {pkuxkx.map.area.init} {
     set localmap;
     storage.Load {map-area} {map.area.dict};
-    event.Handle {map/GotRoomInfo} {map/area} {map} {map.GetArea};
 };
 
+///=== {
+// ## map.GetArea
+//    弄清楚角色当前位于哪个区域。
+//    注意调查过程中可能会向服务器发送必要的命令（尽可能少地）。但如果角色正在移动，则不会发送任何命令。
+//    弄清楚之后，发送事件 map/GotArea。
+//    注意如果已经弄清楚了，则不会发送事件。因此建议先通过函数 map.GetArea 进行查询。
+// };
 #alias {map.GetArea} {
-    #if { "$gMapRoom[area][RESOLVED]" != "" }   {#return};
-    #if { "$map.Locate.mode" == "Careless" }    {#return};
-    #if { "$gMapRoom[direction]" != "here" }    {#return};
-    #if { @ga.IsUnderway{} }                    {#return};
+    #if { @ga.IsUnderway{} }                    {dbgLog map underway; #return};
+    #if { "$gMapRoom[direction]" != "here" }    {dbgLog map not here; #return};
 
-    #if { "$map.Locate.mode" == "CarefulOnce" } {
-        #var map.Locate.mode {Careless};
-    };
+    map.area.check;
+};
 
-    event.HandleOnce {map/GotNodeInfo} {map/area} {map} {map.area.check walk-done};
-    map.GetNodeInfo;
+///=== {
+// ## map.GetArea
+//    返回当前房间信息中的区域信息。无参数。
+// };
+#func {map.GetArea} {
+    #return {$gMapRoom[area][RESOLVED]};
 };
 
 #alias {map.area.check} {
-    #local stage {%1};
+    #local stage {@default{{%1};start}};
 
     #local area {@map.resolveArea{$gMapRoom[area]}};
-    #if { "$area" == "" } {
-        #switch {"$stage"} {
-            #case {"walk-done"} {
-                event.HandleOnce {map/GotLocalmaps} {map/area} {map} {map.area.check localmaps-done};
-                localmaps;
-            };
-            #case {"localmaps-done"} {
-                event.HandleOnce {pp/Response} {map/area} {map} {map.GetArea.pp.done};
-                pp $user[id];
-                #delay map.GetArea.pp {map.area.check pp-timeout} {30};
-            };
-            #case {"pp-timeoout"} {
-                errLog 竭尽全力也无法获得区域信息。我这是到了什么地方？;
-                event.UnHandle {pp/Response} {map/area} {map};
-            };
+    #if { "$area" != "" } {
+        #if { "$gMapRoom[area][RESOLVED]" == "" } {
+            #var gMapRoom[area][RESOLVED] {$area};
+            event.DelayEmit map/GotArea;
         };
         #return;
     };
 
-    #var gMapRoom[area][RESOLVED] {$area};
-    okLog 调查完毕，这里是 $gMapRoom[area][RESOLVED]的$gMapRoom[name];
-    event.DelayEmit map/GotArea;
+    #switch {"$stage"} {
+        #case {"start"} {
+            event.HandleOnce {map/GotNodeInfo} {map/area} {map} {map.area.check walk-done};
+            map.GetNodeInfo gag;
+        };
+        #case {"walk-done"} {
+            event.HandleOnce {map/GotLocalmaps} {map/area} {map} {map.area.check localmaps-done};
+            localmaps;
+        };
+        #case {"localmaps-done"} {
+            #return;
+        };
+    };
 };
 
-#alias {map.GetArea.pp.done} {
-    #undelay map.GetArea.pp;
-    #local ppInfo {$gPPResponse[$user[id]]};
-    #if { "$ppInfo" == "" } {
-        errLog PP 机器人应答出错，请检查设置。;
-        #return;
-    };
-
-    #if { "$ppInfo[room]" != "$gMapRoom[name]" } {
-        warnLog PP 期间角色发生了移动。定位失效。;
-        #return;
-    };
-
-    #var gMapRoom[area][PP] {$ppInfo[area]};
-    map.area.check;
-};
-
+///=== {
+// ## map.Localmaps <是否 gag> [<命令参数>]
+//    执行 localmaps，但因为该命令结果过于刷屏，因此允许 gag 其输出。
+// };
 #alias {map.Localmaps} {
     #local gag  {%1};
     #local args {%2};
@@ -98,17 +92,21 @@ event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
 
     #class map.Localmaps open;
 
-    #line oneshot #action {~^{\e\[0m|}%c◆%*地图%*◆%c$} {
+    #line oneshot #action {~^{\e\[0m|}%c◆%*地图%*◆%c%s%c$} {
         #local color {%%2};
         #replace color {\e[} {};
         #replace color {m$} {};
         #replace color {m} {;};
-        #var gMapRoom[area][LMAP]   {%%3};
+        #local area {%%3%%4};
+        #var gMapRoom[area][LMAP]   {$area};
         #var gMapRoom[area][COLOR]  {$color};
+        #if { "$area" == "柳秀山庄" } {
+            #class map.Localmaps.gag kill;
+        };
     } {2};
 
     #line oneshot #action {^%s%S略图%s$} {
-        #var gMapRoom[terrain] {随机地图};
+        #var gMapRoom[terrain] {@default{$gMapRoom[terrain];随机地图}};
         #var gMapRoom[village] {%%2};
     };
 
@@ -117,8 +115,10 @@ event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
     };
 
     #if { "$gag" == "gag" } {
+        #class map.Localmaps.gag open;
         #action {^%*{|ID=map/localmaps}$} {#line gag} {6};
         #gag {^%*{|ID=map/localmaps}$} {1};
+        #class map.Localmaps.gag close;
     };
 
     #class map.Localmaps close;
@@ -127,6 +127,7 @@ event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
 
     sync.Wait {
         #class map.Localmaps kill;
+        #class map.Localmaps.gag kill;
         event.DelayEmit map/GotLocalmaps;
     };
 };
@@ -134,51 +135,62 @@ event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
 #alias {lm}         {map.Localmaps nogag {%0}};
 #alias {localmaps}  {map.Localmaps gag   {%0}};
 
-#nop 根据数据源确定区域信息。数据源有三种：walk、localmaps、pp;
+#nop 根据数据源确定区域信息。数据源有四种（按使用优先级）：link、walk、node、localmaps;
 #func {map.resolveArea} {
-    #local source   {%0};
+    #local source {%0};
 
     #if { "$source[RESOLVED]" != "" } {
         #return {$source[RESOLVED]};
     };
 
-    #if { "$source[PP]$source[WALK]$source[LMAP]" == "" } {
+    #if { "$source[LINK]$source[WALK]$source[NODE]$source[LMAP]" == "" } {
         #return {};
     };
 
-    #local pp   {@default{$source[PP];%*}};
-    #local walk {@default{$source[WALK];%*}};
     #local lmap {@default{$source[LMAP];%*}};
-    #local pattern {$pp/$walk/$lmap};
+    #local pattern {%*/$lmap};
 
-    #if { "$source[PP]" != "" } {
-        #local key {};
-        #local value {{PP}{$source[PP]}};
-        #foreach {*map.area.dict[$source[PP]/%*/%*][]} {key} {
-            #local value {$map.area.dict[$key]};
-            #unvar map.area.dict[$key];
+    #nop 如果有 LMAP 的话，先根据 LMAP 检索，这个基本上可以做到一一对应。;
+    #if { "$source[LMAP]" != "" } {
+        #local keys {@table.Keys{map.area.dict;{$pattern}}};
+        #if { @sset.Size{$keys} == 1 } {
+            #return {$map.area.dict[$keys][PP]};
         };
-        #local value[WALK]  {@default{$value[WALK];$source[WALK]}};
-        #local value[LMAP]  {@default{$value[LMAP];$source[LMAP]}};
-        #local value[COLOR] {@default{$value[COLOR];{$source[COLOR]}}};
-        #local key {$source[PP]/@default{$source[WALK];UNKNOWN}/@default{$source[LMAP];UNKNOWN}};
-        #var map.area.dict[$key] {$value};
-        storage.Save {map-area} {map.area.dict};
-        #return {$pp};
     };
 
-    #if { &map.area.dict[$pattern][] != 1 } {
-        #return {};
+    #nop 否则查找与 LINK/WALK/NODE 相匹配的信息。;
+    #nop TODO: 理论上这部分也可以做优化，但是 KEY 长了之后太丑了没必要。;
+    #local area {};
+    #foreach {*map.area.dict[$pattern]} {area} {
+        #local area {$map.area.dict[$area]};
+        #if { "$source[LINK]" == "%+/%+" } {
+            #local link {@str.Replace{{$source[LINK]};%+/%+;{{node}{&1}{links}{&2}}}};
+            #if { "$area[LINKS][$link[node]]" === "$link[links]" } {
+                #return {$area[PP]};
+            };
+        };
+        #elseif { "$source[WALK]$source[NODE]" != "" } {
+            #if { "$source[WALK]$source[NODE]" !== "$area[WALK]$area[NODE]" } {
+                #continue;
+            };
+            #if { "$source[WALK]/$source[NODE]" !== "NOTHING/NOTHING" } {
+                #return {$area[PP]};
+            };
+        };
     };
 
-    #foreach {*map.area.dict[$pattern]} {pattern} {
-        #return {$map.area.dict[$pattern][PP]};
-    };
+    #return {};
 };
 
+///=== {
+/// #@ map.AreaColor <区域名称>
+//     获取该区域的颜色。
+//     区域颜色是一个区域的固有属性，可以通过该区域的平民 title 的颜色来确认。
+// };
 #func {map.AreaColor} {
     #local area {%1};
-    #local pattern {$area/%*/%*};
+
+    #local pattern {$area/%*};
 
     #if { &map.area.dict[$pattern][] != 1 } {
         #return {};
@@ -188,10 +200,3 @@ event.HandleOnce {map/init} {map/area} {map} {map.area.Init};
         #return {$map.area.dict[$pattern][COLOR]};
     };
 };
-
-#alias {map.Here} {
-    #var map.Locate.mode {CarefulOnce};
-    look;
-};
-
-#alias {ll} {map.Here} {9.0};
