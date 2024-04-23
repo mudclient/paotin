@@ -81,7 +81,8 @@ VAR {要寻找的 NPC 的特征，表格} {gFocusNPC} {};
         #if {  ( "$gFocusNPC[id]" == "" || "$obj[id]" == "$gFocusNPC[id]" )
             && ( "$gFocusNPC[name]" == "" || "$obj[name]" == "$gFocusNPC[name]" )
             && ( "$gFocusNPC[title]" == "" || "$obj[title]" == "$gFocusNPC[title]" )
-            && ( "$gFocusNPC[nick]" == "" || "$obj[nick]" == "$gFocusNPC[nick]" ) } {
+            && ( "$gFocusNPC[nick]" == "" || "$obj[nick]" == "$gFocusNPC[nick]" )
+            && ( "$gFocusNPC[desc]" == "" || "$obj[desc]" == "$gFocusNPC[desc]" ) } {
             okLog 发现目标 $obj[name] / $obj[id];
             #if { "$gFocusNPC[cbType]" == "command" } {
                 #line sub var #delay 0 {$gFocusNPC[callback] $obj[id]};
