@@ -193,7 +193,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     load-module lib/event;
 
     load-lib option;
-    option.Define {DisableOutput} {Bool} {是否禁止向服务器发送命令} {false};
+    option.Define {DisableOutput}       {Bool}  {是否禁止向服务器发送命令}      {false};
+    option.Define {DisableAllCommands}  {Bool}  {是否禁用所有的触发器和定时器}  {false};
 
     #nop 提供 TinTin++ 命令行自动补全功能。;
     load-lib tab-completion;

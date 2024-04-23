@@ -492,8 +492,6 @@ VAR {用 VAR 关键字定义的 PaoTin++ 变量清单，包含其中文含义} g
     #line oneshot #alias {%1} {halt; #echo {<119>任务已暂停，请输入 <139>%1 %s <119>继续运行。<299>} {%%0}}
 };
 
-option.Define {DisableAllCommands} {Bool} {是否禁用所有的触发器和定时器} {false};
-
 ///=== {
 // ## xtt.DisableAllCommands
 //    禁止发送任何命令。
