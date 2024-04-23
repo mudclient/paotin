@@ -31,6 +31,7 @@ VAR {要寻找的 NPC 的特征，表格} {gFocusNPC} {};
 
     #if { "%0" == "" } {
         #var gFocusNPC {};
+        event.UnHandle {map/GotRoomInfo} {map/utils} {map};
         #return;
     };
 
