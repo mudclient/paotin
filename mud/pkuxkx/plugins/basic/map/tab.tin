@@ -30,7 +30,7 @@ event.HandleOnce {map/init} {map/tab} {map} {map.tab-completion.init};
     };
 
     #local item {};
-    #foreach {$gMapRoom[items]} {item} {
+    #foreach {$gMapRoom[lookable]} {item} {
         #if { "$item" != "" } {
             #tab $item;
         };

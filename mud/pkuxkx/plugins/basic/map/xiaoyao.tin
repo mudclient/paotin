@@ -360,7 +360,7 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     #local dock     {$gMapRoom[dock]};
     #local location {};
 
-    #if { @slist.Contains{{$gMapRoom[items]};{<node>}} } {
+    #if { @slist.Contains{{$gMapRoom[lookable]};{<node>}} } {
         #nop 节点以 walk 节点名称标记;
         #local location {$node($area的$room)};
     };

@@ -146,7 +146,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
     #var gMapRoom[existShown]   {false};                #nop 出口信息已出现;
     #var gMapRoom[lookable]     {};                     #nop 你可以看看(look)的东西;
     #var gMapRoom[colorItems]   {};                     #nop 带颜色的房间特殊物品;
-    #var gMapRoom[dynItems]     {};                     #nop 你可以获取(get)的东西;
+    #var gMapRoom[getable]      {};                     #nop 你可以获取(get)的东西;
     #var gMapRoom[objs]         {};                     #nop 房间物品，不包含生物;
     #var gMapRoom[npcs]         {};                     #nop 房间NPC， 不包含非生物和玩家;
     #var gMapRoom[players]      {};                     #nop 房间玩家，不包含非生物和NPC;
@@ -198,6 +198,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
                 #case {"NPC"}   {#local type {<134>房间 NPC}};
                 #case {"物品"}  {#local type {<164>房间物品}};
                 #case {"玩家"}  {#local type {<174>房间玩家}};
+                #default        {#local type {<164>房间物品}};
             };
             #if { @isFalse{$gMapRoom[existShown]} } {
                 #var gMapRoom[existShown] {true};
@@ -250,14 +251,14 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
     };
 
     #action {^%+4s你可以获取(get):%*。$} {
-        #local items {@str.Split{{%%2};{{，|,}}}};
-        #var gMapRoom[dynItems] {$items};
+        #local getable {@str.Split{{%%2};{{，|,}}}};
+        #var gMapRoom[getable] {$getable};
 
         #local item {};
-        #foreach {$items} {item} {
+        #foreach {$getable} {item} {
             #list gMapRoom[objs] add {{
                 {id}    {$item}
-                {type}  {dynItems}
+                {type}  {getable}
             }};
         };
 
@@ -265,7 +266,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
         #class map.Room.getInfo.desc kill;
 
         #if { @option.IsEnable{MapDebug} } {
-            #echo {%s} {<171>动态物品<299> {$items}};
+            #echo {%s} {<171>动态物品<299> {$getable}};
             #line gag;
         };
     };
