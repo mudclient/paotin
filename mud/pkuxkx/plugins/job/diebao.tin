@@ -10,19 +10,26 @@
     #class diebao.password open;
 
     #var diebao-password-word  {};
-    #var diebao-password-count {0};
+    #var diebao-password-line-count {0};
+    #var diebao-password-word-count {0};
 
-    #line multishot 3 #action {^{|ID=diebao/password}$} {
+    #action {^{|ID=diebao/password}$} {
         okLog -------------;
         #var diebao-password-word  {};
-        #var diebao-password-count {0};
+        #var diebao-password-line-count {0};
         #line multishot 12 #action {^%+12*    {|ID=diebao/password}$} {
             #line gag;
             #cat diebao-password-word {|%%%0|};
-            math.Inc diebao-password-count;
-            #if { $diebao-password-count == 12 } {
+            #if { $diebao-password-line-count == 0 } {
+                math.Inc diebao-password-word-count;
+            };
+            math.Inc diebao-password-line-count;
+            #if { $diebao-password-line-count == 12 } {
                 hzk12.Beautify {$diebao-password-word};
                 okLog -------------;
+                #if { $diebao-password-word-count == 3 } {
+                    #class diebao.password kill;
+                };
             };
         };
     };
