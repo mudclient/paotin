@@ -489,14 +489,18 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
 
     #local nodes {@table.Keys{map.xiaoyao.map;%*$name%*}};
     #local best {};
+    #local better {};
     #local normal {};
     #local node {};
     #foreach {$nodes} {node} {
         #if { "$node" == "$name(%*)" } {
             #return {$node};
         };
-        #if { "$node" == "$name%*($name的%*)" && "$node" != "%*{津|渡|渡口})" } {
+        #if { "$node" == "%*(%*的$name)" && "$node" != "%*{津|渡|渡口})" } {
             #local best {$node};
+        };
+        #elseif { "$node" == "%*($name的%*)" && "$node" != "%*{津|渡|渡口})" } {
+            #local better {$node};
         };
         #elseif { "$node" == "%*(%*$name%*)" } {
             #local normal {$node};
@@ -505,6 +509,9 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
 
     #if { "$best" != "" } {
         #return {$best};
+    };
+    #elseif { "$better" != "" } {
+        #return {$better};
     };
     #else {
         #return {$normal};
