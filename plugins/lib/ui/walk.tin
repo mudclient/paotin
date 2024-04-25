@@ -244,7 +244,7 @@ VAR {触屏和小键盘走路插件的走路命令，默认为 go} ui.walk.cmd {
                 #continue;
             };
             #local code {$global-keypad-code[$name]};
-            #line sub var #macro {$code} {ui.walk.keypad.do $name $type {$args}};
+            #line sub var #macro {^$code} {ui.walk.keypad.do $name $type {$args}};
         };
         #class ui.walk.Keypad close;
         okLog 小键盘走路已开启。;
@@ -334,20 +334,8 @@ VAR {触屏和小键盘走路插件的走路命令，默认为 go} ui.walk.cmd {
     #local args {%3};
 
     #if { "$key" == "Enter" } {
-        #local input {};
-        #cursor get input;
-        #if { {$input} !== {} } {
-            #cursor clear;
-            $input;
-            #line sub var #history insert {$input};
-            #return;
-        };
-        #elseif { "$gMapRoom[dock]" == "dock" } {
-            map.YellBoat;
-            #return;
-        };
-        #elseif { "$gMapRoom[dock]" == "ride" } {
-            map.Ride;
+        #if { "$gMapRoom[dock]" == "{GuoJiang|GuoHe|YellBoat|Shalou|Ride}" } {
+            map.$gMapRoom[dock];
             #return;
         };
     };
