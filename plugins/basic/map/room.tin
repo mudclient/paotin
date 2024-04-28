@@ -158,6 +158,12 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #echo {$format1} {<G01>} {} {} {} {} {} {};
 };
 
+#func {map.Room.CID} {
+    #local area {@default{$gMapRoom[area][RESOLVED];未知地区}};
+    #local name {@default{$gMapRoom[name];未知房间}};
+    #return {$area的$name};
+};
+
 #func {map.Room.GetObjByName} {
     #local name  {%1};
     #local title {@default{%2;%*}};
