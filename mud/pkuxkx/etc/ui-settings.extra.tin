@@ -7,6 +7,7 @@
 
 #nop {Top} {TopSepBar} {MidSepBar} {Bot} {BotSepBar};
 #list prompt-fields create {
+    { {place}{MidSepBar}        {label}{通缉}       {name}{wanted}   {countdown}{Auto} }
     { {place}{MidSepBar}        {label}{重启}       {name}{reboot}   {countdown}{Auto} }
     { {place}{MidSepBar}        {label}{经验转化率} {name}{pot/exp}  }
     { {place}{MidSepBar}        {label}{周}         {name}{week}     {visibility}{HideLabel} {countdown}{Auto} }
