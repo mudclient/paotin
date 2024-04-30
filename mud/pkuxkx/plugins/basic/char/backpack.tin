@@ -412,6 +412,35 @@ event.Define {char/bag}         {无参} {$MODULE} {look bag 命令运行完毕�
 };
 
 ///=== {
+// #@ char.backpack.Amount <范围> <名称或/和 ID>
+//    查询角色是否携带有某样物品。如果有，则返回其数量，否则返回 0。
+//    查询范围参见 HELP char.backpack.Query。
+// };
+#func {char.backpack.Amount} {
+    #local range    {%1};
+    #local key      {%2};
+
+    #local info {${char.${range}[$key]}};
+    #if { "$info" == "" } {
+        #local items {@char.backpack.Query{{$range};{$key}}};
+
+        #if { "$items" == "" } {
+            #return 0;
+        };
+
+        #local count {@slist.Size{$items}};
+        #if { $count > 1 } {
+            errLog 名称或 ID 不唯一，请精确指定，格式为：「蛇床子/shechuang zi」。;
+            #return -1;
+        };
+
+        #local info {${char.${range}[$items]}};
+    };
+
+    #return {@defaultNum{$info[amount];1}};
+};
+
+///=== {
 // ## char.backpack.SellAll
 //    把身上的低价值物品全部卖掉。
 // };
