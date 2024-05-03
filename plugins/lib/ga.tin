@@ -100,3 +100,12 @@ event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参�
         #return 0;
     };
 };
+
+#func {ga.AllDone} {
+    #if { &gXttPipeLine[] == 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
