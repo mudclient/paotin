@@ -57,6 +57,9 @@
     { {place}{Bot} {line}{3}    {label}{状态}       {name}{status}   {cooldown}{600} }
     { {place}{Bot} {line}{3}    {label}{持续效果}   {name}{persist}  {countdown}{Seconds} }
 
+    { {place}{Bot} {line}{10}    {label}{系统路径}   {name}{walk}    }
+    { {place}{Bot} {line}{11}    {label}{本地路径}   {name}{path}    {cooldown}{600} {visibility}{HideCool} }
+
     { {place}{Bot} {line}{99}   {label}{<119>警报}  {name}{alert}   }
     { {place}{Bot} {line}{99}   {label}{随手记}     {name}{note}     {color}{<134>}}
 
