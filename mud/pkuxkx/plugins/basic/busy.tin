@@ -89,7 +89,7 @@ VAR {正在等待的回调列表}    busy.wait-list {};
 #action {^你正忙{|ID=basic/busy}$} {
     #undelay busy.on-idle;
 
-	char.MarkBusy;
+    char.MarkBusy;
 
     #if { &busy.wait-list[] == 0 } {
         #return;
@@ -107,7 +107,7 @@ VAR {正在等待的回调列表}    busy.wait-list {};
 
 #action {^你不忙{|ID=basic/busy}$} {
     #undelay busy.checkbusy;
-	char.UnmarkBusy;
+    char.UnmarkBusy;
     #delay {busy.on-idle} {busy.on-idle} 0;
     #line gag;
 };

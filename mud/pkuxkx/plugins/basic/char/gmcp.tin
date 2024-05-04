@@ -117,7 +117,7 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
             };
             #else {
                 #if { "$name" == "{忙|战斗中}" } {
-					char.set-flag $name $value false;
+                    char.set-flag $name $value false;
                 };
             };
 
