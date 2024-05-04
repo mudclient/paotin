@@ -132,9 +132,6 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         #return;
     };
 
-    #local cancel {@mslp.Exec{path.Cancel;path.Cacnel}};
-    #local finish {@mslp.Exec{path.Finish;path.Finish}};
-
     #class path.BotStep open;
 
     #alias {path.BotStep.done} {
@@ -144,26 +141,23 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 
     #line sub var #alias {path.BotStep.failed} {
         path.BotStep.end;
-        errLog 机器人运行出错，姑且继续录制。如果想要取消录制请使用 $cancel;
+        path.message 机器人运行出错，姑且继续录制，如有不脱请取消录制。;
     };
 
     #line sub var #alias {path.BotStep.end} {
         #class path.BotStep kill;
-        event.UnHandle {map/walk/continue} {path.BotStep};
-        event.UnHandle {map/walk/failed}   {path.BotStep};
         #path start;
         event.Handle {GMCP.Move} {path.Trace} {pathdir} {path.response};
-        path.message <129>录制路径中…… <299>取消录制请点击【<119>$cancel<299>】结束录制请点击【<129>$finish<299>】;
+        path.message <129>录制路径中…… <299>;
     };
+
+    event.ClassHandleOnce {map/walk/continue} {map.$bot} {pathdir} {path.BotStep.done};
+    event.ClassHandleOnce {map/walk/failed}   {map.$bot} {pathdir} {path.BotStep.failed};
 
     #class path.BotStep close;
 
-    event.HandleOnce {map/walk/continue} {path.BotStep} {pathdir} {path.BotStep.done};
-    event.HandleOnce {map/walk/failed}   {path.BotStep} {pathdir} {path.BotStep.failed};
-
     event.UnHandle {GMCP.Move} {path.Trace} {pathdir};
 
-    path.message <139>录制路径已暂停<299>取消录制请点击【<119>$cancel<299>】结束录制请点击【<129>$finish<299>】;
     #path stop;
     #path insert {$bot} {$bot};
     path.message 已经暂停路径录制，将会在机器人运行结束后自动继续。;
@@ -258,6 +252,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     #path destroy;
 
     path.message 路径录制结束。你可以使用 {@mslp.Exec{path.List;path.List}} 命令查看本房间的关联路径。;
+    path.Hint;
 
     storage.Save path path-list;
 };
@@ -446,7 +441,18 @@ VAR {停止走路标志} path.walk.stop {0};
 
 #alias {path.message} {
     #local msg {%0};
-    infoLog <159>$msg<299>;
+
+    #local trace  {@mslp.Exec{path.Trace;<159>path.Trace<299>}};
+    #local cancel {@mslp.Exec{path.Cancel;<119>path.Cancel<299>}};
+    #local finish {@mslp.Exec{path.Finish;<129>path.Finish<299>}};
+
+    #if { @path.isTracing{} } {
+        infoLog <159>$msg<299> 取消录制请使用 {$cancel}，完成录制请使用 {$finish}。<299>;
+    };
+    #else {
+        infoLog <159>$msg<299> 要想录制新路径，请使用 {$trace}。<299>;
+    };
+
     path.hint %0;
 };
 
