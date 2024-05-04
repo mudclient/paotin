@@ -15,6 +15,8 @@ load-module basic/busy;
 
 event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
 
+VAR {逍遥行正在赶路} {xiaoyao.under-way} {0};
+
 #alias {xiaoyao.Init} {
     event.Handle {map/GotRoomInfo} {xiaoyao.try-locate} {map/xiaoyao} {xiaoyao.try-locate};
     storage.Load {map-xiaoyao} {map.xiaoyao.map;map.xiaoyao.room};
@@ -415,6 +417,7 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
     prompt.Set {{walk}{<139>正在前往 <129>$target[room]<139>...<299>}};
 
     #line sub var event.HandleOnce map/walk/continue {xiaoyao/goto} {map/xiaoyao} {xiaoyao.walk-end $hook};
+    #var xiaoyao.under-way {1};
     map.WalkNodes {$target[path]} {xiaoyao/goto};
 };
 
@@ -431,13 +434,15 @@ event.HandleOnce {map/init} {map/xiaoyao} {map} {xiaoyao.Init};
         event.DelayEmit map/walk/continue {$hook};
     };
 
+    #var xiaoyao.under-way {0};
+
     #nop 配合 try-locate 进行定位。;
     look;
 };
 
 #alias {xiaoyao.try-locate} {
     #nop 移动中，位置随时会变。;
-    #if { ! @ga.AllDone{} } {
+    #if { ! @ga.AllDone{} || $xiaoyao.under-way } {
         #return;
     };
 
