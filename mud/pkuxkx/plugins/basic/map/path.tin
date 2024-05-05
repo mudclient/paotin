@@ -81,6 +81,11 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 //    开始为本房间录制路径。
 // };
 #alias {path.SetType} {
+    #if { "%0" == "" } {
+        xtt.Usage %90;
+        #return;
+    };
+
     #if { ! @path.isTracing{} } {
         errLog 尚未开始录制。;
         #return;
