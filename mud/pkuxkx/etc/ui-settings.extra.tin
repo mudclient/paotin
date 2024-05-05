@@ -90,5 +90,4 @@ event.HandleOnce {user-online} {ui/walk/setup/pkuxkx} {pkuxkx/online} {
     ui.walk.Keypad.Bind {KeyMul}        {cmd} {lm};
     ui.walk.Keypad.Bind {KeySub}        {cmd} {map};
     ui.walk.Keypad.Bind {KeyAdd}        {cmd} {kill-npc};
-    ui.walk.Keypad.Bind {Enter}         {cmd} {get-all};
 };

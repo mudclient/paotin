@@ -333,13 +333,6 @@ VAR {触屏和小键盘走路插件的走路命令，默认为 go} ui.walk.cmd {
     #local type {%2};
     #local args {%3};
 
-    #if { "$key" == "Enter" } {
-        #if { "$gMapRoom[dock]" == "{GuoJiang|GuoHe|YellBoat|Shalou|Ride}" } {
-            map.$gMapRoom[dock];
-            #return;
-        };
-    };
-
     #if { "$type" == "cmd" } {
         $args;
         #return;

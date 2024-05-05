@@ -164,7 +164,6 @@ VAR {小键盘走路的功能映射表} {global-keypad-walking} {};
     {{key}{End}             {meaning}{向西南/西下/南上}     {type}{dir}     {args}{southwest;westdown;southup}}
     {{key}{PageUp}          {meaning}{向东北/东上/北下}     {type}{dir}     {args}{northeast;eastup;northdown}}
     {{key}{PageDown}        {meaning}{向东南/东下/南下}     {type}{dir}     {args}{southeast;eastdown;southdown}}
-    {{key}{Enter}           {meaning}{智能交互，搜尸/过河}  {type}{cmd}     {args}{get all}}
     {{key}{Center}          {meaning}{查看房间}             {type}{cmd}     {args}{look}}
 };
 
