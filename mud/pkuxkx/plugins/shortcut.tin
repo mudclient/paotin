@@ -198,14 +198,6 @@ load-lib sync;
 
 #subst {~\e[34m} {\e[94m};
 
-VAR 服务器重启时间 gServerRebootTime {0};
-
-#action {^北大侠客行再过%*将重新启动 ...$} {
-    #local time {@time.ParseDoC{%1}};
-    #var gServerRebootTime {@time.Now{} + $time};
-    prompt.Set {{reboot}{$time}};
-};
-
 #alias {list-armors} {
     #class rbz-list-armors open;
 
