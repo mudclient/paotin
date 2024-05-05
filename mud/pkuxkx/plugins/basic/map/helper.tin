@@ -138,7 +138,7 @@ VAR {地图脚本同步信息} map.sync.room-id {};
     #action {^你朝船夫挥了挥手便跨上岸去。$}        {map.SpecialBoat.return};       #nop 神龙岛;
     #action {^你从踏板上走上了船。$}                {event.Emit map/walk/boat/in};  #nop 桃花岛;
     #action {^你沿着踏板走了上去。$}                {map.SpecialBoat.return};       #nop 桃花岛;
-    #action {map.SpecialBoat.return} {event.Emit map/walk/boat/out; busy.Halt {map.BotReturn map.SpecialBoat}};
+    #alias {map.SpecialBoat.return} {event.Emit map/walk/boat/out; busy.Halt {map.BotReturn map.SpecialBoat}};
     #class map.SpecialBoat close;
     enter boat;
 };
