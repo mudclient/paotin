@@ -106,6 +106,14 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ str.ToHexCode <字符>
 //    获得该字符在 Unicode 编码中的码点，以十六进制整数形式表示。
 //    本函数也可以简写为 char2hex，两个名称用途和用法完全相同。
+//
+// #@ str.HexToDec <十六进制串转十进制串>
+//    数字字符串转换，十六进制串转十进制串。
+//    本函数也可以简写为 hex2dec，两个名称用途和用法完全相同。
+//
+// #@ str.DecToHex <十进制串转十六进制串>
+//    数字字符串转换，十进制串转十六进制串。
+//    本函数也可以简写为 dec2hex，两个名称用途和用法完全相同。
 // };
 #func {str.FromCode}    {#format result {%X} {%0}; #format result {%x} {$result}};
 #func {char}            {#return {@str.FromCode{%0}}};
