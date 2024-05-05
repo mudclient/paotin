@@ -232,7 +232,7 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
                 };
                 #var step {};
             };
-            #match {"{[A-Z][a-z]+}"} {
+            #match {"{[A-Z][a-z]+[A-Za-z]*}"} {
                 #if { @dir.IsDir{@str.ToLower{$step}} } {
                     #var link[type] {Dynamic};
                     #local exit {@str.ToLower{$step}};
