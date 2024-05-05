@@ -282,7 +282,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     #local count {@slist.Size{$path}};
     #if { $count > 0 } {
         #local path {@fp.Transform{{$path};\@str.Replace{VALUE;{%*-%*};{&2}}}};
-        #local path {@fp.Transform{{$path};\@mslp.Exec{{path.Walk ${here}-VALUE};<139>VALUE<299>}} };
+        #local path {@fp.Transform{{$path};\@mslp.Exec{{path.Walk ${here}-VALUE};<139>\@str.Replace{VALUE;{$area的};{}}<299>}} };
         path.hint $path;
     };
     #else {
