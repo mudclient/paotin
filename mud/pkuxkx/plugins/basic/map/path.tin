@@ -42,10 +42,18 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 };
 
 ///=== {
-// ## path.Trace
+// ## path.Trace [<是否可翻转>] [<是否可压缩>]
 //    开始为本房间录制路径。
 // };
 #alias {path.Trace} {
+    #local reversible   {@default{%1;true}};
+    #local compact      {@default{%2;true}};
+
+    #if { @path.isTracing{} } {
+        errLog 录制路径工作正在进行中。;
+        #return;
+    };
+
     #local area {@map.GetArea{}};
 
     #if { "$area" == "" } {
@@ -54,14 +62,11 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         #return;
     };
 
-    #if { @path.isTracing{} } {
-        errLog 录制路径工作正在进行中。;
-        #return;
-    };
-
     #var path-current {
-        {from}  {@map.Room.CID{}}
-        {to}    {}
+        {from}          {@map.Room.CID{}}
+        {to}            {}
+        {reversible}    {$reversible}
+        {compact}       {$compact}
     };
 
     event.Handle {GMCP.Move} {path.Trace} {map/path} {path.response};
@@ -69,6 +74,23 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     path.message 开始录制路径。;
     option.Enable KeypadWalk;
     ui.walk.SetCmd path.ui.move;
+};
+
+///=== {
+// ## path.SetType [<是否可翻转>] [<是否可压缩>]
+//    开始为本房间录制路径。
+// };
+#alias {path.SetType} {
+    #if { ! @path.isTracing{} } {
+        errLog 尚未开始录制。;
+        #return;
+    };
+
+    #local reversible   {@default{%1;$path-current[reversible]}};
+    #local compact      {@default{%2;$path-current[compact]}};
+
+    #var path-current[reversible]   {$reversible};
+    #var path-current[compact]      {$compact};
 };
 
 #alias {path.ui.move} {
@@ -238,14 +260,22 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         #var path-list[$pathName] {$fpath};
     };
     #else {
-        #local fpath {@path.Simplify{$fpath}};
+        #if { @isTrue{$path-current[compact]} } {
+            #local fpath {@path.Simplify{$fpath}};
+        };
+
         okLog 正向路径: {#$fpath#};
         #local pathName {${path-current[from]}-${path-current[to]}};
         #var path-list[$pathName] {$fpath};
-        #local bpath {@path.Simplify{$bpath}};
-        okLog 反向路径: {#$bpath#};
-        #local pathName {${path-current[to]}-${path-current[from]}};
-        #var path-list[$pathName] {$bpath};
+
+        #if { @isTrue{$path-current[reversible]} } {
+            #if { @isTrue{$path-current[compact]} } {
+                #local bpath {@path.Simplify{$bpath}};
+            };
+            okLog 反向路径: {#$bpath#};
+            #local pathName {${path-current[to]}-${path-current[from]}};
+            #var path-list[$pathName] {$bpath};
+        };
     };
 
     #var path-current {};
