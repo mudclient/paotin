@@ -27,6 +27,7 @@ load-file plugins/lib/xtintin/cmds.tin;
 load-file plugins/lib/xtintin/mslp.tin;
 load-file plugins/lib/xtintin/buffer.tin;
 load-file plugins/lib/xtintin/id.tin;
+load-file plugins/lib/xtintin/regex.tin;
 
 ///=== {
 ///// 以上文档采用 PaoTin++ 的文档化注释工具生成。

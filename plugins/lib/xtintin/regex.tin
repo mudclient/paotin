@@ -1,0 +1,35 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#nop 本文件是 xtintin 的一部分，实现了一些正则表达式生成函数;
+
+///=== {
+///// 正则表达式生成函数：
+/////
+// #@ re.TableHeader <表格名称>
+//    生成一个正则表达式，用来匹配一个表格的表头。
+//
+// #@ re.TableTail
+//    生成一个正则表达式，用来匹配一个表格的结尾。
+// };
+#func {re.TableHeader} {
+    #local title {%1};
+    #local end {$E};
+    #if { @isEmptyVar{$E} } {
+        #local end {$};
+    };
+    #return {^╭─{?:(?:─|┬)+}$title{?:(?:─|┬)+}─╮$end};
+};
+
+#func {re.TableTail} {
+    #local end {$E};
+    #if { @isEmptyVar{$E} } {
+        #local end {$};
+    };
+    #return {^╰─{?:(?:─|┴)+}%u{?:(?:─|┴)+}─╯$end};
+};
