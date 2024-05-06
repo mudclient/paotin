@@ -44,6 +44,9 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 ///=== {
 // ## path.Trace [<是否可翻转>] [<是否可压缩>]
 //    开始为本房间录制路径。
+//    两个参数指定了本次即将录制的路径特点，并会在录制完成时真正运用。
+//    如果省略参数，则默认为可翻转、可压缩。
+//    在录制完成之前，你仍然可以随时用 path.SetType 来重新设置。
 // };
 #alias {path.Trace} {
     #local reversible   {@default{%1;true}};
@@ -78,7 +81,10 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 
 ///=== {
 // ## path.SetType [<是否可翻转>] [<是否可压缩>]
-//    开始为本房间录制路径。
+//    重新设置当前正在录制的路径特点。
+//    两个参数指定了此时正在录制的路径特点，并会在录制完成时真正运用。
+//    如果省略参数，则默认为前值，不予改变。
+//    在录制完成之前，你仍然可以随时用 path.SetType 来重新设置。
 // };
 #alias {path.SetType} {
     #if { "%0" == "" } {
