@@ -32,13 +32,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #pathdir {out} {enter} {19};
 #pathdir {enter} {out} {44};
 
-VAR {当前路径} path-current {};
+VAR {当前路径} map.path.current {};
 
 event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 
 #alias {map.path.Init} {
     event.Handle {map/GotRoomInfo} {path.Hint} {map/path} {path.Hint};
-    storage.Load path path-list;
+    storage.Load map-path map.path.list;
 };
 
 ///=== {
@@ -65,7 +65,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         #return;
     };
 
-    #var path-current {
+    #var map.path.current {
         {from}          {@map.Room.CID{}}
         {to}            {}
         {reversible}    {$reversible}
@@ -97,11 +97,11 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         #return;
     };
 
-    #local reversible   {@default{%1;$path-current[reversible]}};
-    #local compact      {@default{%2;$path-current[compact]}};
+    #local reversible   {@default{%1;$map.path.current[reversible]}};
+    #local compact      {@default{%2;$map.path.current[compact]}};
 
-    #var path-current[reversible]   {$reversible};
-    #var path-current[compact]      {$compact};
+    #var map.path.current[reversible]   {$reversible};
+    #var map.path.current[compact]      {$compact};
 };
 
 #alias {path.ui.move} {
@@ -231,7 +231,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         #return;
     };
 
-    #var path-current {};
+    #var map.path.current {};
     #path destroy;
     event.UnHandle {GMCP.Move} {path.Trace};
 
@@ -252,7 +252,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     };
 
     #local here {@map.Room.CID{}};
-    #var path-current[to] {$here};
+    #var map.path.current[to] {$here};
 
     #path stop;
 
@@ -263,39 +263,39 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     #local bpath {};
     #path save backward bpath;
 
-    #if { "$path-current[from]" == "$path-current[to]" } {
+    #if { "$map.path.current[from]" == "$map.path.current[to]" } {
         okLog 检测到遍历路径。;
         #local length {};
         #path get length length;
         #local pathName {${here}-遍历${area}-$length};
-        #var path-list[$pathName] {$fpath};
+        #var map.path.list[$pathName] {$fpath};
     };
     #else {
-        #if { @isTrue{$path-current[compact]} } {
+        #if { @isTrue{$map.path.current[compact]} } {
             #local fpath {@path.Simplify{$fpath}};
         };
 
         okLog 正向路径: {#$fpath#};
-        #local pathName {${path-current[from]}-${path-current[to]}};
-        #var path-list[$pathName] {$fpath};
+        #local pathName {${map.path.current[from]}-${map.path.current[to]}};
+        #var map.path.list[$pathName] {$fpath};
 
-        #if { @isTrue{$path-current[reversible]} } {
-            #if { @isTrue{$path-current[compact]} } {
+        #if { @isTrue{$map.path.current[reversible]} } {
+            #if { @isTrue{$map.path.current[compact]} } {
                 #local bpath {@path.Simplify{$bpath}};
             };
             okLog 反向路径: {#$bpath#};
-            #local pathName {${path-current[to]}-${path-current[from]}};
-            #var path-list[$pathName] {$bpath};
+            #local pathName {${map.path.current[to]}-${map.path.current[from]}};
+            #var map.path.list[$pathName] {$bpath};
         };
     };
 
-    #var path-current {};
+    #var map.path.current {};
     #path destroy;
 
     path.message 路径录制结束。你可以使用 {@mslp.Exec{path.List;path.List}} 命令查看本房间的关联路径。;
     path.Hint;
 
-    storage.Save path path-list;
+    storage.Save map-path map.path.list;
 };
 
 ///=== {
@@ -319,7 +319,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     };
 
     #local here {@map.Room.CID{}};
-    #local path {@table.Keys{path-list; {${here}-%*}}};
+    #local path {@table.Keys{map.path.list; {${here}-%*}}};
     #local count {@slist.Size{$path}};
     #if { $count > 0 } {
         #local path {@fp.Transform{{$path};\@str.Replace{VALUE;{%*-%*};{&2}}}};
@@ -348,9 +348,9 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 
     #local count {0};
     #local name {};
-    #foreach {*path-list[]} {name} {
+    #foreach {*map.path.list[]} {name} {
         #if { "$name" == "${here}-%*" } {
-            #local path {$path-list[$name]};
+            #local path {$map.path.list[$name]};
             #local size {@slist.Size{$path}};
             #echo {%s(<129>$size<299>): %s} {@mslp.Exec{{path.Walk $name};<139>$name<299>}} {<169>$path<099>};
             #math count {$count + 1};
@@ -378,19 +378,30 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         #return {};
     };
 
-    #return {$path-list[$name]};
+    #return {$map.path.list[$name]};
 };
 
 ///=== {
 // ## path.Walk <路径名称> [<回调代码>]
 //    沿着指定的路径名称执行行走任务。行走完成后，执行回调代码。
+//    如果省略回调代码，用户仍可通过订阅 map/walk/continue 事件获得回调机会。
+//    注意约定的回调钩子名称为 map/path/end。
 // };
 #alias {path.Walk} {
     #local name     {%1};
-    #local callback {%2};
-    #local path {$path-list[$name]};
+    #local callback {%22};
+    #local path {$map.path.list[$name]};
 
-    path.WalkSteps {$path} {$callback};
+    #if { "$name" == "" } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    #if { "$callback" != "" } {
+        #line sub {escapes;var} event.HandleOnce map/walk/continue {map/path/end} {map/path} {$callback};
+    };
+
+    path.WalkSteps {$path};
 };
 
 ///=== {
@@ -399,9 +410,14 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 // };
 #alias {path.WalkSteps} {
     #local path     {%1};
-    #local callback {%2};
+    #local callback {%22};
 
     #local len {@slist.Size{$path}};
+    #if { $len == 0 } {
+        xtt.Usage %90;
+        #return;
+    };
+
     #local path {@fp.Transform{{$path};path.step {VALUE}}};
 
     #if { $len > 1 } {
@@ -409,12 +425,11 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         #local path {@slist.Insert{{$path};$len;path.last-step}};
     };
 
-    #if { "$callback" == "" } {
-        #path load {$path;path.end};
+    #if { "$callback" != "" } {
+        #line sub {escapes;var} event.HandleOnce map/walk/continue {map/path/end} {map/path} {$callback};
     };
-    #else {
-        #path load {$path;path.end;$callback};
-    };
+
+    #path load {$path;path.end};
 
     sync.Wait {#path walk};
 };
@@ -425,7 +440,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     #local cmd {@dir.Long{%1}};
 
     event.HandleOnce {map/walk/continue}    {map/step} {map/path} {path.step.next};
-    event.HandleOnce {map/walk/failed}      {map/step} {map/path} {#path destroy; path.last-step};
+    event.HandleOnce {map/walk/failed}      {map/step} {map/path} {#path destroy; path.last-step; path.end};
 
     map.step.Try {} {$cmd} {};
 };
@@ -467,12 +482,14 @@ VAR {停止走路标志} path.walk.stop {0};
         };
     };
 
+    event.Emit {map/walk/continue} {map/path/end};
+
     event.HandleOnce {map/GotArea} {path/end} {map/path} {path.Hint};
     map.GetArea;
 };
 
 #func {path.isTracing} {
-    #if { &path-current[] > 0 } {
+    #if { &map.path.current[] > 0 } {
         #return 1;
     };
     #else {
