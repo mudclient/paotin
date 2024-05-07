@@ -403,13 +403,13 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
         #return;
     };
 
-    #local level {@math.Floor{ @char.SkillLevel{$name} }};
+    #local level {@math.Int{@math.Floor{ @char.SkillLevel{$name} } + 1}};
     #local limit {@char.SkillLimit{$name}};
     fullskLog @buffer.RawLine{} 当前进度: $level / $limit;
 
-    skbrief $char[Skills][$name][code];
+    #delay char.skills.update.level {skbrief $char[Skills][$name][code]} 0.1;
 
     #if { "$name" == "基本内功" || "@char.GetJifaSkill{$name}" == "基本内功" } {
-        hp -neili;
+        #delay char.skills.update.neili {hp -neili} 0.1;
     };
 } {9.1};
