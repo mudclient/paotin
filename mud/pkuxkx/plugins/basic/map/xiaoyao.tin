@@ -380,8 +380,18 @@ VAR {逍遥行正在赶路} {xiaoyao.under-way} {0};
         ||  &gMapRoom[area][] == 0
         || "@map.GetArea{}" == ""
     } {
-        #line sub {func;var} event.HandleOnce map/GotArea {xiaoyao/goto} {xiaoyao} {xiaoyao.goto {$target} {$hook} {@math.Eval{$retry + 1}}};
+        #nop 获取区域的过程中可能无法产生积极的结果，那么就以角色移动为失败标志，取消走路。;
+        #class xiaoyao.goto.locate open;
+        #line sub {func;var} event.ClassHandleOnce map/GotArea {xiaoyao/goto/locate} {xiaoyao} {
+            #class xiaoyao.goto.locate kill;
+            xiaoyao.goto {$target} {$hook} {@math.Eval{$retry + 1}};
+        };
+        #line sub {func;var} event.ClassHandleOnce GMCP.Move {xiaoyao/goto/locate} {xiaoyao} {
+            xiaoyao.goto.cancel {$hook};
+            #class xiaoyao.goto.locate kill;
+        };
         map.GetArea;
+        #class xiaoyao.goto.locate close;
         #return;
     };
 
