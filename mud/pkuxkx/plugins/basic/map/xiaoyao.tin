@@ -323,12 +323,17 @@ VAR {逍遥行正在赶路} {xiaoyao.under-way} {0};
     #local target   {%1};
     #local callback {%22};
 
-    #if { "$callback" == "" } {
-        #local callback {#0};
+    #local hook {map/xiaoyao/@uuid{}};
+
+    #class xiaoyao.Goto open;
+
+    #if { "$callback" != "" } {
+        #line sub {escapes;var} #alias {xiaoyao.Goto.end} {#class xiaoyao.Goto kill; $callback};
+        event.ClassHandleOnce {map/walk/continue} {$hook} {map/xiaoyao} {xiaoyao.Goto.end};
+        event.ClassHandleOnce {map/walk/failed}   {$hook} {map/xiaoyao} {xiaoyao.Goto.end};
     };
 
-    #local hook {map/xiaoyao/@uuid{}};
-    #line sub {escapes;var} event.HandleOnce {map/walk/continue} {$hook} {map/xiaoyao} {$callback};
+    #class xiaoyao.Goto close;
 
     xiaoyao.goto {$target} {$hook} {xiaoyao.GotoThen};
 };
@@ -423,7 +428,9 @@ VAR {逍遥行正在赶路} {xiaoyao.under-way} {0};
 
 #alias {xiaoyao.goto.cancel} {
     #local hook {%1};
-    event.UnHandle {map/walk/continue} {$hook} {map/xiaoyao};
+    #if { "$hook" != "" } {
+        event.DelayEmit {map/walk/failed} {$hook};
+    };
 };
 
 #alias {xiaoyao.walk-end} {
@@ -460,7 +467,7 @@ VAR {逍遥行正在赶路} {xiaoyao.under-way} {0};
         #return;
     };
 
-    #nop 空闲，没有移动，可能是节点，那么就具体调查一下。;
+    dbgLog map => 空闲，没有移动，看名字($gMapRoom[name])可能是节点，那么决定调查一下。;
     event.HandleOnce {map/GotArea} {xiaoyao.locate} {map/xiaoyao} {xiaoyao.locate};
     map.GetArea;
 };
