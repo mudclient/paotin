@@ -129,11 +129,6 @@ load-lib sync;
 
 #gag {向红豆打听有关『%*』的消息。$E};
 
-#action {^请直接输入感恩之语：$TELNET[GA]$} {
-    xtt.DisableAllCommands false;
-    #line oneshot #alias {^%*{|ID=xiang}$} {#send %%0; xtt.UndoDisableAllCommands} {1.001};
-};
-
 #action {^播放短视频%*……$E} {
     #class short-video open;
     #var short-video.hp {$char.HPSummarize.Echo};
@@ -161,10 +156,6 @@ load-lib sync;
 
 #alias kk {look %0; lookin %0; follow %0; killall %0};
 #action {^你瞬间感到了危险临近，奸细就在附近！$E} {killall} {9.500};
-
-#action {^一支铜雀轻轻地落在你的面前，你可以选择下列任务系列中一组：$E} {
-    xtt.DisableAllCommand;
-} {9.999};
 
 #action {^你一顿棍棒乱揍，看来杀手有点怕你了。$E}                   {halt;quan} {9.500};
 #action {^( 蒙面杀手似乎十分疲惫，看来需要好好休息了。)$E}          {halt;ask killer about 认输} {9.999};

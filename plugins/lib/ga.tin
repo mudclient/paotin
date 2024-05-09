@@ -38,22 +38,42 @@ event.Define {GA} {有参} {$MODULE} {接收到 IAC GA 时发射本事件，参�
     #list gXttPipeLine add {$cmd};
 };
 
+/*
+   这里主要目的是处理非标 GA 并努力维持命令和 GA 的对应关系。
+   如果命令和 GA 不对应，就要在这里调整。
+   主要是记录那些一个命令可能会导致多个 GA 的情形，
+   以及 GA 前的提示文本非标的情形。
+*/
 #alias {ga.received-prompt} {
     #local line     {$gTTEventArgv[1]};
+
     #if { "$line" == "== 未完继续 %*== (%*继续下一页%*)%*" } {
         #line gag; #cr; #return;
+    };
+
+    #if { "$line" != "> %*" } {
+        #local cmd {$gXttPipeLine[1]};
+        #list gXttPipeLine delete {1};
+        #if { &gXttPipeLine[] == 0 } {
+            xtt.DisableAllCommands false;
+            #line oneshot #alias {^%*{|ID=lib/ga}$} {
+                #list gXttPipeLine add {{%%0}};
+                #send %%0;
+                xtt.UndoDisableAllCommands;
+            } {1.000};
+        };
     };
 };
 
 #action {^> {$TELNET[GA]|$TELNET[EOR]}$} {
-    #local line {%0};
-    #replace line {{$TELNET[GA]|$TELNET[EOR]}$} {};
-
     #local cmd {};
 
     #if { &gXttPipeLine[] > 0 } {
         #local cmd {$gXttPipeLine[1]};
         #list gXttPipeLine delete {1};
+    };
+    #else {
+        errLog 遭遇意料之外的 GA，请联系开发者。;
     };
 
     event.Emit GA {} {$cmd};
