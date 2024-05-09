@@ -129,11 +129,6 @@ load-lib sync;
 
 #gag {向红豆打听有关『%*』的消息。$E};
 
-#action {^请直接输入感恩之语：$TELNET[GA]$} {
-    xtt.DisableAllCommands false;
-    #line oneshot #alias {^%*{|ID=xiang}$} {#send %%0; xtt.UndoDisableAllCommands} {1.001};
-};
-
 #action {^播放短视频%*……$E} {
     #class short-video open;
     #var short-video.hp {$char.HPSummarize.Echo};
