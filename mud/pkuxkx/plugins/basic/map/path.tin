@@ -201,8 +201,6 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 
     event.UnHandle {GMCP.Move} {path.Trace} {pathdir};
 
-    #path stop;
-
     #local step {$name};
     #local count {&args[]};
     #if { $count > 1 } {
@@ -218,6 +216,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         };
     };
 
+    #path stop;
     #path insert {$step} {$step};
     path.message 已经暂停路径录制，将会在机器人运行结束后自动继续。;
     map.$bot;
