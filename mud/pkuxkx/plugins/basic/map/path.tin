@@ -478,6 +478,7 @@ VAR {停止走路标志} path.walk.stop {0};
 
 #alias {path.Walk.Resume} {
     #var path.walk.stop 0;
+    path.step.next;
 };
 
 #alias {path.Walk.Reset} {
