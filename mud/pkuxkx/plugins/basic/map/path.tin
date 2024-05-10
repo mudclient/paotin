@@ -155,6 +155,16 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     #local bot  {%0};
     #local name {%1};
 
+    #info arguments save;
+    #local args {$info[ARGUMENTS]};
+    #unvar info[ARGUMENTS];
+    #unlocal args[0];
+
+    #if { "$name" == "" } {
+        xtt.Usage %90;
+        #return;
+    };
+
     #if { ! @path.isTracing{} } {
         errLog 路径录制尚未开始。;
         #return;
@@ -192,7 +202,23 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     event.UnHandle {GMCP.Move} {path.Trace} {pathdir};
 
     #path stop;
-    #path insert {$bot} {$bot};
+
+    #local step {$name};
+    #local count {&args[]};
+    #if { $count > 1 } {
+        #local idx {};
+        #loop 2 {$count} {idx} {
+            #local arg {$args[$idx]};
+            #if { "$arg" == "%*;%*" } {
+                #cat {step} {/{$arg}};
+            };
+            #else {
+                #cat {step} {/$arg};
+            };
+        };
+    };
+
+    #path insert {$step} {$step};
     path.message 已经暂停路径录制，将会在机器人运行结束后自动继续。;
     map.$bot;
 };
