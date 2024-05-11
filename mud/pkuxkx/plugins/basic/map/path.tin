@@ -152,15 +152,14 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 //    本命令会监听以上事件并做相应处理。
 // };
 #alias {path.BotStep} {
-    #local bot  {%0};
-    #local name {%1};
+    #local bot {%1};
 
     #info arguments save;
     #local args {$info[ARGUMENTS]};
     #unvar info[ARGUMENTS];
     #unlocal args[0];
 
-    #if { "$name" == "" } {
+    #if { "$bot" == "" } {
         xtt.Usage %90;
         #return;
     };
@@ -170,8 +169,8 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
         #return;
     };
 
-    #if { !@existsAlias{map.$name} } {
-        errLog 不存在机器人 $name，请检查是否拼写错误。;
+    #if { !@existsAlias{map.$bot} } {
+        errLog 不存在机器人 $bot，请检查是否拼写错误。;
         #return;
     };
 
@@ -201,7 +200,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 
     event.UnHandle {GMCP.Move} {path.Trace} {pathdir};
 
-    #local step {$name};
+    #local step {$bot};
     #local count {&args[]};
     #if { $count > 1 } {
         #local idx {};
@@ -219,7 +218,7 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     #path stop;
     #path insert {$step} {$step};
     path.message 已经暂停路径录制，将会在机器人运行结束后自动继续。;
-    map.$bot;
+    map.%0;
 };
 
 ///=== {
