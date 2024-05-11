@@ -312,7 +312,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #while { $idx < $count } {
         #local current {$path[$idx]};
         #local next {$path[@math.Eval{$idx + 1}]};
-        #if { "@dir.Long{$current}" !== "@dir.Reverse{@dir.Long{$next}}" } {
+
+        #if {  ! @dir.IsDir{$current}
+            || ! @dir.IsDir{$next}
+            || "@dir.Long{$current}" !== "@dir.Reverse{@dir.Long{$next}}" } {
             #math idx {$idx + 1};
             #continue;
         };
