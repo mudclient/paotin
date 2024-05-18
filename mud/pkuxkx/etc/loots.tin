@@ -24,6 +24,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {牛皮酒袋/jiudai}               {{kind}{饮料}   {unit}{个}  {value}{sell}   }
     {酸梅汤/suanmei tang}           {{kind}{饮料}   {unit}{杯}  {value}{sell}   }
 
+    {菠菜粉条/bocai fentiao}        {{kind}{食物}   {unit}{盆}  {value}{reserve}}
+    {甜点心/dian xin}               {{kind}{食物}   {unit}{份}  {value}{reserve}}
+
     {包子/baozi}                    {{kind}{食物}   {unit}{个}  {value}{sell}   }
     {生煎馒头/shengjian mantou}     {{kind}{食物}   {unit}{个}  {value}{sell}   }
     {馒头/man tou}                  {{kind}{食物}   {unit}{个}  {value}{sell}   }
