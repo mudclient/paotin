@@ -141,24 +141,31 @@ event.Define {char/bag}         {无参} {$MODULE} {look bag 命令运行完毕�
         #local amount {@math.ParseCN{$amount}};
     };
 
+    #local key {$name/$id};
+
     #if { "$type" == "Wear" } {
-        #if { "$char.Wear[$name/$id]" != "" } {
-            #local amount {@math.Eval{$char.Wear[$name/$id][amount] + 1}};
+        #if { "$char.Wear[$key]" != "" } {
+            #local amount {@math.Eval{$char.Wear[$key][amount] + 1}};
         };
     };
 
-    #var {char.${type}[$name/$id]} {
+    #local value {
         {name}      {$name}
         {id}        {@str.ToLower{$id}}
         {amount}    {$amount}
     };
 
-    #if { "$type" == "{Equip|Cash}" } {
-        #var {char.Item[$name/$id]} {
-            {name}      {$name}
-            {id}        {@str.ToLower{$id}}
-            {amount}    {$amount}
+    #if { "$gLootPool[$key]" != "" } {
+        #local field {};
+        #foreach {kind} {field} {
+            #local value[$field] {$gLootPool[$key][$field]};
         };
+    };
+
+    #var {char.${type}[$key]} {$value};
+
+    #if { "$type" == "{Equip|Cash}" } {
+        #var {char.Item[$key]} {$value};
     };
 };
 
