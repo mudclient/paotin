@@ -164,13 +164,22 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #return {$area的$name};
 };
 
+///=== {
+// #@ map.Room.GetObjByName <名称> [<头衔>]
+//    根据名称提取房间中的物品信息。
+//    由于有时候无法正确区分 NPC、玩家和物品，因此本函数也可以用来查询 NPC 或玩家，
+//    此时如果同时提供了头衔，则也会判断头衔是否匹配。
+//    当然，你也可以只通过头衔来查询，只要保持名称留空即可。
+// };
 #func {map.Room.GetObjByName} {
-    #local name  {%1};
-    #local title {@default{%2;%*}};
+    #local name  {@default{%1;%*}};
+    #local title {%2};
 
     #local idx {};
     #foreach {*gMapRoom[objs][]} {idx} {
-        #if { "$gMapRoom[objs][$idx][title]" == "$title" && "$gMapRoom[objs][$idx][name]" == "$name" } {
+        #if {   "$gMapRoom[objs][$idx][name]" == "$name"
+            &&  ("$title" == "" || @sset.Contains{{$gMapRoom[objs][$idx][title]};$title})
+        } {
             #return {$gMapRoom[objs][$idx]};
         };
     };
@@ -178,6 +187,11 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #return {};
 };
 
+///=== {
+// #@ map.Room.GetObjByID <ID>
+//    根据 ID 提取房间中的物品信息。
+//    由于有时候无法正确区分 NPC、玩家和物品，因此本函数也可以用来查询 NPC 或玩家。
+// };
 #func {map.Room.GetObjByID} {
     #local id  {%1};
 
@@ -191,13 +205,21 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #return {};
 };
 
+///=== {
+// #@ map.Room.GetNpcByName <姓名> [<头衔>]
+//    根据姓名提取房间中的 NPC 信息。如果同时提供了头衔，则也会判断头衔是否匹配。
+//    当然，你也可以只通过头衔来查询，只要保持姓名留空即可。
+//    NOTE: 注意并非所有的 NPC 都可以被成功识别，因此有时候你不得不用 map.Room.GetObjByName。
+// };
 #func {map.Room.GetNpcByName} {
-    #local name  {%1};
+    #local name  {@default{%1;%*}};
     #local title {%2};
 
     #local idx {};
     #foreach {*gMapRoom[npcs][]} {idx} {
-        #if { "$gMapRoom[npcs][$idx][title]" == "$title" && "$gMapRoom[npcs][$idx][name]" == "$name" } {
+        #if {   "$gMapRoom[npcs][$idx][name]" == "$name"
+            &&  ("$title" == "" || @sset.Contains{{$gMapRoom[npcs][$idx][title]};$title})
+        } {
             #return {$gMapRoom[npcs][$idx]};
         };
     };
@@ -205,6 +227,11 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #return {};
 };
 
+///=== {
+// #@ map.Room.GetNpcByID <ID>
+//    根据 ID 提取房间中的 NPC 信息。
+//    NOTE: 注意并非所有的 NPC 都可以被成功识别，因此有时候你不得不用 map.Room.GetObjByID。
+// };
 #func {map.Room.GetNpcByID} {
     #local id  {%1};
 
@@ -212,6 +239,46 @@ event.HandleOnce {map/init} {map/room} {map} {map.Room.Watch};
     #foreach {*gMapRoom[npcs][]} {idx} {
         #if { "$gMapRoom[npcs][$idx][id]" == "$id" } {
             #return {$gMapRoom[npcs][$idx]};
+        };
+    };
+
+    #return {};
+};
+
+///=== {
+// #@ map.Room.GetPlayerByName <姓名> [<头衔>]
+//    根据姓名提取房间中的玩家信息。如果同时提供了头衔，则也会判断头衔是否匹配。
+//    当然，你也可以只通过头衔来查询，只要保持姓名留空即可。
+//    NOTE: 注意并非所有的玩家都可以被成功识别，因此有时候你不得不用 map.Room.GetObjByName。
+// };
+#func {map.Room.GetPlayerByName} {
+    #local name  {@default{%1;%*}};
+    #local title {%2};
+
+    #local idx {};
+    #foreach {*gMapRoom[players][]} {idx} {
+        #if {   "$gMapRoom[players][$idx][name]" == "$name"
+            &&  ("$title" == "" || @sset.Contains{{$gMapRoom[players][$idx][title]};$title})
+        } {
+            #return {$gMapRoom[players][$idx]};
+        };
+    };
+
+    #return {};
+};
+
+///=== {
+// #@ map.Room.GetPlayerByID <ID>
+//    根据 ID 提取房间中的玩家信息。
+//    NOTE: 注意并非所有的玩家都可以被成功识别，因此有时候你不得不用 map.Room.GetObjByID。
+// };
+#func {map.Room.GetPlayerByID} {
+    #local id  {%1};
+
+    #local idx {};
+    #foreach {*gMapRoom[players][]} {idx} {
+        #if { "$gMapRoom[players][$idx][id]" == "$id" } {
+            #return {$gMapRoom[players][$idx]};
         };
     };
 

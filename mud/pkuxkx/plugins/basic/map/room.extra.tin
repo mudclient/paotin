@@ -579,3 +579,20 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
 
     #class map.Room.getInfo.desc close;
 };
+
+///=== {
+// ## map.Room.GetObj <物品 ID 及数量，表格>
+//    从房间捡起物品，但限制背包中的数量，防止过于贪婪。
+// };
+#alias {map.Room.GetObj} {
+    #local dict {%1};
+    #local nop {1};
+    #local id {};
+    #foreach {*dict[]} {id} {
+        #local amount {$dict[$id]};
+        #if { "@map.Room.GetObjByID{$id}" != "" && @char.backpack.Amount{Item;$id} < $amount } {
+            #local nop {0}; get $id;
+        };
+    };
+    #if { ! $nop } {i2};
+};
