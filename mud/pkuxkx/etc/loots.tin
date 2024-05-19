@@ -25,6 +25,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {酸梅汤/suanmei tang}           {{kind}{饮料}   {unit}{杯}  {value}{sell}   }
 
     {菠菜粉条/bocai fentiao}        {{kind}{食物}   {unit}{盆}  {value}{reserve}}
+    {珊瑚白菜/shanhu baicai}        {{kind}{食物}   {unit}{盆}  {value}{reserve}}
+    {麻辣豆腐/mala doufu}           {{kind}{食物}   {unit}{盆}  {value}{reserve}}
+    {琉璃茄子/liuli qiezi}          {{kind}{食物}   {unit}{盆}  {value}{reserve}}
+    {芙蓉花菇/furong huagu}         {{kind}{食物}   {unit}{盆}  {value}{reserve}}
+    {糯米粥/nuomi zhou}             {{kind}{食物}   {unit}{碗}  {value}{reserve}}
     {甜点心/dian xin}               {{kind}{食物}   {unit}{份}  {value}{reserve}}
 
     {包子/baozi}                    {{kind}{食物}   {unit}{个}  {value}{sell}   }
