@@ -175,7 +175,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    从列表中随机取出一个值。
 // };
 #func {list.RandomGet} {
-    #local list     {%1};
+    #local list     {%0};
 
     #local index {@math.Random{1;&list[]}};
     #return {$list[+$index]};
