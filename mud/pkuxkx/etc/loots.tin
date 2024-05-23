@@ -23,7 +23,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #var gLootPool {
     {牛皮酒袋/jiudai}               {{kind}{饮料}   {unit}{个}  {value}{sell}   }
     {酸梅汤/suanmei tang}           {{kind}{饮料}   {unit}{杯}  {value}{sell}   }
+    {牛肉汤/niurou tang}            {{kind}{饮料}   {unit}{碗}  {value}{reserve}}
 
+    {干粮/gan liang}                {{kind}{食物}   {unit}{块}  {value}{reserve}}
     {菠菜粉条/bocai fentiao}        {{kind}{食物}   {unit}{盆}  {value}{reserve}}
     {珊瑚白菜/shanhu baicai}        {{kind}{食物}   {unit}{盆}  {value}{reserve}}
     {麻辣豆腐/mala doufu}           {{kind}{食物}   {unit}{盆}  {value}{reserve}}
