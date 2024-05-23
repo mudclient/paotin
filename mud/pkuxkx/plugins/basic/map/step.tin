@@ -364,9 +364,14 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
 
         #case {"Maze"} {
             #local maze {$link[name]};
-            event.HandleOnce map/walk/continue  {map.Maze $maze} {map.explore.try-go} {map.step.Try.ok};
-            event.HandleOnce map/walk/failed    {map.Maze $maze} {map.explore.try-go} {map.step.Try.fail};
+            event.HandleOnce map/walk/continue  {map.Maze/$maze} {map.explore.try-go} {map.step.Try.ok};
+            event.HandleOnce map/walk/failed    {map.Maze/$maze} {map.explore.try-go} {map.step.Try.fail};
             map.Maze $maze;
+        };
+
+        #case {"Command"} {
+            $link[cmd];
+            sync.Wait {busy.Wait {map.step.Try.ok}};
         };
 
         #default {
