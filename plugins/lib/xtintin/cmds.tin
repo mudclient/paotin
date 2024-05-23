@@ -648,6 +648,12 @@ VAR {用 VAR 关键字定义的 PaoTin++ 变量清单，包含其中文含义} g
     #if { {$input} == {#line debug %*} } {
         #replace input {^#line debug } {};
     };
+    #elseif { {$input} == {{|#line quiet }#debug %S on} } {
+        #replace input {^{|#line quiet }#debug %S on$} {&1#debug &2 off};
+    };
+    #elseif { {$input} == {{|#line quiet }#debug %S off} } {
+        #replace input {^{|#line quiet }#debug %S off$} {&1#debug &2 on};
+    };
     #else {
         #local cmds {act(|i(|o(|n)))|ali(|a(|s))|tic(|k(|e(|r)))
                     |var(|i(|a(|b(|l(|e)))))
