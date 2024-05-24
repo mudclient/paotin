@@ -46,8 +46,8 @@ load-lib alert;
 } {4.994};
 
 #nop 单行的 emote 表情;
-#action {~{*UTF8}{?:^}%c【{\p{Han}{2,5}}】%*(%+1..S{| \S+}%s||%s{\S+ |}%+1..S)%s%c{|◆\p{Han}+◆}%c$E} {
-    chat.log {%2} {%0};
+#action {~{*UTF8}{?:^}%c【%c{\p{Han}{2,5}}%c】%*(%+1..S{| \S+}%s||%s{\S+ |}%+1..S)%s%c{|◆\p{Han}+◆}%c$E} {
+    chat.log {%3} {%0};
 } {4.994};
 
 #nop 多行的 emote 表情;
