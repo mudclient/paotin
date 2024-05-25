@@ -407,7 +407,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
     #local limit {@char.SkillLimit{$name}};
     fullskLog @buffer.RawLine{} 当前进度: $level / $limit;
 
-    #delay char.skills.update.level {skbrief $char[Skills][$name][code]} 0.1;
+    #line sub var #delay char.skills.update.level {skbrief $char[Skills][$name][code]} 0.1;
 
     #if { "$name" == "基本内功" || "@char.GetJifaSkill{$name}" == "基本内功" } {
         #delay char.skills.update.neili {hp -neili} 0.1;
