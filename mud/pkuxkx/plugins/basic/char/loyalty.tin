@@ -37,7 +37,11 @@ loyalty 本来就有两个别名：
         #local last {&gLoyalty[]};
         #if { $last > 0 } {
             #switch {"$gLoyalty[$last][类型]/$gLoyalty[$last][描述]"} {
-                #case {"教训/%*"} {#0};
+                #case {"教训/%*的%*(%*)一点教训。"} {
+                    #var gLoyalty[$last][房间] {&1};
+                    #var gLoyalty[$last][姓名] {&2};
+                    #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
+                };
                 #match {"杀死/%*的%*(%*)%s。"} {
                     #var gLoyalty[$last][房间] {&1};
                     #var gLoyalty[$last][姓名] {&2};
@@ -58,16 +62,11 @@ loyalty 本来就有两个别名：
         };
     };
 
-    #action {^│%s%d%s│要求给%*的%*(%*)一点教训。%s│%s%d%s│%*│$} {
+    #action {^│%s%d%s│要求给%*│%s%d%s│%*│$} {
         mz.parse.desc;
         #var gLoyalty[%%2] {
             {序号}  {%%2}
             {类型}  {教训}
-            {位置}  {%%4}
-            {姓名}  {%%5}
-            {NPC}   {@str.ToLower{%%6}}
-            {积分}  {%%9}
-            {描述}  {}
         };
     };
 
