@@ -13,7 +13,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {AUTHOR}    {担子炮}
 };
 
-event.Define {loyalty} {无参} {$MODULE} {门忠任务查询结果已更新，内容在变量 gLoyalty 中};
+event.Define {char/loyalty} {无参} {$MODULE} {门忠任务查询结果已更新，内容在变量 gLoyalty 中};
 
 VAR {门忠任务查询结果} gLoyalty {};
 
@@ -35,36 +35,38 @@ loyalty 本来就有两个别名：
 
     #alias {mz.parse.desc} {
         #local last {&gLoyalty[]};
-        #if { $last > 0 } {
-            #switch {"$gLoyalty[$last][类型]/$gLoyalty[$last][描述]"} {
-                #match {"教训/%*的%*(%*)一点教训。"} {
-                    #var gLoyalty[$last][房间] {&1};
-                    #var gLoyalty[$last][姓名] {&2};
-                    #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
-                    #var gLoyalty[$last][描述] {};
-                };
-                #match {"杀死/%*的%*(%*)%s。"} {
-                    #var gLoyalty[$last][房间] {&1};
-                    #var gLoyalty[$last][姓名] {&2};
-                    #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
-                    #var gLoyalty[$last][描述] {};
-                };
-                #match {"找到/%*(%*)%s，送给%*的%*(%*)%s。%*描述大致如下：%*"} {
-                    #var gLoyalty[$last][物品] {&1};
-                    #var gLoyalty[$last][ID]   {@str.ToLower{&2}};
-                    #var gLoyalty[$last][房间] {&4};
-                    #var gLoyalty[$last][姓名] {&5};
-                    #var gLoyalty[$last][NPC]  {@str.ToLower{&6}};
-                    #var gLoyalty[$last][描述] {&9};
-                };
-                #match {"留言/%*留言如下内容：「%*」"} {
-                    #var gLoyalty[$last][留言板] {&1};
-                    #var gLoyalty[$last][内容]   {&2};
-                    #var gLoyalty[$last][描述]   {};
-                };
-                #default {
-                    okLog 未知格式。;
-                };
+        #if { $last <= 0 } {
+            #return;
+        };
+
+        #switch {"$gLoyalty[$last][类型]/$gLoyalty[$last][描述]"} {
+            #match {"教训/%*的%*(%*)一点教训。"} {
+                #var gLoyalty[$last][房间] {&1};
+                #var gLoyalty[$last][姓名] {&2};
+                #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
+                #var gLoyalty[$last][描述] {};
+            };
+            #match {"杀死/%*的%*(%*)%s。"} {
+                #var gLoyalty[$last][房间] {&1};
+                #var gLoyalty[$last][姓名] {&2};
+                #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
+                #var gLoyalty[$last][描述] {};
+            };
+            #match {"找到/%*(%*)%s，送给%*的%*(%*)%s。%*描述大致如下：%*"} {
+                #var gLoyalty[$last][物品] {&1};
+                #var gLoyalty[$last][ID]   {@str.ToLower{&2}};
+                #var gLoyalty[$last][房间] {&4};
+                #var gLoyalty[$last][姓名] {&5};
+                #var gLoyalty[$last][NPC]  {@str.ToLower{&6}};
+                #var gLoyalty[$last][描述] {&9};
+            };
+            #match {"留言/%*留言如下内容：「%*」"} {
+                #var gLoyalty[$last][留言板] {&1};
+                #var gLoyalty[$last][内容]   {&2};
+                #var gLoyalty[$last][描述]   {};
+            };
+            #default {
+                okLog 未知格式。;
             };
         };
     };
@@ -111,10 +113,10 @@ loyalty 本来就有两个别名：
         mz.parse.desc;
     };
 
-    event.ClassHandleOnce GA {basic/char} {basic/char} {
+    ga.ClassWait {
         #delay 0 {okLog 门忠任务信息已更新。};
         #class mz.parse kill;
-        #0
+        event.Emit char/loyalty;
     };
 
     #class mz.parse close;
