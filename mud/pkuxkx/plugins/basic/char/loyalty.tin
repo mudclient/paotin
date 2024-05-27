@@ -41,11 +41,13 @@ loyalty 本来就有两个别名：
                     #var gLoyalty[$last][房间] {&1};
                     #var gLoyalty[$last][姓名] {&2};
                     #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
+                    #var gLoyalty[$last][描述] {};
                 };
                 #match {"杀死/%*的%*(%*)%s。"} {
                     #var gLoyalty[$last][房间] {&1};
                     #var gLoyalty[$last][姓名] {&2};
                     #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
+                    #var gLoyalty[$last][描述] {};
                 };
                 #match {"找到/%*(%*)%s，送给%*的%*(%*)%s。%*描述大致如下：%*"} {
                     #var gLoyalty[$last][物品] {&1};
@@ -58,6 +60,7 @@ loyalty 本来就有两个别名：
                 #match {"留言/%*留言如下内容：「%*」"} {
                     #var gLoyalty[$last][留言板] {&1};
                     #var gLoyalty[$last][内容]   {&2};
+                    #var gLoyalty[$last][描述]   {};
                 };
                 #default {
                     okLog 未知格式。;
@@ -73,7 +76,7 @@ loyalty 本来就有两个别名：
             {类型}  {教训}
             {描述}  {@str.Trim{%%4}}
             {积分}  {%%6}
-            {时间}  {@@str.Trim{%%8}}
+            {时间}  {@str.Trim{%%8}}
         };
     };
 
@@ -84,7 +87,7 @@ loyalty 本来就有两个别名：
             {类型}  {留言}
             {描述}  {@str.Trim{%%4}}
             {积分}  {%%6}
-            {时间}  {@@str.Trim{%%8}}
+            {时间}  {@str.Trim{%%8}}
         };
     };
 
@@ -95,7 +98,7 @@ loyalty 本来就有两个别名：
             {类型}  {%%4}
             {描述}  {@str.Trim{%%5}}
             {积分}  {%%7}
-            {时间}  {@@str.Trim{%%9}}
+            {时间}  {@str.Trim{%%9}}
         };
     };
 
