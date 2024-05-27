@@ -37,7 +37,7 @@ loyalty 本来就有两个别名：
         #local last {&gLoyalty[]};
         #if { $last > 0 } {
             #switch {"$gLoyalty[$last][类型]/$gLoyalty[$last][描述]"} {
-                #case {"教训/%*的%*(%*)一点教训。"} {
+                #match {"教训/%*的%*(%*)一点教训。"} {
                     #var gLoyalty[$last][房间] {&1};
                     #var gLoyalty[$last][姓名] {&2};
                     #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
@@ -55,6 +55,10 @@ loyalty 本来就有两个别名：
                     #var gLoyalty[$last][NPC]  {@str.ToLower{&6}};
                     #var gLoyalty[$last][描述] {&9};
                 };
+                #match {"留言/%*留言如下内容：「%*」"} {
+                    #var gLoyalty[$last][留言板] {&1};
+                    #var gLoyalty[$last][内容]   {&2};
+                };
                 #default {
                     okLog 未知格式。;
                 };
@@ -67,6 +71,14 @@ loyalty 本来就有两个别名：
         #var gLoyalty[%%2] {
             {序号}  {%%2}
             {类型}  {教训}
+        };
+    };
+
+    #action {^│%s%d%s│要求到%*│%s%d%s│%*│$} {
+        mz.parse.desc;
+        #var gLoyalty[%%2] {
+            {序号}  {%%2}
+            {类型}  {留言}
         };
     };
 
