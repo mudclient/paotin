@@ -218,6 +218,13 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
                 };
             };
 
+            #match {"{Normal|Dynamic|Hidden}/{[a-z]+}"} {
+                #var link[type] {&1};
+                #var link[exit] {&2};
+                #var link[cmd]  {$map.step.go.cmd &2};
+                #var step {};
+            };
+
             #match {"{[A-Z][^/]*}/%+"}  {map.pl.helper {} {Bot}     {name}  {&1}; #var link[args] {&2}          };
 
             #match {"{[A-Z]+}"} {
