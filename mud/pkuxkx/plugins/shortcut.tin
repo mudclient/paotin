@@ -140,7 +140,7 @@ load-lib sync;
     #var char.HPSummarize.Echo {从不};
     #line quiet #ignore tickers on;
     #action {^%*{|id/short-video}$} {
-        #if { "%%1" == "{停止播放视频。|视频播放完毕。.*}" } {
+        #if { "%%1" == "{视频损坏。|停止播放视频。|视频播放完毕。.*}" } {
             #var char.HPSummarize.Echo {$short-video.hp};
             #line quiet #ignore tickers off;
             #class short-video kill;
