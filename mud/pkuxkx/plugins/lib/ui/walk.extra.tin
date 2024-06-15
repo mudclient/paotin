@@ -8,6 +8,29 @@
     $ui.walk.cmd $dir;
 };
 
+#alias {ui.walk.keypad.do} {
+    #local key  {%1};
+    #local type {%2};
+    #local args {%3};
+
+    #if { "$type" == "cmd" } {
+        $args;
+        #return;
+    };
+
+    #local dir {};
+    #foreach {$args} {dir} {
+        #local exits {$gMapRoom[exits]};
+        #if { "$exits" == "" } {
+            #local exits {@sset.Add{{};$gMapRoom[gmcp][出口信息][]}};
+        };
+        #if { @sset.Contains{{$exits};$dir} } {
+            ui.walk.go $dir;
+            #return;
+        };
+    };
+};
+
 option.Define {GancheMode} {Bool} {是否开启运镖模式} {false};
 
 #alias {ui.walk.Ganche.Setup} {
