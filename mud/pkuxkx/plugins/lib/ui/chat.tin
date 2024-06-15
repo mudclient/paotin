@@ -178,6 +178,21 @@ load-lib alert;
 
         #return;
     };
+    #elseif { {$text} == {%c【闲聊】%c%u%c(%w)向在场众人展示了自己所处的%*的风景%c。%c} } {
+        #class chat.log open;
+
+        #action {~^%*{|ID=chat.log}$} {
+            chat.log {%1} {%%0};
+        } {4.993};
+
+        #action {^{|ID=chat.log}$} {
+            #class chat.log kill;
+        } {4.992};
+
+        #class chat.log close;
+
+        #return;
+    };
 
     #if { "$type" != "{闲聊|求助|谣言}" } {
         #return;
