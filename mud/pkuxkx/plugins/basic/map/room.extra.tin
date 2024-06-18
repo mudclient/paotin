@@ -17,6 +17,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
 #alias {map.Room.Watch} {
     #local dungeon  {?:\[(\S{3,10})\]|};
     #local nation   {?:[ ]+\[(大宋|大元|大理|大夏)国\]|};
+    #local pkzone   {?:[ ]+(杀戮场)|};
     #local terrain  {?:[ ]+\[(都城|城市|城内|村镇|野外|门派|帮派|阴间|(\S+)势力范围)\]|};
     #local save     {?:[ ]+\[(存盘点)\]|};
     #local store    {?:[ ]+\[(玩家储物柜)\]|};
@@ -26,7 +27,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
 
     #class map.Room.Watch open;
 
-    #action {{*UTF8}{?:^}{.{1,9}?\S}{$dungeon} -{$nation}{$terrain}{$save}{$store}{$group}{$mark}{$undef}$} {
+    #action {{*UTF8}{?:^}{.{1,9}?\S}{$dungeon} -{$nation}{$pkzone}{$terrain}{$save}{$store}{$group}{$mark}{$undef}$} {
         #local ret {@map.GMCP.Confirm{}};
 
         #if { @isFalse{$gMapRoom[allDone]} } {
@@ -59,11 +60,12 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
             {name}{%%1}
             {dungeon}{%%2}
             {nation}{%%3}
-            {terrain}{%%4}
-            {save}{@if{{"%%6" == "存盘点"};true;false}}
-            {store}{@if{{"%%7" == "玩家储物柜"};true;false}}
-            {group}{%%8}
-            {mark}{@str.Split{{%%9};{{ +}};{;}}}
+            {pkzone}{@if{{"%%4" == "杀戮场"};true;false}}
+            {terrain}{%%5}
+            {save}{@if{{"%%7" == "存盘点"};true;false}}
+            {store}{@if{{"%%8" == "玩家储物柜"};true;false}}
+            {group}{%%9}
+            {mark}{@str.Split{{%%10};{{ +}};{;}}}
             {cmd}{$ret[cmd]}
             {look}{$ret[exit]}
             {gmcp}{$ret[gmcp]}
@@ -121,6 +123,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
     #var gMapRoom[name]         {$args[name]};          #nop 房间名称;
     #var gMapRoom[colorName]    {};                     #nop 带颜色的房间名称;
     #var gMapRoom[dungeon]      {$args[dungeon]};       #nop 副本名称;
+    #var gMapRoom[pkzone]       {$args[pkzone]};        #nop 杀戮场标记;
     #var gMapRoom[nation]       {$args[nation]};        #nop 房间国家，大宋/大理/大元/大夏;
     #var gMapRoom[terrain]      {$args[terrain]};       #nop 房间地段，包含村落和城墙;
     #var gMapRoom[save]         {$args[save]};          #nop 是否为存盘点;
