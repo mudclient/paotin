@@ -22,7 +22,7 @@
     { {place}{MidSepBar}        {label}{燕青拳}     {name}{yanqing}  }
 
     { {place}{MidSepBar}        {label}{保卫}       {name}{baowei}   }
-    { {place}{MidSepBar}        {label}{答题}       {name}{dati}     }
+    { {place}{MidSepBar}        {label}{答题}       {name}{dati}     {countdown}{Auto} }
     { {place}{MidSepBar}        {label}{比武}       {name}{biwu}     {countdown}{Auto} }
     { {place}{MidSepBar}        {label}{福米}       {name}{fullme}   {cooldown}{600} }
     { {place}{MidSepBar}        {label}{URL}        {name}{URL}      {cooldown}{180} }

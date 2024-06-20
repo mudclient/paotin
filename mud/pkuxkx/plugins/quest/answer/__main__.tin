@@ -1,0 +1,234 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var quest_answer[META] {
+    {NAME}      {答问如流}
+    {DESC}      {解析问题和选项，答题期间提供捷键简化输入，会在超时前默认自动答 c}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+#nop 答题每天早八点和晚八点开始。;
+
+#nop -------------- 答题 API ---------------------;
+
+VAR {当前问题}  answer.question {};
+VAR {简单题库}  answer.question-bank {};
+
+///=== {
+// ## answer.Enable
+//    开启答题。
+//    这样服务器就会给你推送题目。
+//
+// ## answer.Disable
+//    关闭答题。
+//    让服务器不再给你推送题目。
+// };
+#alias {answer.Enable}  {env.Set answer_question};
+#alias {answer.Disable} {env.UnSet answer_question};
+
+///=== {
+// ## answer.MapABCD
+//    创建选项快捷键。用小写字母 a/b/c/d 一键式答题，不用再输入 answer 命令。
+// };
+#alias {answer.MapABCD} {
+    #class answer.select open;
+    #alias {a} {answer.select a manual};
+    #alias {b} {answer.select b manual};
+    #alias {c} {answer.select c manual};
+    #alias {d} {answer.select d manual};
+    #class answer.select close;
+    okLog 已经创建别名，你可以用 a/b/c/d 选择选项。如果在计时结束前仍未选择，将自动答 C。;
+};
+
+#nop -------------- 答题的核心流程 ---------------------;
+
+#action {^【答问如流】答问如流活动，答题许可即将开始推送。$E} {
+    answerLog %99;
+
+    infoLog <169>  答题之前准备好几件事：;
+    infoLog <169>    * finger;
+    infoLog <169>    * who -pro -l;
+    infoLog <169>    * who -l;
+    infoLog <169>    * ask bai xiaosheng about 大势;
+    infoLog <169>    * 准备好道德经;
+    infoLog <169>    * 准备好古诗文;
+    infoLog <169>    * 打开 QQ，关注群里 MUD 消息发送的 emoji;
+    infoLog <169>    * 打开浏览器，准备好搜索引擎;
+
+    answer.ask-dashi false;
+
+    prompt.Set {{dati}{<119>等待图片验证<299>(60)}};
+} {4};
+
+#nop 你获得了答问如流许可，有效期到Wed May  1 20:26:17 2024。;
+#action {^你获得了答问如流许可，有效期到%*。$E} {
+    answerLog %99;
+    prompt.Set {{dati}{<129>图片验证成功<299>}};
+} {4};
+
+#action {^【答问如流】答问如流活动答题许可推送完毕，1分钟后活动正式开始。$E} {
+    answerLog %99;
+    prompt.Set {{dati}{<139>等待正式开始<299>(60)}};
+    answer.MapABCD;
+} {4};
+
+#action {^【答问如流】现在是第%*题，请用命令answer回答，答题期限为%*秒。%*$E} {
+    answerLog %99;
+
+    #local timeout {%2};
+
+    #var answer.question {
+        {idx}       {@math.ParseCN{%1}}
+        {time}      {@time.Now{}}
+        {timeout}   {$timeout}
+        {chat}      {}
+    };
+
+    math.Inc timeout -3;
+
+    prompt.Set {{dati}{<134>等待选择<299>($timeout)}};
+
+    #delay answer.select {answer.select c default} $timeout;
+
+    #class answer.parse.chat open;
+
+    #action {^【闲聊】%*(%*): %u$} {
+        #var answer.question[chat] {$answer.question[chat]@str.Trim{%%3}};
+    } {4};
+
+    #class answer.parse.chat close;
+} {4};
+
+#action {^【答问如流】下面是附加题，%*级以上玩家可选答，答题期限为%*秒。$E} {
+    answerLog %99;
+} {4};
+
+#action {^【答问如流】%*$E} {
+    answerLog %99;
+    #class answer.parse.chat kill;
+    answer.set-question {%1};
+} {4.5};
+
+#alias {answer.set-question} {
+    #local text {@str.Trim{%1}};
+    #replace text {【答问如流】} {};
+    #var answer.question[text] {$text};
+};
+
+#action {^【备选答案】A.%*%sB.%*%sC.%*%sD.%*$E} {
+    answerLog %99;
+
+    #class answer.gather-all-lines kill;
+
+    #var answer.question[options][a] {@str.Trim{%1}};
+    #var answer.question[options][b] {@str.Trim{%3}};
+    #var answer.question[options][c] {@str.Trim{%5}};
+    #var answer.question[options][d] {@str.Trim{%7}};
+
+    #showme {【请作答】$answer.question[text]};
+} {4};
+
+#action {^你选择了%.，恭喜你！答对了。$E} {
+    answerLog %99;
+    #undelay answer.select;
+};
+
+#action {^你选择了%.，很遗憾，这不是正确答案。$E} {
+    answerLog %99;
+    #undelay answer.select;
+};
+
+#action {^本次答对你被奖励了%*点经验，%*点潜能。$E} {
+    answerLog %99;
+};
+
+#action {^连续答对%*题后，你的答题奖励系数为%*%，本次答对你被奖励了%*点经验，%*点潜能。$E} {
+    answerLog %99;
+};
+
+#action {^【答问如流】本次问答活动结束，谢谢各位的参与。$E} {
+    answerLog %99;
+    #class answer.select kill;
+    prompt.Set {{dati}{}};
+} {4};
+
+#nop 这一条触发不是服务器发送的，而是本地模拟的文字，目的是为了插件式写触发。;
+#action {^【请作答】%*$E} {
+    #line gag;
+
+    #local question {%1};
+    #replace question {{？|：|}$} {};
+    #local value {$answer.question-bank[$question]};
+    #if { "$value" == "" } {
+        answerLog <139>不认识的新题目:<299> %1;
+        answer.dump-question;
+        #return;
+    };
+
+    answer.select-by-pattern $value;
+} {4.1};
+
+#nop -------------- 工具触发 ---------------------;
+
+#alias {answer.gather-all-lines} {
+    #class answer.gather-all-lines open;
+
+    #action {^%*$} {
+        answerLog %%99;
+        #list answer.question[colorLines] add {{%%99}};
+        #list answer.question[plainLines] add {{%%0}};
+    } {5.5};
+
+    #class answer.gather-all-lines close;
+};
+
+#alias {answer.select-by-pattern} {
+    #local pattern {%1};
+    #local option {};
+    #foreach {a;b;c;d} {option} {
+        #if { "$answer.question[options][$option]" == "$pattern" } {
+            answer.select $option pattern $pattern;
+            #break;
+        };
+    };
+};
+
+#alias {answer.select-by-number} {
+    #local number {%1};
+    #local option {};
+    #foreach {a;b;c;d} {option} {
+        #if { "$answer.question[options][$option]" == "$number" } {
+            answer.select $option number $number;
+            #break;
+        };
+    };
+};
+
+#alias {answer.dump-question} {
+    #line quiet #line capture tmp #var answer.question;
+    #local id {};
+    #loop 1 &tmp[] {id} {answerLog $tmp[+$id]};
+};
+
+#alias {answer.select} {
+    #local option {@default{%1;c}};
+    #local source {%2};
+    #local value  {%3};
+
+    #switch {"$source"} {
+        #case {"default"}   {answerLog 默认选择了 $option};
+        #case {"pattern"}   {answerLog 基于答案 $value，自动选择了 $option};
+        #case {"number"}    {answerLog 基于答案 $value，自动选择了 $option};
+        #case {"manual"}    {answerLog 手动选择了 $option};
+    };
+
+    answer $option;
+};
