@@ -737,3 +737,25 @@ VAR {用 VAR 关键字定义的 PaoTin++ 变量清单，包含其中文含义} g
 
     sync.Wait {xtt.Ping.ping};
 };
+
+///=== {
+// ## xtt.ConvertMeta <命令> [<参数> ...]
+//    执行命令，并且将其输出全部用原始文本格式显示，方便制作颜色触发。
+//    本命令也可以写成 CCM，方便使用。
+// };
+#alias {CCM} {xtt.ConvertMeta};
+#alias {xtt.ConvertMeta} {
+    #if { "%0" == "" } {
+        xtt.Usage xtt.ConvertMeta;
+        #return;
+    };
+
+    warnLog 开启原始文本显示模式，一秒钟后自动关闭。;
+    #config {convert meta} on;
+    #delay 1 {
+        #config {convert meta} off;
+        okLog 已关闭原始文本显示模式。;
+        ga.Sync;
+    };
+    %0;
+};
