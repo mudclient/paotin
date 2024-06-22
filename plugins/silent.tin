@@ -14,6 +14,9 @@
     register;       check;          answer;         reply;
 
     amber_alert;    status_me;      set;            unset;
+
+    wield;          wi;             unwield;        uw;
+    record;
 };
 
 #nop 文字表情;
