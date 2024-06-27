@@ -144,8 +144,9 @@ VAR {采集机器人工作模式，移动角色}  {gather.move}   {bhmove};
         };
     };
 
-    #action {^你发现了%%1份帮派资材，并运送回了} {
+    #action {^你发现了%*份帮派资材，并运送回了%*$} {
         okLog 帮贡任务完成。;
+        group %%0;
         gquery -me;
         #class gather.lookfor kill;
     };
