@@ -493,6 +493,8 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #action {^走路太快，你没在意脚下，被杂草绊了一下。$}                        {map.step.Try.retry};
     #nop 长沙府的山间小路;
     #action {^小路宽度不足以容纳两人并肩行走，你需要小心翼翼地前行。$}          {map.step.Try.retry};
+    #nop 铜官镇的小道;
+    #action {^你忽然不辨方向，不知道该往哪里走了。$}                            {map.step.Try.retry};
 
     #nop 凌霄城的城门;
     #action {^吊桥还没有升起来，你就这样走了，可能会给外敌可乘之机的。$}        {map.step.Try.retry};
