@@ -35,6 +35,7 @@ event.HandleOnce {map/init} {map/dungeon} {map} {map.Dungeon.Init};
 };
 
 #alias {map.LeaveDungeon.notice} {
+    char.UnmarkFight;
     #if { "%1" == "idle" } {
         okLog 你离开了「$gPrevDungeon」，你不忙。;
     };
@@ -59,7 +60,7 @@ event.HandleOnce {map/init} {map/dungeon} {map} {map.Dungeon.Init};
     #if { "$gMapRoom[name]" == "%+1..S[%+1..S]" } {
         #local dungeon {$gMapRoom[name]};
         #replace dungeon                {%+1..S[%+1..S]} {&2};
-        #replace dungeon {任务副本} {};
+        #replace dungeon {副本$}        {};
         #replace gMapRoom[name]         {[{[^\[]*}]} {};
         #replace gMapRoom[colorName]    {[{[^\[]*}]} {};
     };
@@ -93,16 +94,14 @@ event.HandleOnce {map/init} {map/dungeon} {map} {map.Dungeon.Init};
 #alias {map.dungeon.change} {
     #local dungeon {%1};
 
-    #nop 计有：藏经阁、鄱阳湖、万安塔、保卫襄阳、剿匪、团战、大航海等常规任务副本;
-    #nop 及剑心居、北侠影视城、游侠等三个特别副本;
-    #if { "$dungeon" != "{\[(.*)任务副本\]|北侠影视城|剑心居|游侠}" } {
+    #if { "$dungeon" != "{剑心居|破阵任务|韩世忠任务|保卫襄阳|鄱阳湖|万安塔|藏经阁|剿匪|蛊神塔}" } {
         #return;
     };
 
     #class map.dungeon.change open;
 
-    #action {^你进入了%1。{|ID=map/dungeon}$} {map.dungeon.change.done};
-    #action {^你退出了%1。{|ID=map/dungeon}$} {map.dungeon.change.done};
+    #action {^你进入了%1副本。{|ID=map/dungeon}$}       {map.dungeon.change.done};
+    #action {^你退出了%1{|副本}。{|ID=map/dungeon}$}    {map.dungeon.change.done};
 
     #alias {map.dungeon.change.sync} {
         #class map.dungeon.change kill;
@@ -126,3 +125,68 @@ event.HandleOnce {map/init} {map/dungeon} {map} {map.Dungeon.Init};
 #action {^请使用 leave 自己的id 来退出副本。$E} {leave $user[id]; #line gag};
 
 #alias {enter jxj} {enter jianxinju} {5.5};
+
+/*
+2024/06/29 巡检结果：
+
+准备进入剑心居⏳
+你进入了剑心居副本。
+剑心居[剑心居副本] - [野外]
+准备退出剑心居...
+你退出了剑心居副本。
+
+准备进入破阵任务⏳
+你进入了破阵任务副本。
+阵眼[破阵任务副本] - [野外]
+准备退出破阵任务...
+你退出了破阵任务。
+
+准备进入韩世忠任务⏳
+你进入了韩世忠任务副本。
+山腰[韩世忠任务副本] - [大宋国] [野外]
+准备退出韩世忠任务...
+你退出了韩世忠任务。
+
+准备进入保卫襄阳⏳
+你进入了保卫襄阳副本。
+襄阳当铺[保卫襄阳副本] - [大宋国] [城内]
+准备退出保卫襄阳...
+你退出了保卫襄阳。
+
+准备进入鄱阳湖⏳
+你进入了鄱阳湖副本。
+小船[鄱阳湖副本] - [野外]
+准备退出鄱阳湖...
+你退出了鄱阳湖。
+
+准备进入万安塔⏳
+你进入了万安塔副本。
+万安塔一层[万安塔副本] - [大元国] [副本]
+准备退出万安塔...
+你退出了万安塔。
+
+准备进入藏经阁⏳
+你进入了藏经阁副本。
+藏经阁入口[藏经阁副本] - [野外] [未定义]
+准备退出藏经阁...
+你退出了藏经阁。
+
+准备进入剿匪⏳
+你进入了剿匪副本。
+山脚下[剿匪副本] - [野外] ☆
+准备退出剿匪...
+你退出了剿匪。
+
+规律：
+
+准备进入XXX⏳
+你进入了XXX副本。
+房间名[XXX副本] -
+准备退出XXX...
+你退出了XXX。
+
+特例：
+
+你退出了剑心居副本。—— 这里多了「副本」两个字。
+万安塔一层[万安塔副本] - [大元国] [副本] —— 末尾多了「副本」。
+*/

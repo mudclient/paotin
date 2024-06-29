@@ -15,7 +15,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
 };
 
 #alias {map.Room.Watch} {
-    #local dungeon  {?:\[(\S{3,10})\]|};
+    #local dungeon  {?:\[(\S{3,10})副本\]|};
     #local nation   {?:[ ]+\[(大宋|大元|大理|大夏)国\]|};
     #local pkzone   {?:[ ]+(杀戮场)|};
     #local terrain  {?:[ ]+\[(都城|城市|城内|村镇|野外|门派|帮派|阴间|(\S+)势力范围)\]|};
@@ -27,7 +27,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
 
     #class map.Room.Watch open;
 
-    #action {{*UTF8}{?:^}{.{1,9}?\S}{$dungeon} -{$nation}{$pkzone}{$terrain}{$save}{$store}{$group}{$mark}{$undef}$} {
+    #action {{*UTF8}{?:^}{.{1,9}?\S}{$dungeon} -{$nation}{$pkzone}{$terrain}{$save}{$store}{$group}{$mark}{$undef}{| \[副本\]}$} {
         #local ret {@map.GMCP.Confirm{}};
 
         #if { @isFalse{$gMapRoom[allDone]} } {
