@@ -18,8 +18,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 load-module {basic/title};
 load-lib event;
 
-event.Define {char/score}   {无参} {$MODULE} {score 命令的数据解析成功时，发送本事件}
-event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新}
+event.Define {char/score}   {无参} {$MODULE} {score 命令的数据解析成功时，发送本事件};
+event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新};
 
 /*
 ╭───人物详情────────────────────────┬───────╮
