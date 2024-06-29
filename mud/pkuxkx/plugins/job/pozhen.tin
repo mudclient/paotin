@@ -1,0 +1,84 @@
+#nop vim: set filetype=tt:;
+
+#nop 为革命，保护视力。本模块的出发点是为了保护玩家视力，降低破阵任务触发编写难度。;
+
+#nop 本模块可以，并且只可以用来识别破阵任务的迷阵方位颜色，;
+#nop 迷阵中的错误方向会被本模块识别之后，存储在 pozhen.ErrorExit 变量当中。;
+#nop 本模块并不提供对游戏多次提示的综合判断逻辑，需要玩家自行完成。;
+
+VAR {破阵任务的迷阵候选方向} pozhen.CandExit    {};
+VAR {破阵任务的迷阵错误方向} pozhen.ErrorExit   {};
+
+event.Define {job/pozhen/ErrorExit}  {无参} {$MODULE} {破阵任务的迷阵解析完毕，错误方向存储在 pozhen.ErrorExit 里面};
+
+/*
+    破阵任务迷阵的基本规则：
+    每个迷阵有 8 个不同的方向供玩家选择，每次尝试之前游戏都会给出提示，并在尝试之后给出反馈。
+    八卦的汉字符号是乱序的，本身毫无意义，但是会通过闪烁或者不闪烁来对玩家进行提示。
+    不闪烁的方向是角色通过占卜技能排除掉的错误方向，闪烁的方向是游戏提醒玩家进行选择的方向。
+    因为每次闪烁的方位都不一样，所以玩家需要综合历史记录进行判断。
+*/
+
+#var pozhen.mazeLine {n};
+
+#alias {pozhen.maze.parse} {
+    #class pozhen.maze.parse open;
+
+    #local bagua {?:乾|坤|坎|離|震|兌|巽|艮};
+
+    #nop 破阵的八卦方位字固定为绿底红字，只是有的闪烁，有的不闪烁，据此捕捉;
+    #nop 如果有三组的，就是上下两排，如果只有两组的，那就是中间一排，一共八个方位;
+    #action {~^%c%u{\e\[5m|}\e[42;1m\e[1;31m{$bagua}%c%u{\e\[5m|}\e[42;1m\e[1;31m{$bagua}%c%u{\e\[5m|}\e[42;1m\e[1;31m{$bagua}%u$} {
+        #local mazeline {$pozhen.mazeLine};
+
+        #if { "$mazeline" == "n" } {
+            #var pozhen.mazeLine {s};
+            #var pozhen.ErrorExit {};
+        };
+        #else {
+            #var pozhen.mazeLine {n};
+        };
+
+        #if { "%%3" == "" } {#var pozhen.ErrorExit[${mazeline}w] {true}};
+        #if { "%%6" == "" } {#var pozhen.ErrorExit[$mazeline]    {true}};
+        #if { "%%9" == "" } {#var pozhen.ErrorExit[${mazeline}e] {true}};
+
+        #if { "$mazeline" == "s" } {
+            #delay 0 {pozhen.maze.hint};
+        };
+    } {4.91};
+
+    #nop 接上，这里表示是中间的，注意触发的优先级要比上面的低一些;
+    #action {~^%c%u{\e\[5m|}\e[42;1m\e[1;31m{$bagua}%c%u{\e\[5m|}\e[42;1m\e[1;31m{$bagua}%c%u$} {
+        #if { "%%3" == "" } {#var pozhen.ErrorExit[w] {true}};
+        #if { "%%6" == "" } {#var pozhen.ErrorExit[e] {true}};
+    } {4.92};
+
+    event.ClassHandle {map/LeaveDungeon} {job/pozhen/maze} {job/pozhen} {
+        pozhen.maze.reset;
+        #class pozhen.maze.parse kill;
+    };
+
+    #class pozhen.maze.parse close;
+};
+
+#action {^这里虽然一片宁静气氛，鸟语花香，但也透出着暗藏的杀机。$E} {
+    pozhen.maze.reset;
+    pozhen.maze.parse;
+};
+
+#action {^这里的迷阵在你眼中如同儿戏一般。$E} {
+    pozhen.maze.reset;
+};
+
+#alias {pozhen.maze.hint} {
+    #local errorExit {@table.Keys{pozhen.ErrorExit;%*}};
+    #var pozhen.ErrorExit {$errorExit};
+    event.Emit {job/pozhen/ErrorExit};
+};
+
+#alias {pozhen.maze.reset} {
+    #var pozhen.CandExit    {};
+    #var pozhen.ErrorExit   {};
+    #var pozhen.MazeLine    {n};
+};
