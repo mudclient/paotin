@@ -8,6 +8,82 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 ===========
 */
 
+#var basic_char_sachet[META] {
+    {NAME}      {锦囊管理}
+    {DESC}      {全生命周期维护锦囊数据，让你随时随地通过变量 char[锦囊] 掌握锦囊情况}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {本文件属于 PaoTin++ 的一部分}
+};
+
+event.Define {char/sachet/sync}     {无参}  {$MODULE} {已经获取到 jiancha 命令输出结果，并更新 char[锦囊]。};
+event.Define {char/sachet/add}      {无参}  {$MODULE} {宝石已放入宝石袋，char[锦囊] 已同步更新。};
+event.Define {char/sachet/remove}   {无参}  {$MODULE} {从宝石袋中取出了宝石，char[锦囊] 已同步更新。};
+
+#var gem.name2code {
+    {天}        {8}
+    {泽}        {7}
+    {火}        {6}
+    {雷}        {5}
+    {风}        {4}
+    {水}        {3}
+    {山}        {2}
+    {地}        {1}
+    {☆}        {a}
+    {★}        {b}
+    {◎}        {c}
+    {精金}      {J}
+    {木灵}      {M}
+    {玄冰}      {B}
+    {炎晶}      {Y}
+    {玉髓}      {S}
+    {月魄}      {P}
+    {日魂}      {R}
+    {神龙骨}    {G}
+    {凤凰羽}    {F}
+    {麒麟角}    {Q}
+    {玄武甲}    {X}
+};
+
+#var gem.name2id {
+    {天}        {tian}
+    {泽}        {ze}
+    {火}        {huo}
+    {雷}        {lei}
+    {风}        {feng}
+    {水}        {shui}
+    {山}        {shan}
+    {地}        {di}
+    {精金}      {jin}
+    {木灵}      {mu}
+    {玄冰}      {bing}
+    {炎晶}      {yan}
+    {玉髓}      {sui}
+    {月魄}      {yue}
+    {日魂}      {ri}
+    {神龙骨}    {gu}
+    {凤凰羽}    {yu}
+    {麒麟角}    {jiao}
+    {玄武甲}    {jia}
+};
+
+#var gem.code2name {};
+
+#func {basic_char_sachet.Init} {
+    #local name {};
+    #var gem.code2name {};
+    #foreach {*gem.name2code[]} {name} {
+        #local code {$gem.name2code[$name]};
+        #var gem.code2name[$code] {$name};
+    };
+};
+
+#var char[锦囊] {};
+
+VAR {锦囊最多可以存储的宝石数量} {char.sachet.Max}      {10};
+VAR {锦囊当前已经存储的宝石数量} {char.sachet.Amount}   {0};
+
+#list char[锦囊] create {};
+
 /*
 宝石囊的名字现在有好几种版本：钵盂（僧侣）、布袋（丐帮）、人偶（五毒教）、锦囊（其他门派）
 以上功能都一样，区别在于名字和 ID 不同。
@@ -39,10 +115,7 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 对玩家来说，jiancha 后面带不同 ID 颇有不便，所以现在改成统一 jiancha gem 表示查看详情。
 */
 
-#list char[锦囊] create {};
-
 #alias {jiancha} {char.sachet.jiancha};
-
 #alias {char.sachet.jiancha} {
     #local id {%0};
 
@@ -63,6 +136,8 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #list char[锦囊] create {};
 
     #line oneshot #action {^{人偶|布袋|钵盂|锦囊}(%*) [%*/%*]{|ID=char.sachet}$} {
+        #var char.sachet.Amount {%%3};
+        #var char.sachet.Max    {%%4};
         char.sachet.parse.output;
     };
 
@@ -71,13 +146,6 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #alias {char.sachet.parse.output} {
     #class char-parse-sachet open;
-
-    #local level    {地|山|水|风|雷|火|泽|天};
-    #local type     {☆|★|◎};
-    #local wuxing   {精金|木灵|玄冰|炎晶|玉髓};
-    #local beast    {玄武甲|神龙骨|凤凰羽|麒麟角};
-    #local special  {日魂|月魄};
-    #local pattern  {\(\s*(\d+)\)($level)($type)($wuxing|$beast|$special)\*(\d+)\s+};
 
     #action {^├───%*宝石───────┴─────────┴──────────┤$} {
         #nop;
@@ -104,6 +172,7 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     event.HandleOnce GA {char.sachet} {char} {
         #class char-parse-sachet kill;
         okLog 锦囊数据已更新。;
+        event.Emit char/sachet/sync;
         #nop 吞参数专用，不要删除本行，也不要在末尾加分号或是别的语句
     };
 
@@ -113,7 +182,8 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {__char_sachet_parse__} {
     #local item {%1};
 
-    #replace {item} {[%S]%*{☆|★|◎}%**%d} {
+    #nop 通过触发捕获到的星号可能是带斜杠的，所以这里要去掉。;
+    #replace {item} {[%S]$GEMLVL$GEMGEN$GEMKIND{?:\\|}*%d} {
         {序号}{&1}
         {等级}{&2}
         {阴阳}{&3}
@@ -122,4 +192,132 @@ PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #return {$item};
+};
+
+///=== {
+// #@ gem.NameToCode <宝石中文名>
+//    将宝石的中文名转换成锦囊中的英文序号。
+// };
+#func {gem.NameToCode} {
+    #local gem {%1};
+
+    #replace gem {$GEMLVL$GEMGEN{?: |}$GEMKIND} {
+        {等级}{&1}
+        {阴阳}{&2}
+        {种类}{&3}
+    };
+
+    #local gem {$gem};
+
+    #if { &gem[] == 0 } {
+        #return;
+    };
+
+    #return {$gem.name2code[$gem[种类]]$gem.name2code[$gem[等级]]@str.ToUpper{$gem.name2code[$gem[阴阳]]}};
+};
+
+///=== {
+// #@ gem.NameToID <宝石中文名>
+//    将宝石的中文名转换成背包中的英文 ID。
+// };
+#func {gem.NameToID} {
+    #local gem {%1};
+
+    #replace gem {$GEMLVL$GEMGEN{?: |}$GEMKIND} {
+        {等级}{&1}
+        {阴阳}{&2}
+        {种类}{&3}
+    };
+
+    #local gem {$gem};
+
+    #if { &gem[] == 0 } {
+        #return;
+    };
+
+    #return {$gem.name2id[$gem[等级]] $gem.name2id[$gem[种类]]};
+};
+
+///=== {
+// #@ gem.CodeToName <宝石序号>
+//    将锦囊中的宝石序号转换成中文名。
+// };
+#func {gem.CodeToName} {
+    #local gem {%1};
+
+    #replace gem {%.%.%.} {
+        {种类}{&1}
+        {等级}{&2}
+        {阴阳}{&3}
+    };
+
+    #local gem {$gem};
+
+    #if { &gem[] == 0 } {
+        #return;
+    };
+
+    #return {$gem.code2name[$gem[等级]]$gem.code2name[@str.ToLower{$gem[阴阳]}]$gem.code2name[$gem[种类]]};
+};
+
+///=== {
+// #@ gem.CodeToNameB <宝石序号>
+//    将锦囊中的宝石序号转换成漂亮的中文名。
+// };
+#func {gem.CodeToNameB} {
+    #local gem {@gem.CodeToName{%1}};
+    #return {@Beautify{$gem}};
+};
+
+VAR {锦囊最近一次操作的宝石名称} {char.sachet.Gem} {};
+
+#action {^你从{锦囊|钵盂|布袋|人偶}里面取出一颗$GEM。$E} {
+    #local gem {%2};
+    #var char.sachet.Gem {$gem};
+
+    #local code {@gem.NameToCode{$gem}};
+
+    math.Inc char[锦囊][$code][数量] -1;
+    #if { $char[锦囊][$code][数量] <= 0 } {
+        #unvar char[锦囊][$code];
+    };
+
+    event.Emit char/sachet/remove;
+};
+
+#action {^你将手中$GEM放进了{锦囊|钵盂|布袋|人偶}。$E} {
+    #local gem {%1};
+    #var char.sachet.Gem {$gem};
+
+    #local code {@gem.NameToCode{$gem}};
+
+    #replace gem {$GEMLVL$GEMGEN{?: |}$GEMKIND} {
+        {等级}{&1}
+        {阴阳}{&2}
+        {种类}{&3}
+    };
+
+    #local gem {$gem};
+
+    #if { "$char[锦囊][$code]" == "" } {
+        #var char[锦囊][$code] {
+            {序号} {$code}
+            {数量} {0}
+            {种类} {$gem[种类]}
+            {等级} {$gem[等级]}
+            {阴阳} {$gem[阴阳]}
+        };
+    };
+
+    math.Inc char[锦囊][$code][数量];
+
+    event.Emit char/sachet/add;
+};
+
+#action {^$PLAYER给你一{颗|枚}$GEM。$E} {
+    pack @gem.NameToID{%3};
+};
+
+#action {^从$NPC身上掉了出来一颗$GEM$E} {
+    pack @gem.NameToID{%2};
 };

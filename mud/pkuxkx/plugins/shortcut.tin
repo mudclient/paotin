@@ -155,10 +155,6 @@ load-lib sync;
 #action {^>%s$} {#line gag};
 #gag {^├{(─|┼)+}┤$};
 
-#action {^$PLAYER给你一{颗|枚}{地|山|水|风|雷|火|泽|天}{☆|★|◎}%+2..3u。$E} {
-    pack gem;
-} {9.999};
-
 #alias kk {look %0; lookin %0; follow %0; killall %0};
 #action {^你瞬间感到了危险临近，奸细就在附近！$E} {killall} {9.500};
 
