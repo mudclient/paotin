@@ -17,6 +17,7 @@ load-file plugins/lib/xtintin/list.tin;
 load-file plugins/lib/xtintin/table.tin;
 load-file plugins/lib/xtintin/slist.tin;
 load-file plugins/lib/xtintin/set.tin;
+load-file plugins/lib/xtintin/trans.tin;
 load-file plugins/lib/xtintin/queue.tin;
 load-file plugins/lib/xtintin/time.tin;
 load-file plugins/lib/xtintin/path.tin;

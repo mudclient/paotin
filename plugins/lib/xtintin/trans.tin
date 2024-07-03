@@ -1,0 +1,103 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#nop 本文件是 xtintin 的一部分，实现了一些基于字典的翻译函数;
+
+#var {gDictC2D} {
+    {零}    {0}
+    {一}    {1}
+    {二}    {2}
+    {三}    {3}
+    {四}    {4}
+    {五}    {5}
+    {六}    {6}
+    {七}    {7}
+    {八}    {8}
+    {九}    {9}
+    {十}    {10}
+    {百}    {100}
+    {千}    {1000}
+    {万}    {10000}
+    {亿}    {100000000}
+};
+
+///=== {
+// #@ trans.Word <待翻译字符串> <字典名称> [<语言名称>]
+//    提供基本的字符串翻译功能。翻译字典由字典名称指定的表格变量来指定。
+//    如果同时提供了语言名称，则意味着字典中存在多种语言条目，那么应当选择指定的语言翻译结果。
+//    本函数是基础功能，实践中一般用 trans.String 或者 trans.Simple
+// };
+#func {trans.Word} {
+    #local input {%1};
+    #local trans-word-dict {%2};
+    #local sub {%3};
+
+    #local value {${${trans-word-dict}[$input]}};
+    #if { "$value" == "" } {
+        #return {$input};
+    };
+    #elseif { &value[] == 0 } {
+        #return {$value};
+    };
+    #elseif { "$sub" != "" } {
+        #return {$value[$sub]};
+    };
+    #else {
+        #return {$input};
+    };
+};
+
+///=== {
+// #@ trans.String <待翻译字符串> <字典名称> [<语言名称>]
+//    提供基本的字符串翻译功能。翻译字典由字典名称指定的表格变量来指定。
+//    如果同时提供了语言名称，则意味着字典中存在多种语言条目，那么应当选择指定的语言翻译结果。
+// };
+#func {trans.String} {
+    #local input {%1};
+    #local trans-string-dict {%2};
+    #local sub {%3};
+
+    #local output {@str.Replace{{$input};{{*UTF8}{.}};{@@trans.Word{{&1};$trans-string-dict}}}};
+
+    #return {$output};
+};
+
+///=== {
+// #@ trans.Simple <待翻译字符串> <源语言> <目标语言>
+//    提供基本的字符串翻译功能。将待翻译字符串中，每个源语言中的字符，替换成目标语言中对应的字符。
+// };
+#func {trans.Simple} {
+    #local input    {%1};
+    #local src      {@trans.expand-set{%2}};
+    #local dst      {@trans.expand-set{%3}};
+
+    #if { @slist.Size{$src} != @slist.Size{$dst} } {
+        warnLog 源语言和目标语言字典长度不同。;
+        #return {$input};
+    };
+
+    #list src create {@str.Chars{$src}};
+    #list dst create {@str.Chars{$dst}};
+    #local trans-helper-dict {@list.ZipAs{{{%s}{%s}};{$src};{$dst}}};
+    #local trans-helper-dict {@fp.Transform{{$trans-helper-dict};VALUE}};
+
+    #local output {@str.Replace{{$input};{{*UTF8}{.}};{@@trans.Word{{&1};trans-helper-dict}}}};
+    #return {$output};
+};
+
+///=== {
+// #@ trans.Number <中文数字串>
+//    将中文数字串翻译成阿拉伯字符串。
+//    注意这和 math.ParseCN 不同，并不会识别十进制。它只是对文字的简单翻译。
+// };
+#func {trans.Number} {
+    #local input {%1};
+
+    #local output {@str.Replace{{$input};{{*UTF8}{.}};{@@trans.Word{{&1};gDictC2D}}}};
+    #return {$output};
+};
