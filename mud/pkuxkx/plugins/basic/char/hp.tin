@@ -703,13 +703,20 @@ hp -neili 格式：
     };
 };
 
-#action {^虽然藏而不发，你仍在不断积蓄攻势。(气势：%d%)$E}          {#var char[HP][气势] {%1}};
-#action {^你在攻击中不断积蓄攻势。(气势：%d%)$E}                    {#var char[HP][气势] {%1}};
-#action {^你蓄足攻势，在战斗中发出绝招「%*」。(气势：%d%)$E}        {#var char[HP][气势] {%2}};
-#action {^你蓄势不足，目前只积累了%d%气势。$E}                      {#var char[HP][气势] {%1}};
-#action {^出招太猛，招式用老，你的气势降低了。(气势：%d%)$E}        {#var char[HP][气势] {%1}};
-#action {^你逐步从之前战斗的紧张气氛中平缓下来。(气势：%d%)$E}      {#var char[HP][气势] {%1}};
-#action {^经过一段时间后，你终于完全从紧张地战斗氛围中解脱出来。$E} {#var char[HP][气势] {0}};
+#action {^虽然藏而不发，你仍在不断积蓄攻势。(气势：%d%)$E}          {char.hp.set-qishi %1};
+#action {^你在攻击中不断积蓄攻势。(气势：%d%)$E}                    {char.hp.set-qishi %1};
+#action {^你蓄足攻势，在战斗中发出绝招「%*」。(气势：%d%)$E}        {char.hp.set-qishi %2};
+#action {^你蓄势不足，目前只积累了%d%气势。$E}                      {char.hp.set-qishi %1};
+#action {^出招太猛，招式用老，你的气势降低了。(气势：%d%)$E}        {char.hp.set-qishi %1};
+#action {^你逐步从之前战斗的紧张气氛中平缓下来。(气势：%d%)$E}      {char.hp.set-qishi %1};
+#action {^你暂缓了攻势。(气势：%d%)$E}                              {char.hp.set-qishi %1};
+#action {^经过一段时间后，你终于完全从紧张地战斗氛围中解脱出来。$E} {char.hp.set-qishi 0};
+
+#alias {char.hp.set-qishi} {
+    #local qishi {%1};
+    #var char[HP][气势] {$qishi};
+    char.set-flag 战斗中 true;
+};
 
 ///=== {
 // ## char.UncolorEnemy
