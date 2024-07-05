@@ -36,7 +36,8 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
 
         #local keep {};
         #if { &ret[gmcp][] > 0 } {
-            #local keep[direction] {here};
+            #local keep[direction]  {here};
+            #local keep[gmcp]       {$ret[gmcp]};
         };
         #elseif { "$ret[cmd]" == "look" } {
             #if { "$ret[exit]" != "" } {
@@ -52,6 +53,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
                     {coach}     {$gMapRoom[coach]}
                     {coachLinks}{$gMapRoom[coachLinks]}
                     {direction} {here}
+                    {gmcp}      {$gMapRoom[gmcp]}
                 };
             };
         };
@@ -598,4 +600,23 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
         };
     };
     #if { ! $nop } {i2};
+};
+
+///=== {
+// #@ map.Room.exits
+//    获取 gMapRoom 变量中的出口信息。结果承诺将按照字母排序。
+//    没有 fullme 的时候，移动时看不到出口，但可以从 GMCP 里获取。
+// };
+#func {map.Room.exits} {
+    #local exits {$gMapRoom[exits]};
+    #if { "$exits" != "" } {
+        #return {$exits};
+    };
+
+    #if { &gMapRoom[gmcp][出口信息][] == 0 } {
+        #return {};
+    };
+
+    #local exits {$gMapRoom[gmcp][出口信息][%*]};
+    #return {@slist.Sort{$exits}};
 };
