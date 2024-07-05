@@ -137,6 +137,7 @@ VAR {键盘扫描码} {global-keypad-code} {
 
 #nop 热键绑定;
 #list global-key-bindings create {
+    {{key}{^\cc}    {meaning}{刷新屏幕}                     {action}{#screen resize 0 0}}
     {{key}{\cd}     {meaning}{命令行智能切换}               {action}{cli.SmartToggle}}
     {{key}{\co\cd}  {meaning}{禁止/允许命令和触发}          {action}{xtt.ToggleDisableCommands}}
     {{key}{\cos}    {meaning}{禁止/允许状态栏更新}          {action}{prompt.ToggleSwitch}}
