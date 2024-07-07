@@ -56,7 +56,7 @@ Section
     FileWrite $R3 "        $\"list$\": $\r$\n"
     FileWrite $R3 "        [$\r$\n"
     FileWrite $R3 "            {$\r$\n"
-    FileWrite $R3 "                $\"commandline$\": $\"$drive\\paotin\\bin\\tt++.exe ids/tintin$\",$\r$\n"
+    FileWrite $R3 "                $\"commandline$\": $\"$drive\\paotin\\bin\\tt++.exe -G -r init.tin$\",$\r$\n"
     FileWrite $R3 "                $\"guid$\": $\"{0b778637-b3ef-410d-b678-3f825e2cdef1}$\",$\r$\n"
     FileWrite $R3 "                $\"hidden$\": true,$\r$\n"
     FileWrite $R3 "                $\"name$\": $\"WinTin++$\",$\r$\n"
