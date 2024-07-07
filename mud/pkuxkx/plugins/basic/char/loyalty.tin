@@ -15,7 +15,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 event.Define {char/loyalty} {无参} {$MODULE} {门忠任务查询结果已更新，内容在变量 gLoyalty 中};
 
-VAR {门忠任务查询结果} gLoyalty {};
+VAR {门忠任务查询结果}  gLoyalty        {};
+VAR {门忠任务状态}      loyalty.Status  {};
 
 /*
 loyalty 本来就有两个别名：
@@ -40,7 +41,7 @@ loyalty 本来就有两个别名：
         };
 
         #switch {"$gLoyalty[$last][类型]/$gLoyalty[$last][描述]"} {
-            #match {"教训/%*的%*(%*)一点教训。"} {
+            #match {"教训/%*的%*(%*)%s一点教训。"} {
                 #var gLoyalty[$last][房间] {&1};
                 #var gLoyalty[$last][姓名] {&2};
                 #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
@@ -107,6 +108,19 @@ loyalty 本来就有两个别名：
     #action {^│%s│%*│%s│%s│$} {
         #local len {&gLoyalty[]};
         #cat gLoyalty[$len][描述] {@str.Trim{%%2}};
+    };
+
+    #action {^│基础奖励是指未将丹心状态和门忠日影响纳入考虑的原始奖励，你现在就可以接到%*│$} {
+        #var loyalty.Status[CD] {0};
+    };
+
+    #action {^│基础奖励是指未将丹心状态和门忠日影响纳入考虑的原始奖励，你还需要%d秒才可以%*│$} {
+        #var loyalty.Status[CD] {%%1};
+    };
+
+    #action {^│%*。本周的门忠日是星期%*和星期%*。%s│$} {
+        #var loyalty.Status[day1] {星期%%2};
+        #var loyalty.Status[day2] {星期%%3};
     };
 
     #action {^╰─{(─)+}───%S────╯$} {
