@@ -154,7 +154,7 @@ VAR {简单题库}  answer.question-bank {};
     answerLog %99;
 };
 
-#action {^【答问如流】本次问答活动结束，谢谢各位的参与。$E} {
+#action {^【答问如流】本次问答活动结束，谢谢各位的参与。{|  祝各位周末愉快 \^_\^}$E} {
     answerLog %99;
     #class answer.select kill;
     prompt.Set {{dati}{}};
