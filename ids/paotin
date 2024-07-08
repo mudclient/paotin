@@ -34,4 +34,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     load-module foo;
 };
 
+#class local-console open;
+
 #alias {%*} {#showme 你奋笔疾书，挥毫落纸：「<060>%0<070>」} {9.999};
+
+#class local-console close;
+
+#event {SESSION CREATED} {
+    #info session save;
+    #if { $info[SESSION][PORT] > 0 } {
+        #class local-console kill;
+    };
+};
