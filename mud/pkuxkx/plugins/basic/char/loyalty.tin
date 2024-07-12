@@ -26,7 +26,7 @@ loyalty 本来就有两个别名：
 #alias {mz list}        {mz.List nogag};
 #alias {loyalty list}   {mz.List gag};
 
-#action {@re.TableHeader{门忠任务列表(共%*项)}} {
+#action {@re.TableHeader{门忠任务列表(共%*项){|💎}}} {
     #var gLoyalty {};
     mz.parse;
 };
@@ -67,7 +67,7 @@ loyalty 本来就有两个别名：
                 #var gLoyalty[$last][描述]   {};
             };
             #default {
-                okLog 未知格式。;
+                errLog 未知格式。;
             };
         };
     };
