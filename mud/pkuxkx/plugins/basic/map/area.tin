@@ -67,7 +67,7 @@ event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
         };
         #case {"walk-done"} {
             event.HandleOnce {map/GotLocalmaps} {map/area} {map} {map.area.check localmaps-done};
-            localmaps;
+            map.Localmaps gag;
         };
         #case {"localmaps-done"} {
             #return;
@@ -132,8 +132,9 @@ event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
     };
 };
 
-#alias {lm}         {map.Localmaps nogag {%0}};
-#alias {localmaps}  {map.Localmaps gag   {%0}};
+#alias {lm}             {map.Localmaps nogag {%0}};
+#alias {localmaps}      {map.Localmaps nogag {%0}};
+#alias {localmaps_gag}  {map.Localmaps gag {%0}};
 
 #nop 根据数据源确定区域信息。数据源有四种（按使用优先级）：link、walk、node、localmaps;
 #func {map.resolveArea} {

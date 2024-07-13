@@ -169,7 +169,8 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
     xtt.Send {status_me %2};
 };
 
-#alias {status_me}  {char.GetStatusMe gag   {%0}};
-#alias {sm}         {char.GetStatusMe nogag {%0}};
+#alias {status_me_gag}  {char.GetStatusMe gag {%0}};
+#alias {status_me}      {char.GetStatusMe nogag {%0}};
+#alias {sm}             {char.GetStatusMe nogag {%0}};
 
 #delay status_me.Init {char.GetStatusMe gag} 3;
