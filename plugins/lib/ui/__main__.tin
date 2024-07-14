@@ -1,6 +1,12 @@
 #nop vim: set filetype=tt:;
 
-load-module lib/ui/tmux;
+#if { "@uname{}" == "Windows%*" } {
+    load-module lib/ui/windows;
+};
+#else {
+    load-module lib/ui/tmux;
+};
+
 load-module lib/ui/prompt;
 load-module lib/ui/beautify;
 load-module lib/ui/keyboard;

@@ -1,0 +1,25 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2024 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#var lib_ui_windows[META] {
+    {NAME}      {Windows UI}
+    {DESC}      {设置窗口标题}
+    {AUTHOR}    {担子炮}
+};
+
+#func {lib_ui_windows.Init} {
+    #return {true};
+};
+
+#alias {windows.SetTitle} {
+    #if { "$char[档案][账号]" != "" && "$char[档案][大名]" != "" } {
+        #screen set title $char[档案][账号]-$char[档案][大名];
+    };
+};
+
+event.Handle {char/score} {lib/ui/windows} {lib/ui} {windows.SetTitle};
