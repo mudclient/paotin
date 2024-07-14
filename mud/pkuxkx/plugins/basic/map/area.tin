@@ -117,7 +117,7 @@ event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
     #if { "$gag" == "gag" } {
         #class map.Localmaps.gag open;
         #action {^%*{|ID=map/localmaps}$} {#line gag} {6};
-        #gag {^%*{|ID=map/localmaps}$} {1};
+        #gag {^%*{|ID=map/localmaps}$};
         #class map.Localmaps.gag close;
     };
 

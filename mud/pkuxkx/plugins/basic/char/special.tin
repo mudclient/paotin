@@ -18,7 +18,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 VAR {角色特技列表，表格} {char.Special} {};
 
 #func {basic_char_special.Init} {
-    #delay {char.special.Init} {sp} 1;
+    #delay {char.special.Init} {special} 1;
 
     #return true;
 };
@@ -67,8 +67,16 @@ VAR {角色特技列表，表格} {char.Special} {};
         #class char.Special close;
     };
 
+    #action {^你还未成年，不能使用特殊技能。{|ID=char/special}$} {
+        #class char.Special kill;
+    };
+
+    #action {^你现在什么特技都不会，你共拥有特技积分%d点，你最多可以同时激发%d个特技。} {
+        #class char.Special kill;
+    };
+
     #if { "$gag" == "gag" } {
-        #gag {^%*{|ID=char/special}$} 1;
+        #gag {^%*{|ID=char/special}$};
     };
 
     #class char.Special close;
@@ -76,8 +84,9 @@ VAR {角色特技列表，表格} {char.Special} {};
     xtt.Send {special};
 };
 
-#alias {special}    {char.Special gag {%0}};
-#alias {sp}         {char.Special nogag {%0}};
+#alias {special_gag}    {char.Special gag {%0}};
+#alias {special}        {char.Special nogag {%0}};
+#alias {sp}             {char.Special nogag {%0}};
 
 #action {^你把%*加入了你的激发特技列表。$E} {
     #local name {%1};
@@ -90,7 +99,8 @@ VAR {角色特技列表，表格} {char.Special} {};
 };
 
 #action {^你把%*从你的激发特技列表中移除。$E} {
-    #if { "$char.Special[%1]" == "" } {
+    #local name {%1};
+    #if { "$char.Special[$name]" == "" } {
         char.Special gag;
     };
     #else {
