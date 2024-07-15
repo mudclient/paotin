@@ -162,6 +162,17 @@ load-lib sync;
     xtt.DisableAllCommand;
 } {9.999};
 
+#action {^如果你愿意和对方进行比试，请你也对张 三(zhang san)下一次 biwu(accept) zhang指令。$E} {
+    #local wimpy {@defaultNum{@env.Get{wimpy};10}};
+    #if { $wimpy > 10 } {
+        env.Set wimpy 10;
+    };
+    #if { @char.IsBusy{} } {halt};
+    #if { $char[HP][气血百分比] < 99 } {yun recover};
+    #if { $char[HP][精神百分比] < 99 } {yun regenerate};
+    accept zhang san;
+};
+
 #action {^你一顿棍棒乱揍，看来杀手有点怕你了。$E}                   {halt;quan} {9.500};
 #action {^( 蒙面杀手似乎十分疲惫，看来需要好好休息了。)$E}          {halt;ask killer about 认输} {9.999};
 #action {^( 蒙面杀手已经陷入半昏迷状态，随时都可能摔倒晕去。)$E}    {halt;ask killer about 认输} {9.999};
