@@ -74,6 +74,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 event.Define {jobquery} {无参} {$MODULE} {任务CD状态查询结果已更新，内容在变量 gJobState 中};
 
+load-module basic/cmds/link;
+
 /*
 jobquery 本来就有两个别名：
     1. jobquery 长一些，不方便输入，用的较少，因此重定义其行为，默认屏蔽系统输出
@@ -158,6 +160,8 @@ VAR {任务CD状态查询结果} gJobState {};
     #class jobquery close;
 
     #class jobquery-parser open;
+
+    link.Enable jobquery {藏经阁;大唐爵位任务};
 
     #nop 这里一共有 7 个占位符;
     #local jobHeader {│[%d]%!s│[{门|新|主|特}]%!s│%S{|\((\d+)\)} {|([0-9.]+)%}%!s};

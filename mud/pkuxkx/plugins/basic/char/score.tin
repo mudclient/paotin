@@ -16,6 +16,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 load-module {basic/title};
+load-module {basic/cmds/link};
 load-lib event;
 
 event.Define {char/score}   {无参} {$MODULE} {score 命令的数据解析成功时，发送本事件};
@@ -76,6 +77,8 @@ event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新};
     #var char[档案][高级任务] {-1};
     #var char[档案][低级任务] {-1};
     #var char[档案][劫匪掉宝] {-1};
+
+    link.Enable score {年龄;存款;死亡};
 
     #line oneshot #action {~^%c│%c %* %c%+1..S%c(%+3..S)%c%s%c│%*│%c$} {
         #local obj {@ParseTitle{@str.Trim{@str.Plain{%%3 %%5(%%7)}}}};
