@@ -78,7 +78,7 @@ event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新};
     #var char[档案][低级任务] {-1};
     #var char[档案][劫匪掉宝] {-1};
 
-    link.Enable score {年龄;存款;死亡};
+    link.Enable score 5 {个人信息;门派履历;年龄;存款;死亡};
 
     #line oneshot #action {~^%c│%c %* %c%+1..S%c(%+3..S)%c%s%c│%*│%c$} {
         #local obj {@ParseTitle{@str.Trim{@str.Plain{%%3 %%5(%%7)}}}};

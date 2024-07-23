@@ -7,12 +7,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 */
 
 ///=== {
-// ## link.Enable <命令名称> <链接名称>
+// ## link.Enable <命令名称> <CD> <链接名称>
 //    为指定的命令激活其中的超链接。如果有多个链接，可以用字符串列表来表达。
 // };
 #alias {link.Enable} {
     #local cmd      {%1};
-    #local links    {%2};
+    #local cd       {%2};
+    #local links    {%3};
 
     #if { "$cmd" == "" || "$links" == "" } {
         xtt.Usage %90;
@@ -20,7 +21,23 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #local link {};
+    #local time {@math.Eval{@time.Now{} + $cd}};
     #foreach {$links} {link} {
-        #line sub var #sub {~\e[4m$link} {@mslp.Send{{$cmd $link};$link}};
+        #line sub var #sub {~\e[4m$link} {@mslp.Exec{{link.delayExec $time {$cmd $link}};$link}};
+    };
+};
+
+#alias {link.delayExec} {
+    #local time {%1};
+    #local cmd  {%2};
+
+    #local now {@time.Now{}};
+    #if { $now > $time } {
+        $cmd;
+    };
+    #else {
+        #local delay {@math.Eval{$time - $now + 1}};
+        warnLog 服务器 CD 中，稍候片刻，即将执行。;
+        #line sub var #delay $delay {$cmd};
     };
 };

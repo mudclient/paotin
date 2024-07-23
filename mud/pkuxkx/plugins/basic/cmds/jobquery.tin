@@ -161,7 +161,7 @@ VAR {任务CD状态查询结果} gJobState {};
 
     #class jobquery-parser open;
 
-    link.Enable jobquery {藏经阁;大唐爵位任务};
+    link.Enable jobquery 0 {藏经阁;大唐爵位任务};
 
     #nop 这里一共有 7 个占位符;
     #local jobHeader {│[%d]%!s│[{门|新|主|特}]%!s│%S{|\((\d+)\)} {|([0-9.]+)%}%!s};
