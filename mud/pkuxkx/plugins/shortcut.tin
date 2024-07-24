@@ -327,3 +327,13 @@ load-lib sync;
 
 #alias {yz_zj} {xiaoyao.Goto 镇江的广场};
 #alias {zj_yz} {xiaoyao.Goto 扬州的中央广场};
+
+#nop Windows Terminal 的默认配色里，绿色和亮绿色不是很容易分清楚，所以这里加亮一下。;
+#action {^你曾经踏足的区域：$E} {
+    #class visited-map open;
+    #sub {~[1;32m} {[1;35m};
+    #action {~^%*%+1S%+1..s%c{|ID=visited-map}$} {#0};
+    #class visited-map close;
+
+    ga.ClassWait {#class visited-map kill};
+};
