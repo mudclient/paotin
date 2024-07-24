@@ -16,7 +16,7 @@
     amber_alert;    status_me;      set;            unset;
 
     wield;          wi;             unwield;        uw;
-    record;
+    record;         part_abandon;   help;
 };
 
 #nop 文字表情;

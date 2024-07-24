@@ -323,5 +323,7 @@ load-lib sync;
     };
 };
 
+#alias {part_abandon} {xtt.Send {part_abandon %0}} 9.0;
+
 #alias {yz_zj} {xiaoyao.Goto 镇江的广场};
 #alias {zj_yz} {xiaoyao.Goto 扬州的中央广场};
