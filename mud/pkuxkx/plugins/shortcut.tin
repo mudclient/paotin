@@ -323,7 +323,5 @@ load-lib sync;
     };
 };
 
-#alias {%S_%S} {node walk %0} 9;
-
 #alias {yz_zj} {xiaoyao.Goto 镇江的广场};
 #alias {zj_yz} {xiaoyao.Goto 扬州的中央广场};
