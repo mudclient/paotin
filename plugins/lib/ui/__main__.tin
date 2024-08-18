@@ -2,8 +2,7 @@
 
 #if { "@uname{}" == "Windows%*" } {
     load-module lib/ui/windows;
-};
-#else {
+} {
     load-module lib/ui/tmux;
 };
 
