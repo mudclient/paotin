@@ -56,6 +56,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 // #@ str.Plain <字符串>
 //    去除字符串中的颜色代码和 ANSI 控制字符。
+//
+// #@ str.Color <字符串>
+//    仅保留字符串中的颜色代码，去掉其余成分，方便比较颜色。
 // };
 #func {str.Trim}    {#format result {%p} {%0}};
 #func {trim}        {#return {@str.Trim{%0}}};
@@ -64,6 +67,28 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {trimAll}     {#return {@str.TrimAll{%0}}};
 
 #func {str.Plain}   {#format result {%P} {%0}};
+
+#func {str.Color} {
+    #local str      {};
+    #local state    {START};
+    #local ch       {};
+
+    #parse {%0} {ch} {
+        #switch {"$state/$ch"} {
+            #case {"START/\e"}  {#local state {ESCAPE}};
+            #case {"START/%*"}  {#0};
+            #case {"ESCAPE/["}  {#local state {INNER}};
+            #case {"ESCAPE/%*"} {#local state {OUTER}};
+            #case {"INNER/m"}   {#cat str {;}; #local state {OUTER}};
+            #case {"INNER/%*"}  {#cat str {$ch}};
+            #case {"OUTER/\e"}  {#local state {ESCAPE}};
+        };
+    };
+
+    #replace {str} {;$} {};
+
+    #return {$str};
+};
 
 ///=== {
 // #@ str.Replace <字符串> <正则表达式> <替换表达式>
