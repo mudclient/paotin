@@ -13,13 +13,13 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
 /*
 ╭───扬州─────────┬─────────────╮
 │目的地                      │拼音名称                  │
-│丐帮分舵                    │gaibang                   │
-│濠州府                      │haozhou                   │
-│长江[建康府]                │jiankang                  │
-│曲阜                        │qufu                      │
-│往生堂                      │shashou                   │
-│信阳                        │xinyang                   │
-│长江[镇江]                  │zhenjiang                 │
+│丐帮分舵  ◇ 土地庙         │gaibang                   │
+│濠州府  ◇ 广场             │haozhou                   │
+│长江[建康府]  ◇ 长江渡口   │jiankang                  │
+│往生堂  ◇ 往生堂广场       │shashou                   │
+│信阳  ◇ 小广场             │xinyang                   │
+│徐州  ◇ 戏马台             │xuzhou                    │
+│长江[镇江]  ◇ 扬子津       │zhenjiang                 │
 ├──────────────┴─────────────┤
 │walk [拼音名]命令使用内建路径。                         │
 │walk -c [拼音名]返回具体地点的路径。                    │
@@ -54,21 +54,51 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
     #local {E} {{?:|id=map/getnode}$};
 
     #if { "$gag" == "gag" } {
-        #gag {^%*{|ID=map/getnode}$E};
+        #gag {^%*$E};
     };
 
-    #action {^│目的地%s│拼音名称%s│$E} {
-        #if { "%1" == "gag" } {#line gag};
-    } {4.999};
-
-    #action {{*UTF8}{^}╭─{(─)*}─{\p{Han}+}─{(─|┬)*}──╮$E} {
+    #action {{*UTF8}{^}╭─{(─)*}─{\p{Han}+}─{(─|┬)*}─╮$E} {
         #var gMapRoom[node]         {%%4};
         #var gMapRoom[nodeLinks]    {};
 
         #class map.GetNodeInfo open;
 
-        #action {^│%S%s│%S%s│{|ID=map/getnode}$} {
-            #var {gMapRoom[nodeLinks][%%%3]} {%%%1};
+        #local {E} {{?:|id=map/getnode}$};
+
+        #action {^│目的地%s│拼音名称%s│$E} {
+            #if { "%1" == "gag" } {#line gag};
+        } {4.999};
+
+        #action {^├──{(─)*}──┼──{(─)*}──┤$E} {
+            #class map.GetNodeInfo.miss open;
+            #action {^%*{|ID=map/getnode}$} {errLog 发现 BUG，$gMapRoom[node]（$gMapRoom[name]）下面这行内容无法识别，请报告开发者。} {5.1};
+            #class map.GetNodeInfo.miss close;
+        };
+
+        #action {^├──{(─)*}──┴──{(─)*}──┤$E} {
+            #class map.GetNodeInfo.miss kill;
+        };
+
+        #nop 新版目标样式，有菱形，分红绿，拼音在张金鳌任务下会变色。;
+        #action {~^%c│%+2c%S%+1c %+1c ◇ %+1c%S%C│%+1c%S%C│%c$E} {
+            map.room.node-link {%%%3} {@str.Plain{%%%10}} {@str.Color{%%%5}} {@str.Color{%%%10}};
+        };
+
+        #alias {map.room.node-link} {
+            #local name         {%%%1};
+            #local pinyin       {%%%2};
+            #local markColor    {%%%3};
+            #local pinyinColor  {%%%4};
+
+            #var {gMapRoom[nodeLinks][$pinyin]} {{name}{$name}};
+
+            #if { "$markColor" != "" } {
+                #var {gMapRoom[nodeLinks][$pinyin][markColor]} {$markColor};
+            };
+
+            #if { "$pinyinColor" != "" } {
+                #var {gMapRoom[nodeLinks][$pinyin][pinyinColor]} {$pinyinColor};
+            };
         };
 
         #class map.GetNodeInfo close;
@@ -173,7 +203,7 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
     #alias {map.WalkNodes.walk-next} {
         #if { &map.WalkNodes.nodes[] > 0 } {
             #local node {$map.WalkNodes.nodes[1]};
-            #local node {@str.Replace{{$map.WalkNodes.nodes[1]};{^%+{|/(.+)}$};{{step}{&1}{args}{&3}}}};
+            #local node {@str.Replace{{$node};{^%+{|/\x7b?([^\x7b\x7d]+)\x7d?}$};{{step}{&1}{args}{&3}}}};
             #list map.WalkNodes.nodes delete 1;
             #if { "$node[step]" == "PATH" } {
                 xtt.SendBatch {$node[args]};
