@@ -475,6 +475,9 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #nop {西南地绵绵群山|滇北群山|藏边群山|六盘山};
     #action {^你还在山中跋涉，一时半会恐怕走不出这%*山！$}                      {map.step.Try.retry};
 
+    #action {^你在浙闽之间的群山中转来转去，却还没有走出去。$}                  {map.step.Try.retry};
+    #action {^你在浙闽之间的群山中兜兜转转，一时却还未能走出去。$}              {map.step.Try.retry};
+
     #nop 成都的金牛道;
     #action {^你小心翼翼往前挪动，遇到艰险难行处，只好放慢脚步。$}              {map.step.Try.retry};
     #nop 雁荡山的山路;
