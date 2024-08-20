@@ -519,7 +519,7 @@ VAR {逍遥行正在赶路} {xiaoyao.under-way} {0};
         #local pattern {%*的$room};
     };
 
-    #if { @slist.Contains{{$gMapRoom[lookable]};{<node>}} } {
+    #if { "$node" != "" || @slist.Contains{{$gMapRoom[lookable]};{<node>}} } {
         #nop 节点以 walk 节点名称标记;
         #local pattern {@default{$node;%*}($pattern)};
     };
@@ -620,15 +620,8 @@ VAR {逍遥行正在赶路} {xiaoyao.under-way} {0};
         #local prev {$routeMap[$node]};
         #local link {$map.xiaoyao.map[$prev][$node]};
         #local node {$prev};
-
         #format route   {%s-%s} {$node} {$route};
-
-        #if { "$link" == "PATH" } {
-            #list path insert 1 {PATH/{$action}};
-        };
-        #else {
-            #list path insert 1 {$link};
-        };
+        #list path insert 1 {$link};
     };
 
     #list path {simplify};
