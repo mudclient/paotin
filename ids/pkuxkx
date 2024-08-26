@@ -30,7 +30,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
 #nop 用户上线之后想要自动执行的代码写这里;
 #alias {user-online} {
-    chat* back;
+    helpme* back;
 };
 
 #nop 也可以在下面继续定义自己的别名和触发，均在 #gts 生效（会继承到所有 session）;

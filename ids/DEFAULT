@@ -58,5 +58,5 @@ mudlib.Set {pkuxkx};
 
 #nop 用户上线之后想要自动执行的代码写这里;
 #alias {user-online} {
-    back;
+    okLog 我回来啦！;
 };

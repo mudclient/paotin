@@ -337,3 +337,19 @@ load-lib sync;
 
     ga.ClassWait {#class visited-map kill};
 };
+
+#alias {fix-chat-back} {
+    #class fix-chat-back open;
+
+    #line oneshot #alias {chat* back} {
+        prompt.Note <131>最近 back 表情泛滥成灾，请大家<531>尽快删除<099><131>自己 ID 配置文件中的 chat* back。<299>;
+    };
+
+    #delay fix-chat-back {
+        #class fix-chat-back kill;
+    } 10;
+
+    #class fix-chat-back close;
+};
+
+fix-chat-back;
