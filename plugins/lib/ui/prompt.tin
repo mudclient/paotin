@@ -226,8 +226,8 @@ VAR {命令输入提示符} prompt-prompt {Input};
     #local midSepBar    {};
     #local botSepBar    {};
 
-    #foreach {*{prompt-fields[]}} {idx} {
-        #local field {${prompt-fields[$idx]}};
+    #foreach {*prompt-fields[]} {idx} {
+        #local field {$prompt-fields[$idx]};
         #if { "$field[visibility]" == "" } {
             #local field[visibility] {HideEmpty};
         };
@@ -283,17 +283,17 @@ VAR {命令输入提示符} prompt-prompt {Input};
     };
 
     #local allBarColor {};
-    #if { "${prompt-dict[busy][value]}" == "true" } {
-        #local allBarColor {${prompt-theme[BusyColor]}};
+    #if { "$prompt-dict[busy][value]" == "true" } {
+        #local allBarColor {$prompt-theme[BusyColor]};
     };
-    #if { "${prompt-dict[battle][value]}" == "true" } {
-        #local allBarColor {${prompt-theme[BattleColor]}};
+    #if { "$prompt-dict[battle][value]" == "true" } {
+        #local allBarColor {$prompt-theme[BattleColor]};
     };
-    #if { "${prompt-dict[battle][value]}" == "true" && "${prompt-dict[busy][value]}" == "true" } {
-        #local allBarColor {${prompt-theme[BattleBusyColor]}};
+    #if { "$prompt-dict[battle][value]" == "true" && "$prompt-dict[busy][value]" == "true" } {
+        #local allBarColor {$prompt-theme[BattleBusyColor]};
     };
-    #if { "${prompt-dict[disable][value]}" != "" } {
-        #local allBarColor {${prompt-theme[Disable]}};
+    #if { "$prompt-dict[disable][value]" != "" } {
+        #local allBarColor {$prompt-theme[Disable]};
     };
 
     #if { &topSepBar[] > 0 } {
@@ -332,7 +332,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
             #math topMaxLine {$topMaxLine - 1};
         };
         #else {
-            #local barColor {${prompt-theme[TopSepBar]}};
+            #local barColor {$prompt-theme[TopSepBar]};
             #if { "$allBarColor" != "" } {#local barColor {$allBarColor}};
             #local text {@__prompt_fill_line__{{$text[text]};{$text[width]};$barColor}};
             #list content {add} {{{line}{$topMaxLine}{text}{$text}}};
@@ -341,7 +341,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
 
     #if { &botSepBar[] > 0 || $botMaxLine > 0 } {
         #local text {@__prompt_build_line__{{$botSepBar}}};
-        #local barColor {${prompt-theme[BotSepBar]}};
+        #local barColor {$prompt-theme[BotSepBar]};
         #if { "$allBarColor" != "" } {#local barColor {$allBarColor}};
         #local text {@__prompt_fill_line__{{$text[text]};{$text[width]};$barColor}};
         #list content {add} {{{line}{-2}{text}{$text}}};
@@ -366,25 +366,25 @@ VAR {命令输入提示符} prompt-prompt {Input};
 
     #if { &midSepBar[] > 0 || &botLines[] > 0 } {
         #local text {@__prompt_build_line__{{$midSepBar}}};
-        #local barColor {${prompt-theme[MidSepBar]}};
+        #local barColor {$prompt-theme[MidSepBar]};
         #if { "$allBarColor" != "" } {#local barColor {$allBarColor}};
         #local text {@__prompt_fill_line__{{$text[text]};{$text[width]};$barColor}};
         #math line {$botMaxLine + 1};
         #list content {add} {{{line}{-$line}{text}{$text}}};
     };
 
-    #if { "${prompt-top-max-line}" != "$topMaxLine" || "${prompt-bot-max-line}" != "$botMaxLine" } {
+    #if { "$prompt-top-max-line" != "$topMaxLine" || "$prompt-bot-max-line" != "$botMaxLine" } {
         #local lineWidth {@prompt.ScreenWidth{}};
         #local spaceLine {};
         #format spaceLine {%-${lineWidth}s} {};
 
         #local newMax {$topMaxLine};
-        #while { $newMax < ${prompt-top-max-line} } {
+        #while { $newMax < $prompt-top-max-line } {
             #math newMax {$newMax + 1};
             #echo {{$spaceLine}{$newMax}};
         };
         #local newMax {$botMaxLine + 1};
-        #while { $newMax < ${prompt-bot-max-line} } {
+        #while { $newMax < $prompt-bot-max-line } {
             #math newMax {$newMax + 1};
             #echo {{$spaceLine}{-$newMax}};
         };
@@ -401,7 +401,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
         #echo {{%s}{$line[line]}} {$line[text]};
     };
 
-    #local prompt {${prompt-prompt}};
+    #local prompt {$prompt-prompt};
     #if { "$prompt" != "" } {
         #local prompt {$prompt};
         #echo {{$prompt}{-1}};
@@ -419,7 +419,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
         #local label {$field[label]};
         #local color {$field[color]};
         #local width {$field[width]};
-        #local value {${prompt-dict[$name]}};
+        #local value {$prompt-dict[$name]};
         #local now {};
         #format now {%T};
 
@@ -432,7 +432,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
         #local zero {undef};
         #if { "$field[countdown]" != "" } {
             #local seconds {};
-            #math seconds {$now - ${prompt-dict[$name][showTime]}};
+            #math seconds {$now - $prompt-dict[$name][showTime]};
             #replace value[value] {^%+1..d$} {@__prompt_countdown__{&1;$seconds}};
             #replace value[value] {(%+1..d)} {(@__prompt_countdown__{&1;$seconds})};
             #if { "$value[value]" != "{[1-9][0-9]*|.*\([1-9][0-9]*\).*}" } {
@@ -470,18 +470,18 @@ VAR {命令输入提示符} prompt-prompt {Input};
 
         #if { "$label" != "" } {
             #nop 如果全局开关已经禁用，则忽略所有配色，全部显示为禁用色;
-            #if { "${prompt-dict[disable][value]}" != "" } {
+            #if { "$prompt-dict[disable][value]" != "" } {
                 #replace label {^<{[a-zA-Z0-9]+}>} {};
-                #local label {${prompt-theme[Disable]}$label};
+                #local label {$prompt-theme[Disable]$label};
             };
             #else {
                 #nop 否则根据内容的新鲜程度自动改变颜色;
                 #if { "$cool" == "true" } {
                     #replace label {^<{[a-zA-Z0-9]+}>} {};
-                    #local label {${prompt-theme[CoolLabel]}$label};
+                    #local label {$prompt-theme[CoolLabel]$label};
                 };
                 #else {
-                    #local label {${prompt-theme[HotLabel]}$label};
+                    #local label {$prompt-theme[HotLabel]$label};
                 };
             };
 
@@ -493,7 +493,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
         };
 
         #if { "$color" == "" } {
-            #local color {${prompt-theme[Value]}};
+            #local color {$prompt-theme[Value]};
         };
 
         #format value {$color%-${width}s<299>} {$value[value]};
@@ -610,7 +610,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
 //    参见 prompt.Enable。
 // };
 #alias {prompt.Disable} {
-    prompt.Set {{disable}{${prompt-icon[DisableRefresh]}}};
+    prompt.Set {{disable}{$prompt-icon[DisableRefresh]}};
     prompt.refresh;
     #untick prompt.refresh;
 };
@@ -630,7 +630,7 @@ VAR {命令输入提示符} prompt-prompt {Input};
 //    在 prompt.Disable 和 prompt.Enable 之间切换。
 // };
 #alias {prompt.ToggleSwitch} {
-    #if { "${prompt-dict[disable][value]}" == "" } {
+    #if { "$prompt-dict[disable][value]" == "" } {
         prompt.Disable;
     };
     #else {
@@ -640,9 +640,9 @@ VAR {命令输入提示符} prompt-prompt {Input};
 
 #alias {prompt.bindKey} {
     #local idx {};
-    #foreach {*{global-key-bindings[]}} {idx} {
-        #local key  {${global-key-bindings[$idx][key]}};
-        #local code {${global-key-bindings[$idx][action]}};
+    #foreach {*global-key-bindings[]} {idx} {
+        #local key  {$global-key-bindings[$idx][key]};
+        #local code {$global-key-bindings[$idx][action]};
         #line sub var #macro {$key} {$code};
     };
 };
@@ -670,10 +670,10 @@ VAR {命令输入提示符} prompt-prompt {Input};
     #draw Yellow scroll line 1 1 1 90;
 
     #local idx {};
-    #foreach {*{global-key-bindings[]}} {idx} {
-        #local key      {${global-key-bindings[$idx][key]}};
-        #local meaning  {${global-key-bindings[$idx][meaning]}};
-        #local code     {${global-key-bindings[$idx][action]}};
+    #foreach {*global-key-bindings[]} {idx} {
+        #local key      {$global-key-bindings[$idx][key]};
+        #local meaning  {$global-key-bindings[$idx][meaning]};
+        #local code     {$global-key-bindings[$idx][action]};
         #replace key {\\c} {Ctrl+};
         #replace key {Ctrl+%.%+1..*} {Ctrl+&1 &2};
         #echo {   %-20s %-30s %-40s}
