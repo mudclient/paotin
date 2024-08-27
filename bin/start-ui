@@ -44,4 +44,8 @@ fi
 
 echo 正在连接 UI...
 
-exec $TMUXCMD attach-session -d -t $SESSION
+if [ "x$PT_TMUX_UI" == "xshare" ]; then
+    exec $TMUXCMD attach-session -t $SESSION
+else
+    exec $TMUXCMD attach-session -d -t $SESSION
+fi
