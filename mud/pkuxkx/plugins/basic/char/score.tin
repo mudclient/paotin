@@ -138,6 +138,14 @@ event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新};
         #var char[档案][天赋][灵性] {@str.Trim{%%3}};
     };
 
+#nop │国籍：大理        上线：扬州客店      │门派：天龙寺          禅机：86        │;
+    #action {^│%+：%* %+：%+│%+：%* %+：%+│$} {
+        #var char[档案][%%1] {@str.Trim{%%2}};
+        #var char[档案][@str.Trim{%%3}] {@str.Trim{%%4}};
+        #var char[档案][%%5] {@str.Trim{%%6}};
+        #var char[档案][@str.Trim{%%7}] {@str.Trim{%%8}};
+    } {5.01};
+
 #nop │国籍：大夏        上线：扬州客店      │门派：武当派                          │;
 #nop │性别：男性        姻缘：未遇良人      │师承：张三丰                          │;
 #nop │年龄：二十岁      体型：匀称          │门忠：3274                            │;
@@ -146,13 +154,13 @@ event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新};
         #var char[档案][%%1] {@str.Trim{%%2}};
         #var char[档案][@str.Trim{%%3}] {@str.Trim{%%4}};
         #var char[档案][%%5] {@str.Trim{%%6}};
-    } {5.1};
+    } {5.02};
 
 #nop │生日：辛丑年十二月五日亥时八刻        │叛师：无                              │;
     #action {^│%+：%*│%+：%*│$} {
         #var char[档案][%%1] {@str.Trim{%%2}};
         #var char[档案][%%3] {@str.Trim{%%4}};
-    } {5.2};
+    } {5.03};
 
 #nop │杀生：0人               │职业：甲士              │存款：527金条 21713黄金   │;
 #nop │被杀：4次               │道德：100.12万          │门派例钱：无              │;
