@@ -309,7 +309,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
         };
     };
 
-    #action {^%+4s这里是%+3..4u的一处%*。} {
+    #action {^%+4s这里是%+3..4u的一处$gMapRoom[name]。} {
         #var gMapRoom[terrain] {村落内部};
         #var gMapRoom[village] {%%2};
         #if { @option.IsEnable{MapDebug} } {
