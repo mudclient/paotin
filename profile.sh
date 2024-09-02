@@ -4,7 +4,7 @@ export LANG=en_US.UTF8
 export TERM=xterm-256color
 
 export LSCOLORS=Gxfxcxdxbxegedabagacad
-export LESS="-r -f"
+export LESS="-r -f --mouse"
 export PATH=$HOME/bin:$PATH
 export PS1='\[\033[1;49;32m\]MUD\[\033[0m\]:\[\033[33m\]\w\[\033[0m\]\$ '
 
