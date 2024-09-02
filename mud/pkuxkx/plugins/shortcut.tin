@@ -187,6 +187,7 @@ load-lib sync;
 #action {^你捡起一把玉石子。$E}         {put shi zi in lupi dai} {9.500};
 #action {^你从%*搜出一把玉石子。$E}     {put shi zi in lupi dai} {9.500};
 
+#action {^王府亲兵大声喝道：「哪里来的刁民，胆敢擅闯王府？」$E} {ask qin bingtou about 自立为王} {9.999};
 #action {^没有经过通传，任何人等不得擅闯都统治府。$E} {ask shiwei about 通传} {9.999};
 #action {^你因为种种原因停了下来，可以用walk继续进行。$E} {#delay 1 {xtt.Send {walk}}} {9.500};
 #action {^艄公说“到啦，上岸吧”，随即把一块踏脚板搭上堤岸。$E} {out} {9.500};
