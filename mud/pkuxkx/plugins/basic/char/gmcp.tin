@@ -93,13 +93,14 @@ event.Define {char/nofight} {无参} {$MODULE} {角色脱离战斗};
 
         #local name {$gmcp-name-map[HP主要][$key]};
         #if { "$name" != "" } {
+            #if { $char[HP][$name] == $value } {
+                #nop 服务器有时候推送过来的数据没有变化，这时候就忽略，当它不存在。;
+                #continue;
+            };
+
             #local hasHP1 {1};
 
             #if { "$name" == "当前%*" } {
-                #if { $char[HP][$name] == $value } {
-                    #nop 服务器有时候推送过来的数据没有变化，这时候就忽略，当它不存在。;
-                    #continue;
-                };
                 speedo.Set {$name} {$value} {true} {10};
                 #local bakName {@str.Replace{$name;当前;上次}};
                 #local pctName {@str.Replace{$name;当前%*;&1百分比}};
