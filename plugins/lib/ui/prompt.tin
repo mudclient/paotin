@@ -403,9 +403,10 @@ VAR {命令输入提示符} prompt-prompt {Input};
 
     #local prompt {$prompt-prompt};
     #if { "$prompt" != "" } {
-        #local prompt {$prompt};
         #echo {{$prompt}{-1}};
     };
+
+    #cursor {redraw input};
 };
 
 #func {__prompt_build_line__} {
