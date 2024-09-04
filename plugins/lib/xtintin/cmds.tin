@@ -199,6 +199,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #local class    {$info[VARIABLES][+$index][class]};
         #local value    {$info[VARIABLES][+$index][arg2]};
         #local nest     {$info[VARIABLES][+$index][nest]};
+        #local cnName   {};
 
         #if { "$class" == "" && "$pattern" != "all" } {
             #continue;
@@ -208,7 +209,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             #local class {未分组};
         };
 
-        #if { "$pattern" != "{|all}" && "$class/$name" != "%*$pattern%*" } {
+        #if { &gPaoTinVars[$name][] > 0 } {
+            #local cnName {$gPaoTinVars[$name][cnName]};
+        };
+
+        #if { "$pattern" != "{|all}" && "$class/$name/$cnName" != "%*$pattern%*" } {
             #continue;
         };
 
@@ -247,7 +252,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
                 {$type}
                 {$value};
 
-            #if { "$gPaoTinVars[$name]" != "" } {
+            #if { &gPaoTinVars[$name][] > 0 } {
                 #echo {$format}
                     {}
                     {  ╰── $gPaoTinVars[$name][cnName]}
