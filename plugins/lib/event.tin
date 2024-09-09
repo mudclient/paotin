@@ -349,7 +349,7 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
         #return;
     };
 
-    #if { "$event" != "{[A-Za-z0-9. -]+}" } {
+    #if { "$event" != "{[A-Za-z0-9. -/]+}" } {
         xtt.Usage $method 事件名称不是合法的标识符名称;
         #return;
     };
