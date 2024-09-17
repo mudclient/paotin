@@ -83,6 +83,7 @@
     {{key}{\cog}    {meaning}{开启/关闭 GMCP 调试信息}          {action}{option.Toggle GMCPDebug}}
     {{key}{\coM}    {meaning}{开启/关闭地图调试模式}            {action}{option.Toggle MapDebug; look}}
     {{key}{\coV}    {meaning}{开启/禁止显示房间风景图}          {action}{option.Toggle ShowRoomView; look}}
+    {{key}{\coH}    {meaning}{开启/暂停 HP 摘要，效果持续七天}  {action}{option.Toggle HPSummarize.Pause}}
 };
 
 event.HandleOnce {user-online} {ui/walk/setup/pkuxkx} {pkuxkx/online} {

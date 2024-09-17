@@ -397,9 +397,22 @@ hp -neili 格式：
     #local level {@default{%1;强制}};
 
     #if { "$level" != "强制" } {
+        #if { @option.IsEnable{HPSummarize.Pause} } {
+            #local time {@option.Get{HPSummarize.PauseTime}};
+            #if { $time > @time.Now{} } {
+                #return;
+            };
+            #elseif { $time > 0 } {
+                okLog HP 摘要抑制时间已结束，现已重新开启。;
+                option.Toggle HPSummarize.Pause;
+                option.Set HPSummarize.PauseTime {0};
+            };
+        };
+
         #if { "$char.HPSummarize.Echo" == "从不" } {
             #return;
         };
+
         #if { "$char.HPSummarize.Echo" == "自动" && "$level" != "自动" } {
             #return;
         };
@@ -548,6 +561,24 @@ hp -neili 格式：
 
     #local summarize {<099>$head〔HP摘要〕<298>${气血}${内力}${回气}${精神}${精力}${食水}$tail<099>};
     #showme $summarize;
+};
+
+option.Define {HPSummarize.Pause}       {Bool}      {是否暂停 HP 摘要显示}      {false};
+option.Define {HPSummarize.PauseTime}   {Time}      {暂停显示 HP 摘要截止时间}  {0};
+event.Handle {option/changed} {opt/HPSummarize.Pause/pkuxkx} {$MODULE} {char.HPSummarize.onTogglePause};
+
+#alias {char.HPSummarize.onTogglePause} {
+    #if { @option.IsEnable{HPSummarize.Pause} } {
+        #local time {@math.Eval{@time.Now{} + 86400 * 7}};
+        warnLog 你已选择临时抑制 HP 摘要。在 @time.Format{$time} 之前，你将不会再看到 HP 摘要。;
+        warnLog HP 摘要是 PaoTin++ 非常有特色的功能，几乎每个用户都喜欢它。;
+        warnLog 希望那时的你能够以更加开放的心态来迎接它。;
+        option.Set HPSummarize.PauseTime {$time};
+    };
+    #else {
+        okLog HP 摘要是 PaoTin++ 非常有特色的功能，几乎每个用户都喜欢它。欢迎体验。;
+        option.Set HPSummarize.PauseTime {0};
+    };
 };
 
 #func {char.hp.expandBigNumber} {
