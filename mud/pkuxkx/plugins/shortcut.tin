@@ -274,8 +274,9 @@ load-lib sync;
     #local nop {1};
     #foreach {*gMapRoom[objs][]} {idx} {
         #local id {$gMapRoom[objs][$idx][id]};
+        #local status2 {$gMapRoom[objs][$idx][status2]};
         math.Inc idc[$id];
-        #if { "$id" == "{corpse|skeleton}" } {
+        #if { "$id" == "{corpse|skeleton}" || ( "$status2" == "昏迷不醒" && "$id" == "%S %S" ) } {
             get gold from $id $idc[$id];
             get silver from $id $idc[$id];
             get gem from $id $idc[$id];
