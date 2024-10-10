@@ -126,6 +126,8 @@ VAR {信息栏的默认配色主题} prompt-theme {
     {Value}{<299>}
 };
 
+VAR {信息栏的填充字符} prompt-padding {─};
+
 VAR {常用图标} prompt-icon {
     {DisableRefresh}{🚫}
 };
@@ -149,6 +151,13 @@ VAR {命令输入提示符} prompt-prompt {Input};
 
 #func {lib_ui_prompt.Init} {
     load-file {etc/ui-settings.tin};
+
+    #if { "@getenv{TERM_PROGRAM}" == "vscode" && "@getenv{TERM_PROGRAM_VERSION}" <= "1.81.1" } {
+        #if { "$prompt-padding" == "─" } {
+            #var prompt-padding {-};
+        };
+    };
+
     #local _ @prompt.ScreenWidth{};
     prompt.Set {};
     prompt.bindKey;
@@ -576,18 +585,18 @@ VAR {命令输入提示符} prompt-prompt {Input};
 
     #local left {};
     #format {left} {%${leftLen}s} {};
-    #replace {left} { } {─};
+    #replace {left} { } {$prompt-padding};
 
     #local right {};
     #format {right} {%${rightLen}s} {};
-    #replace {right} { } {─};
+    #replace {right} { } {$prompt-padding};
 
     #if { $leftLen < 0 } {
         #format {newText} {%$screenWidth.${screenWidth}s} {$newText};
         #return {$newText};
     };
     #elseif { "$newText" == "" } {
-        #return {$color$left──$right<099>};
+        #return {$color$left$prompt-padding$prompt-padding$right<099>};
     };
     #else {
         #return {$color$left<299> $newText $color$right<099>};

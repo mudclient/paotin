@@ -26,6 +26,8 @@ VAR {信息栏的配色主题} prompt-theme {
     {Value}{<299>}
 };
 
+VAR {信息栏的填充字符} prompt-padding {─};
+
 VAR {自定义图标} prompt-icon {
     {DisableRefresh}{🚫}
 };
