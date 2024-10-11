@@ -199,8 +199,8 @@ VAR {地图脚本同步信息} map.sync.room-id {};
 
 #alias {map.boat.try-enter} {
     #if { "$map-Boat-state" == "waitBoat" } {
-        go enter;
         event.HandleOnce {GMCP.Move} {map.boat} {map} {map.boat.check};
+        go enter;
     };
 };
 
@@ -211,7 +211,9 @@ VAR {地图脚本同步信息} map.sync.room-id {};
         #return;
     };
 
-    #if { &gGMCP[Move][出口信息] > 1 } {
+    #untick map.boat.yell;
+
+    #if { &gGMCP[Move][出口信息][] > 1 } {
         errLog 登船失败，这是哪里？;
         #return;
     };
@@ -221,7 +223,6 @@ VAR {地图脚本同步信息} map.sync.room-id {};
         #return;
     };
 
-    #untick map.boat.yell;
     #var map-Boat-state {inBoat};
     event.Emit map/walk/boat/in;
 };
