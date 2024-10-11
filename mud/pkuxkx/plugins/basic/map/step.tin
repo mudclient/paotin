@@ -191,7 +191,7 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
             #match {"Give/%+/%+/%+"}    {map.pl.helper {&3} {}  {gate} { {type}{give}   {what}{&1}{who}{&2} }   };
             #match {"Answer/%+/%+"}     {map.pl.helper {&2} {}  {gate} { {type}{answer} {words}{&1}         }   };
             #match {"Say/%+/%+"}        {map.pl.helper {&2} {}  {gate} { {type}{say}    {words}{&1}         }   };
-            #match {"Ask/%+/%+/%+"}     {map.pl.helper {&3} {}  {gate} { {type}{ask}    {who}{&1}{what}     }   };
+            #match {"Ask/%+/%+/%+"}     {map.pl.helper {&3} {}  {gate} { {type}{ask}    {who}{&1}{what}{&2} }   };
             #match {"Unwield/%+"}       {map.pl.helper {&1} {}  {gate} { {type}{unwield}                    }   };
             #match {"Prepare/%+/%+"}    {map.pl.helper {&2} {}  {gate} { {prepare}  {&1}                    }   };
             #match {"Postpare/%+/%+"}   {map.pl.helper {&2} {}  {gate} { {postpare} {&1}                    }   };
