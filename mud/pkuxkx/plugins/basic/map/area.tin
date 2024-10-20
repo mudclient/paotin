@@ -41,7 +41,7 @@ event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
 };
 
 ///=== {
-// ## map.GetArea
+// #@ map.GetArea
 //    返回当前房间信息中的区域信息。无参数。
 // };
 #func {map.GetArea} {
