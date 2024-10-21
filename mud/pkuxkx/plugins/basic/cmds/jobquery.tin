@@ -159,52 +159,83 @@ VAR {任务CD状态查询结果} gJobState {};
     #var gJobStateUpdate {0};
     #class jobquery close;
 
+    #var env.Week[best]     {};
+    #var env.Week[buff]     {};
+    #var env.Week[debuff]   {};
+    #var env.Week[normal]   {};
+
     #class jobquery-parser open;
 
     link.Enable jobquery 0 {藏经阁;大唐爵位任务};
 
     #nop 这里一共有 7 个占位符;
-    #local jobHeader {│[%d]%!s│[{门|新|主|特}]%!s│%S{|\((\d+)\)} {|([0-9.]+)%}%!s};
+    #local jobLeader {│[%d]%!s│[{门|新|主|特}]%!s│%S{|\((\d+)\)} {|([0-9.]+)%}%!s};
     #local jobEnd {%!s│};
 
     #alias {jq.set} {
-        #local {name}   {%%3};
-        #local {times}  {%%4};
-        #local {pct}    {%%6};
-        #if { "$times" != "" } {#local {times} {%%5}};
-        #if { "$pct" != "" }   {#local {pct}   {%%7}};
+        #local {rawLine}    {%%1};
+        #local {name}       {%%4};
+        #local {times}      {%%5};
+        #local {pct}        {%%7};
+
+        #replace name {▎}  {};
+
+        #if { "$times" != "" } {#local {times} {%%6}};
+        #if { "$pct" != "" }   {#local {pct}   {%%8}};
+
+        #local color {\e\[[0-9;]+m};
+
+        #replace {rawLine} {^%*[主]%C│%+1c{(($color)+)▎$color|}%+0..2c$name%*$} {
+            {group}  {&5}
+            {buff}  {&7}
+        };
+
+        #local moreInfo {$rawLine};
+        #if { "$moreInfo[buff]"  != "" } {#local moreInfo[buff]  {@str.Color{$moreInfo[buff]}}};
+        #if { "$moreInfo[group]" != "" } {#local moreInfo[group] {@str.Color{$moreInfo[group]}}};
+
+        #switch {"$moreInfo[buff]"} {
+            #case {"42;1;1;37"} {#local moreInfo[buff] {最佳}; #var env.Week[best]   {@sset.Add{{$env.Week[best]};$name}}};
+            #case {"1;32"}      {#local moreInfo[buff] {上升}; #var env.Week[buff]   {@sset.Add{{$env.Week[buff]};$name}}};
+            #case {"31"}        {#local moreInfo[buff] {下降}; #var env.Week[debuff] {@sset.Add{{$env.Week[debuff]};$name}}};
+            #case {"2;37;0"}    {#local moreInfo[buff] {正常}; #var env.Week[normal] {@sset.Add{{$env.Week[normal]};$name}}};
+        };
+
         #var gJobState[$name] {
-            {ID}        {%%1}
-            {类型}      {%%2}
+            {ID}        {%%2}
+            {类型}      {%%3}
             {名称}      {$name}
             {次数}      {$times}
             {成功率}    {$pct}
-            {CD}        {%%8}
-            {附加信息}  {%%9}
+            {CD}        {%%9}
+            {附加信息}  {%%10}
+            {增益}      {$moreInfo[buff]}
+            {增益联动}  {$moreInfo[group]}
         };
+
         #if { "%1" == "gag" } {
             #line gag;
         };
     };
 
-    #action {^$jobHeader│任务已经失败。$jobEnd$} {
-        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {-3} {任务已经失败。};
+    #action {^$jobLeader│任务已经失败。$jobEnd$} {
+        jq.set {%%99} {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {-3} {任务已经失败。};
     };
 
-    #action {^$jobHeader│仍需%S才能接到下个任务。$jobEnd$} {
-        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {@time.ParseDoC{%%8}} {等待CD中};
+    #action {^$jobLeader│仍需%S才能接到下个任务。$jobEnd$} {
+        jq.set {%%99} {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {@time.ParseDoC{%%8}} {等待CD中};
     };
 
-    #action {^$jobHeader│现在即可接到下个任务。%S$jobEnd$} {
-        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {0} {%%8};
+    #action {^$jobLeader│现在即可接到下个任务。%S$jobEnd$} {
+        jq.set {%%99} {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {0} {%%8};
     };
 
-    #action {^$jobHeader│任务正在进行中。%S$jobEnd$} {
-        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {-2} {%%8};
+    #action {^$jobLeader│任务正在进行中。%S$jobEnd$} {
+        jq.set {%%99} {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {-2} {%%8};
     };
 
-    #action {^$jobHeader│未满足接受此任务的所有条件，%S$jobEnd$} {
-        jq.set {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {-1} {%%8};
+    #action {^$jobLeader│未满足接受此任务的所有条件，%S$jobEnd$} {
+        jq.set {%%99} {%%1} {%%2} {%%3} {%%4} {%%5} {%%6} {%%7} {-1} {%%8};
     };
 
     #class jobquery-parser close;
