@@ -19,7 +19,7 @@ load-lib speedo;
     {西市}              {{room}{773}{name}{西市}        {path}{e;n;w;s}            {exits}{n;w;s;e}}
     {东市}              {{room}{703}{name}{东市}        {path}{e;n;e;e;e;s}        {exits}{n;w;s;e}}
     {大雁塔}            {{room}{713}{name}{大慈恩寺}    {path}{e;n;e;s;s;e;se}     {exits}{e;w;nw;se}}
-    {小雁塔}            {{room}{729}{name}{荐福寺}      {path}{e;n;e;s;e}          {exits}{e;w}}
+    {小雁塔}            {{room}{729}{name}{荐福寺}      {path}{e;n;e;s;e}          {exits}{w}}
     {东市附近的顺街}    {{room}{712}{name}{顺街}        {path}{e;n;e;s;s;e}        {exits}{n;w;se}}
     {西市附近的顺街}    {{room}{784}{name}{顺街}        {path}{e;n;e;s;s;w}        {exits}{n;e}}
     {通化门大街}        {{room}{768}{name}{通化门大街}  {path}{e;n;n;n;w}          {exits}{e;w}}
@@ -98,7 +98,7 @@ load-lib speedo;
     #action {^最近长安城内出现不少盗窃事件，有人报告%*附近商铺$} {
         #class tang.job kill;
         #var {tang-job-log[地点]} {%%1};
-        #delay tang.goto {tang.goto {%%1}} 1;
+        #delay tang.goto {tang.goto {%%1}} 2;
     };
 
     #action {^郭隆说道：你刚刚才问过，等等再来吧。$} {
@@ -114,7 +114,7 @@ load-lib speedo;
     #action {^你先把手头上的工作完成以后才能接着领下一个任务。$} {
         #class tang.job kill;
         tang.cancel;
-        #delay tang.job {tang.job} 1;
+        #delay tang.job {tang.job} 2;
     };
 
     #class tang.job close;
@@ -146,7 +146,7 @@ load-lib speedo;
 
     #action {^继续看下一位。$} {
         #math tang-inquiry-luren-index {${tang-inquiry-luren-index} + 1};
-        #delay 1 {
+        #delay 2 {
             tang.look ${tang-inquiry-luren-index};
             tang.ask ${tang-inquiry-luren-index};
         };
@@ -169,7 +169,7 @@ load-lib speedo;
         #else {
             #echo 下一个出口;
             xtt.Send {$exit};
-            #delay 1 {tang.look 1; tang.ask 1};
+            #delay 2 {tang.look 1; tang.ask 1};
         };
     };
 
@@ -592,8 +592,8 @@ load-lib speedo;
 
     #class tang.back close;
 
-    #delay tang.finish {ask jingzhao shaoyin about 领赏} 2;
-    #delay tang.job {tang.job} 3;
+    #delay tang.finish {ask jingzhao shaoyin about 领赏; tang.cancel} 2;
+    #delay tang.job {tang.job} 5;
 };
 
 #alias {tang.upgrade} {
