@@ -113,13 +113,13 @@ jobs:
           mv setup.exe ${{ steps.exe-name.outputs.EXENAME }}
 
       - name: Create artifact -- PaoTin++ Installer
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.exe-name.outputs.EXENAME }}
           path: ${{ steps.exe-name.outputs.EXENAME }}
 
       - name: Create artifact -- WinTin++
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: WinTin++
           path: |
@@ -139,7 +139,7 @@ jobs:
     needs: build
     steps:
       - name: Retrieve artifact files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.name }}
 
