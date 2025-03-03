@@ -20,6 +20,33 @@ VAR {逍遥行正在赶路} {xiaoyao.under-way} {0};
 #alias {xiaoyao.Init} {
     event.Handle {map/GotRoomInfo} {xiaoyao.try-locate} {map/xiaoyao} {xiaoyao.try-locate};
     storage.Load {map-xiaoyao} {map.xiaoyao.map;map.xiaoyao.room};
+    load-config xiaoyao;
+    xiaoyao.fixMap;
+};
+
+#nop fixMap 只修复连接，不允许添加新的节点;
+#alias {xiaoyao.fixMap} {
+    #local node {};
+    #foreach {*map.xiaoyao.Special[]} {node} {
+        #if { &map.xiaoyao.map[$node][] == 0 } {
+            #continue;
+        };
+
+        #local target {};
+        #foreach {*map.xiaoyao.Special[$node][]} {target} {
+            #if { &map.xiaoyao.map[$target][] == 0 } {
+                #continue;
+            };
+
+            #local link {$map.xiaoyao.Special[$node][$target]};
+            #if { "$link" == "DELETE" } {
+                #unvar map.xiaoyao.map[$node][$target];
+            };
+            #else {
+                #var map.xiaoyao.map[$node][$target] {$link};
+            };
+        };
+    };
 };
 
 #alias {xiaoyao.checkMap} {
