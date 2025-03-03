@@ -79,6 +79,11 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
             #class map.GetNodeInfo.miss kill;
         };
 
+        #nop 旧版目标样式，无菱形，不分红绿。;
+        #action {~^%c│%+2c%S%C│%+1c%S%C│%c$E} {
+            map.room.node-link {%%%3} {@str.Plain{%%%6}} {} {@str.Color{%%%6}};
+        };
+
         #nop 新版目标样式，有菱形，分红绿，拼音在张金鳌任务下会变色。;
         #action {~^%c│%+2c%S%+1c %+1c ◇ %+1c%S%C│%+1c%S%C│%c$E} {
             map.room.node-link {%%%3} {@str.Plain{%%%10}} {@str.Color{%%%5}} {@str.Color{%%%10}};
