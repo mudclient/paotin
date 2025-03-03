@@ -92,7 +92,7 @@ event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
 
     #class map.Localmaps open;
 
-    #line oneshot #action {~^{\e\[0m|}%c◆%*地图%*◆%c%s%c$} {
+    #line oneshot #action {~^{\e\[0m|}%c◆%*地图%*◆%C{|\(非任务区域\)}%C$} {
         #local color {%%2};
         #replace color {\e[} {};
         #replace color {m$} {};
@@ -100,6 +100,14 @@ event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
         #local area {%%3%%4};
         #var gMapRoom[area][LMAP]   {$area};
         #var gMapRoom[area][COLOR]  {$color};
+
+        #if { "%%6" == "" } {
+            #var gMapRoom[area][JOB] {true};
+        };
+        #else {
+            #var gMapRoom[area][JOB] {false};
+        };
+
         #if { "$area" == "柳秀山庄" } {
             #class map.Localmaps.gag kill;
         };
