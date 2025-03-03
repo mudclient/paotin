@@ -23,6 +23,58 @@ VAR {角色特技列表，表格} {char.Special} {};
     #return true;
 };
 
+/*
+2025-03-04 00:13:15 INPUT: sp
+╭───特技列表─────────────────────┬─────────╮
+│      │特技                                            │级别              │
+├───┼────────────────────────┼─────────┤
+│*     │身轻如燕(agile)                                 │●●              │
+│      │金蝉脱壳(chainless)                             │●                │
+│*     │铜皮铁骨(ironskin)                              │●                │
+│*     │饕餮之力(greedy)                                │●                │
+├───┴────────────────────────┴─────────┤
+│特技积分6800点，最多可同时激发3个特技。                                     │
+╰─────────────────────────────北大侠客行────╯
+*/
+
+#action {@re.TableHeader{特技列表}} {
+    #class char-special-parser open;
+
+    #var char.Special {};
+
+    #action {^│{|\*} %s │%S(%S) %s │%S %s │{|ID=char/special}$} {
+        #local enable   {%%1};
+        #local name     {%%3};
+        #local id       {%%4};
+        #local level    {@str.Len{%%6}};
+
+        #if { "$enable" == "*" } {
+            #local enable {true};
+        };
+        #else {
+            #local enable {false};
+        };
+
+        #var char.Special[$name] {
+            {id}{$id}
+            {name}{$name}
+            {enable}{$enable}
+            {level}{$level}
+        };
+    };
+
+    #action {^│特技积分%d点，最多可同时激发%d个特技。 %s │{|ID=char/special}$} {
+        #var char.Special[META][剩余积分] {%%1};
+        #var char.Special[META][特技槽位] {%%2};
+        #delay 0 {okLog 角色特技数据已记录。};
+        #class char-special-parser kill;
+    };
+
+    ga.ClassWait {#class char-special-parser kill};
+
+    #class char-special-parser close;
+};
+
 #alias {char.Special} {
     #local gag  {%1};
     #local args {%2};
@@ -34,44 +86,15 @@ VAR {角色特技列表，表格} {char.Special} {};
 
     #class char.Special open;
 
-    #action {^你现在会以下这些特技：{|ID=special/check}$} {
-        #class char.Special open;
-        #var char.Special {};
-        #action {^{\*| }%S(%S)  %S{|ID=special/check}$} {
-            #local enable   {%%%1};
-            #local name     {%%%2};
-            #local id       {%%%3};
-            #local level    {@str.Len{%%%4}};
-
-            #if { "$enable" == "*" } {
-                #local enable {true};
-            };
-            #else {
-                #local enable {false};
-            };
-
-            #var char.Special[$name] {
-                {id}{$id}
-                {name}{$name}
-                {enable}{$enable}
-                {level}{$level}
-            };
-        };
-        #action {^你共拥有特技积分%d点，最多可以同时激发%d个特技。{|ID=special/check}$} {
-            #delay 0 {okLog 角色特技数据已记录。};
-            #if { "%1" == "gag" } {
-                #line gag;
-            };
-            #class char.Special kill;
-        };
-        #class char.Special close;
-    };
-
     #action {^你还未成年，不能使用特殊技能。{|ID=char/special}$} {
+        #var char.Special {};
         #class char.Special kill;
     };
 
     #action {^你现在什么特技都不会，你共拥有特技积分%d点，你最多可以同时激发%d个特技。} {
+        #var char.Special {};
+        #var char.Special[META][剩余积分] {%%1};
+        #var char.Special[META][特技槽位] {%%2};
         #class char.Special kill;
     };
 
