@@ -47,7 +47,7 @@ VAR {上次遇到缺失 GMCP.Move 的行走反馈的时间} {map.missing-gmcp.la
     #if { &map.gmcp-move.tbc[] == 0 } {
         #local now {@time.Now{}};
         #if { $now < $map.missing-gmcp.lasttime + 60 * 5 } {
-            errLog map => 发现 BUG，遇到了遗失先导 GMCP.Move 事件的行走反馈。;
+            errLog 发现 BUG，遇到了遗失先导 GMCP.Move 事件的行走反馈。;
         };
         #else {
             dbgLog map => 发现 BUG，遇到了遗失先导 GMCP.Move 事件的行走反馈。;
