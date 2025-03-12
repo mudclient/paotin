@@ -10,10 +10,10 @@
 };
 
 /*
-╭───基本功夫──────┬─────────────┬─────────────╮
-│内功 (force)              │八荒六合唯我独尊功        │有效等级：  420           │
+╭───核心功夫──────┬─────────────┬─────────────╮
+│内功 (force)  👍          │八荒六合唯我独尊功        │有效等级：  420           │
 │躲闪 (dodge)              │月影舞步                  │有效等级：  769           │
-│招架 (parry)              │天山六阳掌                │有效等级：  419           │
+│招架 (parry)  42%/50%     │天山六阳掌                │有效等级：  419           │
 ├───常用兵器──────┼─────────────┼─────────────┤
 │剑法 (sword)              │天羽奇剑                  │有效等级：  419           │
 ├───常用拳脚──────┼─────────────┼─────────────┤
@@ -44,7 +44,7 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
 
     #class char.Jifa open;
 
-    #action {^╭───基本功夫─{(─|┬)*}───╮$} {
+    #action {@re.TableHeader{核心功夫}} {
         #local skillName {};
         #foreach {*char[Skills][]} {skillName} {
             #unvar char[Skills][$skillName][jifa-to];
@@ -61,21 +61,26 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
 #alias {char.jifa.parse.output} {
     #class char.Jifa open;
 
-    #var char-jifa-type {基本功夫};
+    #var char-jifa-type {核心功夫};
 
     #action {{*UTF8}{?:^}├───{\p{Han}{4}}──{(─|┼)*}─┤{|ID=char/jifa}$} {
         #var char-jifa-type {%%1};
     };
 
-    #action {^│%S (%*) %s│%S{|\[互备\]} %s│有效等级：%s %d %s │$} {
+    #action {^│%S (%*) %s{|👍|[0-9%/]+}%s│%S{|\[互备\]} %s│有效等级：%s %d %s │$} {
         #local baseName     {基本%%1};
         #if { "$baseName" == "基本躲闪" } {
             #local baseName {基本轻功};
         };
-        #local skillName    {%%4};
-        #local jifaLevel    {%%8};
+        #local qualified    {%%4};
+        #local skillName    {%%6};
+        #local jifaLevel    {%%10};
+
+        #replace qualified {%} {};
+
         #if { &char[Skills][$baseName][] > 0 && "$skillName" != "无" } {
             #var char[Skills][$baseName][jifa-to]       {$skillName};
+            #var char[Skills][$baseName][qualified]     {$qualified};
             #var char[Skills][$baseName][jifa-level]    {$jifaLevel};
             #var char[Skills][$baseName][jifa-type]     {$char-jifa-type};
         };
@@ -90,7 +95,7 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
         };
     };
 
-    #action {^╰───{(┴|─)*}──%S────╯{|ID=char/jifa}$} {
+    #action {@re.TableTail{char/jifa}} {
         char.jifa.done;
     };
 
