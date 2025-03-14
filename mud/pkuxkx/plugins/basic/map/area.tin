@@ -92,6 +92,18 @@ event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
 
     #class map.Localmaps open;
 
+    #line oneshot #action {~^{\e\[0m|}◆%*◆%c$} {
+        #local rawTitle {@raw.EraseInvisible{{%%2};true}};
+        #if { &rawTitle[fragments][] == 0 } {
+            errLog 遇到了特殊情况，请报告开发者。;
+            #return;
+        };
+
+        #local title {$rawTitle[fragments][1]};
+        #var gMapRoom[area][LMAP]   {$title[text]};
+        #var gMapRoom[area][COLOR]  {$title[color]};
+    } {4};
+
     #line oneshot #action {~^{\e\[0m|}%c◆%*地图%*◆%C{|\(非任务区域\)}%C$} {
         #local color {%%2};
         #replace color {\e[} {};
