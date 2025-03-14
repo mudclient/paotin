@@ -57,6 +57,18 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
         #gag {^%*$E};
     };
 
+    #action {@re.TableHeader{0%s}} {
+        #local nodeName {@map.FixNode{}};
+        #if { "$nodeName" != "" } {
+            okLog 节点信息发现 BUG，已经主动修正。;
+            #line gag;
+            #show ╭───$nodeName────────┬──────────╮;
+        };
+        #else {
+            errLog 节点信息发现 BUG，请主动修正。;
+        };
+    };
+
     #action {{*UTF8}{^}╭─{(─)*}─{\p{Han}+}─{(─|┬)*}─╮$E} {
         #var gMapRoom[node]         {%%4};
         #var gMapRoom[nodeLinks]    {};
@@ -145,6 +157,18 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
 
     xtt.Send {walk -c};
     sync.Wait {map.GetNodeInfo.done} {map/GetNodeInfo};
+};
+
+#func {map.FixNode} {
+    #local nodeName {};
+    #foreach {*map.xiaoyao.FixNode[]} {nodeName} {
+        #local desc {$map.xiaoyao.FixNode[$nodeName]};
+        #if { "$gMapRoom[desc]" == "%*$desc%*" } {
+            #return {$nodeName};
+        };
+    };
+
+    #return {};
 };
 
 #alias {walk} {
