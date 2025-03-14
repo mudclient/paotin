@@ -1,0 +1,273 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分。
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+*/
+
+#nop 本文件是 xtintin 的一部分，实现了一些颜色字符串处理函数;
+
+///=== {
+///// 颜色字符串处理函数：
+//
+// #@ str.Plain <字符串>
+//    去除字符串中的颜色代码和 ANSI 控制字符。
+//
+// #@ str.Color <字符串>
+//    仅保留字符串中的颜色代码，去掉其余成分，方便比较颜色。
+// };
+
+#func {str.Plain}   {#format result {%P} {%0}};
+
+#func {str.Color} {
+    #local str      {};
+    #local state    {START};
+    #local ch       {};
+
+    #parse {%0} {ch} {
+        #switch {"$state/$ch"} {
+            #case {"START/\e"}  {#local state {ESCAPE}};
+            #case {"START/%*"}  {#0};
+            #case {"ESCAPE/["}  {#local state {INNER}};
+            #case {"ESCAPE/%*"} {#local state {OUTER}};
+            #case {"INNER/m"}   {#cat str {;}; #local state {OUTER}};
+            #case {"INNER/%*"}  {#cat str {$ch}};
+            #case {"OUTER/\e"}  {#local state {ESCAPE}};
+        };
+    };
+
+    #replace {str} {;$} {};
+
+    #return {$str};
+};
+
+///=== {
+// #@ util.ColorBar <字符串> <颜色1> <权重1> <颜色2> <权重2> [...]
+//    将字符串按照颜色及其对应的权重占比，渲染成彩色字符串。注意颜色参数须按顺序排列。
+// };
+#func {util.ColorBar} {
+    #local str {%1};
+
+    #local args {};
+    #list args create {%0};
+    #list args delete {1} {1};
+
+    #local parts {};
+    #list parts create {};
+    #local count {0};
+    #local sum {0};
+    #while { $count < &args[] } {
+        #local color    {$args[@math.Eval{$count + 1}]};
+        #local weight   {@defaultNum{$args[@math.Eval{$count + 2}];0}};
+        #list parts {add} {{
+            {color}{$color}
+            {weight}{$weight}
+        }};
+        #math count {$count + 2};
+        #math sum {$sum + $weight};
+    };
+
+    #local elem {};
+    #local len {@str.Len{$str}};
+    #local leftLen {0};
+    #local leftWeight {0};
+    #local colorStr {};
+    #foreach {$parts[%*]} {elem} {
+        #local elemLen {@math.Eval{($elem[weight] + $leftWeight) * $len / $sum - $leftLen}};
+        #local text {@str.Sub{{$str};$leftLen;$elemLen}};
+        #cat colorStr {$elem[color]$text<299>};
+        #math leftLen {$leftLen + $elemLen};
+        #math leftWeight {$leftWeight + $elem[weight]};
+    };
+
+    #return {$colorStr};
+};
+
+///=== {
+// #@ raw.ParseFragments <颜色字符串> [<之前的颜色>]
+//    解析包含颜色代码的字符串，将其拆分成一系列的文本片段，每个片段包含一段文本和对应的颜色属性。
+//    本函数实际上有两个返回值，以 table 形式打包返回，其中包含以下内容：
+//      - color: 字符串解析完毕之后，最后的颜色状态（可供之后调用），参见下面的 color 属性。
+//      - fragments: 一个表格列表，其中每个元素是一个表格，包含以下两个字段：
+//        - text: 文本片段
+//        - color:
+//          - fg: 前景色，可能是一个一位数（16色系统）或一个多位数（256色系统）或三个数（RGB颜色）
+//          - bg: 背景色，同上
+//          - attrs: 文本样式属性，是一个字符串集合(sset)，包含以下可能的值：
+//              - bold
+//              - italic
+//              - underline
+//              - blink
+//              - reverse
+//              - dim
+//              - f256      表示前景色是 256 色系统
+//              - b256      表示背景色是 256 色系统
+//              - ftrue     表示前景色是真彩色
+//              - btrue     表示背景色是真彩色
+// };
+#func {raw.ParseFragments} {
+    #local str      {%1};
+    #local color    {%2};
+
+    #local fragments    {};
+    #local fragment     {};
+    #local tokens       {};
+    #local mode         {TEXT};
+
+    #while {1} {
+        #if { &tokens[] == 0 } {
+            raw.ParseFragments.nextToken;
+            #if { "$str" === "" } {
+                #break;
+            };
+
+            #if { "$str[text]" !== "" } {
+                #local fragment[text] {$str[text]};
+                #local fragment[color] {$color};
+                #list fragments add {{$fragment}};
+                #local fragment {};
+            };
+            #elseif { "$str[color]" !== "" } {
+                #replace str[color] {^\e[} {};
+                #replace str[color] {m$}   {};
+                #if { "$str[color]" !== "" } {
+                    #list tokens add {$str[color]};
+                    #local mode {SGR};
+                };
+            };
+
+            #local str {$str[rest]};
+            #continue;
+        };
+
+        #local token {$tokens[1]};
+        #list tokens delete 1;
+
+        #switch {"$mode/$token"} {
+            #case {"SGR/0"}             {#local color[fg] {0}; #local color[bg] {0}; #local color[attrs] {}};
+            #case {"SGR/1"}             {#local color[attrs] {@sset.Add{{$color[attrs]};bold}}};
+            #case {"SGR/2"}             {#local color[attrs] {@sset.Add{{$color[attrs]};dim}}};
+            #case {"SGR/3"}             {#local color[attrs] {@sset.Add{{$color[attrs]};italic}}};
+            #case {"SGR/4"}             {#local color[attrs] {@sset.Add{{$color[attrs]};underline}}};
+            #case {"SGR/5"}             {#local color[attrs] {@sset.Add{{$color[attrs]};blink}}};
+            #case {"SGR/7"}             {#local color[attrs] {@sset.Add{{$color[attrs]};reverse}}};
+            #case {"SGR/3{[0-7]}"}      {#local color[fg] {$token}};
+            #case {"SGR/4{[0-7]}"}      {#local color[bg] {$token}};
+            #case {"SGR/9{[0-7]}"}      {#local color[fg] {$token}};
+            #case {"SGR/10{[0-7]}"}     {#local color[bg] {$token}};
+            #case {"SGR/38"}            {#local mode {SGR38}};
+            #case {"SGR38/2"}           {#local mode {SGR382}};
+            #case {"SGR382/%+1..d"}     {#local mode {SGR}; #local color[fg] {$token}; #local color[attrs] {@sset.Add{{$color[attrs]};f256}}};
+            #case {"SGR38/5"}           {#local mode {SGR385}; #local color[fg] {}; #local color[attrs] {@sset.Add{{$color[attrs]};ftrue}}};
+            #case {"SGR385/%+1..d"}     {#local mode {SGR3851}; #local color[fg] {@slist.Append{{$color[fg]};$token}}};
+            #case {"SGR3851/%+1..d"}    {#local mode {SGR3852}; #local color[fg] {@slist.Append{{$color[fg]};$token}}};
+            #case {"SGR3852/%+1..d"}    {#local mode {SGR};     #local color[fg] {@slist.Append{{$color[fg]};$token}}};
+            #case {"SGR/48"}            {#local mode {SGR48}};
+            #case {"SGR48/2"}           {#local mode {SGR482}};
+            #case {"SGR482/%+1..d"}     {#local mode {SGR}; #local color[bg] {$token}; #local color[attrs] {@sset.Add{{$color[attrs]};b256}}};
+            #case {"SGR48/5"}           {#local mode {SGR485}; #local color[bg] {}; #local color[attrs] {@sset.Add{{$color[attrs]};btrue}}};
+            #case {"SGR485/%+1..d"}     {#local mode {SGR4851}; #local color[bg] {@slist.Append{{$color[bg]};$token}}};
+            #case {"SGR4851/%+1..d"}    {#local mode {SGR4852}; #local color[bg] {@slist.Append{{$color[bg]};$token}}};
+            #case {"SGR4852/%+1..d"}    {#local mode {SGR};     #local color[bg] {@slist.Append{{$color[bg]};$token}}};
+        };
+    };
+
+    #if { "$str[text]" !== "" } {
+        #local fragment[text] {$str[text]};
+        #local fragment[color] {$color};
+        #list fragments add {{$fragment}};
+    };
+
+    #return {
+        {fragments} {$fragments}
+        {color}     {$color}
+    };
+};
+
+#alias {raw.ParseFragments.nextToken} {
+    #if { "$str" === "" } {
+        #return;
+    };
+
+    #replace str {^{[^\e]+}%*$} {
+        {text}  {&1}
+        {rest}  {&2}
+    };
+
+    #var str {$str};
+
+    #if { "$str[text]" !== "" } {
+        #return {$str};
+    };
+
+    #replace str {^%+1c%*$} {
+        {color} {&1}
+        {rest}  {&2}
+    };
+
+    #var str {$str};
+
+    #if { "$str[text]" !== "" } {
+        #return {$str};
+    };
+
+    #replace str {^\e%*} {
+        {esc}   {&1}
+        {rest}  {&2}
+    };
+
+    #var str {$str};
+};
+
+///=== {
+// #@ raw.EraseInvisible <颜色字符串> [<是否压缩>]
+//    解析包含颜色代码的字符串，将其拆分成多个片段，并擦掉其中前景色与背景色相同的部分。
+//    如果同时指定了第二个参数为真，则将颜色相同的连续多个部分进行合并。
+//    最终返回值格式与 raw.ParseFragments 相同。
+// };
+#func {raw.EraseInvisible} {
+    #local str {%1};
+    #local zip {%2};
+
+    #local color {};
+    #local output {};
+
+    #local str {@raw.ParseFragments{{$str}}};
+    #foreach {*str[fragments][]} {fragment} {
+        #local fragment {$str[fragments][$fragment]};
+
+        #if {  ! @sset.Contains{{$fragment[color][attrs]};f256}
+            && ! @sset.Contains{{$fragment[color][attrs]};b256}
+            && ! @sset.Contains{{$fragment[color][attrs]};ftrue}
+            && ! @sset.Contains{{$fragment[color][attrs]};btrue}
+            && $fragment[color][fg] + 10 == $fragment[color][bg] } {
+            #continue;
+        };
+
+        #if {  @sset.Contains{{$fragment[color][attrs]};f256}
+            && @sset.Contains{{$fragment[color][attrs]};b256}
+            && "$fragment[color][fg]" === "$fragment[color][bg]" } {
+            #continue;
+        };
+
+        #if {  @sset.Contains{{$fragment[color][attrs]};ftrue}
+            && @sset.Contains{{$fragment[color][attrs]};btrue}
+            && "$fragment[color][fg]" === "$fragment[color][bg]" } {
+            #continue;
+        };
+
+        #if { @isTrue{$zip} && "$color" != "" && "$fragment[color]" === "$color" } {
+            #cat output[-1][text] {$fragment[text]};
+        };
+        #else {
+            #list output add {{$fragment}};
+            #local color {$fragment[color]};
+        };
+    };
+
+    #return {
+        {fragments} {$output}
+        {color}     {$color}
+    };
+};

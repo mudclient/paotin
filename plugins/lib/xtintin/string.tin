@@ -53,42 +53,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ str.TrimAll <字符串>
 //    去除字符串中全部的空白。
 //    本函数也可以简写为 trimAll，两个名称用途和用法完全相同。
-//
-// #@ str.Plain <字符串>
-//    去除字符串中的颜色代码和 ANSI 控制字符。
-//
-// #@ str.Color <字符串>
-//    仅保留字符串中的颜色代码，去掉其余成分，方便比较颜色。
 // };
 #func {str.Trim}    {#format result {%p} {%0}};
 #func {trim}        {#return {@str.Trim{%0}}};
 
 #func {str.TrimAll} {#var result {%0}; #replace {result} {%+1..s} {}};
 #func {trimAll}     {#return {@str.TrimAll{%0}}};
-
-#func {str.Plain}   {#format result {%P} {%0}};
-
-#func {str.Color} {
-    #local str      {};
-    #local state    {START};
-    #local ch       {};
-
-    #parse {%0} {ch} {
-        #switch {"$state/$ch"} {
-            #case {"START/\e"}  {#local state {ESCAPE}};
-            #case {"START/%*"}  {#0};
-            #case {"ESCAPE/["}  {#local state {INNER}};
-            #case {"ESCAPE/%*"} {#local state {OUTER}};
-            #case {"INNER/m"}   {#cat str {;}; #local state {OUTER}};
-            #case {"INNER/%*"}  {#cat str {$ch}};
-            #case {"OUTER/\e"}  {#local state {ESCAPE}};
-        };
-    };
-
-    #replace {str} {;$} {};
-
-    #return {$str};
-};
 
 ///=== {
 // #@ str.Replace <字符串> <正则表达式> <替换表达式>
@@ -394,45 +364,3 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 #func {chars} {#return {@str.Chars{%0}}};
-
-///=== {
-// #@ util.ColorBar <字符串> <颜色1> <权重1> <颜色2> <权重2> [...]
-//    将字符串按照颜色及其对应的权重占比，渲染成彩色字符串。注意颜色参数须按顺序排列。
-// };
-#func {util.ColorBar} {
-    #local str {%1};
-
-    #local args {};
-    #list args create {%0};
-    #list args delete {1} {1};
-
-    #local parts {};
-    #list parts create {};
-    #local count {0};
-    #local sum {0};
-    #while { $count < &args[] } {
-        #local color    {$args[@math.Eval{$count + 1}]};
-        #local weight   {@defaultNum{$args[@math.Eval{$count + 2}];0}};
-        #list parts {add} {{
-            {color}{$color}
-            {weight}{$weight}
-        }};
-        #math count {$count + 2};
-        #math sum {$sum + $weight};
-    };
-
-    #local elem {};
-    #local len {@str.Len{$str}};
-    #local leftLen {0};
-    #local leftWeight {0};
-    #local colorStr {};
-    #foreach {$parts[%*]} {elem} {
-        #local elemLen {@math.Eval{($elem[weight] + $leftWeight) * $len / $sum - $leftLen}};
-        #local text {@str.Sub{{$str};$leftLen;$elemLen}};
-        #cat colorStr {$elem[color]$text<299>};
-        #math leftLen {$leftLen + $elemLen};
-        #math leftWeight {$leftWeight + $elem[weight]};
-    };
-
-    #return {$colorStr};
-};

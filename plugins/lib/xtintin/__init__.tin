@@ -12,6 +12,7 @@ load-file plugins/lib/xtintin/doc.tin;
 load-file plugins/lib/xtintin/number.tin;
 load-file plugins/lib/xtintin/bool.tin;
 load-file plugins/lib/xtintin/string.tin;
+load-file plugins/lib/xtintin/raw.tin;
 load-file plugins/lib/xtintin/algo.tin;
 load-file plugins/lib/xtintin/list.tin;
 load-file plugins/lib/xtintin/table.tin;
