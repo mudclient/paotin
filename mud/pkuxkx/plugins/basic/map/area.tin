@@ -148,11 +148,14 @@ event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
         #class map.Localmaps.gag close;
     };
 
+    option.Push HighlightBlue false;
+
     #class map.Localmaps close;
 
     xtt.Send {localmaps};
 
     sync.Wait {
+        option.Pop HighlightBlue;
         #class map.Localmaps kill;
         #class map.Localmaps.gag kill;
         event.DelayEmit map/GotLocalmaps;

@@ -46,6 +46,8 @@
     {⭕️|🐎|🌊|🔥|🎭|🐀|🔅}                                      {left-align}
 };
 
+option.Define {HighlightBlue} {Bool} {是否加亮幽蓝色} {true};
+
 #alias {beautify.On} {
     #class beautify-sub kill;
     #class beautify-sub open;
@@ -68,6 +70,8 @@
         #line ignore #showme {@Beautify{{%%1%%2%%3}}$beautify-eol-mark};
         #line gag;
     } {9.999};
+
+    #subst {~\e[34m} {@if{@option.IsEnable{HighlightBlue};\e[94m;\e[34m}};
 
     #class beautify-sub close;
 

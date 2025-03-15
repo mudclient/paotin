@@ -132,7 +132,8 @@ VAR {任务CD状态查询结果} gJobState {};
         #delay jobquery {job.Query {%1} {%2}} $cd;
     };
 
-    #line oneshot #action {^╭─┬─北侠任务查询助理─{(─|┬)+}─╮$} {
+    #line oneshot #action {@re.TableHeader{北侠任务查询助理}} {
+        option.Push HighlightBlue false;
         jobquery.parse.output {%1};
         #if { "%1" == "gag" } {
             #line gag;
@@ -140,6 +141,7 @@ VAR {任务CD状态查询结果} gJobState {};
     };
 
     #line oneshot #action {{*UTF8}{^}╰─{(─|┴)+}──{\p{Han}+}────╯{|ID=cmds/jobquery}$} {
+        option.Pop HighlightBlue;
         #class jobquery-parser kill;
         #class job.Query kill;
         #if { "%1" == "gag" } {

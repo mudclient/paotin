@@ -204,8 +204,6 @@ load-lib sync;
     open box;
 } {9.999};
 
-#subst {~\e[34m} {\e[94m};
-
 #alias {list-armors} {
     #class rbz-list-armors open;
 
