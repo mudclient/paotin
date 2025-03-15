@@ -162,6 +162,63 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
 };
 
 ///=== {
+// ## option.Push <选项名称> <选项值>
+//    设置选项的当前值，并将旧值压入栈中。配合 option.Pop 可以实现选项值的回退。
+// };
+#alias {option.Push} {
+    #local {option} {%1};
+    #local {value}  {%2};
+
+    #if { "$option" == "" } {
+        xtt.Usage option.Push;
+        #return {};
+    };
+
+    #local old {$gOptions[$option]};
+    #if { "$old" == "" } {
+        errLog 不存在选项「$option」，请先定义后再使用。;
+        #return;
+    };
+
+    #if { ! @option.isValidValue{$gOptions[$option][type];{$value}} } {
+        #return;
+    };
+
+    #var {gOptions[$option][value]} {$value};
+    #list gOptions[$option][stack] add {$old[value]};
+    storage.SetGlobal {global-options} {$gOptions};
+    event.Emit {option/changed} {opt/$option/%*};
+};
+
+///=== {
+// ## option.Pop <选项名称> <选项值>
+//    从选项的历史值中按照后进先出的原则弹出一个值，使之成为当前值。配合 option.Push 可以实现选项值的回退。
+// };
+#alias {option.Pop} {
+    #local {option} {%1};
+
+    #if { "$option" == "" } {
+        xtt.Usage option.Pop;
+        #return {};
+    };
+
+    #local old {$gOptions[$option]};
+    #if { "$old" == "" } {
+        errLog 不存在选项「$option」，请先定义后再使用。;
+        #return;
+    };
+
+    #if { &gOptions[$option][stack][] == 0 } {
+        #return;
+    };
+
+    #var {gOptions[$option][value]} {$old[stack][-1]};
+    #list gOptions[$option][stack] delete -1;
+    storage.SetGlobal {global-options} {$gOptions};
+    event.Emit {option/changed} {opt/$option/%*};
+};
+
+///=== {
 // #@ option.IsEnable <选项名称>
 //    检查选项是否已被开启。
 // };
