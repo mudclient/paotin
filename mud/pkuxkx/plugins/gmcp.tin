@@ -58,6 +58,8 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
 
     {Combat} {
         {enemy_in}              {敌人加入}
+        {max_qi}                {最大气血}
+        {max_jing}              {最大精神}
         {qi_damage}             {气血伤害}
         {jing_wound}            {精血受损}
         {qi_wound}              {气血受损}
