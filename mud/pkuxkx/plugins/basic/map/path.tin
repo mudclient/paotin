@@ -405,6 +405,26 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
     #return {$map.path.list[$name]};
 };
 
+VAR {千里通步进推进器} {path.Walk.Stepper} {};
+
+///=== {
+// ## path.Walk.SetStepper <步进推进器>
+//    设置路径行走的步进推进器。如果设置了步进推进器，则千里通将进入步进推进模式。
+//    你推一步，它就走一步，不推就不走。
+//    你可以用 path.Walk.Resume 来推动千里通继续前进，一次一步。
+//    注意，步进推进器仅在下一次行走任务中生效。一旦行走结束，无论成功失败，步进推进器设置将被清空。
+// };
+#alias {path.Walk.SetStepper} {
+    #local stepper {%21};
+
+    #if { "$stepper" == "" } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    #var path.Walk.Stepper {$stepper};
+};
+
 ///=== {
 // ## path.Walk <路径名称> [<回调代码>]
 //    沿着指定的路径名称执行行走任务。行走完成后，执行回调代码。
@@ -463,7 +483,13 @@ event.HandleOnce {map/init} {map/path} {map} {map.path.Init};
 
     #local cmd {@dir.Long{%1}};
 
-    event.HandleOnce {map/walk/continue}    {map/step} {map/path} {path.step.next};
+    #if { "$path.Walk.Stepper" === "" } {
+        event.HandleOnce {map/walk/continue}    {map/step} {map/path} {path.step.next};
+    };
+    #else {
+        #line sub {escapes;var} event.HandleOnce {map/walk/continue}    {map/step} {map/path} {$path.Walk.Stepper};
+    };
+
     event.HandleOnce {map/walk/failed}      {map/step} {map/path} {#path destroy; path.last-step; path.end};
 
     map.step.Try {} {$cmd} {};
@@ -506,6 +532,8 @@ VAR {停止走路标志} path.walk.stop {0};
             #path run;
         };
     };
+
+    #var path.Walk.Stepper {};
 
     event.Emit {map/walk/continue} {map/path/end};
 
