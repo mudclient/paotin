@@ -26,7 +26,7 @@ $ECHO;
 $ECHO "\e[1;32m第三步，设置 GitHub 加速。\e[m";
 $ECHO;
 
-git config --global url."http://chat.unix5.com/mudclient/".insteadOf "https://github.com/mudclient/"
+curl -sL https://chat.unix5.com/mudclient/paotin/raw/install/git-config | bash
 
 $ECHO;
 $ECHO "\e[1;32m第四步，下载 PaoTin++。\e[m";

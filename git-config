@@ -1,0 +1,26 @@
+git config --global url."http://chat.unix5.com/mudclient/".insteadOf "https://github.com/mudclient/"
+
+# 原始仓库 URL 列表
+urls=(
+  "https://github.com/junegunn/vim-plug"
+  "https://github.com/dzpao/vim-mbs"
+  "https://github.com/morhetz/gruvbox"
+  "https://github.com/yegappan/mru"
+  "https://github.com/jlanzarotta/BufExplorer"
+  "https://github.com/mhinz/vim-startify"
+)
+
+# 固定前缀
+prefix="http://chat.unix5.com/dzp"
+
+# 循环处理每个 URL
+for url in "${urls[@]}"; do
+  # 提取仓库名称（去掉 .git 后缀）
+  repo_name=$(basename "$url" .git)
+
+  # 生成替换后的 URL
+  replacement_url="$prefix/$repo_name"
+
+  # 生成并执行 git config 命令
+  git config --global url."$replacement_url".insteadOf "$url"
+done
