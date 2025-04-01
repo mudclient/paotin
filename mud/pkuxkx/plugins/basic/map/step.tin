@@ -478,6 +478,8 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #action {^你在浙闽之间的群山中转来转去，却还没有走出去。$}                  {map.step.Try.retry};
     #action {^你在浙闽之间的群山中兜兜转转，一时却还未能走出去。$}              {map.step.Try.retry};
 
+    #nop 衢州的一线天;
+    #action {^在这里可没法走那么快。$}                                          {map.step.Try.retry};
     #nop 商州的峡谷;
     #action {^走到最狭窄处不足一尺，你能侧身缓行。$}                            {map.step.Try.retry};
     #nop 张家口的蛤蟆嘴;
