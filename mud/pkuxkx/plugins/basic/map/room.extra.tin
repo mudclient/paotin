@@ -14,9 +14,12 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
     set area_detail;
 };
 
+VAR {可能的房间小地图} miniMapBuffer {};
+
 #alias {map.Room.Watch} {
     #local dungeon  {?:\[(\S{3,10})副本\]|};
-    #local nation   {?:[ ]+\[(大宋|大元|大理|大夏)国\]|};
+    #local weather  {?:[ ]+\[((?:春|夏|秋|冬)(?:风|雨)|暖阳|酷晴|晴朗|雪晴|冬雾)\]|};
+    #local nation   {?:[ ]?\[(大宋|大元|大理|大夏)国\]|};
     #local pkzone   {?:[ ]+(杀戮场)|};
     #local terrain  {?:[ ]+\[(都城|城市|城内|村镇|野外|门派|帮派|阴间|(\S+)势力范围)\]|};
     #local save     {?:[ ]+\[(存盘点)\]|};
@@ -27,7 +30,19 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
 
     #class map.Room.Watch open;
 
-    #action {{*UTF8}{?:^}{.{1,9}?\S}{$dungeon} -{$nation}{$pkzone}{$terrain}{$save}{$store}{$group}{$mark}{$undef}{| \[副本\]}$} {
+    #action {^%*{|ID=basic/map/minimap}$} {
+        #local line {%%1};
+        #if { "$line" == "{\s{8}}%*" } {
+            #replace line {%+1..u%+1..s$} {&1};
+            #cat miniMapBuffer {|$line|};
+        };
+        #else {
+            #var miniMapBuffer {};
+        };
+        #config {MULTI TRIGGER} ON;
+    } {4.020};
+
+    #action {{*UTF8}{?:^}{.{1,9}?\S}{$dungeon} -{$weather}{$nation}{$pkzone}{$terrain}{$save}{$store}{$group}{$mark}{$undef}{| \[副本\]}$} {
         #local ret {@map.GMCP.Confirm{}};
 
         #if { @isFalse{$gMapRoom[allDone]} } {
@@ -61,13 +76,13 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
         #local room {
             {name}{%%1}
             {dungeon}{%%2}
-            {nation}{%%3}
-            {pkzone}{@if{{"%%4" == "杀戮场"};true;false}}
-            {terrain}{%%5}
-            {save}{@if{{"%%7" == "存盘点"};true;false}}
-            {store}{@if{{"%%8" == "玩家储物柜"};true;false}}
-            {group}{%%9}
-            {mark}{@str.Split{{%%10};{{ +}};{;}}}
+            {nation}{%%4}
+            {pkzone}{@if{{"%%5" == "杀戮场"};true;false}}
+            {terrain}{%%6}
+            {save}{@if{{"%%8" == "存盘点"};true;false}}
+            {store}{@if{{"%%9" == "玩家储物柜"};true;false}}
+            {group}{%%10}
+            {mark}{@str.Split{{%%11};{{ +}};{;}}}
             {cmd}{$ret[cmd]}
             {look}{$ret[exit]}
             {gmcp}{$ret[gmcp]}
@@ -112,7 +127,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
         #line gag;
 
         map.Room.getInfo {$room};
-    };
+    } {4.010};
 
     #class map.Room.Watch close;
 };
@@ -139,7 +154,7 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
     #var gMapRoom[look]         {$args[look]};          #nop 如果是 look 命令，那么 look 的是哪个方向;
     #var gMapRoom[gmcp]         {$args[gmcp]};          #nop GMCP.Move 信息;
     #var gMapRoom[area]         {$args[area]};          #nop 房间所在区域;
-    #var gMapRoom[map]          {};                     #nop 房间小地图;
+    #var gMapRoom[map]          {$miniMapBuffer};       #nop 房间小地图;
     #var gMapRoom[maphere]      {};                     #nop 周围地形图;
     #var gMapRoom[desc]         {};                     #nop 房间文字描述;
     #var gMapRoom[descEnd]      {false};                #nop 房间文字描述已结束（目前以空行标识）;
