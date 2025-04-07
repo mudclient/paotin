@@ -17,6 +17,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #var gLog[ok]       {ok.log};
 #var gLog[warn]     {warn.log};
 #var gLog[error]    {error.log};
+#var gLog[msg]      {msg.log};
 #var gLog[debug]    {debug.log};
 
 #var gLog[PATH]     {log};
@@ -63,10 +64,11 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 };
 
-#alias {okLog}      {log.write {$gLog[ok]}     {<129>%0}   {ECHO}};
-#alias {warnLog}    {log.write {$gLog[warn]}   {<139>%0}   {ECHO}};
-#alias {errLog}     {log.write {$gLog[error]}  {<119>%0}   {ECHO}};
-#alias {infoLog}    {log.write {$gLog[info]}   {%0}        {ECHO}};
+#alias {okLog}      {log.write {$gLog[ok]}     {<B030><128>%0}   {ECHO}};
+#alias {warnLog}    {log.write {$gLog[warn]}   {<B330><138>%0}   {ECHO}};
+#alias {errLog}     {log.write {$gLog[error]}  {<B300><118>%0}   {ECHO}};
+#alias {msgLog}     {log.write {$gLog[msg]}    {<B033><168>%0}   {ECHO}};
+#alias {infoLog}    {log.write {$gLog[info]}   {<B333>%0}        {ECHO}};
 
 #alias {dbgLog} {
     #local tag {%1};
@@ -81,7 +83,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { @slist.Contains{{@option.Get{DebugTags}};$tag} } {
-        log.write {$gLog[debug]} {<850>%0<999>} {$echo};
+        log.write {$gLog[debug]} {<B555><858>%0<999>} {$echo};
     };
 };
 
