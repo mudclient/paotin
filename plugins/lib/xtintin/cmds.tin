@@ -22,6 +22,8 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     prompt.refresh;
 };
 
+#var gLastQuitTime {0};
+
 ///=== {
 // ## quit
 //    退出客户端，但不退出游戏角色。也可以写作 exit，作用相同。
@@ -30,7 +32,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    为了避免悲剧发生，这里特别映射一下，改成仅断开连接，而不退出服务器角色。
 //    如果玩家真的需要向服务器发送 quit 指令，请输入全大写的 QUIT。exit 同理要写作 EXIT。
 // };
-#alias {quit} {xtt.Usage quit {<169>注意，本命令的用法可能和你的理解不同，请参考下文<000>}; #end};
+#alias {quit} {
+    #if { @time.Now{} - $gLastQuitTime < 5 } {
+        #end;
+    };
+    #else {
+        xtt.Usage quit {<169>注意，本命令的用法可能和你的理解不同，<519>如果你真的需要 quit，请在 5 秒内再输入一遍。<088><169>具体参考下文：<000>};
+        #var gLastQuitTime {@time.Now{}};
+    };
+};
 #alias {exit} {quit};
 #alias {QUIT} {xtt.Send quit};
 #alias {EXIT} {xtt.Send exit};
