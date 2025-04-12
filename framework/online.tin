@@ -26,9 +26,21 @@ event.Emit user-online;
 #nop 提供给用户的自动执行函数;
 user-online;
 
+#var online.zap.retries {0};
+#alias {online.zap} {
+    #if { $online.zap.retries > 2 } {
+        #zap;
+    };
+    #else {
+        #math online.zap.retries {$online.zap.retries + 1};
+        #delay online.WatchDog {online.zap} 60;
+    };
+};
+
 ttevent.Handle {RECEIVED OUTPUT} {online.KeepAlive} {framework/online} {
     #undelay online.WatchDog;
-    #delay online.WatchDog {#zap} 180;
+    #unvar online.zap.retries {0};
+    #delay online.WatchDog {online.zap} 180;
 };
 
 #class main close;
