@@ -127,6 +127,7 @@ event.Define {GMCP.Message}     {无参} {$MODULE} {接收到 GMCP 聊天信息�
 
     #if { @option.IsEnable{GMCPDebug} } {
         #line sub escapes #var gGMCP[Unknown] {%2};
+        #var gGMCP[Unknown][VarName] {%1};
         warnLog 接收到未知的 GMCP 消息：%1，请联系开发者。以下为消息内容：;
         #var gGMCP[Unknown];
         #unvar gGMCP[Unknown];
