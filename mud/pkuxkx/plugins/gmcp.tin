@@ -12,11 +12,12 @@ load-lib option;
 load-lib event;
 load-lib gmcp;
 
-event.Define {GMCP.Move}    {无参} {$MODULE} {接收到 GMCP 移动信息，已更新 gGMCP[Move]};
-event.Define {GMCP.Status}  {无参} {$MODULE} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
-event.Define {GMCP.Combat}  {无参} {$MODULE} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
-event.Define {GMCP.Buff}    {无参} {$MODULE} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
-event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，已更新 gGMCP[Message]};
+event.Define {GMCP.Unknown}     {无参} {$MODULE} {接收到 GMCP 未知消息，已更新 gGMCP[Unknown]};
+event.Define {GMCP.Move}        {无参} {$MODULE} {接收到 GMCP 移动信息，已更新 gGMCP[Move]};
+event.Define {GMCP.Status}      {无参} {$MODULE} {接收到 GMCP 角色状态，已更新 gGMCP[Status]};
+event.Define {GMCP.Combat}      {无参} {$MODULE} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
+event.Define {GMCP.Buff}        {无参} {$MODULE} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
+event.Define {GMCP.Message}     {无参} {$MODULE} {接收到 GMCP 聊天信息，已更新 gGMCP[Message]};
 
 #var {gmcp.key-e2c} {
     {Move} {
@@ -101,17 +102,35 @@ event.Define {GMCP.Message} {无参} {$MODULE} {接收到 GMCP 聊天信息，�
 };
 
 #alias {gmcp.pkuxkx.Enable} {
-    #event {IAC SB GMCP GMCP.Status IAC SE}     {gmcp.pkuxkx.OnStatus {%%1} {%%2}};
-    #event {IAC SB GMCP GMCP.Move IAC SE}       {gmcp.pkuxkx.OnMove {%%1} {%%2}};
-    #event {IAC SB GMCP GMCP.Combat IAC SE}     {gmcp.pkuxkx.OnCombat {%%1} {%%2}};
-    #event {IAC SB GMCP GMCP.Buff IAC SE}       {gmcp.pkuxkx.OnBuff {%%1} {%%2}};
-    #event {IAC SB GMCP GMCP.Message IAC SE}    {gmcp.pkuxkx.OnMessage {%%1} {%%2}};
+    #event {IAC SB GMCP} {
+        #if { "%%0" == "GMCP.{Status|Move|Combat|Buff|Message}" } {
+            #return;
+        };
+        gmcp.pkuxkx.OnGMCP {%%0} {%%1};
+    };
+
+    #event {IAC SB GMCP GMCP.Status IAC SE}         {gmcp.pkuxkx.OnStatus {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Move IAC SE}           {gmcp.pkuxkx.OnMove {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Combat IAC SE}         {gmcp.pkuxkx.OnCombat {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Buff IAC SE}           {gmcp.pkuxkx.OnBuff {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.Message IAC SE}        {gmcp.pkuxkx.OnMessage {%%1} {%%2}};
 
     tune gmcp status on;
     tune gmcp move on;
     tune gmcp buff on;
     tune gmcp combat on;
     tune gmcp message on;
+};
+
+#alias {gmcp.pkuxkx.OnGMCP} {
+    mudLog GMCP: {%1} {%2};
+
+    #if { @option.IsEnable{GMCPDebug} } {
+        #line sub escapes #var gGMCP[Unknown] {%2};
+        warnLog 接收到未知的 GMCP 消息：%1，请联系开发者。以下为消息内容：;
+        #var gGMCP[Unknown];
+        #unvar gGMCP[Unknown];
+    };
 };
 
 #alias {gmcp.pkuxkx.OnStatus} {
