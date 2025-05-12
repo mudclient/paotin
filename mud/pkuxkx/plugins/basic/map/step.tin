@@ -478,6 +478,8 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #action {^你在浙闽之间的群山中转来转去，却还没有走出去。$}                  {map.step.Try.retry};
     #action {^你在浙闽之间的群山中兜兜转转，一时却还未能走出去。$}              {map.step.Try.retry};
 
+    #nop 昆明的迎仙桥;
+    #action {^桥上挤满了游人，快不起来。$}                                      {map.step.Try.retry};
     #nop 商州的瓮峪古道;
     #action {^到了此处，山道开始拐弯，你稍稍放慢观察一下。$}                    {map.step.Try.retry};
     #nop 潼关的陡坡;
