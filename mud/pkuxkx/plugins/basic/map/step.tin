@@ -498,6 +498,8 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #action {^到了此处，山道开始拐弯，你稍稍放慢观察一下。$}                    {map.step.Try.retry};
     #nop 潼关的陡坡;
     #action {^因为道路变得极陡，你行至此处不得不放慢脚步。$}                    {map.step.Try.retry};
+    #nop 潼关的深谷;
+    #action {^这里险峻异常，稍有不慎就是跌落深渊的下场。$}                      {map.step.Try.retry};
     #nop 袁州的塘源冲;
     #action {^看着四周的淤泥，你谨慎地选择下脚的方位。$}                        {map.step.Try.retry};
     #nop 衢州的一线天;
