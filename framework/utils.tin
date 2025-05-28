@@ -186,10 +186,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #replace tmp {"} {};
     #replace tmp {%*{-| }%*} {&1};
     #switch {"$tmp"} {
-        #case {""}          {#0};
-        #case {"opensuse"}  {#local uname {openSUSE}};
-        #case {"alpine"}    {#local uname {@if{@existsFile{/.dockerenv};Docker;Alpine}}};
-        #default            {#local uname {@str.Capital{$tmp}}};
+        #case {""}              {#0};
+        #case {"opensuse%*"}    {#local uname {openSUSE}};
+        #case {"centos"}        {#local uname {CentOS}};
+        #case {"nixos"}         {#local uname {NixOS}};
+        #case {"uos"}           {#local uname {UOS}};
+        #case {"linuxmint"}     {#local uname {LinuxMint}};
+        #case {"openEuler"}     {#local uname {openEuler}};
+        #case {"alpine"}        {#local uname {@if{@existsFile{/.dockerenv};Docker;Alpine}}};
+        #default                {#local uname {@str.Capital{$tmp}}};
     };
     #unvar tmp;
 
