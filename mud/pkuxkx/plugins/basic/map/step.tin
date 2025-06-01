@@ -551,13 +551,15 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     };
 
     #nop 襄阳的蒙古营门;
-    #action {^守将大声喝到:干什么的?(answer)$}                     {answer 送信; map.step.Try.retry};
-    #nop 都统制府的大门;
-    #action {^没有经过通传，任何人等不得擅闯都统治府。$} {ask shiwei about 通传; map.step.Try.retry};
+    #action {^守将大声喝到:干什么的?(answer)$}                       {answer 送信; map.step.Try.retry};
     #nop 北京的各大城门;
-    #action {^官兵拦住你说道：站住，把%*留下再说！$}             {unwield right; map.step.Try.retry};
+    #action {^官兵拦住你说道：站住，把%*留下再说！$}               {unwield right; map.step.Try.retry};
     #nop 北京的各大城门，同上，空手可进;
     #action {^官兵拦住了你。$} {#0};
+    #nop 都统制府的大门;
+    #action {^都统制府侍卫说道：「没有经过通传，任何人等不得擅闯都统治府。」$} {
+        ask shiwei about 通传; map.step.Try.retry;
+    };
     #nop 襄阳的南门;
     #action {^守军拦住了你的去路，大声喝到：干什么的？要想通过先问问我们守将大人！$} {
         ask shou jiang about 投军; map.step.Try.retry;
