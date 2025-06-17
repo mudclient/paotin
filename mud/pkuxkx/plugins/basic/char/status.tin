@@ -59,6 +59,11 @@ event.Define {char/status}    {无参}  {$MODULE} {已经获取到 status_me 命
 
     #class char-parse-status-me open;
 
+    #sub {~\e[46m}  {<ABB>};
+    #sub {~\e[42m}  {<ABA>};
+    #sub {~\e[43m}  {<CCA>};
+    #sub {~\e[45m}  {<CAC>};
+
     #if { "$silent" == "gag" } {
         #gag {^%*$};
     };
