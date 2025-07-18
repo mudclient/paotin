@@ -43,6 +43,28 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 ///=== {
+// #@ util.WordColor <字符串> <子字符串>
+//    从字符串中检索子字符串，如果找到它，就把它的颜色取出来并作为返回值，否则返回空。
+// };
+#func {str.WordColor} {
+    #local str      {%1};
+    #local word     {%2};
+
+    #replace word {%+1u} {(?:\e\[[0-9;:]*m)*&1};
+    #replace str {^%*{$word}%*$} {&2};
+
+    #local color {@str.Color{$str}};
+
+    #replace color {^0;} {};
+    #replace color {;0$} {};
+
+    #replace color {2;37;0;} {};
+    #replace color {;2;37;0} {};
+
+    #return {$color};
+};
+
+///=== {
 // #@ util.ColorBar <字符串> <颜色1> <权重1> <颜色2> <权重2> [...]
 //    将字符串按照颜色及其对应的权重占比，渲染成彩色字符串。注意颜色参数须按顺序排列。
 // };
