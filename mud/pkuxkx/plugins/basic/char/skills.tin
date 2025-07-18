@@ -74,6 +74,10 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
     #if { "$args" == "" } {
         #line oneshot #action {^╭───技能列表(共%*项){(─|┬)*}──╮$} {
             #var char[Skills][count] {@math.ParseCN{%%1}};
+            #local rawLine  {%%99};
+            #replace rawLine {)%C─} {)&1────};
+            #echo {%s} {@Beautify{{$rawLine}}};
+            #line gag;
             char.skills.parse.output;
         };
     };
@@ -91,18 +95,25 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 
     #action {^├───%%1项%%2──} {
         #var char[Skills][currentType] {%%2};
+        #local rawLine  {%%99};
+        #replace rawLine {%C├───%C%*项%*%C──} {&1├───&2&3项&4&5─────};
+        #echo {%s} {@Beautify{{$rawLine}}};
+        #line gag;
     };
 
+    #sub {~^%C│%*(%*)%*│%*│%*/%C-%*│} {%%1│%%2(%%3)%%4      │%%5│%%6/%%7-%%8│};
+
     #nop □已激发，☆真传武功，＋有子技能。;
-    #action {^│{□|☆|＋|  }%S(%S) %!s │%S {|↑}%!s │%!s %S/%S %!s│{|ID=char.skills}} {
+    #action {^│{□|☆|＋|  }%S(%S) {|(?:＋)+}%!s │%S {|↑}%!s │%!s %S/%S %!s│{|ID=char.skills}} {
         #local rawLine  {%%99};
         #local type     {$char[Skills][currentType]};
         #local enabled  {%%1};
         #local name     {%%2};
         #local code     {%%3};
-        #local rank     {%%4};
-        #local level    {%%6};
-        #local limit    {%%7};
+        #local prof     {%%4};
+        #local rank     {%%5};
+        #local level    {%%7};
+        #local limit    {%%8};
 
         #if { "$limit" == "-" } {
             #local limit {0};
@@ -117,17 +128,22 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
             #format enabled {false};
         };
 
+        #if { "$prof" == "＋" } {
+            #local prof {{color}{@str.WordColor{{$rawLine};{$prof}}}{mark}{$prof}};
+        };
+
         #list char[Skills][nameList] add {$name};
 
         #var {char[Skills][$name]} {
             $char[Skills][$name]
-            {name}{$name}
-            {type}{$type}
-            {enabled}{$enabled}
-            {code}{$code}
-            {rank}{$rank}
-            {level}{$level}
-            {limit}{$limit}
+            {name}      {$name}
+            {type}      {$type}
+            {enabled}   {$enabled}
+            {code}      {$code}
+            {prof}      {$prof}
+            {rank}      {$rank}
+            {level}     {$level}
+            {limit}     {$limit}
         };
 
         #if { $char-skill-limit < $limit } {
@@ -139,12 +155,32 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
         };
 
         #nop 接下来给技能加上彩色进度条，用来表示当前级别距离上限的程度;
-        #replace rawLine {^%*│%*(%S)%C│%*│%+1c%c %*│%*$} {&1│&2@char.Skills.colorIt{{&3};{&4};{&7};$level;$limit;10}│&5│&6&7 &8│&9};
+        #replace rawLine {^%*│%*(%S)%C{(?:＋)*}%C│%*│%+1c%c %*│%*$} {&1│&2@char.Skills.colorIt{{&3};{&4&5};{&6};{&9};$level;$limit;10}│&7│&8&9 &10│&11};
+        #echo {%s} {@Beautify{{$rawLine}}};
+        #line gag;
+    };
+
+    #sub {├─%*──┴─%*──┴──%*──┤} {├─%%1────────┴─%%2──┴──%%3──┤};
+
+    #action {^│共使用了%*个技能槽位，空余槽位(%*)。级别上限：%*。%s│} {
+        #local rawLine  {%%99};
+        #replace rawLine { %C│} {       &1│};
+        #echo {%s} {@Beautify{{$rawLine}}};
+        #line gag;
+    };
+
+    #action {^│本日高级演练，使用点数：%*，潜能：%*。%s│} {
+        #local rawLine  {%%99};
+        #replace rawLine { %C│} {       &1│};
         #echo {%s} {@Beautify{{$rawLine}}};
         #line gag;
     };
 
     #action {^╰───{(┴|─)*}─%S────╯{|ID=char.skills}$} {
+        #local rawLine  {%%99};
+        #replace rawLine {╯} {───╯};
+        #echo {%s} {@Beautify{{$rawLine}}};
+        #line gag;
         char.skills.parse.done;
     };
 
@@ -189,13 +225,14 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 
 #func {char.Skills.colorIt} {
     #local code     {%1};
-    #local space    {@str.Plain{%2}};
-    #local pColor   {%3};
-    #local level    {%4};
-    #local limit    {%5};
-    #local barLen   {%6};
+    #local prof     {%2};
+    #local space    {@str.Plain{%3}};
+    #local pColor   {%4};
+    #local level    {%5};
+    #local limit    {%6};
+    #local barLen   {%7};
 
-    #local text     {($code)$space};
+    #local text     {($code)$prof $space     };
     #local textLen  {@str.Len{$text}};
     #local leftLen  {@math.Eval{$textLen - $barLen - 5}};
     #local left     {@str.Left{{$text}; $leftLen}};
