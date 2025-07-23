@@ -55,6 +55,9 @@ VAR {背包里所有物品的 ID}           char.ItemID         {};
 VAR {包袱及其内容}                  char.Bag            {};
 
 VAR {背包内容是否已经脏了}          char.backpack.IsDirty {1};
+VAR {背包总负重（百分比）}          char.backpack.Percent {0};
+VAR {背包总负重（重量）}            char.backpack.Weight  {0};
+VAR {背包总负重（数量）}            char.backpack.Number  {0};
 
 event.Define {char/i2}          {无参} {$MODULE} {i2 命令运行完毕，背包数据已更新};
 event.Define {char/id}          {无参} {$MODULE} {id 命令运行完毕，背包数据已更新};
@@ -175,8 +178,9 @@ event.Define {char/bag}         {无参} {$MODULE} {look bag 命令运行完毕�
     char.backpack.parse {bag} {$bag};
 };
 
-#action {^你身上带著下列这些东西(负重 %1%)：$E} {
+#action {^你身上带著下列这些东西(负重 %d%)：$E} {
     #var char.backpack.IsDirty 0;
+    #var char.backpack.Percent {%1};
     char.backpack.parse i2;
 };
 
@@ -587,3 +591,8 @@ event.Define {char/bag}         {无参} {$MODULE} {look bag 命令运行完毕�
 #action {^你装备%*做武器。$E}               {#var char.backpack.IsDirty 1};
 #action {^你打开盲盒，发现了%*。$E}         {#var char.backpack.IsDirty 1};
 #action {^你重新加载了%*等%*件装备。$E}     {#var char.backpack.IsDirty 1};
+
+#action {^│你共携带%*件器物，负重约%*斤，} {
+    #var char.backpack.Number {@math.ParseCN{%1}};
+    #var char.backpack.Weight {@math.ParseCN{%2}};
+};
