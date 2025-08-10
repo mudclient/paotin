@@ -548,6 +548,8 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #action {^牛三调笑道：「别走那么快啊」$}                                    {map.step.Try.retry};
     #nop 凌霄城的城门;
     #action {^吊桥还没有升起来，你就这样走了，可能会给外敌可乘之机的。$}        {map.step.Try.retry};
+    #nop 台州府的山间道;
+    #action {^你小心翼翼地看着脚下，不敢再快了。$}                              {map.step.Try.retry};
 
     #nop 凉州的金塔寺;
     #action {^走在石阶上，你看着身边的悬崖，稍有不慎就是粉身碎骨的下场，不由得靠里侧身，放缓脚步。$} {
