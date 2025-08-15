@@ -353,3 +353,21 @@ load-lib sync;
 };
 
 fix-chat-back;
+
+#alias {help.hint} {
+    ga.Wait {msgLog %0};
+};
+
+#alias {help newbie} {
+    xtt.Send help newbie;
+    help.hint 如果你想进一步查看 PaoTin++ 新手帮助，请输入 HELP NEWBIE（注意区分大小写）;
+} {9.9};
+
+#alias {help {map|path}} {
+    xtt.Send help %1;
+    help.hint 如果你想查看 PaoTin++ 相关主题，请输入 HELP %1（注意区分大小写）;
+} {9.9};
+
+#action {^没有针对这项主题的说明文件。$E} {
+    help.hint 你是不是打错命令啦？如果你想要查看 PaoTin++ 帮助，你应该用 HELP，如果想要查看 TinTin++ 帮助，应该用 #help;
+} {9.9};

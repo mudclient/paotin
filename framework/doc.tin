@@ -376,8 +376,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 /////
 ///// - 6. 交互日志:
 /////      - infoLog:   一般的信息。默认为白色。
+/////      - msgLog:    醒目的一般信息。默认为亮青色。
 /////      - okLog:     积极的信息。默认为亮绿色。
-/////      - warnLog:   醒目的信息，需要引起注意的信息。默认为亮黄色。
+/////      - warnLog:   非常醒目的信息，需要引起注意的信息。默认为亮黄色。
 /////      - errLog:    消极的信息，代表某种错误发生。默认为亮红色。
 /////      - dbgLog:    调试信息，包含大量细节的信息。不显示在主屏，只记录到文件。
 /////
@@ -395,7 +396,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //      - 不是什么:  PaoTin++ 不提供违背服务器管理政策的机器人，许多时候你得自己做。
 //      - 优势: 更新及时，合法合规，开源共享，社区成熟
 //      - 特色: PaoTin++ 是唯一一款可以搭配全功能终端模拟器使用的跨平台主流客户端，这意味着它在任何平台上的渲染都是最漂亮的。
-//    - 常用 HELP 关键字
+//    - 常用 HELP 关键字（注意大小写不要打错）
 //      - 新人必读: HELP NEWBIE
 //      - 基本介绍: HELP paotin
 //      - 常用函数: HELP xtintin
@@ -417,12 +418,13 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //      - 把数据存起来，重启后还能用: HELP storage
 //    - 逍遥行
 //      - 这是什么: 可以让你在整个游戏地图中进行远距离移动，比如一口气从北京移动到云南，自动过河。
-//      - 安装方法: 逍遥行插件已内置，但数据文件需要单独下载，入 QQ 群查看群文件「PaoTin++ 新手必备」。
+//      - 安装方法: 逍遥行插件已内置，但数据文件需要单独下载，加下面技术交流 QQ 群查看群文件「PaoTin++ 新手必备」。
 //    - 社区
-//        - GitHub: https://github.com/mudclient/paotin/
-//        - 墙内镜像: http://chat.unix5.com/mudclient/paotin/
-//        - Wiki: https://pkuxkx.net/wiki/tools/paotin/
-//        - 入门级教程: https://pkuxkx.net/forum/thread-48458-1-1.html
-//        - 实用技巧: https://pkuxkx.net/wiki/tools/paotin/tips
-//        - QQ交流群: 951665549，入群暗号：「PaoTin++ 新人前来报到」
+//      - GitHub: https://github.com/mudclient/paotin/
+//      - 墙内镜像: http://chat.unix5.com/mudclient/paotin/
+//      - Wiki: https://pkuxkx.net/wiki/tools/paotin/
+//      - 通关秘籍: https://pkuxkx.net/wiki/tools/paotin/tips
+//      - 月嫂级教程: https://pkuxkx.net/forum/thread-49073-1-1.html
+//      - 技术交流QQ群: 951665549，请认准群名「TinTin++++」，入群暗号：「PaoTin++ 新人前来报到」
+//      - 萌新互助交流QQ群(游戏群): 831875141。
 // };
