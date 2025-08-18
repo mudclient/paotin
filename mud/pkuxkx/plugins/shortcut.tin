@@ -371,3 +371,11 @@ fix-chat-back;
 #action {^没有针对这项主题的说明文件。$E} {
     help.hint 你是不是打错命令啦？如果你想要查看 PaoTin++ 帮助，你应该用 HELP，如果想要查看 TinTin++ 帮助，应该用 #help;
 } {9.9};
+
+#alias {goto matrix} {
+    #screen clear all;
+    #buffer lock on;
+    #delay 0 {#history delete};
+    #event {SECOND} #loop 0 9 cnt #delay {$cnt / (1.0+9)} #draw <f3c3> rain 1 1 -1 -1 rain 1 9;
+    #line oneshot #event {RECEIVED KEYPRESS} {#unevent {SECOND}; #buffer lock off; #delay 1 {#screen resize 0 0}};
+};
