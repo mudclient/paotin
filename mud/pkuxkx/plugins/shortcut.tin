@@ -363,7 +363,7 @@ fix-chat-back;
     help.hint 如果你想进一步查看 PaoTin++ 新手帮助，请输入 HELP NEWBIE（注意区分大小写）;
 } {9.9};
 
-#alias {help {map|path}} {
+#alias {^help {map|path}$} {
     xtt.Send help %1;
     help.hint 如果你想查看 PaoTin++ 相关主题，请输入 HELP %1（注意区分大小写）;
 } {9.9};
