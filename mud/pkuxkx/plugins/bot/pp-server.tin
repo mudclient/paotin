@@ -41,6 +41,10 @@ load-lib storage;
     #local uid      {%2};
     #local qid      {%3};
 
+    #replace qid {%s◆%*◆$}    {};
+    #replace qid {%s⿻$}        {};
+    #replace qid {%s$}          {};
+
     #format uid {%l} {$uid};
     #format uid {%p} {$uid};
     #format qid {%l} {$qid};
