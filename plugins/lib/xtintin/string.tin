@@ -40,7 +40,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {str.Space}   {#return {@str.Repeat{{%0};{ }}}};
 #func {space}       {#return {@str.Space{%0}}};
 
-#func {str.Repeat}  {#var result {}; #loop 1 {%1} tmp {#cat result {%2}}};
+#func {str.Repeat}  {#var result {}; #if { %1 > 0 } { #loop 1 {%1} tmp {#cat result {%2}} };};
 #func {repeat}      {#return {@str.Repeat{%0}}};
 
 #func {str.Reverse} {#var result {}; #parse {%0} {tmp} {#var result {$tmp$result}}};
