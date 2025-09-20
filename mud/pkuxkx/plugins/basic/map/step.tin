@@ -342,7 +342,13 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
             };
         };
 
-        #case {"{GuoJiang|GuoHe|Shalou|Ride}"} {
+        #case {"Ride"} {
+            event.HandleOnce map/walk/continue  {map.Ride} {map.step.Try.do} {map.step.Try.ok};
+            event.HandleOnce map/walk/failed    {map.Ride} {map.step.Try.do} {map.step.Try.fail};
+            map.Ride $link[dir];
+        };
+
+        #case {"{GuoJiang|GuoHe|Shalou}"} {
             #local bot {$link[type]};
             event.HandleOnce map/walk/continue  {map.$bot} {map.step.Try.do} {map.step.Try.ok};
             event.HandleOnce map/walk/failed    {map.$bot} {map.step.Try.do} {map.step.Try.fail};
