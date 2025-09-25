@@ -29,6 +29,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #pathdir {sd} {nu} {36};
 #pathdir {wd} {eu} {40};
 
+#pathdir {neu} {swd} {19};
+#pathdir {nwu} {sed} {25};
+#pathdir {seu} {nwd} {22};
+#pathdir {swu} {ned} {28};
+#pathdir {ned} {swu} {35};
+#pathdir {nwd} {seu} {42};
+#pathdir {sed} {nwu} {38};
+#pathdir {swd} {neu} {44};
+
 #pathdir {out} {enter} {19};
 #pathdir {enter} {out} {44};
 
