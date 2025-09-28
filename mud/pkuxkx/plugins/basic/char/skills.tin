@@ -103,8 +103,8 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 
     #sub {~^%C│%*(%*)%*│%*│%*/%C-%*│} {%%1│%%2(%%3)%%4      │%%5│%%6/%%7-%%8│};
 
-    #nop □已激发，☆真传武功，＋有子技能。;
-    #action {^│{□|☆|＋|  }%S(%S) {|(?:＋)+}%!s │%S {|↑}%!s │%!s %S/%S %!s│{|ID=char.skills}} {
+    #nop □已激发，△另一种激发，☆真传武功，＋有子技能。;
+    #action {^│{□|△|☆|＋|  }%S(%S) {|(?:＋)+}%!s │%S {|↑}%!s │%!s %S/%S %!s│{|ID=char.skills}} {
         #local rawLine  {%%99};
         #local type     {$char[Skills][currentType]};
         #local enabled  {%%1};
@@ -121,7 +121,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 
         #replace name { } {};
 
-        #if { "$enabled" == "□" } {
+        #if { "$enabled" == "{□|△}" } {
             #format enabled {true};
         };
         #else {
