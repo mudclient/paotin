@@ -7,7 +7,7 @@
 #func {lib_ui_beautify.Init} {
     #class data/lib/ui/beautify open;
     #var beautify-switch {OFF};
-    #var beautify-eol-mark {<g03>.};
+    #var beautify-eol-mark {<299><g03>.};
     #class data/lib/ui/beautify close;
     beautify.On;
     #return true;
