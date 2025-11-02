@@ -59,7 +59,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { "$uuid" == "" } {
-        #format uuid {%U};
+        #local uuid {@sync.UUID{}};
     };
 
     sync.handle {$uuid} {$callback};
@@ -79,8 +79,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return;
     };
 
-    #local uuid {};
-    #format uuid {%U};
+    #local uuid {@sync.UUID{}};
 
     #line sub var sync.Wait {$callback} {$uuid};
 
@@ -106,7 +105,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     };
 
     #if { "$uuid" == "" } {
-        #format uuid {%U};
+        #local uuid {@sync.UUID{}};
     };
 
     #info session save;
@@ -133,8 +132,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return;
     };
 
-    #local uuid {};
-    #format uuid {%U};
+    #local uuid {@sync.UUID{}};
 
     #line sub var sync.ClassWait {$callback} {$uuid};
 
