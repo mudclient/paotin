@@ -41,7 +41,7 @@ loyalty 本来就有两个别名：
         };
 
         #switch {"$gLoyalty[$last][类型]/$gLoyalty[$last][描述]"} {
-            #match {"教训/%*的%*(%*)%s一点教训。"} {
+            #match {"教训/%*的%*(%*)%s一点教训(attack)。"} {
                 #var gLoyalty[$last][房间] {&1};
                 #var gLoyalty[$last][姓名] {&2};
                 #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
