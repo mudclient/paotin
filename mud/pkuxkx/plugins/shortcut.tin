@@ -372,6 +372,10 @@ fix-chat-back;
     help.hint 你是不是打错命令啦？如果你想要查看 PaoTin++ 帮助，你应该用 HELP，如果想要查看 TinTin++ 帮助，应该用 #help;
 } {9.9};
 
+#alias {change %s{H|M|L}} {
+    xtt.Send change %2;
+};
+
 #alias {goto matrix} {
     #screen clear all;
     #buffer lock on;
