@@ -384,6 +384,19 @@ VAR {可能的房间小地图} miniMapBuffer {};
         };
     };
 
+    #action {^%+4s一片浓雾中，什么也看不清。$} {
+        #var gMapRoom[fog]      {true};
+        #var gMapRoom[exitStr]  {};
+    };
+
+    #action {^%+4s浓雾中你依稀觉得似乎可以通往%*方向。$} {
+        #var gMapRoom[fog]          {true};
+        #var gMapRoom[exitStr]      {};
+        #var gMapRoom[existShown]   {true};
+        #class map.Room.getInfo.map kill;
+        #class map.Room.getInfo.desc kill;
+    };
+
     #action {^%+4s{这里(?:明显|所有|唯一)的(?:出口|方向)有|浓雾中你觉得似乎有出口通往} %*$} {
         #local desc {%%2};
         #if { "$desc" == "%*浓雾%*" } {
