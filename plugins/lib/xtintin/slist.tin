@@ -27,20 +27,26 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #local idx {};
     #loop {1} {&list[]} {idx} {
         #local elem {$list[$idx]};
-        #local complex {false};
-        #if { {$elem} == {%*;%*} || {$elem} == {{\{.*\}}} } {
-            #local complex {true};
+        #local complex 0;
+        #local isSlist 0;
+
+        #if { @slist.Size{$elem} > 1 } {
+            #local isSlist 1;
+        };
+
+        #if { $isSlist || {$elem} == {{\{.*\}}} } {
+            #local complex 1;
         };
 
         #if { $idx == 1 } {
-            #if { @isTrue{$complex} } {
+            #if { $complex } {
                 #line sub {var;escapes;secure} #cat output {$elem};
             };
             #else {
                 #cat output {$elem};
             };
         };
-        #elseif { @isTrue{$complex} } {
+        #elseif { $complex } {
             #cat output {;{$elem}};
         };
         #else {
