@@ -180,10 +180,11 @@ VAR {可能的房间小地图} miniMapBuffer {};
     #var gMapRoom[allDone]      {false};                #nop 房间信息已收集完毕;
 
     #local color {@buffer.RawLine{}};
-    #replace color {<{/|}H2>} {};
-    #replace color {%S - %*$} {&1};
-    #replace color {\e[2;37;0m} {};
-    #replace color {%S[%u]}   {&1};
+    #replace color {<{/|}H2>}       {};
+    #replace color {%S -%c %*$}     {&1};
+    #replace color {\e[2;37;0m}     {};
+    #replace color {%S{[^\e]}[%u]}  {&1&2};
+
     #var gMapRoom[colorName] {$color};
 
     #class map.Room.getInfo open;
