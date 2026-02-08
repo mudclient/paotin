@@ -383,3 +383,17 @@ fix-chat-back;
     #event {SECOND} #loop 0 9 cnt #delay {$cnt / (1.0+9)} #draw <f3c3> rain 1 1 -1 -1 rain 1 9;
     #line oneshot #event {RECEIVED KEYPRESS} {#unevent {SECOND}; #buffer lock off; #delay 1 {#screen resize 0 0}};
 };
+
+VAR {是否已释放过八方风雨} pfm.bafang {0};
+
+#alias {bafang} {
+    #tick pfm.bafang {
+        #if { @char.InCombat{} } {
+            perform sword.bafang;
+            #var pfm.bafang 1;
+        };
+        #elseif { $pfm.bafang } {
+            #untick pfm.bafang;
+        };
+    } 1;
+};
