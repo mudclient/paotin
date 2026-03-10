@@ -159,7 +159,7 @@ load-lib sync;
 #action {^你瞬间感到了危险临近，奸细就在附近！$E} {killall} {9.500};
 
 #action {^一支铜雀轻轻地落在你的面前，你可以选择下列任务系列中一组：$E} {
-    xtt.DisableAllCommand;
+    xtt.DisableAllCommands;
 } {9.999};
 
 #action {^如果你愿意和对方进行比试，请你也对张 三(zhang san)下一次 biwu(accept) zhang指令。$E} {
