@@ -26,6 +26,8 @@ event.HandleOnce {map/init} {map/gmcp} {map} {map.GMCP.TraceMove};
 
 VAR {上次遇到缺失 GMCP.Move 的行走反馈的时间} {map.missing-gmcp.lasttime} {@time.Now{}};
 
+VAR {是否提示 GMCP.Move BUG} {map.missing-gmcp.notify} {false};
+
 #func {map.GMCP.Confirm} {
     #local move-success {@default{%1;true}};
 
@@ -46,7 +48,7 @@ VAR {上次遇到缺失 GMCP.Move 的行走反馈的时间} {map.missing-gmcp.la
 
     #if { &map.gmcp-move.tbc[] == 0 } {
         #local now {@time.Now{}};
-        #if { $now < $map.missing-gmcp.lasttime + 60 * 5 } {
+        #if { $now < $map.missing-gmcp.lasttime + 60 * 5 && @isTrue{$map.missing-gmcp.notify} } {
             errLog 发现 BUG，遇到了遗失先导 GMCP.Move 事件的行走反馈。;
         };
         #else {
