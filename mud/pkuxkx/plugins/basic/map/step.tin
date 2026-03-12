@@ -559,6 +559,9 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #nop 台州府的山间道;
     #action {^你小心翼翼地看着脚下，不敢再快了。$}                              {map.step.Try.retry};
 
+    #nop 泰山的山路;
+    #action {^走到这里，已经没有人工的石阶，道路纷杂，你不禁伫足查看。$}        {map.step.Try.retry};
+
     #nop 泰山派的云梯道;
     #action {^石阶在脚下微微颤动，仿佛连山风都在考量你的心志。你下意识放慢了脚步，不敢贸然前行。$} {
         map.step.Try.retry;
