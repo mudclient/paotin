@@ -639,6 +639,22 @@ VAR {用 VAR 关键字定义的 PaoTin++ 变量清单，包含其中文含义} g
 };
 
 ///=== {
+// ## RAW <命令>
+//    短时间回到没有加载任何 PaoTin++ 插件的状态，然后执行命令。
+//    本别名与 xtt.DisableAllCommands 极为相似，区别只在于本别名要求一个命令名作为参数。
+// };
+#alias {RAW} {
+    #local cmd {@str.Trim{%0}};
+
+    #if { "$cmd" == "" } {
+        xtt.Usage %90;
+        #return;
+    };
+
+    xtt.DisableAllCommands false 3 {$cmd};
+};
+
+///=== {
 // ## xtt.DisableAllCommands
 //    禁止发送任何命令。
 //    某些游戏模式下，玩家必须小心地输入，否则一旦输错会造成损失。此时可以用本
@@ -648,12 +664,15 @@ VAR {用 VAR 关键字定义的 PaoTin++ 变量清单，包含其中文含义} g
 // };
 #alias {xtt.DisableAllCommands} {
     #local carefully {@default{%1;true}};
+    #local timeout {@default{%2;600}};
+    #local cmd {%3};
+
     #class disable-all-commands open;
 
     option.Enable DisableAllCommands;
 
     warnLog 所有定时器、触发器和事件句柄已被禁用。;
-    warnLog 600 秒后自动解除该状态。;
+    warnLog $timeout 秒后自动解除该状态。;
 
     #if { @isTrue{$carefully} } {
         #alias {^%*{|ID=paotin/disable-all-commands}$} {
@@ -668,13 +687,20 @@ VAR {用 VAR 关键字定义的 PaoTin++ 变量清单，包含其中文含义} g
         } {1.002};
     };
 
-    #gts {#delay 600 {#ats xtt.UndoDisableAllCommands}};
+    #line sub var #gts {#delay $timeout {#ats xtt.UndoDisableAllCommands}};
 
     #line quiet #ignore actions on;
     #line quiet #ignore tickers on;
     #line quiet #ignore events on;
+    #line quiet #ignore substitutes on;
+    #line quiet #ignore gags on;
+    #line quiet #ignore highlights on;
 
     #class disable-all-commands close;
+
+    #if { "$cmd" != "" } {
+        #send $cmd;
+    };
 };
 
 ///=== {
@@ -687,6 +713,9 @@ VAR {用 VAR 关键字定义的 PaoTin++ 变量清单，包含其中文含义} g
     #line quiet #ignore actions off;
     #line quiet #ignore tickers off;
     #line quiet #ignore events off;
+    #line quiet #ignore substitutes off;
+    #line quiet #ignore gags off;
+    #line quiet #ignore highlights off;
     okLog 命令已恢复正常。;
     option.Disable DisableAllCommands;
 } {1.000};
