@@ -115,6 +115,8 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
         #local level    {%%7};
         #local limit    {%%8};
 
+        #tab {$code};
+
         #if { "$limit" == "-" } {
             #local limit {0};
         };
