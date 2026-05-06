@@ -68,9 +68,6 @@ option.Define {GagMove} {Bool} {是否抑制玩家移动信息} {true};
 
 #action {~^%*将%*脱了下来。$CE}                         { move-log {%0} }{9.999};
 #action {~^%*将锦囊%*，放回怀中。$CE}                   { move-log {%0} }{9.999};
-#action {~^%*{穿|戴}上一%*。$CE}                        { move-log {%0} }{9.999};
-#action {~^%*丢下一%*。$CE}                             { move-log {%0} }{9.999};
-#action {~^%*装备%*。$CE}                               { move-log {%0} }{9.999};
 
 #action {~^%*只见小木门乒地关上了。$CE}                 { move-log {%0} }{9.999};
 
