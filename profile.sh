@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export LANG=en_US.UTF8
+export LANG=en_US.UTF-8
 export TERM=xterm-256color
 export EDITOR=nvim
 
