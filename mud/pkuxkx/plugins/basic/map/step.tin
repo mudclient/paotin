@@ -750,7 +750,7 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
 
     event.ClassHandleOnce GA {map/step/Try} {map} {map.step.Try.do.fail};
 
-    #class map.step.Try.failed.reason open;
+    #class map.step.Try.failed.reason close;
 };
 
 #func {map.step.Cond.checker.EXP} {
