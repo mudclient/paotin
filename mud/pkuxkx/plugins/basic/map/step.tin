@@ -558,6 +558,8 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #action {^吊桥还没有升起来，你就这样走了，可能会给外敌可乘之机的。$}        {map.step.Try.retry};
     #nop 台州府的山间道;
     #action {^你小心翼翼地看着脚下，不敢再快了。$}                              {map.step.Try.retry};
+    #nop 佛山镇的罗汉峡;
+    #action {^此处乱石密布，稍不留意很容易被绊倒。$}                            {map.step.Try.retry};
 
     #nop 泰山的山路;
     #action {^走到这里，已经没有人工的石阶，道路纷杂，你不禁伫足查看。$}        {map.step.Try.retry};
