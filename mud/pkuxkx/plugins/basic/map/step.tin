@@ -465,6 +465,11 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #action {^你的动作还没有完成，不能移动。$}                                  {map.step.Try.retry};
     #nop 随机绊倒;
     #action {^你不小心被什么东西绊了一下，差点摔个大跟头。$}                    {map.step.Try.retry};
+    #nop 随机 Busy;
+    #action {^你正欲前行，忽觉后颈微微一凉，似有高手将你死死锁定！$}            {map.step.Try.retry};
+    #action {^你心头一凛，急忙驻足拧身，摆出防御架势。$}                        {map.step.Try.retry};
+    #action {^然而四周风平浪静，竟只是草木皆兵，虚惊一场。$}                    {map.step.Try.retry};
+
     #nop 徐州的巷尾;
     #action {^地痞对你恶狠狠说道：“小贱人，不给大爷上供也想跑？”$}            {map.step.Try.retry};
     #nop 大轮寺的入幽口;
@@ -560,6 +565,8 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #action {^你小心翼翼地看着脚下，不敢再快了。$}                              {map.step.Try.retry};
     #nop 佛山镇的罗汉峡;
     #action {^此处乱石密布，稍不留意很容易被绊倒。$}                            {map.step.Try.retry};
+    #nop 庐山的北山盘道;
+    #action {^你极细看着路牌上到底写些什么。$}                                  {map.step.Try.retry};
 
     #nop 泰山的山路;
     #action {^走到这里，已经没有人工的石阶，道路纷杂，你不禁伫足查看。$}        {map.step.Try.retry};
