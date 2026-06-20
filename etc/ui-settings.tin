@@ -166,18 +166,30 @@ VAR {键盘扫描码} {global-keypad-code} {
 VAR {小键盘走路的功能映射表} {global-keypad-walking} {};
 
 #list {global-keypad-walking} create {
-    {{key}{Up}              {meaning}{向北，尽量靠下/上}    {type}{dir}     {args}{northdown;north;northup;up;northwest;northeast}}
-    {{key}{Down}            {meaning}{向南，尽量靠下/下}    {type}{dir}     {args}{southdown;south;southup;down;southwest;southeast}}
-    {{key}{Left}            {meaning}{向西，尽量靠下/出}    {type}{dir}     {args}{westdown;west;westup;out;northwest;southwest}}
-    {{key}{Right}           {meaning}{向东，尽量靠下/入}    {type}{dir}     {args}{eastdown;east;eastup;enter;northeast;southeast}}
-    {{key}{ShiftUp}         {meaning}{向北，尽量靠上}       {type}{dir}     {args}{northup;north}}
-    {{key}{ShiftDown}       {meaning}{向南，尽量靠上}       {type}{dir}     {args}{southup;south}}
-    {{key}{ShiftLeft}       {meaning}{向西，尽量靠上}       {type}{dir}     {args}{westup;west}}
-    {{key}{ShiftRight}      {meaning}{向东，尽量靠上}       {type}{dir}     {args}{eastup;east}}
-    {{key}{Home}            {meaning}{向西北/西上/北上}     {type}{dir}     {args}{northwest;westup;northup}}
-    {{key}{End}             {meaning}{向西南/西下/南上}     {type}{dir}     {args}{southwest;westdown;southup}}
-    {{key}{PageUp}          {meaning}{向东北/东上/北下}     {type}{dir}     {args}{northeast;eastup;northdown}}
-    {{key}{PageDown}        {meaning}{向东南/东下/南下}     {type}{dir}     {args}{southeast;eastdown;southdown}}
+    {{key}{Up}              {meaning}{向北，尽量靠下/上}    {type}{dir}     {args}{
+        northdown;north;northup;up;northwestdown;northwest;northwestup;northeastdown;northeast;northeastup}}
+    {{key}{Down}            {meaning}{向南，尽量靠下/下}    {type}{dir}     {args}{
+        southdown;south;southup;down;southwestdown;southwest;southwestup;southeastdown;southeast;southeastup}}
+    {{key}{Left}            {meaning}{向西，尽量靠下/出}    {type}{dir}     {args}{
+        westdown;west;westup;out;northwestdown;northwest;northwestup;southwestdown;southwest;sourthwestup}}
+    {{key}{Right}           {meaning}{向东，尽量靠下/入}    {type}{dir}     {args}{
+        eastdown;east;eastup;enter;northeastdown;northeast;northeastup;southeastdown;southeast;southeastup}}
+    {{key}{ShiftUp}         {meaning}{向北，尽量靠上}       {type}{dir}     {args}{
+        northup;north;northwestup;northwest;northeastup;northeast}}
+    {{key}{ShiftDown}       {meaning}{向南，尽量靠上}       {type}{dir}     {args}{
+        southup;south;southwestup;southwest;southeastup;southeast}}
+    {{key}{ShiftLeft}       {meaning}{向西，尽量靠上}       {type}{dir}     {args}{
+        westup;west;northwestup;northwest;southwestup;southwest}}
+    {{key}{ShiftRight}      {meaning}{向东，尽量靠上}       {type}{dir}     {args}{
+        eastup;east;southeastup;southeast;northeastup;northeast}}
+    {{key}{Home}            {meaning}{向西北/西上/北上}     {type}{dir}     {args}{
+        northwestdown;northwest;northwestup;westup;northup}}
+    {{key}{End}             {meaning}{向西南/西下/南上}     {type}{dir}     {args}{
+        southwestdown;southwest;southwestup;westdown;southup}}
+    {{key}{PageUp}          {meaning}{向东北/东上/北下}     {type}{dir}     {args}{
+        northeastdown;northeast;northeastup;eastup;northdown}}
+    {{key}{PageDown}        {meaning}{向东南/东下/南下}     {type}{dir}     {args}{
+        southeastdown;southeast;southeastup;eastdown;southdown}}
     {{key}{Center}          {meaning}{查看房间}             {type}{cmd}     {args}{look}}
 };
 
