@@ -37,7 +37,7 @@ user-online;
     };
 };
 
-#event {RECEIVED OUTPUT}
+#event {RECEIVED OUTPUT} {
     #undelay online.WatchDog;
     #unvar online.zap.retries {0};
     #delay online.WatchDog {online.zap} 180;
