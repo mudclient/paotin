@@ -576,8 +576,10 @@ VAR {可能的房间小地图} miniMapBuffer {};
         };
 
         #if { "%%0" == "%s" } {
-            #var gMapRoom[descEnd] {true};
-            #return;
+            #if { "$gMapRoom[desc]" != "" } {
+                #var gMapRoom[descEnd] {true};
+                #return;
+            };
         };
 
         #local obj {@ParseTitle{%%0}};
