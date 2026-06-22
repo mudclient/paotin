@@ -113,7 +113,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #if { "$gLog[initialled]" != "true" } {#return};
     #config {LOG} {RAW};
     #config {LOG LEVEL} {HIGH};
-    #log timestamp {%Y-%m-%d %H:%M:%S };
+    #log timestamp {%Y-%m-%d %H:%M:%S.%f };
     #log append {$gLog[PATH]/$gLog[buffer]};
     ttevent.Handle {RECEIVED INPUT} {log} {framework/log} {log.input};
     ttevent.Handle {RECEIVED LINE}  {log} {framework/log} {mudLog $gTTEventArgZero};
