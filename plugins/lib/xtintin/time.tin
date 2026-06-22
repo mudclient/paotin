@@ -14,7 +14,17 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 // #@ time.Now
 //    返回当前系统时间戳。
 // };
-#func {time.Now} {#format result {%T}};
+#func {time.Now} {
+    #local format   {%0};
+
+    #if { "$format" != "%%{T|U}" } {
+        #local format {%T};
+    };
+
+    #local time     {0};
+    #format time    {$format};
+    #return {$time};
+};
 
 ///=== {
 // #@ time.ParseDoC <时间长度文本>
@@ -51,7 +61,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    时间戳如果省略则为当前系统时间。
 // };
 #func {time.Format} {
-    #local time   {@defaultNum{%1;@time.Now{}}};
+    #local time   {@defaultNum{%1;@time.Now{%U}}};
     #local format {@default{%2;{%Y-%m-%d %H:%M:%S}}};
     #format result {%t} {{$format}{$time}};
     #return {$result};
@@ -63,7 +73,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    格式字符串参见 #help time，如果省略则为 %Y-%m-%d %H:%M:%S。
 // };
 #func {time.FormatNow} {
-    #local time   {@time.Now{}};
+    #local time   {@time.Now{%U}};
     #local format {@default{%1;{%Y-%m-%d %H:%M:%S}}};
     #format result {%t} {{$format}{$time}};
     #return {$result};
