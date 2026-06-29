@@ -279,7 +279,7 @@ VAR {逍遥行正在赶路} {xiaoyao.under-way} {0};
     xiaoyao.Goto $node;
 };
 
-#alias {map} {
+#alias {/map} {
     #local width {0};
     #screen get cols width;
     #if { $width > 132 } {
