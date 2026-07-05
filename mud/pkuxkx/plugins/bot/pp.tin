@@ -143,12 +143,12 @@ event.Define {pp/Response}  {无参} {$MODULE} {已经获取到 PP 结果，并�
 
 #action {^你告诉%S：find $user[id]$E} {#line gag};
 
-#action {^%S(%S)告诉你：【%S(%S)】目前在【%S的%S】,快去摁死它吧!$E} {
+#action {^%S(%S)告诉你：【%S({\S+(| \S+)})】目前在【%S的%S】,快去摁死它吧!$E} {
     #local tell {%2};
     #local name {%3};
     #local id   {%4};
-    #local area {%5};
-    #local room {%6};
+    #local area {%6};
+    #local room {%7};
 
     #local ppList {@option.Get{PPBotListPrivate};@option.Get{PPBotListPublic}};
     #local pp {};
