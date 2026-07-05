@@ -28,6 +28,7 @@ loyalty 本来就有两个别名：
 
 #action {@re.TableHeader{门忠任务列表(共%*项){|💎}}} {
     #var gLoyalty {};
+    #var loyalty.Status {};
     mz.parse;
 };
 
@@ -41,7 +42,8 @@ loyalty 本来就有两个别名：
         };
 
         #switch {"$gLoyalty[$last][类型]/$gLoyalty[$last][描述]"} {
-            #match {"教训/%*的%*(%*)%s一点教训(attack)。"} {
+            #nop 这里『教训』后面应该还有一个单词，但是常常显示不全，所以忽略它。;
+            #match {"教训/%*的%*(%*)%s一点教训%*。"} {
                 #var gLoyalty[$last][房间] {&1};
                 #var gLoyalty[$last][姓名] {&2};
                 #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
@@ -61,7 +63,7 @@ loyalty 本来就有两个别名：
                 #var gLoyalty[$last][NPC]  {@str.ToLower{&6}};
                 #var gLoyalty[$last][描述] {&9};
             };
-            #match {"留言/%*留言如下内容：「%*」"} {
+            #match {"留言/%*留言如下内容：「%*」。"} {
                 #var gLoyalty[$last][留言板] {&1};
                 #var gLoyalty[$last][内容]   {&2};
                 #var gLoyalty[$last][描述]   {};
@@ -114,8 +116,8 @@ loyalty 本来就有两个别名：
         #var loyalty.Status[CD] {0};
     };
 
-    #action {^│基础奖励是指未将丹心状态和门忠日影响纳入考虑的原始奖励，你还需要%d秒才可以%*│$} {
-        #var loyalty.Status[CD] {%%1};
+    #action {^│基础奖励是指未将丹心状态和门忠日影响纳入考虑的原始奖励，你还需要%*秒才可以%*│$} {
+        #var loyalty.Status[CD] {@str.Trim{%%1}};
     };
 
     #action {^│%*。本周的门忠日是星期%*和星期%*。%s│$} {
@@ -123,8 +125,12 @@ loyalty 本来就有两个别名：
         #var loyalty.Status[day2] {星期%%3};
     };
 
-    #action {^╰─{(─)+}───%S────╯$} {
+    #action {^├─{(─)+}─┴─{(─)+}──┴─{(─)+}──┴──{(─)+}───┤{|char/loyalty}$} {
         mz.parse.desc;
+    };
+
+    #action {^╰─{(─)+}───%S────╯{|char/loyalty}$} {
+        #class mz.parse.remaining kill;
     };
 
     ga.ClassWait {
@@ -134,6 +140,16 @@ loyalty 本来就有两个别名：
     };
 
     #class mz.parse close;
+
+    #class mz.parse.remaining open;
+
+    #action {^%*{|char/loyalty}$} {
+        #if { "$loyalty.Status" != "" } {
+            warnLog 未知格式: %%1;
+        };
+    } {9.9};
+
+    #class mz.parse.remaining close;
 };
 
 #alias {mz.List} {
