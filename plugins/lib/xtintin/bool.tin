@@ -117,3 +117,56 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #return {$else};
     };
 };
+
+///=== {
+// #@ ifEqual <值1> <值2> <结果1> <结果2>
+//    判断值1和值2是否相等，如果相等则返回结果1，否则返回结果2。
+// };
+#func {ifEqual} {
+    #local left     {%1};
+    #local right    {%2};
+    #local then     {%3};
+    #local else     {%4};
+
+    #if { "$left" === "$right" } {
+        #return {$then};
+    };
+    #else {
+        #return {$else};
+    };
+};
+
+///=== {
+// #@ ifMatch <值> <模式> <结果1> <结果2>
+//    判断值和模式是否匹配，如果匹配则返回结果1，否则返回结果2。
+// };
+#func {ifMatch} {
+    #local value    {%1};
+    #local pattern  {%2};
+    #local then     {%3};
+    #local else     {%4};
+
+    #if { "$value" == "$pattern" } {
+        #return {$then};
+    };
+    #else {
+        #return {$else};
+    };
+};
+
+///=== {
+// #@ ifEmpty <值> <结果1> <结果2>
+//    判断值是否为空，如果是则返回结果1，否则返回结果2。
+// };
+#func {ifEmpty} {
+    #local value    {%1};
+    #local then     {%2};
+    #local else     {%3};
+
+    #if { "$value" === "" } {
+        #return {$then};
+    };
+    #else {
+        #return {$else};
+    };
+};
