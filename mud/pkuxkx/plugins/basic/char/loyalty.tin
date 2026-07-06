@@ -55,13 +55,14 @@ loyalty 本来就有两个别名：
                 #var gLoyalty[$last][NPC]  {@str.ToLower{&3}};
                 #var gLoyalty[$last][描述] {};
             };
-            #match {"找到/%*(%*)%s，送给%*的%*(%*)%s。%*描述大致如下：%*"} {
+            #match {"找到/%*(%*)%s，送给%*的%*(%*)%s。%*描述大致如下：%*。{|  √}"} {
                 #var gLoyalty[$last][物品] {&1};
                 #var gLoyalty[$last][ID]   {@str.ToLower{&2}};
                 #var gLoyalty[$last][房间] {&4};
                 #var gLoyalty[$last][姓名] {&5};
                 #var gLoyalty[$last][NPC]  {@str.ToLower{&6}};
-                #var gLoyalty[$last][描述] {&9};
+                #var gLoyalty[$last][描述] {&9。};
+                #var gLoyalty[$last][线索] {@ifEmpty{&10;false;true}};
             };
             #match {"留言/%*留言如下内容：「%*」。"} {
                 #var gLoyalty[$last][留言板] {&1};
