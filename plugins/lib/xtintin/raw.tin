@@ -2,7 +2,7 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2026 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
@@ -16,12 +16,25 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //
 // #@ str.Color <字符串>
 //    仅保留字符串中的颜色代码，去掉其余成分，方便比较颜色。
+//    本函数与 str.SimpleColor 的区别在于，本函数不会简化颜色。
+//
+// #@ str.SimpleColor <字符串>
+//    仅保留字符串中的颜色代码，去掉其余成分，方便比较颜色。
+//    本函数与 str.Color 的区别在于，本函数会简化颜色。
+//    所谓简化是指对颜色代码串进行了 color.Trim 和 color.Clean 操作。
+//
+// #@ color.Trim <颜色代码串>
+//    去掉颜色代码串两头的复位代码。
+//
+// #@ color.Clean <颜色代码串>
+//    压缩颜色代码串，只保留经过运算后的效果。
+//    NOTE: 注意某些情况下你可能需要先进行 color.Trim 操作。
 // };
 
 #func {str.Plain}   {#format result {%P} {%0}};
 
 #func {str.Color} {
-    #local str      {};
+    #local color    {};
     #local state    {START};
     #local ch       {};
 
@@ -31,15 +44,69 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
             #case {"START/%*"}  {#0};
             #case {"ESCAPE/["}  {#local state {INNER}};
             #case {"ESCAPE/%*"} {#local state {OUTER}};
-            #case {"INNER/m"}   {#cat str {;}; #local state {OUTER}};
-            #case {"INNER/%*"}  {#cat str {$ch}};
+            #case {"INNER/m"}   {#cat color {;}; #local state {OUTER}};
+            #case {"INNER/%*"}  {#cat color {$ch}};
             #case {"OUTER/\e"}  {#local state {ESCAPE}};
         };
     };
 
-    #replace {str} {;$} {};
+    #replace {color} {;$} {};
 
-    #return {$str};
+    #return {$color};
+};
+
+#func {str.SimpleColor} {
+    #local color {@str.Color{%0}};
+    #local color {@color.Trim{$color}};
+    #local color {@color.Clean{$color}};
+    #return {$color};
+};
+
+#func {color.Trim} {
+    #local color {%0};
+    #replace color {^{(2;37;0(;|))+}} {};
+    #replace color {^{(0(;|))+}} {};
+    #replace color {{((;|)2;37;0)+}$} {};
+    #replace color {{(0(;|))+}$} {};
+
+    #return {$color};
+};
+
+#func {color.Clean} {
+    #local color {%0};
+
+    #local str {};
+    #line sub escapes #format str {%s} {@raw.ParseFragments{{\e[${color}m}}};
+    #if { &str[color][] == 0 } {
+        #return {};
+    };
+
+    #local color {$str[color]};
+    #local attr {};
+    #local output {};
+
+    #foreach {$color[attrs]} {attr} {
+        #switch {"$attr"} {
+            #case {"bold"}      {#cat output {;1}};
+            #case {"dim"}       {#cat output {;2}};
+            #case {"italic"}    {#cat output {;3}};
+            #case {"underline"} {#cat output {;4}};
+            #case {"blink"}     {#cat output {;5}};
+            #case {"reverse"}   {#cat output {;7}};
+            #case {"f16"}       {#cat output {;$color[fg]}};
+            #case {"b16"}       {#cat output {;$color[bg]}};
+            #case {"F16"}       {#cat output {;$color[fg]}};
+            #case {"B16"}       {#cat output {;$color[bg]}};
+            #case {"f256"}      {#cat output {;38;5;$color[fg]}};
+            #case {"b256"}      {#cat output {;48;5;$color[bg]}};
+            #case {"ftrue"}     {#cat output {;38;2;$color[fg]}};
+            #case {"btrue"}     {#cat output {;48;2;$color[bg]}};
+        };
+    };
+
+    #replace output {^;} {};
+
+    #return {$output};
 };
 
 ///=== {
@@ -118,15 +185,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //          - bg: 背景色，同上
 //          - attrs: 文本样式属性，是一个字符串集合(sset)，包含以下可能的值：
 //              - bold
+//              - dim
 //              - italic
 //              - underline
 //              - blink
 //              - reverse
-//              - dim
+//              - f16       表示前景色是 16 色系统
+//              - b16       表示背景色是 16 色系统
+//              - F16       表示前景色是 AIXterm 16 色系统
+//              - B16       表示背景色是 AIXterm 16 色系统
 //              - f256      表示前景色是 256 色系统
 //              - b256      表示背景色是 256 色系统
 //              - ftrue     表示前景色是真彩色
 //              - btrue     表示背景色是真彩色
+//            注意以上属性承诺按照以上顺序出现，但如果未设置该属性则不出现。
 // };
 #func {raw.ParseFragments} {
     #local str      {%1};
@@ -146,7 +218,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 
             #if { "$str[text]" !== "" } {
                 #local fragment[text] {$str[text]};
-                #local fragment[color] {$color};
+                #local fragment[color] {@raw.ParseFragments.buildColor{$color}};
                 #list fragments add {{$fragment}};
                 #local fragment {};
             };
@@ -167,33 +239,35 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         #list tokens delete 1;
 
         #switch {"$mode/$token"} {
-            #case {"SGR/0"}             {#local color[fg] {0}; #local color[bg] {0}; #local color[attrs] {}};
-            #case {"SGR/1"}             {#local color[attrs] {@sset.Add{{$color[attrs]};bold}}};
-            #case {"SGR/2"}             {#local color[attrs] {@sset.Add{{$color[attrs]};dim}}};
-            #case {"SGR/3"}             {#local color[attrs] {@sset.Add{{$color[attrs]};italic}}};
-            #case {"SGR/4"}             {#local color[attrs] {@sset.Add{{$color[attrs]};underline}}};
-            #case {"SGR/5"}             {#local color[attrs] {@sset.Add{{$color[attrs]};blink}}};
-            #case {"SGR/7"}             {#local color[attrs] {@sset.Add{{$color[attrs]};reverse}}};
-            #case {"SGR/3{[0-7]}"}      {#local color[fg] {$token}};
-            #case {"SGR/4{[0-7]}"}      {#local color[bg] {$token}};
-            #case {"SGR/9{[0-7]}"}      {#local color[fg] {$token}};
-            #case {"SGR/10{[0-7]}"}     {#local color[bg] {$token}};
+            #case {"SGR/0"}             {#local color[fg] {}; #local color[bg] {}; #local color[attrs] {}};
+            #case {"SGR/1"}             {#local color[attrs][bold]      {1}};
+            #case {"SGR/2"}             {#local color[attrs][dim]       {1}};
+            #case {"SGR/3"}             {#local color[attrs][italic]    {1}};
+            #case {"SGR/4"}             {#local color[attrs][underline] {1}};
+            #case {"SGR/5"}             {#local color[attrs][blink]     {1}};
+            #case {"SGR/7"}             {#local color[attrs][reverse]   {1}};
+            #case {"SGR/3{[0-7]}"}      {#local color[fg] {$token}; #local color[attrs][fcolors] {8}};
+            #case {"SGR/4{[0-7]}"}      {#local color[bg] {$token}; #local color[attrs][bcolors] {8}};
+            #case {"SGR/9{[0-7]}"}      {#local color[fg] {$token}; #local color[attrs][fcolors] {16}};
+            #case {"SGR/10{[0-7]}"}     {#local color[bg] {$token}; #local color[attrs][bcolors] {16}};
             #case {"SGR/38"}            {#local mode {SGR38}};
-            #case {"SGR38/2"}           {#local mode {SGR382}};
-            #case {"SGR382/%+1..d"}     {#local mode {SGR}; #local color[fg] {$token}; #local color[attrs] {@sset.Add{{$color[attrs]};f256}}};
-            #case {"SGR38/5"}           {#local mode {SGR385}; #local color[fg] {}; #local color[attrs] {@sset.Add{{$color[attrs]};ftrue}}};
+            #case {"SGR38/2"}           {#local mode {SGR382}; #local color[fg] {}; #local color[attrs][fcolors] {256}};
+            #case {"SGR382/%+1..d"}     {#local mode {SGR}; #local color[fg] {$token}};
+            #case {"SGR38/5"}           {#local mode {SGR385}; #local color[fg] {}; #local color[attrs][fcolors] {true}};
             #case {"SGR385/%+1..d"}     {#local mode {SGR3851}; #local color[fg] {@slist.Append{{$color[fg]};$token}}};
             #case {"SGR3851/%+1..d"}    {#local mode {SGR3852}; #local color[fg] {@slist.Append{{$color[fg]};$token}}};
             #case {"SGR3852/%+1..d"}    {#local mode {SGR};     #local color[fg] {@slist.Append{{$color[fg]};$token}}};
             #case {"SGR/48"}            {#local mode {SGR48}};
-            #case {"SGR48/2"}           {#local mode {SGR482}};
-            #case {"SGR482/%+1..d"}     {#local mode {SGR}; #local color[bg] {$token}; #local color[attrs] {@sset.Add{{$color[attrs]};b256}}};
-            #case {"SGR48/5"}           {#local mode {SGR485}; #local color[bg] {}; #local color[attrs] {@sset.Add{{$color[attrs]};btrue}}};
+            #case {"SGR48/2"}           {#local mode {SGR482}; #local color[bg] {}; #local color[attrs][bcolors] {256}};
+            #case {"SGR482/%+1..d"}     {#local mode {SGR}; #local color[bg] {$token}};
+            #case {"SGR48/5"}           {#local mode {SGR485}; #local color[bg] {}; #local color[attrs][bcolors] {true}};
             #case {"SGR485/%+1..d"}     {#local mode {SGR4851}; #local color[bg] {@slist.Append{{$color[bg]};$token}}};
             #case {"SGR4851/%+1..d"}    {#local mode {SGR4852}; #local color[bg] {@slist.Append{{$color[bg]};$token}}};
             #case {"SGR4852/%+1..d"}    {#local mode {SGR};     #local color[bg] {@slist.Append{{$color[bg]};$token}}};
         };
     };
+
+    #local color {@raw.ParseFragments.buildColor{$color}};
 
     #if { "$str[text]" !== "" } {
         #local fragment[text] {$str[text]};
@@ -205,6 +279,40 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         {fragments} {$fragments}
         {color}     {$color}
     };
+};
+
+#func {raw.ParseFragments.buildColor} {
+    #local color {%0};
+
+    #local attrs {$color[attrs]};
+    #local attr {};
+    #local newAttrs {};
+    #foreach {bold;dim;italic;underline;blink;reverse} {attr} {
+        #if { $attrs[$attr] } {
+            #cat newAttrs {;$attr};
+        };
+    };
+
+    #nop 前景色只能有一个系统，以最后出现的为准。;
+    #switch {"$color[attrs][fcolors]/@slist.Size{$color[fg]}"} {
+        #case {"8/1"}       {#cat newAttrs {;f16}};
+        #case {"16/1"}      {#cat newAttrs {;F16}};
+        #case {"256/1"}     {#cat newAttrs {;f256}};
+        #case {"true/3"}    {#cat newAttrs {;ftrue}};
+    };
+
+    #nop 背景色只能有一个系统，以最后出现的为准。;
+    #switch {"$color[attrs][bcolors]/@slist.Size{$color[bg]}"} {
+        #case {"8/1"}       {#cat newAttrs {;b16}};
+        #case {"16/1"}      {#cat newAttrs {;B16}};
+        #case {"256/1"}     {#cat newAttrs {;b256}};
+        #case {"true/3"}    {#cat newAttrs {;btrue}};
+    };
+
+    #replace newAttrs {^;} {};
+    #local color[attrs] {$newAttrs};
+
+    #return {$color};
 };
 
 #alias {raw.ParseFragments.nextToken} {
