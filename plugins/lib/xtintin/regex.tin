@@ -36,3 +36,113 @@ PaoTin++ © 2020~2026 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     #line quiet #info classes save;
     #return {$info[CLASSES][1][arg1]};
 };
+
+VAR {服务器渲染的表格数据}  gServerTable   {};
+
+///=== {
+// ## re.ParseServerTable [<回调代码>]
+//    通用的解析服务器表格的工具。
+//    如果提供了回调代码，那么当表格解析完成后，会调用它。
+//    本工具有两个变体，分别是 re.ParseServerTable/gag 和 re.ParseServerTable/nogag
+//    如果不使用变体后缀修饰，那么默认为 nogag 模式。
+// };
+#alias {re.ParseServerTable}        {re.ParseServerTable.do {nogag} {%21}};
+#alias {re.ParseServerTable/gag}    {re.ParseServerTable.do {gag}   {%21}};
+#alias {re.ParseServerTable/nogag}  {re.ParseServerTable.do {nogag} {%21}};
+
+#alias {re.ParseServerTable.do} {
+    #local gag      {%1};
+    #local callback {%2};
+
+    #var gServerTable {};
+    #var gServerTable.helper[gag]       {$gag};
+    #var gServerTable.helper[callback]  {$callback};
+
+    #line oneshot #action {~{*UTF8}{?:^}%!c╭─{?:(?:─|┬)+}%c{\p{Han}+}%c{?:(?:─|┬)+}─╮%c{|re/ParseServerTable}$} {
+        #var gServerTable[name]         {%%2};
+        #var gServerTable[nameColor]    {@color.Trim{@str.Color{%%1}}};
+        #if { "$gServerTable.helper[gag]" == "gag" } {
+            #line gag;
+        };
+        re.ParseServerTable.body;
+    };
+};
+
+#alias {re.ParseServerTable.body} {
+    #class re.ParseServerTable open;
+
+    #if { "$gServerTable.helper[gag]" == "gag" } {
+        #gag {^%*{|re/ParseServerTable/body}$};
+    };
+
+    #local color    {(?:\e\[[0-9;:]*m)*};
+    #local color2   {(?:\e\[[0-9;:]*m|\s+)*};
+    #line oneshot #action {~^{?:$color}│{($color\S+$color2│)+}%c{|re/ParseServerTable/header}$} {
+        #local header {%%1};
+        #list header explode {│};
+        #var gServerTable[header] {$header};
+        #local idx {};
+        #foreach {*gServerTable[header][]} {idx} {
+            #local header {$gServerTable[header][$idx]};
+            #replace header {%*%C$} {&1};
+            #replace header {^{(\e\[(|0|2;37;0)m)+}} {};
+            #var gServerTable[header][$idx] {
+                {color} {@color.Trim{@str.Color{$header}}}
+                {text}  {@str.Plain{$header}}
+            };
+        };
+    } {4.9};
+
+    #action {~^{?:$color}│%*%s%c│%c{|re/ParseServerTable/body}$} {
+        #if { "%%1" != "%*│%*" } {
+            #local note {%%1};
+            #cat gServerTable[note] {$note};
+            #return;
+        };
+
+        #local line {%%1};
+        #list line explode {│};
+        #local idx {};
+        #local body {};
+        #local colorBody {};
+        #foreach {*line[]} {idx} {
+            #local b {$line[$idx]};
+            #replace b {%*%C$} {&1};
+            #replace b {^{(\e\[(|0|2;37;0)m)+}} {};
+            #local field {$gServerTable[header][$idx][text]};
+            #local body[$field] {@str.Plain{$b}};
+            #local colorBody[$field] {$b};
+        };
+
+        #local body[group] {$gServerTable.helper[group]};
+        #local colorBody[group] {$gServerTable.helper[colorGroup]};
+
+        #list gServerTable[body] add {{$body}};
+        #list gServerTable[colorBody] add {{$colorBody}};
+    } {4.95};
+
+    #action {~{*UTF8}{?:^}%!c├─{?:(?:─|┼)*}%c{\p{Han}+}%c{?:(?:─|┼)+}──┤%c{|re/ParseServerTable/group}$} {
+        #var gServerTable.helper[colorGroup] {%%1%%2};
+        #var gServerTable.helper[group] {%%2};
+    };
+
+    #action {^├──{(─|┴)+}──┤$} {
+        #var gServerTable[note] {};
+    };
+
+    #action {{*UTF8}{?:^}╰─{?:(?:─|┴)+}{\p{Han}+}{?:(?:─|┴)+}─╯{|re/ParseServerTable/body}$} {
+        #class re.ParseServerTable kill;
+
+        #if { "$gServerTable.helper[gag]" == "gag" } {
+            #line gag;
+        };
+
+        #if { "$gServerTable.helper[callback]" !== "" } {
+            #line sub {escapes;var;func} #delay 0 {
+                $gServerTable.helper[callback];
+            };
+        };
+    };
+
+    #class re.ParseServerTable close;
+};
