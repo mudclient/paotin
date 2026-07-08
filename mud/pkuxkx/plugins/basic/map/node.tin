@@ -3,7 +3,7 @@
 /*
 本文件属于 PaoTin++ 的一部分
 ===========
-PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2026 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 ===========
 */
@@ -11,20 +11,21 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息，并更新到 gMapRoom 全局变量。};
 
 /*
-╭───扬州─────────┬─────────────╮
-│目的地                      │拼音名称                  │
-│丐帮分舵  ◇ 土地庙         │gaibang                   │
-│濠州府  ◇ 广场             │haozhou                   │
-│长江[建康府]  ◇ 长江渡口   │jiankang                  │
-│往生堂  ◇ 往生堂广场       │shashou                   │
-│信阳  ◇ 小广场             │xinyang                   │
-│徐州  ◇ 戏马台             │xuzhou                    │
-│长江[镇江]  ◇ 扬子津       │zhenjiang                 │
-├──────────────┴─────────────┤
-│walk [拼音名]命令使用内建路径。                         │
-│walk -c [拼音名]返回具体地点的路径。                    │
-│node 命令列出玩家自建路径。                             │
-╰───────────────────北大侠客行────╯
+╭───扬州──────────────┬────────────┬─────╮
+│目的地                                │拼音名称                │步数      │
+│丐帮分舵  ◇ 土地庙                   │gaibang                 │13        │
+│濠州府  ◇ 广场                       │haozhou                 │11        │
+│建康府  ◇ 长江渡口                   │jiankang                │12        │
+│庐州  ◇ 石板桥                       │luzhou                  │11        │
+│往生堂  ◇ 往生堂广场                 │shashou                 │14        │
+│信阳  ◇ 小广场                       │xinyang                 │10        │
+│徐州  ◇ 戏马台                       │xuzhou                  │14        │
+│镇江  ◇ 扬子津                       │zhenjiang               │8         │
+├───────────────────┴────────────┴─────┤
+│walk [拼音名]命令使用内建路径。                                             │
+│walk -c [拼音名]返回具体地点的路径。                                        │
+│node 命令列出玩家自建路径。                                                 │
+╰─────────────────────────────北大侠客行────╯
 */
 
 ///=== {
@@ -69,45 +70,35 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
         };
     };
 
-    #action {{*UTF8}{^}╭─{(─)*}─{\p{Han}+}─{(─|┬)*}─╮$E} {
-        #var gMapRoom[node]         {%%4};
+    re.ParseServerTable map.GetNodeInfo.parse;
+    #alias {map.GetNodeInfo.parse} {
+        #var gMapRoom[node]         {$gServerTable[name]};
         #var gMapRoom[nodeLinks]    {};
 
-        #class map.GetNodeInfo open;
+        #local idx {};
+        #foreach {*gServerTable[body][]} {idx} {
+            #local body {$gServerTable[body][$idx]};
+            #local colorBody {$gServerTable[colorBody][$idx]};
 
-        #local {E} {{?:|id=map/getnode}$};
+            #var dest {@str.Replace{{$colorBody[目的地]};{%S%!c %c ◇ %*};{
+                {dest}      {&1}
+                {markColor} {&2}
+                {colorRoom} {&3}
+                {room}      {&3}
+            }}};
 
-        #action {^│目的地%s│拼音名称%s│$E} {
-            #if { "%1" == "gag" } {#line gag};
-        } {4.999};
+            #local name         {@str.Plain{$dest[dest]}};
+            #local room         {@str.Plain{$dest[room]}};
+            #local pinyin       {$body[拼音名称]};
+            #local markColor    {@str.Color{$dest[markColor]}};
+            #local pinyinColor  {@str.Color{$colorBody[拼音]}};
+            #local steps        {$body[步数]};
 
-        #action {^├──{(─)*}──┼──{(─)*}──┤$E} {
-            #class map.GetNodeInfo.miss open;
-            #action {^%*{|ID=map/getnode}$} {errLog 发现 BUG，$gMapRoom[node]（$gMapRoom[name]）下面这行内容无法识别，请报告开发者。} {5.1};
-            #class map.GetNodeInfo.miss close;
-        };
-
-        #action {^├──{(─)*}──┴──{(─)*}──┤$E} {
-            #class map.GetNodeInfo.miss kill;
-        };
-
-        #nop 旧版目标样式，无菱形，不分红绿。;
-        #action {~^%c│%+2c%S%C│%+1c%S%C│%c$E} {
-            map.room.node-link {%%%3} {@str.Plain{%%%6}} {} {@str.Color{%%%6}};
-        };
-
-        #nop 新版目标样式，有菱形，分红绿，拼音在张金鳌任务下会变色。;
-        #action {~^%c│%+2c%S%+1c %+1c ◇ %+1c%S%C│%+1c%S%C│%c$E} {
-            map.room.node-link {%%%3} {@str.Plain{%%%10}} {@str.Color{%%%5}} {@str.Color{%%%10}};
-        };
-
-        #alias {map.room.node-link} {
-            #local name         {%%%1};
-            #local pinyin       {%%%2};
-            #local markColor    {%%%3};
-            #local pinyinColor  {%%%4};
-
-            #var {gMapRoom[nodeLinks][$pinyin]} {{name}{$name}};
+            #var {gMapRoom[nodeLinks][$pinyin]} {
+                {name}  {$name}
+                {room}  {$room}
+                {steps} {$steps}
+            };
 
             #if { "$markColor" != "" } {
                 #var {gMapRoom[nodeLinks][$pinyin][markColor]} {$markColor};
@@ -117,8 +108,6 @@ event.Define {map/GotNodeInfo}  {无参} {$MODULE} {已经获取到节点信息�
                 #var {gMapRoom[nodeLinks][$pinyin][pinyinColor]} {$pinyinColor};
             };
         };
-
-        #class map.GetNodeInfo close;
     };
 
     #action {^%*内的系统内建路径出发点在：%*，请查询localmaps获得具体方位。$E} {
