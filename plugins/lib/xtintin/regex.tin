@@ -138,7 +138,7 @@ VAR {服务器渲染的表格数据}  gServerTable   {};
         };
 
         #if { "$gServerTable.helper[callback]" !== "" } {
-            #line sub {escapes;var;func} #delay 0 {
+            #line sub {escapes;var;func} ga.Wait {
                 $gServerTable.helper[callback];
             };
         };
