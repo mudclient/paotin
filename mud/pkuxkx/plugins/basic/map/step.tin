@@ -567,6 +567,14 @@ VAR {清除门卫命令，默认为 attack}					map.step.crush.cmd	{attack};
     #action {^此处乱石密布，稍不留意很容易被绊倒。$}                            {map.step.Try.retry};
     #nop 庐山的北山盘道;
     #action {^你极细看着路牌上到底写些什么。$}                                  {map.step.Try.retry};
+    #nop 开封的梁山泊;
+    #action {^行到此处，芦苇丛生，烟波浩渺，不知深浅。$}                        {map.step.Try.retry};
+    #nop 大轮寺的积雪小路;
+    #action {^雪路很滑，你不由得放慢了速度，小心翼翼地行走！$}                  {map.step.Try.retry};
+    #nop 剑门关的小路;
+    #action {^到了剑门关前，道路更加险峻，除了慢慢登上关城，别无他途。$}        {map.step.Try.retry};
+    #nop 剑门关的崎岖小路;
+    #action {^你不时要注意头顶的落石，根本不敢乱跑。$}                          {map.step.Try.retry};
 
     #nop 泰山的山路;
     #action {^走到这里，已经没有人工的石阶，道路纷杂，你不禁伫足查看。$}        {map.step.Try.retry};
