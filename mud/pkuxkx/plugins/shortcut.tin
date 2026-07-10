@@ -397,3 +397,16 @@ VAR {是否已释放过八方风雨} pfm.bafang {0};
         };
     } 1;
 };
+
+#nop 武当新人常常因为 PaoTin++ 美化导致借不到经书，这里优化一下。;
+#alias {jie} {
+    #local book {%0};
+
+    #if { "$book" == "%*{庄子|道德经|阴符经}%*" } {
+        #replace book { } {};
+        xtt.Send jie $book;
+    };
+    #else {
+        xtt.Send jie %0;
+    };
+};
