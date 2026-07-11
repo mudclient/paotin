@@ -410,3 +410,6 @@ VAR {是否已释放过八方风雨} pfm.bafang {0};
         xtt.Send jie %0;
     };
 };
+
+#alias {l %s(users)}    {xtt.Send l (users)}    {9};
+#alias {look %s(users)} {xtt.Send look (users)} {9};
