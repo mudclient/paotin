@@ -154,6 +154,71 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 };
 
 ///=== {
+// #@ slist.DictTranslate <字符串列表> <字典>
+//    通过字典对字符串列表进行翻译。
+//    返回新的字符串列表。
+// };
+#func {slist.DictTranslate} {
+    #local slist {%1};
+    #local dict  {%2};
+
+    #local l {};
+
+    #local elem {};
+    #foreach {$slist} {elem} {
+        #if { "$elem" !== "" } {
+            #if { &dict[$elem] > 0 } {
+                #local new {$dict[$elem]};
+                #if { "$new" === "" } {
+                    #continue;
+                };
+                #else {
+                    #list l add {{$new}};
+                };
+            };
+        };
+    };
+
+    #list l collapse {;};
+
+    #return {$l};
+};
+
+///=== {
+// #@ slist.Translate <字符串列表> <旧元素列表> <新元素列表>
+//    对字符串列表进行翻译。将字符串列表中的旧元素用相对应的新元素替代。
+//    返回新的字符串列表。
+// };
+#func {slist.Translate} {
+    #local slist    {%1};
+    #local keys     {%2};
+    #local values   {%3};
+
+    #list values create {$values};
+
+    #local dict {};
+
+    #local idx {0};
+    #local key {};
+    #foreach {$keys} {key} {
+        #math idx {$idx + 1};
+        #local value {$values[+$idx]};
+        #local dict[$key] {$value};
+    };
+
+    #return {@slist.DictTranslate{{$slist};{$dict}}};
+};
+
+///=== {
+// #@ slist.Drop <字符串列表> <元素列表>
+//    从字符串列表中删除在元素列表中出现过的元素。
+//    返回新的字符串列表。
+// };
+#func {slist.Drop} {
+    #return {@slist.Translate{{%1};{%2}}};
+};
+
+///=== {
 // #@ slist.IndexOf <字符串列表> <字符串>
 //    从字符串列表中查找某个字符串，并返回其位置（从 1 开始计），0 表示没找到。
 // };
