@@ -25,7 +25,7 @@ VAR {可能的房间小地图} miniMapBuffer {};
     #local save     {?:[ ]+\[(存盘点)\]|};
     #local store    {?:[ ]+\[(玩家储物柜)\]|};
     #local group    {?:[ ]+\[(\S+)\]|};
-    #local mark     {?:[ ]+((?:㊣|★|☆|\s)*)|};
+    #local mark     {?:[ ]+((?:㊣|★|☆|(?:.*? (?:①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩))|\s)*)|};
     #local undef    {?:[ ]+\[未定义\]|};
 
     #class map.Room.Watch open;
