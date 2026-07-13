@@ -122,9 +122,30 @@ load-lib sync;
 
 #alias tichun {
     #class tichun open;
-    #action {^你目前的修为还可以再转换%%1点内力变为真气。$E} {#delay 0 {xtt.Send {tichun %%1}}} {9.500};
+
+    #action {^你目前的修为还可以再转换%%1点内力变为真气。$} {
+        xtt.Send {tichun %%1};
+    } {9.500};
+
+    #alias {tichun.do} {
+        #local point {@math.Eval{$char[HP][最大真气] - $char[HP][当前真气]}};
+        #local point {@math.Min{$point;$char[HP][当前内力]}};
+        xtt.Send {tichun $point};
+    };
+
+    #action {^你不断催动内力向丹田气海中灌注。$} {
+        #class tichun kill;
+    };
+
     #class tichun close;
-    #delay 1 {xtt.Send {tichun $char[HP][当前内力]}};
+
+    hp;
+
+    sync.Wait {
+        busy.Wait {
+            tichun.do;
+        };
+    };
 };
 
 #gag {向红豆打听有关『%*』的消息。$E};
