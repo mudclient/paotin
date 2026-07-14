@@ -207,8 +207,8 @@ VAR {任务CD状态查询结果} gJobState {};
         };
 
         #local moreInfo {$rawLine};
-        #if { "$moreInfo[buff]"  != "" } {#local moreInfo[buff]  {@str.Color{$moreInfo[buff]}}};
-        #if { "$moreInfo[group]" != "" } {#local moreInfo[group] {@str.Color{$moreInfo[group]}}};
+        #if { "$moreInfo[buff]"  != "" } {#local moreInfo[buff]  {@str.SimpleColor{$moreInfo[buff]}}};
+        #if { "$moreInfo[group]" != "" } {#local moreInfo[group] {@str.SimpleColor{$moreInfo[group]}}};
 
         #if { "$moreInfo[color]" != "" } {
             #replace moreInfo[color] {\e[2;37;0m{(\e\[([0-9;]+)m)+}◆} {@str.Replace{{&3};{;};{-}};};
