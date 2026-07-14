@@ -114,8 +114,10 @@ VAR {服务器渲染的表格数据}  gServerTable   {};
             #local colorBody[$field] {$b};
         };
 
-        #local body[group] {$gServerTable.helper[group]};
-        #local colorBody[group] {$gServerTable.helper[colorGroup]};
+        #if { "$gServerTable.helper[group]" != "" } {
+            #local body[group] {$gServerTable.helper[group]};
+            #local colorBody[group] {$gServerTable.helper[colorGroup]};
+        };
 
         #list gServerTable[body] add {{$body}};
         #list gServerTable[colorBody] add {{$colorBody}};
@@ -130,7 +132,7 @@ VAR {服务器渲染的表格数据}  gServerTable   {};
         #var gServerTable[note] {};
     };
 
-    #action {{*UTF8}{?:^}╰─{?:(?:─|┴)+}{\p{Han}+}{?:(?:─|┴)+}─╯{|re/ParseServerTable/body}$} {
+    #action {{*UTF8}{?:^}╰─{?:(?:─|┴)+}{(|\p{So})\p{Han}+(|\p{So})}{?:(?:─|┴)+}─╯{|re/ParseServerTable/body}$} {
         #class re.ParseServerTable kill;
 
         #if { "$gServerTable.helper[gag]" == "gag" } {
