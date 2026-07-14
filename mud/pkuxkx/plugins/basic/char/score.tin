@@ -114,7 +114,7 @@ event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新};
     } {6};
 
 #nop │ 膂力：[  69]  悟性：[  47]  根骨：[  83]  身法：[  79]       │    -  -      │;
-    #action {~^\e[0m│\e[2;37;0m 膂力：[%+]  悟性：[%+]  根骨：[%+]  身法：[%+]%+│%+│} {
+    #action {~^%!c│%!c 膂力：[%+]  悟性：[%+]  根骨：[%+]  身法：[%+]%+│%+│%c$} {
         #local str {%%1};
         #local int {%%2};
         #local con {%%3};
@@ -128,10 +128,10 @@ event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新};
             #local key {初始};
         };
 
-        #replace str {{\x1b\[[0-9;\\]+m}} {};
-        #replace int {{\x1b\[[0-9;\\]+m}} {};
-        #replace con {{\x1b\[[0-9;\\]+m}} {};
-        #replace dex {{\x1b\[[0-9;\\]+m}} {};
+        #local str {@str.Plain{$str}};
+        #local int {@str.Plain{$int}};
+        #local con {@str.Plain{$con}};
+        #local dex {@str.Plain{$dex}};
 
         #var char[档案][$key][膂力] {@str.Trim{$str}};
         #var char[档案][$key][悟性] {@str.Trim{$int}};
