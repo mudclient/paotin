@@ -18,6 +18,7 @@ event.Define {GMCP.Status}      {无参} {$MODULE} {接收到 GMCP 角色状态�
 event.Define {GMCP.Combat}      {无参} {$MODULE} {接收到 GMCP 战斗信息，已更新 gGMCP[Combat]};
 event.Define {GMCP.Buff}        {无参} {$MODULE} {接收到 GMCP BUFF状态，已更新 gGMCP[Buff]};
 event.Define {GMCP.Message}     {无参} {$MODULE} {接收到 GMCP 聊天信息，已更新 gGMCP[Message]};
+event.Define {GMCP.System}      {无参} {$MODULE} {接收到 GMCP 副本跃迁，已更新 gGMCP[System]};
 
 #var {gmcp.key-e2c} {
     {Move} {
@@ -99,11 +100,15 @@ event.Define {GMCP.Message}     {无参} {$MODULE} {接收到 GMCP 聊天信息�
         {name}                  {姓名}
         {url}                   {下载地址}
     }
+
+    {System} {
+        {site}                  {副本}
+    }
 };
 
 #alias {gmcp.pkuxkx.Enable} {
     #event {IAC SB GMCP} {
-        #if { "%%0" == "GMCP.{Status|Move|Combat|Buff|Message}" } {
+        #if { "%%0" == "GMCP.{Status|Move|Combat|Buff|Message|System}" } {
             #return;
         };
         gmcp.pkuxkx.OnGMCP {%%0} {%%1};
@@ -114,6 +119,7 @@ event.Define {GMCP.Message}     {无参} {$MODULE} {接收到 GMCP 聊天信息�
     #event {IAC SB GMCP GMCP.Combat IAC SE}         {gmcp.pkuxkx.OnCombat {%%1} {%%2}};
     #event {IAC SB GMCP GMCP.Buff IAC SE}           {gmcp.pkuxkx.OnBuff {%%1} {%%2}};
     #event {IAC SB GMCP GMCP.Message IAC SE}        {gmcp.pkuxkx.OnMessage {%%1} {%%2}};
+    #event {IAC SB GMCP GMCP.System IAC SE}         {gmcp.pkuxkx.OnSystem {%%1} {%%2}};
 
     tune gmcp status on;
     tune gmcp move on;
@@ -205,10 +211,24 @@ event.Define {GMCP.Message}     {无参} {$MODULE} {接收到 GMCP 聊天信息�
     event.Emit GMCP.Message {};
 };
 
+#alias {gmcp.pkuxkx.OnSystem} {
+    mudLog GMCP.System: {%2};
+
+    #line sub escapes #var gGMCP[System] {%1};
+    #var gGMCP[System] {$gGMCP[System][1]};
+    gmcp.translate-key System;
+
+    #if { @option.IsEnable{GMCPDebug} } {
+        #var gGMCP[System];
+    };
+
+    event.Emit GMCP.System {};
+};
+
 #alias {gmcp.translate-key} {
     #local class {%1};
 
-    #if { "$class" != "{Move|Status|Combat|Buff|Message}" } {
+    #if { "$class" != "{Move|Status|Combat|Buff|Message|System}" } {
         #return;
     };
 
