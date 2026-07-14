@@ -48,11 +48,12 @@ VAR {角色特技列表，表格} {char.Special} {};
         #local id       {%%4};
         #local level    {@str.Len{%%6}};
 
-        #if { "$enable" == "*" } {
-            #local enable {true};
+        #nop 这里不要和星号比，容易被转义，直接和空字符串比就可以了。;
+        #if { "$enable" == "" } {
+            #local enable {false};
         };
         #else {
-            #local enable {false};
+            #local enable {true};
         };
 
         #var char.Special[$name] {
