@@ -214,9 +214,9 @@ event.HandleOnce {map/init} {map/area} {map} {pkuxkx.map.area.init};
 };
 
 ///=== {
-/// #@ map.AreaColor <区域名称>
-//     获取该区域的颜色。
-//     区域颜色是一个区域的固有属性，可以通过该区域的平民 title 的颜色来确认。
+// #@ map.AreaColor <区域名称>
+//    获取该区域的颜色。
+//    区域颜色是一个区域的固有属性，可以通过该区域的平民 title 的颜色来确认。
 // };
 #func {map.AreaColor} {
     #local area {%1};
