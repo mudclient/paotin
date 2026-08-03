@@ -294,7 +294,16 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 };
 
 ///=== {
-// #@ char.SkillLimit [<技能名称>]
+// #@ char.SkillID <技能中文名称>
+//    返回技能的 ID。支持且仅支持所有玩家 skills 命令中可以看到的技能。
+// };
+#func {char.SkillID} {
+    #local skill {%1};
+    #return {$char[Skills][$skill][code]};
+};
+
+///=== {
+// #@ char.SkillLimit [<技能中文名称>]
 //    如果指定了技能名称，则返回该技能所能达到的技能上限。
 //    如果没有指定或者技能不存在，则返回本人的武功技能上限。
 //    如果技能上限获取失败，默认值为基本内功的上限，如果基本内功上限也没有获取到，则默认为 1。
@@ -307,7 +316,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 };
 
 ///=== {
-// #@ char.SkillType <技能名称>
+// #@ char.SkillType <技能中文名称>
 //    返回该技能的技能类别。
 //    常见的技能类别有：
 //        - 基本功夫
@@ -394,7 +403,7 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
         #return {$char[Skills][$arg][jifa-to]};
     };
     #else {
-        #return;
+        #return {};
     };
 };
 
@@ -419,6 +428,93 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
     };
 
     #return {@defaultNum{$char[Skills][$skill][jifa-level];$level}};
+};
+
+///=== {
+// #@ char.CanLianxi [<基本武功>]
+//    如果某项武功可以练习，则返回真，否则返回假。
+//    如果省略参数，则默认为基本招架。
+//    注意: 这里不考虑游戏特定的限制，只做简单的等级比较。
+// };
+#func {char.CanLianxi} {
+    #local skill {@default{%1;基本招架}};
+
+    #if { "$skill" != "基本%*" || "$skill" == "基本内功" } {
+        #return 0;
+    };
+
+    #local baseLvl  {@char.SkillLevel{$skill}};
+    #local skill    {@char.GetJifaSkill{$skill}};
+    #local level    {@char.SkillLevel{$skill}};
+
+    #if { "$skill" == "" || $baseLvl == 0 || $level == 0 } {
+        #return 0;
+    };
+
+    #if { @math.Floor{$baseLvl} > @math.Floor{$level} } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.CanLingwu [<基本武功>]
+//    如果某项武功可以领悟，则返回真，否则返回假。
+//    如果省略参数，则默认为基本内功。
+// };
+#func {char.CanLingwu} {
+    #local skill {@default{%1;基本内功}};
+
+    #if { "$skill" != "基本%*" } {
+        #return 0;
+    };
+
+    #local baseLvl  {@char.SkillLevel{$skill}};
+    #local skill    {@char.GetJifaSkill{$skill}};
+    #local level    {@char.SkillLevel{$skill}};
+
+    #if { "$skill" == "" || $baseLvl == 0 || $level == 0 } {
+        #return 0;
+    };
+
+    #if { @math.Floor{$baseLvl} <= @math.Floor{$level} } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.CanXiulian [<内功中文名称>]
+//    如果角色拥有足够的潜能（暂定为 10w），并且内功等级尚未达到上限，则返回真，否则返回假。
+//    可选的内功名称参数用来指定具体的内功，如果省略则取当前激发的内功。
+// };
+#func {char.CanXiulian} {
+    #local force    {%1};
+
+    #if { "$force" == "" } {
+        #local force {@char.GetJifaSkill{基本内功}};
+    };
+
+    #if { "$force" == "" } {
+        #return 0;
+    };
+
+    #local level    {@char.SkillLevel{$force}};
+    #local limit    {@char.SkillLimit{$force}};
+
+    #if { @defaultNum{$char[HP][潜能];0} < 100000 } {
+        #return 0
+    };
+
+    #if { $level < 100 || $level >= $limit } {
+        #return 0;
+    };
+
+    #return 1;
 };
 
 #action {^你的「%*」进步了！$E} {
