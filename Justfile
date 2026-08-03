@@ -1,7 +1,7 @@
 # 默认行为，也就是本命令
 help:
     @echo '输入 just <recipe> 执行预定义的动作。'
-    @just --list --unsorted
+    @just-list 2>/dev/null || just --list --unsorted
 
 # 制作镜像
 build-image:
