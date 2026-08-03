@@ -440,6 +440,9 @@ hp -neili 格式：
     #if { $char[HP][气血百分比] < 30 || $char[HP][精神百分比] < 70 } {
         #local safety {危险};
     };
+    #elseif { $char[HP][气血百分比] > 95 && $char[HP][精神百分比] > 98 } {
+        #local safety {康泰};
+    };
     #elseif { $char[HP][气血百分比] > 80 && $char[HP][精神百分比] > 95 } {
         #local safety {安全};
     };
@@ -453,6 +456,11 @@ hp -neili 格式：
         {背景} { {平常}{<099>} {战斗}{<B00A>} {战安}{<B040>} {战危}{<B600>} {战忙}{<B808>} {危急}{<BA00>} {正忙}{<B330>} }
     }}};
 
+    #local char.hp.fight.target {};
+    #if { @existsFunction{fight.target.Brief} } {
+        #local char.hp.fight.target {@fight.target.Brief{}};
+    };
+
     #switch {"$char[HP][战斗中]/$char[HP][忙]/$safety"} {
         #case {"false/false/%*"} {
             #local head    {$theme[背景][平常]$theme[前景][平常]};
@@ -464,27 +472,35 @@ hp -neili 格式：
         };
         #case {"true/false/"} {
             #local head    {$theme[背景][战斗]$theme[前景][战斗]};
-            #local tail     { $theme[前景][战斗]战($char[HP][气势])};
+            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $char.hp.fight.target};
         };
         #case {"true/true/"} {
             #local head    {$theme[背景][战忙]$theme[前景][战忙]};
-            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战忙]忙<298>};
+            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战忙]忙 $char.hp.fight.target<298>};
+        };
+        #case {"true/false/康泰"} {
+            #local head    {$theme[背景][战安]$theme[前景][战安]};
+            #local tail     { $theme[前景][战安]战($char[HP][气势]) $theme[前景][战安]泰 $char.hp.fight.target<298>};
+        };
+        #case {"true/true/康泰"} {
+            #local head    {$theme[背景][战忙]$theme[前景][战忙]};
+            #local tail     { $theme[前景][战安]战($char[HP][气势]) $theme[前景][战安]泰 $theme[前景][战忙]忙 $char.hp.fight.target<298>};
         };
         #case {"true/false/安全"} {
             #local head    {$theme[背景][战安]$theme[前景][战安]};
-            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战安]安<298>};
+            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战安]安 $char.hp.fight.target<298>};
         };
         #case {"true/true/安全"} {
             #local head    {$theme[背景][战忙]$theme[前景][战忙]};
-            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战安]安 $theme[前景][战忙]忙<298>};
+            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战安]安 $theme[前景][战忙]忙 $char.hp.fight.target<298>};
         };
         #case {"true/false/危险"} {
             #local head    {$theme[背景][战危]$theme[前景][战危]};
-            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战危]危<298>};
+            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战危]危 $char.hp.fight.target<298>};
         };
         #case {"true/true/危险"} {
             #local head    {$theme[背景][危急]$theme[前景][危急]};
-            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战危]危 $theme[前景][战忙]忙<298>};
+            #local tail     { $theme[前景][战斗]战($char[HP][气势]) $theme[前景][战危]危 $theme[前景][战忙]忙 $char.hp.fight.target<298>};
         };
     };
 
