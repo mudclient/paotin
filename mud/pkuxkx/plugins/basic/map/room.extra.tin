@@ -14,7 +14,8 @@ event.HandleOnce {map/init} {pkuxkx/map/room} {map} {pkuxkx.map.Room.init};
     set area_detail;
 };
 
-VAR {可能的房间小地图} miniMapBuffer {};
+VAR {当前所在的房间}    gMapHere        {};
+VAR {可能的房间小地图}  miniMapBuffer   {};
 
 #alias {map.Room.Watch} {
     #local dungeon  {?:\[(\S{3,10})副本\]|};
@@ -94,6 +95,7 @@ VAR {可能的房间小地图} miniMapBuffer {};
         #local here {0};
         #if { "$room[direction]" == "here" } {
             #local here {@map.Here{}};
+            #var gMapHere {$gMapRoom};
         };
 
         #local header {%%99};
@@ -509,7 +511,7 @@ VAR {可能的房间小地图} miniMapBuffer {};
         #unvar gMapRoom[drawMap];
         #var gMapRoom[allDone] {true};
 
-        #if { @slist.Contains{{$gMapRoom[lookable]};{<ferry>}} } {
+        #if { @slist.Contains{{$gMapRoom[lookable]};{〈ferry〉}} } {
             #var gMapRoom[dock] {Ride};
         };
 
@@ -650,4 +652,18 @@ VAR {可能的房间小地图} miniMapBuffer {};
 
     #local exits {$gMapRoom[gmcp][出口信息][%*]};
     #return {@slist.Sort{$exits}};
+};
+
+///=== {
+// #@ map.Room.IsAt <房间名>
+//    判断当前房间名称是不是指定的名称。如果是则返回真，否则返回假。
+// };
+#func {map.Room.IsAt} {
+    #local roomName {%1};
+
+    #if { "$gMapHere[name]" == "$roomName" } {
+        #return 1;
+    };
+
+    #return 0;
 };
