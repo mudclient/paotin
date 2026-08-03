@@ -239,6 +239,20 @@ event.Define {char/saving}  {无参} {$MODULE} {银行存款数据更新};
     #class char-score-parser close;
 };
 
+///=== {
+// #@ char.InFamily <门派列表>
+//    如果角色属于指定的门派，则返回真，否则返回假。
+// };
+#func {char.InFamily} {
+    #local family {%0};
+
+    #if { @sset.Contains{{$family};$char[档案][门派]} } {
+        #return 1;
+    };
+
+    #return 0;
+};
+
 #nop 取钱提示;
 #action {^%+1..4u记完帐，告诉你：「您在敝商号现还有%*。」$} {
     score.update-balance {%2};
