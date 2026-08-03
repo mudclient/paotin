@@ -91,8 +91,8 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
 
     #echo {%h} { 已经定义的事件列表 };
 
-    #echo {%-30s %-5s %-40s %s} {事件/已注册的钩子} {类型} {模块} {说明/代码};
-    #echo {%-30s %-5s %-40s %s} {@str.Repeat{30;-}} {----} {@str.Repeat{40;-}} {------------};
+    #echo {%-40s %-5s %-40s %s} {事件/已注册的钩子} {类型} {模块} {说明/代码};
+    #echo {%-40s %-5s %-40s %s} {@str.Repeat{40;-}} {----} {@str.Repeat{40;-}} {------------};
 
     #local event {};
     #foreach {*gValidEvent[]} {event} {
@@ -105,7 +105,7 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
         #local desc {$gValidEvent[$event][desc]};
 
         #local event-line {};
-        #format {event-line} {%-30s %-5s %-40s %s} {$event} {$type}
+        #format {event-line} {%-40s %-5s %-40s %s} {$event} {$type}
             {@genModuleLink{$module;MOD}} {$desc};
 
         #local eventShown {0};
@@ -145,10 +145,12 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
                     #local lead {╰};
                 };
 
+                #local hookStr {@str.FormatIfElse{"$class" != "ANY_CLASS";$hook(%s);$hook;$class}};
+
                 #local len {1};
-                #format len {%L} {$hook};
-                #math len {26 - $len};
-                #echo { $lead@str.Repeat{$len;─} %s        %-40s %s}{$hook}
+                #format len {%L} {$hookStr};
+                #math len {36 - $len};
+                #echo { $lead@str.Repeat{$len;─} %s        %-40s %s}{$hookStr}
                     {@genModuleLink{$module;MOD}}
                     {$gEventHandlers[$event][$class][$hook][code]};
             };
@@ -295,6 +297,7 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
     #local class {$info[SESSION][CLASS]};
     #unvar info[SESSION];
     event.handle {%1} {%2} {%3} {%24} {event.ClassHandle} {{class}{$class}};
+    #class $class open;
 };
 
 ///=== {
@@ -306,6 +309,7 @@ VAR {已定义的 PaoTin++ 事件列表}  gValidEvent    {};
     #local class {$info[SESSION][CLASS]};
     #unvar info[SESSION];
     event.handle {%1} {%2} {%3} {%24} {event.ClassHandleOnce} {{justOnce}{true}{class}{$class}};
+    #class $class open;
 };
 
 ///=== {
@@ -449,6 +453,7 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
     #local class {$info[SESSION][CLASS]};
     #unvar info[SESSION];
     ttevent.handle {%1} {%2} {%3} {%24} {ttevent.ClassHandle} {{class}{$class}};
+    #class $class open;
 };
 
 ///=== {
@@ -460,6 +465,7 @@ VAR {当前正在处理的 TinTin++ 事件 %0}   gTTEventArgZero     {};
     #local class {$info[SESSION][CLASS]};
     #unvar info[SESSION];
     ttevent.handle {%1} {%2} {%3} {%24} {ttevent.ClassHandleOnce} {{justOnce}{true}{class}{$class}};
+    #class $class open;
 };
 
 ///=== {
