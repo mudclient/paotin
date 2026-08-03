@@ -68,6 +68,8 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 #alias {cha}        {char.Skills};
 #alias {skbrief}    {char.Skbrief {%1} nogag};
 
+VAR {技能 ID 到技能名称的转换} char.skills.id2name {};
+
 #alias {char.Skills} {
     #local args {%0};
 
@@ -147,6 +149,8 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
             {level}     {$level}
             {limit}     {$limit}
         };
+
+        #var char.skills.id2name[$code] {$name};
 
         #if { $char-skill-limit < $limit } {
             #var char-skill-limit $limit;
@@ -249,31 +253,74 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
 };
 
 #alias {char.Skbrief} {
-    #local id   {%1};
+    #local skillID {%1};
 
-    #if { "$id" == "" } {
+    #if { "$skillID" == "" } {
         errLog 用法: skbrief <技能ID>;
         #return;
     };
 
-    #alias {char.Skbrief.parse} {
+    #alias {char.Skbrief.update} {
+        #local lvl      {%%1};
+        #local point    {%%2};
+
+        #local skillID  {%1};
+
+        #local skillName {$char.skills.id2name[$skillID]};
+        #if { "$skillName" == "" } {
+            errLog skills 相关触发出现 BUG，请联系开发者。;
+            #return;
+        };
+
+        #local delta {@math.Eval{$point - $char[Skills][$skillName][point]}};
+        #if { $char[Skills][$skillName][lvl] != $lvl } {
+            #local delta 0;
+        };
+
+        #var char[Skills][$skillName][lvl]      {$lvl};
+        #var char[Skills][$skillName][point]    {$point};
+
+        #local level {};
+
+        #nop 领悟有时候会领悟过头，小点偶尔会超过等级的平方。;
+        #nop XXX: 这个时候就强制限制到 xxx.99，以免引起重大误解。;
+        #if { $point >= $lvl ** 2 } {
+            #local level {@math.Eval{$lvl + 0.99}};
+        };
+        #else {
+            #math level {$lvl*1.0000000000000000 + $point*1.00 / ($lvl ** 2)};
+            #replace level {^%*.%.%.%*$} {&1.&2&3};
+        };
+
+        #var char[Skills][$skillName][level]    {$level};
+
+        #local limit    {@char.SkillLimit{$skillName}};
+        #local jifa     {@char.GetJifaSkill{$skillName}};
+        #local jifaLvl  {@char.SkillLevel{$jifa}};
+        #local delta    {@str.FormatIfElse{$delta > 0; {(<129>+<299>%s)}; {}; $delta}};
+        #local desc     {<== <039>$level<299> / <069>$limit<299> <== <Ffc0>$skillName<299>};
+
+        #if { "$jifa" != "" } {
+            #cat desc { 当前激发至 <059>$jifa<299>($jifaLvl)};
+        };
+        #else {
+            #cat desc { <019>该技能尚未激发<299>};
+        };
+
+        #line sub var #line oneshot #sub {^#{$lvl}/{$point}$} {#<129>$lvl<299>/<029>$point<299>$delta $desc};
+
+        event.Emit {char/skbrief};
+    };
+
+    #line oneshot #alias {char.Skbrief.parse} {
         #line oneshot #action {^系统回馈：R:skbrief-begin-%%1$} {
             #class char-skbrief-parse-output-%%1 open;
             #line oneshot #action {^#%d/%d{|ID=char/skbrief-%%1}$} {
-                #local skill {};
-                #foreach {*char[Skills][]} {skill} {
-                    #if { "$char[Skills][$skill][code]" == "%%2" } {
-                        #var char[Skills][$skill][lvl]      {%%%%1};
-                        #var char[Skills][$skill][point]    {%%%%2};
-                        #local level {};
-                        #math level {
-                                $char[Skills][$skill][lvl]*1.00
-                            +   $char[Skills][$skill][point]*1.00 / ($char[Skills][$skill][lvl] ** 2)};
-                        #var char[Skills][$skill][level]    {$level};
-                        event.Emit {char/skbrief};
-                        #break;
-                    };
-                };
+                #local lvl      {%%%%1};
+                #local point    {%%%%2};
+
+                char.Skbrief.update {$lvl} {$point};
+
                 #local gag {@default{%2;gag}};
                 #if { "$gag" == "gag" } {
                     #line gag;
@@ -289,8 +336,8 @@ event.Define {char/skbrief} {无参}  {$MODULE} {已经获取到 skbrief 命令�
     };
 
     #local uuid {@uuid{}};
-    char.Skbrief.parse $uuid $id;
-    xtt.Send {#response R:skbrief-begin-$uuid;skbrief $id;response R:skbrief-end-$uuid#};
+    char.Skbrief.parse $uuid $skillID;
+    xtt.Send {#response R:skbrief-begin-$uuid;skbrief $skillID;response R:skbrief-end-$uuid#};
 };
 
 ///=== {
