@@ -286,6 +286,32 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 #func {format}      {#return {@str.Format{%0}}};
 
 ///=== {
+// #@ str.FormatIf <条件> <格式> <参数>
+//    类似于 str.Format，但只有条件满足时才执行。否则维持原值不变。
+// };
+#func {str.FormatIf} {
+    #if { %1 } {
+        #format result {%2} {%3};
+    };
+    #else {
+        #return {%3};
+    };
+};
+
+///=== {
+// #@ str.FormatIfElse <条件> <格式1> <格式2> <参数>
+//    类似于 str.FormatIf，但当条件不满足时，换成另一种格式。
+// };
+#func {str.FormatIfElse} {
+    #if { %1 } {
+        #format result {%2} {%4};
+    };
+    #else {
+        #format result {%3} {%4};
+    };
+};
+
+///=== {
 // #@ str.Left <字符串> <截取宽度>
 //    按照屏幕宽度标准，截取字符串左边的若干字符。
 //    本函数也可以简写为 left，两个名称用途和用法完全相同。
