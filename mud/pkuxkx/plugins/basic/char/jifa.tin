@@ -84,6 +84,7 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
             #var char[Skills][$baseName][jifa-level]    {$jifaLevel};
             #var char[Skills][$baseName][jifa-type]     {$char-jifa-type};
         };
+
         #if { &char[Skills][$skillName][] > 0 } {
             #if { "$char[Skills][$skillName][jifa-to]" == "" } {
                 #var char[Skills][$skillName][jifa-to]  {$baseName};
@@ -92,6 +93,11 @@ event.Define {char/jifa}    {无参}  {$MODULE} {已经获取到 jifa/enable 命
                 #cat char[Skills][$skillName][jifa-to]  {;$baseName};
             };
             #var char[Skills][$skillName][jifa-level]   {$jifaLevel};
+        };
+
+        #if { "$baseName" == "基本内功" } {
+            #nop 精力上限先按照基本内功激发等级的 10 倍计算，简单粗暴，基本够用。;
+            #math char[HP][精力上限] {$jifaLevel * 10};
         };
     };
 

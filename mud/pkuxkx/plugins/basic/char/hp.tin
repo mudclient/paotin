@@ -32,11 +32,13 @@ event.Define {char/hpneili}  {无参}  {$MODULE} {已经获取到 hp -neili 命�
     #var char[HP][上次内力]     {0};
     #var char[HP][当前内力]     {0};
     #var char[HP][最大内力]     {1};
+    #var char[HP][内力上限]     {1};
     #var char[HP][加力]         {0};
     #var char[HP][内力百分比]   {0};
     #var char[HP][上次精力]     {0};
     #var char[HP][当前精力]     {0};
     #var char[HP][最大精力]     {1};
+    #var char[HP][精力上限]     {1};
     #var char[HP][精力百分比]   {0};
     #var char[HP][上次气血]     {0};
     #var char[HP][当前气血]     {0};
@@ -203,8 +205,6 @@ hp -neili 格式：
 
 #alias {char.hp.parse.hp-neili} {
     #class char-hp-parse-hp-neili open;
-
-    #var char[HP][内力上限] {1};
 
     #action {^│%S(%S) %s %S %s - %s %d/%s%d(%d{|\)}%s│{|ID=char/hp-neili}$} {
         #local name     {@str.Trim{%%1}};
@@ -803,6 +803,80 @@ event.Handle {option/changed} {opt/HPSummarize.Pause/pkuxkx} {$MODULE} {char.HPS
     #else {
         #return 0;
     };
+};
+
+///=== {
+// #@ char.CanDazuo
+//    如果角色最大内力点数没有达到最大上限，则返回真，否则返回假。无参数。
+// };
+#func {char.CanDazuo} {
+    #local limit {$char[HP][内力上限]};
+
+    #if { $limit == 1 } {
+        warnLog 无法获得角色内力上限，疑似数据未更新。;
+        #return 0;
+    };
+
+    #if { $char[HP][最大内力] < $limit } {
+        #return 1;
+    };
+
+    #return 0;
+};
+
+///=== {
+// #@ char.CanTuna
+//    如果角色最大精力点数没有达到最大上限，则返回真，否则返回假。无参数。
+// };
+#func {char.CanTuna} {
+    #local limit {$char[HP][精力上限]};
+
+    #if { $limit == 1 } {
+        warnLog 无法获得角色精力上限，疑似数据未更新。;
+        #return 0;
+    };
+
+    #if { $char[HP][最大精力] < $limit } {
+        #return 1;
+    };
+
+    #return 0;
+};
+
+///=== {
+// #@ char.CanTichun
+//    如果角色拥有真气，并且真气不满，则返回真，否则返回假。无参数。
+// };
+#func {char.CanTichun} {
+    #if { $char[HP][最大真气] > 1 && $char[HP][真气百分比] < 100 } {
+        #return 1;
+    };
+
+    #return 0;
+};
+
+///=== {
+// #@ char.IsPoisoned
+//    如果角色中毒了，则返回真，否则返回假。无参数。
+// };
+#func {char.IsPoisoned} {
+    #if { "$char[HP][状态]" == "{.*毒.*|.*火焰刀.*}" || "$char[HP][毒]" !== "" } {
+        #return 1;
+    };
+
+    #return 0;
+};
+
+///=== {
+// #@ char.IsPoisonActive
+//    如果角色中毒了，且没有被压制，则返回真，否则返回假。无参数。
+// };
+#func {char.IsPoisonActive} {
+    #if { @char.IsPoisoned{} && ! @sset.Contains{{$char[HP][状态]};毒性压制} } {
+        #return 1;
+    };
+
+    #return 0;
 };
 
 #action {^虽然藏而不发，你仍在不断积蓄攻势。(气势：%d%)$E}              {char.hp.set-qishi %1};
