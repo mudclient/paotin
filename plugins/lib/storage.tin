@@ -2,7 +2,7 @@
 
 /*
 本文件属于 PaoTin++ 的一部分。
-PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+PaoTin++ © 2020~2026 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
 你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
 */
 
@@ -16,12 +16,29 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 /////   1. var/data/file1.tin （优先）
 /////   2. data/file1.tin     （其次）
 /////
-///// 各模块可以通过 API storage.Save 按需创建自己的存储文件，在其中存储一个或多个
-///// 变量，并在需要时通过 API storage.Load 提取这些变量。
+///// storage 支持的存储有两大维度：
+/////   - 存储形式
+/////        - 文件式（Save/Load）: 按文件组织多个变量。
+/////        - 键值式（Set/Get）: 把琐碎的数据集中存到同一个文件里，不必单独建文件。
+/////   - 作用域
+/////        - share: 跨角色共享。
+/////        - user: 按角色 ID 隔离，存 data/<角色ID>/ 下。
 /////
-///// 另外，storage 模块自行维护了一个全局存储文件。在简单使用场景下，其它模块
-///// 可以通过 API storage.SetGlobal 和 storage.GetGlobal 来读写这个全局存储文件。
-///// 这对读写少量的数据显得更加方便。
+///// 两大维度正交，组合成四组 API：
+/////   - 文件式 share: storage.Save     / storage.Load
+/////   - 文件式 user : storage.SaveUser / storage.LoadUser
+/////   - 键值式 share: storage.Set      / storage.Get
+/////   - 键值式 user : storage.SetUser  / storage.GetUser
+/////
+///// 各模块可以自行决定变量的存放位置，通常来说，对于较大的变量，建议通过文件式 API，
+///// 也就是 storage.Save/SaveUser 来创建自己模块专属的存储文件，并在需要时通过读取
+///// API storage.Load/LoadUser 提取这些变量。每个存储文件可以存储一个或多个变量。
+/////
+///// 而那些较为琐碎的存储项，通常是一些较小的变量，storage 模块自行维护了一组全局收
+///// 纳文件（data/storage.tin），各模块可通过键值式 API 来读写它们，更为方便。
+/////
+///// NOTE: 旧 API storage.SetGlobal/storage.GetGlobal 与 storage.Set/storage.Get 等
+///// 价，目前已废弃，但暂时保留以兼容既有代码，请各模块作者尽快更换。
 ///// };
 
 #var lib_storage[META] {
@@ -30,7 +47,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
     {AUTHOR}    {担子炮}
 };
 
-VAR {存储路径} storage-path {data};
+VAR {存储路径}              storage-path            {data};
+VAR {跨角色共享存储项}      storage-globals         {};
+VAR {角色私有存储项}        storage-user-globals    {};
 
 #func {lib_storage.Init} {
     #local _ {@mkdir{data}};
@@ -43,23 +62,39 @@ VAR {存储路径} storage-path {data};
 
     storage.Load {storage} {storage-globals};
 
-    dbgLog storage 全局存储项已加载。;
-
     #return {true};
 };
 
-///=== {
-// ## storage.Save <文件名> <变量名1> [...]
-//    将由变量名列表所指定的变量及其值存储到指定的存储文件中。
-// };
-#alias {storage.Save} {
-    #local file {%1};
-    #local vars {%2};
+#nop 内部函数，计算指定作用域的存储文件路径。user 作用域需要已登录的角色 ID。;
+#func {storage.path} {
+    #local scope    {%1};
+    #local file     {%2};
 
-    #if { "$file" == "" || "$vars" == "" } {
-        xtt.Usage storage.Save;
-        #return;
+    #replace file {.tin$} {};
+    #cat file {.tin};
+
+    #if { "$scope" != "{share|user}" } {
+        errLog storage.path 参数错误，scope 只能为 share 或 user。;
+        #return {};
     };
+
+    #if { "$scope" == "share" } {
+        #return {$storage-path/$file};
+    };
+
+    #if { "$user[id]" == "" } {
+        errLog 尚未登录角色，无法操作 user 作用域的存储文件。;
+        #return {};
+    };
+
+    #local _ {@mkdir{$storage-path/$user[id]}};
+    #return {$storage-path/$user[id]/$file};
+};
+
+#nop 内部命令，将指定变量列表存储到给定的存储文件中。;
+#alias {storage.dump} {
+    #local vars {%1};
+    #local path {%2};
 
     #class comm-store-tmp open;
     #local var {};
@@ -82,26 +117,22 @@ VAR {存储路径} storage-path {data};
     };
     #class comm-store-tmp close;
 
-    #class comm-store-tmp write {$storage-path/${file}.tin};
+    #class comm-store-tmp write {$path};
 
     #class comm-store-tmp kill;
 };
 
-///=== {
-// ## storage.Load <文件名> <变量名1> [...]
-//    从指定的存储文件中加载变量。
-//    存储文件中实际存储的变量可能更多一些，但本函数可以只加载其中一部分变量。
-// };
-#alias {storage.Load} {
-    #local file {%1};
+#nop 内部命令，从给定的存储文件中加载变量到指定变量列表中。
+#nop 存储文件不存在时静默跳过，不会报错。;
+#alias {storage.load} {
+    #local path {%1};
     #local vars {%2};
 
-    #if { "$file" == "" || "$vars" == "" } {
-        xtt.Usage storage.Load;
+    #if { !@existsFile{$path} } {
         #return;
     };
 
-    #line quiet #class comm-store-tmp {assign} {load-file data/${file}.tin};
+    #line quiet #class comm-store-tmp {assign} {load-file $path};
     #local var {};
     #foreach {$vars} {var} {
         #local count {&{dump-${var}[]}};
@@ -124,16 +155,107 @@ VAR {存储路径} storage-path {data};
 };
 
 ///=== {
-// ## storage.SetGlobal <KEY> [<值>]
-//    将值关联到 KEY 上，并存储到全局存储文件中。
-//    参见 storage.GetGlobal
+// ## storage.Save <文件名> <变量名1> [...]
+//    将由变量名列表所指定的变量及其值存储到指定的存储文件中。
+//    存储文件的路径为 share 作用域，所有角色共享同一份数据。
+//    例子: storage.Save {foo} {my-var1;my-var2};
+//    注意文件名可以省略且建议省略 .tin 后缀。
 // };
-#alias {storage.SetGlobal} {
+#alias {storage.Save} {
+    #local file {%1};
+    #local vars {%2};
+
+    #if { "$file" == "" || "$vars" == "" } {
+        xtt.Usage storage.Save;
+        #return;
+    };
+
+    storage.dump {$vars} {@storage.path{share;$file}};
+};
+
+///=== {
+// ## storage.Load <文件名> <变量名1> [...]
+//    从指定的存储文件中加载变量。
+//    存储文件的路径为 share 作用域，所有角色共享同一份数据。
+//    存储文件中实际存储的变量可能更多一些，但本函数可以只加载其中一部分变量。
+//    例子: storage.Load {foo} {my-var1;my-var2};
+//    注意文件名可以省略且建议省略 .tin 后缀。
+// };
+#alias {storage.Load} {
+    #local file {%1};
+    #local vars {%2};
+
+    #if { "$file" == "" || "$vars" == "" } {
+        xtt.Usage storage.Load;
+        #return;
+    };
+
+    storage.load {@storage.path{share;$file}} {$vars};
+};
+
+///=== {
+// ## storage.SaveUser <文件名> <变量名1> [...]
+//    将由变量名列表所指定的变量及其值存储到当前角色的私有存储文件中。
+//    存储文件的路径为 user 作用域，位于 data/<角色ID>/ 目录下，各角色相互隔离。
+//    本命令需要登录完成、获得角色 ID 之后才能使用，否则报错拒绝。
+//    例子: storage.SaveUser {foo} {my-var1;my-var2};
+//    注意文件名可以省略且建议省略 .tin 后缀。
+// };
+#alias {storage.SaveUser} {
+    #local file {%1};
+    #local vars {%2};
+
+    #if { "$file" == "" || "$vars" == "" } {
+        xtt.Usage storage.SaveUser;
+        #return;
+    };
+
+    #if { "$user[id]" == "" } {
+        errLog storage 尚未登录角色，无法使用 storage.SaveUser。;
+        #return;
+    };
+
+    storage.dump {$vars} {@storage.path{user;$file}};
+};
+
+///=== {
+// ## storage.LoadUser <文件名> <变量名1> [...]
+//    从当前角色的私有存储文件中加载变量。
+//    存储文件的路径为 user 作用域，位于 data/<角色ID>/ 目录下，各角色相互隔离。
+//    本命令需要登录完成、获得角色 ID 之后才能使用，否则报错拒绝。
+//    存储文件中实际存储的变量可能更多一些，但本函数可以只加载其中一部分变量。
+//    例子: storage.LoadUser {foo} {my-var1;my-var2};
+//    注意文件名可以省略且建议省略 .tin 后缀。
+// };
+#alias {storage.LoadUser} {
+    #local file {%1};
+    #local vars {%2};
+
+    #if { "$file" == "" || "$vars" == "" } {
+        xtt.Usage storage.LoadUser;
+        #return;
+    };
+
+    #if { "$user[id]" == "" } {
+        errLog storage 尚未登录角色，无法使用 storage.LoadUser。;
+        #return;
+    };
+
+    storage.load {@storage.path{user;$file}} {$vars};
+};
+
+///=== {
+// ## storage.Set <KEY> [<值>]
+//    将值关联到 KEY 上，并存储到全局存储文件中。
+//    本命令与 storage.SetUser 相对，读写的是 share 作用域的键值存储。
+//    参见 storage.Get
+// };
+#alias {storage.Set} {
     #local key      {%1};
     #local value    {%2};
 
     #if { "$key" == "" } {
-        xtt.Usage storage.SetGlobal;
+        xtt.Usage storage.Set;
         #return;
     };
 
@@ -144,17 +266,97 @@ VAR {存储路径} storage-path {data};
 };
 
 ///=== {
-// #@ storage.GetGlobal <KEY>
+// #@ storage.Get <KEY>
 //    从全局存储文件中根据 KEY 提取值。
-//    参见 storage.SetGlobal
+//    本函数与 storage.GetUser 相对，读写的是 share 作用域的键值存储。
+//    参见 storage.Set
 // };
-#func {storage.GetGlobal} {
+#func {storage.Get} {
     #local key  {%1};
 
     #if { "$key" == "" } {
-        xtt.Usage storage.SetGlobal;
+        xtt.Usage storage.Get;
         #return {};
     };
 
     #return {$storage-globals[$key]};
+};
+
+///=== {
+// ## storage.SetGlobal <KEY> [<值>]
+//    旧名称，已废弃，等同于 storage.Set，保留以兼容既有代码，请尽快迁移。
+// };
+#alias {storage.SetGlobal} {
+    warnLog 本接口已废弃，请尽快改用 storage.Set;
+    storage.Set %0;
+};
+
+///=== {
+// #@ storage.GetGlobal <KEY>
+//    旧名称，已废弃，等同于 storage.Get，保留以兼容既有代码，请尽快迁移。
+// };
+#func {storage.GetGlobal} {
+    #local key {%1};
+    warnLog 本接口已废弃，请尽快改用 storage.Get;
+    #return @storage.Get{$key};
+};
+
+///=== {
+// ## storage.SetUser <KEY> [<值>]
+//    将值关联到 KEY 上，并存储到当前角色的私有存储文件中。
+//    需要登录完成、获得角色 ID 之后才能使用，否则报错拒绝。
+//    参见 storage.GetUser
+// };
+#alias {storage.SetUser} {
+    #local key      {%1};
+    #local value    {%2};
+
+    #if { "$key" == "" } {
+        xtt.Usage storage.SetUser;
+        #return;
+    };
+
+    #if { "$user[id]" == "" } {
+        errLog storage 尚未登录角色，无法使用 storage.SetUser。;
+        #return;
+    };
+
+    storage.ensure-user;
+    #var storage-user-globals[$key] {$value};
+    storage.SaveUser {storage-user} {storage-user-globals};
+};
+
+///=== {
+// #@ storage.GetUser <KEY>
+//    从当前角色的私有存储文件中根据 KEY 提取值。
+//    需要登录完成、获得角色 ID 之后才能使用，否则报错拒绝。
+//    参见 storage.SetUser
+// };
+#func {storage.GetUser} {
+    #local key  {%1};
+
+    #if { "$key" == "" } {
+        xtt.Usage storage.SetUser;
+        #return {};
+    };
+
+    #if { "$user[id]" == "" } {
+        errLog storage 尚未登录角色，无法使用 storage.GetUser。;
+        #return {};
+    };
+
+    storage.ensure-user;
+    #return {$storage-user-globals[$key]};
+};
+
+VAR {角色私有存储已加载}    storage-user-loaded     {false};
+
+#nop 内部命令，确保角色私有存储项已从磁盘加载。;
+#alias {storage.ensure-user} {
+    #if { @isTrue{$storage-user-loaded} } {
+        #return;
+    };
+
+    storage.LoadUser {storage-user} {storage-user-globals};
+    #var storage-user-loaded {true};
 };
