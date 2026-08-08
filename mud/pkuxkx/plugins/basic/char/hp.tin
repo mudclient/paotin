@@ -57,11 +57,11 @@ event.Define {char/hpneili}  {无参}  {$MODULE} {已经获取到 hp -neili 命�
     #var char[HP][最大真气]     {1};
     #var char[HP][真气减伤]     {0};
     #var char[HP][真元]         {0};
-    #var char[HP][食物]         {0};
-    #var char[HP][最大食物]     {1};
+    #var char[HP][当前食物]     {0};
+    #var char[HP][最大食物]     {200};
     #var char[HP][饥饿]         {};
-    #var char[HP][饮水]         {0};
-    #var char[HP][最大饮水]     {1};
+    #var char[HP][当前饮水]     {0};
+    #var char[HP][最大饮水]     {200};
     #var char[HP][口渴]         {};
     #var char[HP][气势]         {0};
     #var char[HP][状态]         {};
@@ -113,18 +113,18 @@ hp 有两种格式，非战斗状态：
         speedo.Set {当前真气} {$char[HP][当前真气]} {true} {10};
     };
     #action {^│【食物】%s%d%s/%s%d%s[%S]%!s│【潜能】%s%S%!s│$} {
-        #var char[HP][食物]     {%%2};
+        #var char[HP][当前食物] {%%2};
         #var char[HP][最大食物] {%%5};
         #var char[HP][饥饿]     {%%7};
         #var char[HP][潜能显示] {%%9};
-        speedo.Set {食物} {$char[HP][食物]} {true} {10};
+        speedo.Set {当前食物} {$char[HP][当前食物]} {true} {10};
     };
     #action {^│【饮水】%s%d%s/%s%d%s[%S]%!s│【经验】%s%S%!s│$} {
-        #var char[HP][饮水]     {%%2};
+        #var char[HP][当前饮水] {%%2};
         #var char[HP][最大饮水] {%%5};
         #var char[HP][口渴]     {%%7};
         #var char[HP][经验显示] {%%9};
-        speedo.Set {饮水} {$char[HP][饮水]} {true} {10};
+        speedo.Set {当前饮水} {$char[HP][当前饮水]} {true} {10};
     };
     #action {^│【气势】%s%d%s\%%s　【平衡】%s%d%s\%%!s│$} {
         #var char[HP][气势]     {%%2};
@@ -157,6 +157,8 @@ hp 有两种格式，非战斗状态：
         #math char[HP][气血健康度] { $char[HP][有效气血] * 100 / $char[HP][最大气血] };
         #math char[HP][精神健康度] { $char[HP][有效精神] * 100 / $char[HP][最大精神] };
         #math char[HP][真气百分比] { $char[HP][当前真气] * 100 / $char[HP][最大真气] };
+        #math char[HP][食物百分比] { $char[HP][当前食物] * 100 / $char[HP][最大食物] };
+        #math char[HP][饮水百分比] { $char[HP][当前饮水] * 100 / $char[HP][最大饮水] };
         event.Emit char/hp;
         char.hp.parse.done;
     };
@@ -318,12 +320,12 @@ hp -neili 格式：
 #action {^#%1,%2,%3,%4,{0|1},{0|1}$} {
     #var char[HP][当前真气]  {@char.hp.expandBigNumber{%1}};
     #var char[HP][当前真元]  {@char.hp.expandBigNumber{%2}};
-    #var char[HP][食物]      {@char.hp.expandBigNumber{%3}};
-    #var char[HP][饮水]      {@char.hp.expandBigNumber{%4}};
+    #var char[HP][当前食物]  {@char.hp.expandBigNumber{%3}};
+    #var char[HP][当前饮水]  {@char.hp.expandBigNumber{%4}};
 
     speedo.Set {当前真气}   {$char[HP][当前真气]}   {true} {10};
-    speedo.Set {食物}       {$char[HP][食物]}       {true} {10};
-    speedo.Set {饮水}       {$char[HP][饮水]}       {true} {10};
+    speedo.Set {当前食物}   {$char[HP][当前食物]}   {true} {10};
+    speedo.Set {当前饮水}   {$char[HP][当前饮水]}   {true} {10};
 
     #math char[HP][真气百分比] { $char[HP][当前真气] * 100 / $char[HP][最大真气] };
 
@@ -516,7 +518,7 @@ hp -neili 格式：
     };
 
     #local label {气血};
-    #if { $char[HP][食物] <= 0 || $char[HP][饮水] <= 0 } {
+    #if { @char.MustEat{} || @char.MustDrink{} } {
         #local label {<118>气血};
     };
 
@@ -555,7 +557,7 @@ hp -neili 格式：
             #local 每秒精神变化 {};
         };
         #local label {精神};
-        #if { $char[HP][食物] <= 0 || $char[HP][饮水] <= 0 } {
+        #if { @char.MustEat{} || @char.MustDrink{} } {
             #local label {<118>精神};
         };
         #format 精神 { $labelColor$label<298>: %s%s/%s}
@@ -570,7 +572,7 @@ hp -neili 格式：
         #nop 气血治疗的数值展示为每分钟可以治疗的最大血量的倍数（以百分比形式）;
         #local {气血治疗} {@math.Int{@math.Eval{$char[STATUS][气血治疗] * 100 * 60 / $char[HP][最大气血]}}};
         #local label {回气};
-        #if { !@char.IsBusy{} && $char[HP][食物] > 0 && $char[HP][饮水] > 0 && ($char[HP][气血百分比] < 100 || $char[HP][气血健康度] < 100) } {
+        #if { !@char.IsBusy{} && !@char.MustEat{} && !@char.MustDrink{} && ($char[HP][气血百分比] < 100 || $char[HP][气血健康度] < 100) } {
             #local label {<128><588>回气\e[25m};
         };
         #format {回气} { $labelColor$label: %s/%s} {@char.hp.colorit{${气血恢复}}} {@char.hp.colorit{${气血治疗}}};
@@ -583,7 +585,7 @@ hp -neili 格式：
         #nop 精神治疗的数值展示为每分钟可以治疗的最大精神的倍数（以百分比形式）;
         #local {精神治疗} {@math.Int{@math.Eval{$char[STATUS][精神治疗] * 100 * 60 / $char[HP][最大精神]}}};
         #local label {回精};
-        #if { !@char.IsBusy{} && $char[HP][食物] > 0 && $char[HP][饮水] > 0 && ($char[HP][精神百分比] < 100 || $char[HP][精神健康度] < 100) } {
+        #if { !@char.IsBusy{} && !@char.MustEat{} && !@char.MustDrink{} && ($char[HP][精神百分比] < 100 || $char[HP][精神健康度] < 100) } {
             #local label {<128><588>回精\e[25m};
         };
         #format {回精} { $labelColor$label: %s/%s} {@char.hp.colorit{${精神恢复}}} {@char.hp.colorit{${精神治疗}}};
@@ -607,16 +609,16 @@ hp -neili 格式：
     #local 食水 {};
     #if { $width >= 110 } {
         #local label {食水};
-        #if { $char[HP][食物] <= 0 || $char[HP][饮水] <= 0 } {
+        #if { @char.MustEat{} || @char.MustDrink{} } {
             #local label {<118><588>食水\e[25m<288>};
         };
         #if { @char.InCombat{} } {
-            #format {食水} { $label: %s/%s} {$char[HP][食物]} {$char[HP][饮水]};
+            #format {食水} { $label: %s/%s} {$char[HP][当前食物]} {$char[HP][当前饮水]};
         };
         #else {
             #format {食水} { $label: %s/%s(%s/%s)}
-                    {$char[HP][食物]} {$char[HP][饮水]}
-                    {@speedo.GetSpeed{食物;60}} {@speedo.GetSpeed{饮水;60}};
+                    {$char[HP][当前食物]} {$char[HP][当前饮水]}
+                    {@speedo.GetSpeed{当前食物;60}} {@speedo.GetSpeed{当前饮水;60}};
         };
     };
 
@@ -775,6 +777,114 @@ event.Handle {option/changed} {opt/HPSummarize.Pause/pkuxkx} {$MODULE} {char.HPS
 // };
 #func {char.IsIdle} {
     #if { "$char[HP][忙]" == "false" } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.hp.GetPercent <属性名称>
+//    返回指定属性的当前百分比。
+//    参数说明：
+//      - 属性名称: 支持 食物、饮水、气血、精神、内力、精力、真气。
+//    百分比由 PaoTin++ 根据 GMCP.Status 推送的当前值与最大值计算，是 PaoTin++ 的便利层。
+//    参数非法或数据未就绪时返回 -1。
+// };
+#func {char.hp.GetPercent} {
+    #local name {%1};
+
+    #if { "$name" != "{食物|饮水|气血|精神|内力|精力|真气}" } {
+        xtt.Usage char.hp.GetPercent;
+        #return -1;
+    };
+
+    #local percent {$char[HP][$name百分比]};
+    #if { "$percent" == "" } {
+        #return -1;
+    };
+
+    #return $percent;
+};
+
+///=== {
+// #@ char.MustEat
+//    如果角色已经饿到极点（食物百分比 ≤ 0），则返回真，否则返回假。
+//    百分比数据未就绪时，按当前食物值保守估计。
+// };
+#func {char.MustEat} {
+    #if { @char.hp.GetPercent{食物} <= 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.MustDrink
+//    如果角色已经渴到极点（饮水百分比 ≤ 0），则返回真，否则返回假。
+//    百分比数据未就绪时，按当前饮水值保守估计。
+// };
+#func {char.MustDrink} {
+    #if { @char.hp.GetPercent{饮水} <= 0 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.NeedEat
+//    如果角色饿了（食物百分比 ≤ 50），则返回真，否则返回假。
+//    百分比数据未就绪时，按当前食物值保守估计。
+// };
+#func {char.NeedEat} {
+    #if { @char.hp.GetPercent{食物} <= 50 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.NeedDrink
+//    如果角色渴了（饮水百分比 ≤ 50），则返回真，否则返回假。
+//    百分比数据未就绪时，按当前饮水值保守估计。
+// };
+#func {char.NeedDrink} {
+    #if { @char.hp.GetPercent{饮水} <= 50 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.CanEatMore
+//    如果角色还能继续进食（食物百分比 ≤ 95），则返回真，否则返回假。
+//    百分比数据未就绪时，按当前食物值保守估计。
+// };
+#func {char.CanEatMore} {
+    #if { @char.hp.GetPercent{食物} <= 95 } {
+        #return 1;
+    };
+    #else {
+        #return 0;
+    };
+};
+
+///=== {
+// #@ char.CanDrinkMore
+//    如果角色还能继续饮水（饮水百分比 ≤ 95），则返回真，否则返回假。
+//    百分比数据未就绪时，按当前饮水值保守估计。
+// };
+#func {char.CanDrinkMore} {
+    #if { @char.hp.GetPercent{饮水} <= 95 } {
         #return 1;
     };
     #else {
