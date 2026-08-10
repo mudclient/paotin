@@ -27,6 +27,8 @@ ids/*
 !ids/DEFAULT
 !ids/EXAMPLE
 
+*.log
+
 tmux/*
 
 foo.tin
@@ -47,6 +49,10 @@ var
 
 data/*
 
+# worktrees
+wt/*
+
 CLAUDE.md
 AGENTS.md
 opencode.json
+agent-box.yaml
