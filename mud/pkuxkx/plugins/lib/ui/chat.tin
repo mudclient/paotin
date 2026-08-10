@@ -35,7 +35,7 @@ load-lib storage;
 load-lib alert;
 
 #func {lib_ui_chat.Init} {
-    #var chat-wujue-title {@storage.GetGlobal{五绝名号}};
+    #var chat-wujue-title {@storage.Get{五绝名号}};
     load-file {etc/ui-chat.tin};
     #return true;
 };
@@ -71,7 +71,7 @@ load-lib alert;
                 #var chat-wujue-title {@sset.Add{{$chat-wujue-title};$title}};
             };
         };
-        storage.SetGlobal 五绝名号 {$chat-wujue-title};
+        storage.Set 五绝名号 {$chat-wujue-title};
     };
 
     #if { "$type" != "{求助|北侠QQ群|闲聊|副本|谣言|门派|帮派|队伍|江湖|任务|交易|本地|区域|亡灵|表决|醒目|答问如流|备选答案|私聊}" } {
