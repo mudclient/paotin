@@ -490,20 +490,19 @@ VAR {技能 ID 到技能名称的转换} char.skills.id2name {};
         #return 0;
     };
 
-    #local baseLvl  {@char.SkillLevel{$skill}};
+    #local baseLvl  {@math.Floor{@char.SkillLevel{$skill}}};
     #local skill    {@char.GetJifaSkill{$skill}};
-    #local level    {@char.SkillLevel{$skill}};
+    #local level    {@math.Floor{@char.SkillLevel{$skill}}};
 
     #if { "$skill" == "" || $baseLvl == 0 || $level == 0 } {
         #return 0;
     };
 
-    #if { @math.Floor{$baseLvl} > @math.Floor{$level} } {
-        #return 1;
-    };
-    #else {
+    #if { $baseLvl <= $level } {
         #return 0;
     };
+
+    #return 0;
 };
 
 ///=== {
@@ -518,20 +517,20 @@ VAR {技能 ID 到技能名称的转换} char.skills.id2name {};
         #return 0;
     };
 
-    #local baseLvl  {@char.SkillLevel{$skill}};
+    #local baseLvl  {@math.Floor{@char.SkillLevel{$skill}}};
     #local skill    {@char.GetJifaSkill{$skill}};
-    #local level    {@char.SkillLevel{$skill}};
+    #local level    {@math.Floor{@char.SkillLevel{$skill}}};
+    #local limit    {@math.Floor{@char.SkillLimit{$skill}}};
 
     #if { "$skill" == "" || $baseLvl == 0 || $level == 0 } {
         #return 0;
     };
 
-    #if { @math.Floor{$baseLvl} <= @math.Floor{$level} } {
-        #return 1;
-    };
-    #else {
+    #if { $baseLvl > $level || $baseLvl >= $limit } {
         #return 0;
     };
+
+    #return 1;
 };
 
 ///=== {
@@ -550,8 +549,8 @@ VAR {技能 ID 到技能名称的转换} char.skills.id2name {};
         #return 0;
     };
 
-    #local level    {@char.SkillLevel{$force}};
-    #local limit    {@char.SkillLimit{$force}};
+    #local level    {@math.Floor{@char.SkillLevel{$force}}};
+    #local limit    {@math.Floor{@char.SkillLimit{$force}}};
 
     #if { @defaultNum{$char[HP][潜能];0} < 100000 } {
         #return 0
@@ -571,8 +570,10 @@ VAR {技能 ID 到技能名称的转换} char.skills.id2name {};
         #return;
     };
 
-    #local level {@math.Int{@math.Floor{ @char.SkillLevel{$name} } + 1}};
+    #local level {@math.Floor{@char.SkillLevel{$name}}};
+    #local level {@math.Eval{$level + 1}};
     #local limit {@char.SkillLimit{$name}};
+
     fullskLog @buffer.RawLine{} 当前进度: $level / $limit;
 
     #line sub var #delay char.skills.update.level {skbrief $char[Skills][$name][code]} 0.1;
