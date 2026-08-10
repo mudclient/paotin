@@ -19,7 +19,7 @@ load-lib storage;
 event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只会唤醒和选项名称相对应的钩子};
 
 #func {lib_option.Init} {
-    #var gOptions {@storage.GetGlobal{global-options}};
+    #var gOptions {@storage.Get{global-options}};
     #return {true};
 };
 
@@ -29,19 +29,33 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
 ///// 全局选项本质上就是一些变量，这个模块主要是为了提供一些公共 API，和一个统
 ///// 一的管理方式，能够把散落在各处的选项集中管理。
 /////
-// ## option.Define <名称> <数据类型> <中文含义> [<默认值>]
+///// 选项具有作用域：
+/////   - share: 跨角色共享，修改后所有本机角色都会受到影响。
+/////   - user:  按角色隔离，每个角色有自己的值，修改本角色不会影响其他角色。
+/////
+///// 作用域在定义时指定，缺省为 user。可以在运行时通过 option.SetScope 调整。
+///// 具体细节请参考 HELP option.SetScope
+/////
+// ## option.Define <名称> <数据类型> <中文含义> [<默认值>] [<作用域>]
 //    定义一个全局选项。选项被定义之后有一些公共 API 可供使用。
 //    选项必须经过定义之后才能使用。选项的名称按照大骆驼风格命名。
-//    目前仅支持 Bool 型选项。
+//    作用域可选 share 或 user，缺省为 user。
+//    目前支持 Bool, Number, String, Slist, Time 等类型的选项。
 // };
 #alias {option.Define} {
     #local option   {%1};
     #local type     {%2};
     #local meaning  {%3};
     #local default  {%4};
+    #local scope    {@default{%5;user}};
 
     #if { "$option" == "" || "$type" == "" || "$meaning" == "" } {
         xtt.Usage option.Define;
+        #return;
+    };
+
+    #if { "$scope" != "{share|user}" } {
+        xtt.Usage option.Define 作用域只能是 share 或 user。;
         #return;
     };
 
@@ -51,6 +65,14 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
             || "$gOptions[$option][meaning]" != "$meaning"
         } {
             errLog 选项「$option」已存在，请检查代码。;
+        };
+
+        #if { "$gOptions[$option][scope]" == "" } {
+            #nop 兼容旧数据，补齐缺省作用域。;
+            #var gOptions[$option][scope] {$scope};
+        };
+        #elseif { "$gOptions[$option][scope]" != "$scope" } {
+            errLog 选项「$option」的作用域与已有定义不一致，请检查代码。;
         };
         #return;
     };
@@ -64,9 +86,10 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
         {type}      {$type}
         {meaning}   {$meaning}
         {value}     {$default}
+        {scope}     {$scope}
     };
 
-    storage.SetGlobal {global-options} {$gOptions};
+    option.persist;
 };
 
 ///=== {
@@ -74,9 +97,11 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
 //    列出所有的选项。
 // };
 #alias {option.List} {
+    option.ensure;
+
     #echo {};
-    #echo {   <128>%-25s%-10s  %-30s %+22s} {选项名称} {选项类型} {选项含义} {选项当前值};
-    #draw Yellow scroll line 1 1 1 100;
+    #echo {   <128>%-25s %-10s %-8s %-30s %+22s} {选项名称} {选项类型} {作用域} {选项含义} {选项当前值};
+    #draw Yellow scroll line 1 1 1 110;
 
     #local option {};
     #foreach {*gOptions[]} {option} {
@@ -88,9 +113,10 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
             };
         };
 
-        #echo {   %-25s %-10s %-30s %+22s}
+        #echo {   %-25s %-10s %-8s %-30s %+22s}
             {$gOptions[$option][name]}
             {$gOptions[$option][type]}
+            {$gOptions[$option][scope]}
             {$gOptions[$option][meaning]}
             {{$value}};
     };
@@ -109,6 +135,8 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
         xtt.Usage option.Get;
         #return {};
     };
+
+    option.ensure;
 
     #if { "$gOptions[$option]" == "" } {
         errLog 不存在选项「$option」，请先定义后再使用。;
@@ -131,6 +159,8 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
         #return {};
     };
 
+    option.ensure;
+
     #local old {$gOptions[$option]};
     #if { "$old" == "" } {
         errLog 不存在选项「$option」，请先定义后再使用。;
@@ -143,7 +173,7 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
 
     #if { "$old[value]" !== "$value" } {
         #var {gOptions[$option][value]} {$value};
-        storage.SetGlobal {global-options} {$gOptions};
+        option.persist;
         event.Emit {option/changed} {opt/$option/%*};
     };
 
@@ -174,6 +204,8 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
         #return {};
     };
 
+    option.ensure;
+
     #local old {$gOptions[$option]};
     #if { "$old" == "" } {
         errLog 不存在选项「$option」，请先定义后再使用。;
@@ -186,7 +218,7 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
 
     #var {gOptions[$option][value]} {$value};
     #list gOptions[$option][stack] add {$old[value]};
-    storage.SetGlobal {global-options} {$gOptions};
+    option.persist;
     event.Emit {option/changed} {opt/$option/%*};
 };
 
@@ -202,6 +234,8 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
         #return {};
     };
 
+    option.ensure;
+
     #local old {$gOptions[$option]};
     #if { "$old" == "" } {
         errLog 不存在选项「$option」，请先定义后再使用。;
@@ -214,7 +248,7 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
 
     #var {gOptions[$option][value]} {$old[stack][-1]};
     #list gOptions[$option][stack] delete -1;
-    storage.SetGlobal {global-options} {$gOptions};
+    option.persist;
     event.Emit {option/changed} {opt/$option/%*};
 };
 
@@ -317,6 +351,60 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
 };
 
 ///=== {
+// #@ option.Scope <选项名称>
+//    获取选项的作用域，返回 share 或 user。
+//    参见 option.SetScope
+// };
+#func {option.Scope} {
+    #local option {%1};
+
+    #if { "$option" == "" } {
+        #return {};
+    };
+
+    #if { "$gOptions[$option]" == "" } {
+        #return {};
+    };
+
+    #return {$gOptions[$option][scope]};
+};
+
+///=== {
+// ## option.SetScope <选项名称> <share|user>
+//    修改选项的作用域，并将选项数据从原来的存储迁移到新的存储。
+//    NOTE: 本命令会移动选项的数据，操作前请确认该选项的当前值。
+// };
+#alias {option.SetScope} {
+    #local option {%1};
+    #local scope {%2};
+
+    #if { "$option" == "" || "$scope" == "" } {
+        xtt.Usage option.SetScope;
+        #return;
+    };
+
+    #if { "$gOptions[$option]" == "" } {
+        errLog 不存在选项「$option」，请先定义后再使用。;
+        #return;
+    };
+
+    #if { "$scope" != "{share|user}" } {
+        xtt.Usage option.SetScope 作用域只能是 share 或 user。;
+        #return;
+    };
+
+    #local oldScope {$gOptions[$option][scope]};
+    #if { "$oldScope" == "$scope" } {
+        #return;
+    };
+
+    #var gOptions[$option][scope] {$scope};
+    option.persist;
+
+    infoLog 选项「$gOptions[$option][meaning]($option)」的作用域已从 $oldScope 调整为 $scope。;
+};
+
+///=== {
 // ## option.Enable <选项名称>
 //    启用该选项。
 // };
@@ -353,4 +441,54 @@ event.Define {option/changed} {无参} {$MODULE} {选项已更新。本事件只
     #else {
         #return 1;
     };
+};
+
+VAR {角色私有选项已加载}  option-user-loaded  {false};
+
+#nop 内部命令，确保角色私有选项已经从磁盘加载。;
+#alias {option.ensure} {
+    #if { @isTrue{$option-user-loaded} || "$user[id]" == "" } {
+        #return;
+    };
+
+    #local userOpts {@storage.GetUser{options}};
+    #local opt {};
+    #foreach {*userOpts[]} {opt} {
+        #if { "$userOpts[$opt]" != "" } {
+            #if { "$userOpts[$opt][scope]" == "" } {
+                #nop 兼容旧数据，保留现有作用域。;
+                #var userOpts[$opt][scope] {$gOptions[$opt][scope]};
+            };
+            #var gOptions[$opt] {$userOpts[$opt]};
+        };
+    };
+
+    #var option-user-loaded {true};
+};
+
+#nop 内部命令，将选项字典持久化到磁盘。
+#nop global-options 键保存全部跨角色共享的选项；
+#nop options 键仅保存当前角色的私有选项，供不同角色隔离读取。;
+#alias {option.persist} {
+    option.ensure;
+
+    #if { "$user[id]" == "" } {
+        #return;
+    };
+
+    #local globalOpts {};
+    #local userOpts {};
+
+    #local opt {};
+    #foreach {*gOptions[]} {opt} {
+        #if { "$gOptions[$opt][scope]" == "share" } {
+            #var globalOpts[$opt] {$gOptions[$opt]};
+        };
+        #else {
+            #var userOpts[$opt] {$gOptions[$opt]};
+        };
+    };
+
+    storage.Set     {global-options}    {$globalOpts};
+    storage.SetUser {options}           {$userOpts};
 };
