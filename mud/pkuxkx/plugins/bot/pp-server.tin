@@ -23,7 +23,7 @@ VAR {黑名单}        pp-black-list       {};
 load-lib storage;
 
 #func {bot_pp-server.Init} {
-    storage.Load {pp-server} {pp-vip-list;pp-svip-list;pp-black-list};
+    storage.LoadUser {pp-server} {pp-vip-list;pp-svip-list;pp-black-list};
 
     #return {true};
 };
@@ -458,5 +458,5 @@ VAR {无效目标 ID，列表表格，屏蔽这些 ID 一段时间防止重复�
 };
 
 #alias {pp.store-vip} {
-    storage.Save {pp-server} {pp-vip-list;pp-svip-list;pp-black-list};
+    storage.SaveUser {pp-server} {pp-vip-list;pp-svip-list;pp-black-list};
 };
