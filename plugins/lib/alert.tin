@@ -24,7 +24,7 @@ VAR {目前正在进行的警报，列表表格}  alert-items     {};
 load-lib storage;
 
 #func {lib_alert.Init} {
-    storage.Load {alert} {alert-items};
+    storage.LoadUser {alert} {alert-items};
     #return {true};
 };
 
@@ -59,7 +59,7 @@ load-lib storage;
         {interval}  {$interval}
     }};
 
-    storage.Save {alert} {alert-items};
+    storage.SaveUser {alert} {alert-items};
 
     alert.perform;
 };
@@ -81,7 +81,7 @@ load-lib storage;
 
     #if { $idx > 0 } {
         #list alert-items delete {$idx};
-        storage.Save {alert} {alert-items};
+        storage.SaveUser {alert} {alert-items};
         alert.perform;
     };
 };
@@ -107,7 +107,7 @@ load-lib storage;
     };
 
     #if { @isTrue{$changed} } {
-        storage.Save {alert} {alert-items};
+        storage.SaveUser {alert} {alert-items};
         alert.perform;
     };
 
