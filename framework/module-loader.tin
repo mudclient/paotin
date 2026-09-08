@@ -170,6 +170,7 @@ class.open module-loader;
 
     infoLog 卸载 $moduleName。;
     #local modules {};
+    #local name {};
     #foreach {*{xtt-modules[]}} {name} {
         #if { "$name" != "$moduleName" } {
             #format modules {%s%s} {$modules} {{$name}{$xtt-modules[$name]}};
